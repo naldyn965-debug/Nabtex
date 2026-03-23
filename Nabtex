@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="نبتيكس Nabtex — موسوعة زراعية احترافية">
+<title>نبتيكس · Nabtex</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root{
+  /* brand */
+  --brand:#1B6B3A;--brand-d:#134d2a;--brand-l:#2d9055;
+  --brand-xl:#4ab870;--brand-mist:#e8f5ee;--brand-pale:#f2faf5;
+
+  /* neutrals */
+  --ink:#0f1f16;--ink2:#1e3a28;
+  --slate:#3a5945;--muted:#6b8f78;
+  --line:#e0ede5;--line2:#c8ddd2;
+  --bg:#f8fdf9;--bg2:#f0f7f2;--bg3:#e8f2eb;
+  --white:#ffffff;
+
+  /* accent gold */
+  --gold:#b8860b;--gold-l:#d4a017;--gold-pale:#fdf8e8;
+
+  /* status */
+  --red:#c0392b;--orange:#e67e22;--green:#27ae60;
+
+  /* surfaces */
+  --card:var(--white);--glass:rgba(248,253,249,.9);
+
+  /* shadows */
+  --s1:0 1px 4px rgba(15,31,22,.06);
+  --s2:0 3px 12px rgba(15,31,22,.08);
+  --s3:0 8px 28px rgba(15,31,22,.11);
+  --s4:0 16px 56px rgba(15,31,22,.15);
+  --s5:0 32px 80px rgba(15,31,22,.18);
+  --sglow:0 0 0 3px rgba(27,107,58,.18);
+
+  /* type */
+  --f-ui:'Cairo',sans-serif;
+  --f-display:'Cormorant Garamond',serif;
+
+  /* spacing */
+  --max:1380px;
+  --r1:6px;--r2:10px;--r3:16px;--r4:24px;--rpill:9999px;
+
+  /* easing */
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --ease-smooth:cubic-bezier(.65,0,.35,1);
+}
+[data-dark]{
+  --bg:#0b160d;--bg2:#111d14;--bg3:#172219;
+  --card:#162019;--glass:rgba(11,22,13,.92);
+  --ink:#e2f0e6;--ink2:#c0d9c6;--slate:#8ab89a;--muted:#5a8068;
+  --line:rgba(27,107,58,.15);--line2:rgba(27,107,58,.25);
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;overflow-x:hidden;scroll-behavior:smooth}
+body{font-family:var(--f-ui);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6;transition:background .3s,color .3s}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;outline:none;font-family:var(--f-ui);background:none}
+input,select{font-family:var(--f-ui);outline:none}
+img{display:block;max-width:100%}
+::selection{background:rgba(27,107,58,.2)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+
+/* ═══════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════ */
+#ldr{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--brand-d);overflow:hidden}
+#ldr .l-logo{font-family:var(--f-display);font-size:52px;color:#fff;letter-spacing:.04em;opacity:0;transform:translateY(20px);animation:ldIn .8s .2s var(--ease-out) forwards}
+#ldr .l-tag{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.2em;text-transform:uppercase;margin-top:8px;opacity:0;animation:ldIn .8s .5s var(--ease-out) forwards}
+#ldr .l-line{width:0;height:2px;background:linear-gradient(90deg,var(--brand-xl),var(--gold-l));margin-top:32px;animation:lLine 1.8s .4s var(--ease-out) forwards;border-radius:2px}
+#ldr.out{animation:ldOut .7s var(--ease-smooth) forwards}
+@keyframes ldIn{to{opacity:1;transform:none}}
+@keyframes lLine{to{width:200px}}
+@keyframes ldOut{to{opacity:0;transform:scale(1.04);pointer-events:none}}
+
+/* ═══════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════ */
+#pgbar{position:fixed;top:0;left:0;right:0;height:2.5px;z-index:8000;background:linear-gradient(90deg,var(--brand),var(--gold-l),var(--brand-xl));transform-origin:left;transform:scaleX(0);transition:transform .08s linear}
+
+/* ═══════════════════════════════════════════
+   CUSTOM CURSOR
+═══════════════════════════════════════════ */
+#cur,#cur-r{position:fixed;border-radius:50%;pointer-events:none;z-index:7999;transform:translate(-50%,-50%)}
+#cur{width:7px;height:7px;background:var(--brand);transition:transform .1s}
+#cur-r{width:34px;height:34px;border:1.5px solid rgba(27,107,58,.5);transition:transform .14s var(--ease-out),width .2s,height .2s,border-color .2s}
+#cur-r.h{width:52px;height:52px;border-color:var(--gold-l);opacity:.6}
+@media(pointer:coarse){#cur,#cur-r{display:none}}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.W{max-width:var(--max);margin:0 auto;padding:0 24px}
+@media(max-width:600px){.W{padding:0 16px}}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+.nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0)}
+.nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--line);transition:box-shadow .3s}
+.nav.up .nav-bg{box-shadow:var(--s3)}
+.nav-inner{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:10px}
+/* logo */
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,var(--brand-l),var(--brand-d));display:grid;place-items:center;box-shadow:var(--s2);transition:transform .3s var(--ease-spring)}
+.logo-mark svg{width:20px;height:20px}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.1)}
+.logo-name{font-family:var(--f-display);font-size:22px;color:var(--ink);letter-spacing:.01em}
+.logo-name span{color:var(--brand)}
+/* links */
+.nav-links{display:flex;gap:2px;margin-right:32px}
+.nl{padding:6px 14px;border-radius:var(--rpill);font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;letter-spacing:.01em}
+.nl:hover{color:var(--brand);background:var(--brand-pale)}
+.nl.active{color:var(--brand);font-weight:700}
+/* actions */
+.nav-actions{display:flex;align-items:center;gap:8px;margin-right:auto}
+.nav-icon-btn{width:38px;height:38px;border-radius:var(--rpill);display:grid;place-items:center;border:1px solid var(--line);color:var(--slate);font-size:17px;transition:all .2s var(--ease-spring);background:var(--card)}
+.nav-icon-btn:hover{transform:scale(1.08);border-color:var(--brand);color:var(--brand)}
+.btn-nav-o{padding:8px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;border:1.5px solid var(--line2);color:var(--brand);transition:all .2s var(--ease-spring)}
+.btn-nav-o:hover{border-color:var(--brand);background:var(--brand-pale);transform:translateY(-1px)}
+.btn-nav-f{padding:8px 20px;border-radius:var(--rpill);font-size:13px;font-weight:700;background:var(--brand);color:#fff;box-shadow:var(--s2);transition:all .2s var(--ease-spring)}
+.btn-nav-f:hover{background:var(--brand-l);transform:translateY(-2px);box-shadow:var(--s3)}
+/* ham */
+.ham{display:none;flex-direction:column;gap:5px;padding:8px;border-radius:var(--r2)}
+.ham span{display:block;width:20px;height:1.5px;background:var(--ink);border-radius:1px;transition:all .2s var(--ease-smooth)}
+.ham.x span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.ham.x span:nth-child(2){opacity:0;transform:scaleX(0)}
+.ham.x span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mob-menu{display:none;flex-direction:column;padding:12px 24px 20px;border-top:1px solid var(--line);background:var(--glass);backdrop-filter:blur(20px)}
+.mob-menu .nl{display:block;padding:10px 14px;border-radius:var(--r2)}
+@media(max-width:768px){
+  .nav-links,.nav-actions .btn-nav-o,.nav-actions .btn-nav-f{display:none}
+  .ham{display:flex}
+}
+
+/* ═══════════════════════════════════════════
+   PAGES SYSTEM
+═══════════════════════════════════════════ */
+.page{display:none;min-height:100svh}
+.page.active{display:block;animation:pgIn .4s var(--ease-out)}
+@keyframes pgIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ═══════════════════════════════════════════
+   HOME — HERO  (CINEMATIC FULL-SCREEN)
+═══════════════════════════════════════════ */
+.hero{position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+/* ── background layers ── */
+.hero-bg-img{position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1800&q=85');background-size:cover;background-position:center 40%;transform:scale(1.08);animation:hKen 22s ease-in-out infinite alternate;filter:brightness(.28) saturate(.7)}
+@keyframes hKen{from{transform:scale(1.08) translateX(1%)}to{transform:scale(1) translateX(-1%)}}
+.hero-noise{position:absolute;inset:0;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
+.hero-canvas{position:absolute;inset:0;z-index:1}
+/* radial light orbs */
+.hero-orb1{position:absolute;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(27,107,58,.32) 0%,transparent 70%);top:-200px;right:-150px;animation:orbFloat1 12s ease-in-out infinite;pointer-events:none;z-index:1}
+.hero-orb2{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(184,134,11,.18) 0%,transparent 70%);bottom:-100px;left:-100px;animation:orbFloat2 15s ease-in-out infinite;pointer-events:none;z-index:1}
+.hero-orb3{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(75,184,112,.2) 0%,transparent 70%);top:40%;left:42%;transform:translate(-50%,-50%);animation:orbFloat3 9s ease-in-out infinite;pointer-events:none;z-index:1}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-40px,30px) scale(1.1)}66%{transform:translate(20px,-20px) scale(.95)}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-40px) scale(1.12)}}
+@keyframes orbFloat3{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:.8;transform:translate(-50%,-50%) scale(1.2)}}
+/* bottom veil */
+.hero-veil-b{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,var(--bg) 0%,transparent 100%);z-index:2}
+.hero-veil-t{position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(to bottom,rgba(0,0,0,.4) 0%,transparent 100%);z-index:2}
+
+/* ── floating plant images ── */
+.hero-plants{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.hp{position:absolute;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);opacity:0}
+.hp img{width:100%;height:100%;object-fit:cover;transition:transform 8s ease-in-out}
+.hp:hover img{transform:scale(1.06)}
+.hp1{width:220px;height:290px;top:8%;right:4%;border-radius:24px;transform:rotate(4deg);animation:hpIn1 1s 1.8s var(--ease-out) forwards}
+.hp2{width:170px;height:220px;top:55%;right:20%;border-radius:18px;transform:rotate(-3deg);animation:hpIn2 1s 2.1s var(--ease-out) forwards}
+.hp3{width:190px;height:250px;top:12%;right:28%;border-radius:22px;transform:rotate(2deg);animation:hpIn3 1s 2.4s var(--ease-out) forwards}
+.hp4{width:155px;height:200px;bottom:18%;right:6%;border-radius:16px;transform:rotate(-4deg);animation:hpIn4 1s 2.6s var(--ease-out) forwards}
+@keyframes hpIn1{to{opacity:.85;transform:rotate(4deg) translateY(0)}}
+@keyframes hpIn2{from{opacity:0;transform:rotate(-3deg) translateY(30px)}to{opacity:.75;transform:rotate(-3deg) translateY(0)}}
+@keyframes hpIn3{from{opacity:0;transform:rotate(2deg) translateY(20px)}to{opacity:.65;transform:rotate(2deg) translateY(0)}}
+@keyframes hpIn4{from{opacity:0;transform:rotate(-4deg) translateY(40px)}to{opacity:.7;transform:rotate(-4deg) translateY(0)}}
+/* floating plant hover pulse */
+.hp{animation-fill-mode:both;transition:transform .4s ease,opacity .3s}
+.hp:hover{opacity:1!important;transform:rotate(0)!important}
+
+/* ── content ── */
+.hero-content{position:relative;z-index:3;max-width:720px;text-align:center;padding:0 24px;margin:0 auto}
+/* stagger animations */
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:var(--rpill);background:rgba(27,107,58,.25);border:1px solid rgba(75,184,112,.35);color:#7de89e;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:28px;backdrop-filter:blur(8px);opacity:0;animation:fadeUp .7s .4s var(--ease-out) forwards}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#7de89e;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(125,232,158,.5)}50%{opacity:.4;box-shadow:0 0 0 6px rgba(125,232,158,0)}}
+.hero-h1{font-family:var(--f-display);font-size:clamp(3rem,6vw,6.5rem);line-height:1.04;letter-spacing:-.03em;color:#fff;margin-bottom:20px;text-shadow:0 4px 40px rgba(0,0,0,.4)}
+.hero-h1 .line{display:block;overflow:hidden}
+.hero-h1 .word{display:inline-block;opacity:0;transform:translateY(100%)}
+.hero-h1 .ita{font-style:italic;color:#7de89e;text-shadow:0 0 60px rgba(75,184,112,.5)}
+.hero-sub{font-size:clamp(15px,1.6vw,17px);color:rgba(255,255,255,.62);line-height:1.8;margin-bottom:38px;max-width:560px;margin-left:auto;margin-right:auto;opacity:0;animation:fadeUp .7s .85s var(--ease-out) forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px;justify-content:center;opacity:0;animation:fadeUp .7s 1s var(--ease-out) forwards}
+.btn-hero-p{padding:15px 34px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-size:15px;font-weight:700;box-shadow:0 4px 24px rgba(27,107,58,.55),inset 0 1px 0 rgba(255,255,255,.2);transition:all .25s var(--ease-spring);display:flex;align-items:center;gap:9px;position:relative;overflow:hidden}
+.btn-hero-p::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
+.btn-hero-p:hover{background:var(--brand-l);transform:translateY(-3px);box-shadow:0 12px 36px rgba(27,107,58,.6)}
+.btn-hero-p:hover::before{opacity:1}
+.btn-hero-s{padding:15px 30px;border-radius:var(--rpill);border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.88);font-size:15px;font-weight:700;transition:all .25s var(--ease-spring);background:rgba(255,255,255,.08);backdrop-filter:blur(12px)}
+.btn-hero-s:hover{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.15);transform:translateY(-2px)}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;opacity:0;animation:fadeUp .7s 1.15s var(--ease-out) forwards}
+.hpill{padding:8px 18px;border-radius:var(--rpill);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);font-size:13px;font-weight:600;transition:all .2s var(--ease-spring);cursor:pointer;backdrop-filter:blur(8px)}
+.hpill:hover{border-color:rgba(125,232,158,.5);color:#7de89e;background:rgba(27,107,58,.25);transform:translateY(-2px)}
+
+/* ── scroll hint ── */
+.hero-scroll{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp .6s 2s var(--ease-out) forwards}
+.hero-scroll span{font-size:11px;color:rgba(255,255,255,.38);letter-spacing:.12em;text-transform:uppercase}
+.hero-scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,rgba(255,255,255,.4),transparent);animation:scrollPulse 2s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:.4;transform:scaleY(1)}50%{opacity:.9;transform:scaleY(1.2)}}
+
+/* ── bottom wave ── */
+.hero-wave{position:absolute;bottom:-1px;left:0;right:0;z-index:3}
+
+/* ═══════════════════════════════════════════
+   HOME — SEARCH CARD (dark glass)
+═══════════════════════════════════════════ */
+.search-card{position:relative;z-index:4;width:100%;max-width:580px;margin:32px auto 0;background:rgba(255,255,255,.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--r3);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1);padding:24px;opacity:0;animation:fadeUp .7s 1.3s var(--ease-out) forwards}
+@keyframes scIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.sc-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.sc-label::before{content:'';width:16px;height:1px;background:rgba(255,255,255,.3)}
+.sc-bar{display:flex;align-items:center;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--rpill);transition:border-color .15s,box-shadow .2s;position:relative}
+.sc-bar:focus-within{border-color:rgba(75,184,112,.6);box-shadow:0 0 0 3px rgba(27,107,58,.25)}
+.sc-bar-icon{padding:0 14px;color:rgba(255,255,255,.45);font-size:17px;flex-shrink:0;font-style:normal}
+.sc-bar-icon.spin{animation:spin .5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sc-inp{flex:1;padding:14px 0;background:transparent;color:#fff;font-size:15px;border:none;min-width:0}
+.sc-inp::placeholder{color:rgba(255,255,255,.38)}
+.sc-go{margin:5px;padding:9px 20px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-size:13px;font-weight:700;transition:all .2s var(--ease-spring);flex-shrink:0}
+.sc-go:hover{background:var(--brand-l);transform:scale(1.05)}
+.sc-dd{position:absolute;top:calc(100% + 8px);right:0;left:0;background:var(--card);border-radius:var(--r3);border:1px solid var(--line2);box-shadow:var(--s5);display:none;z-index:600;max-height:400px;overflow-y:auto}
+.sc-dd.on{display:block;animation:ddIn .22s var(--ease-out)}
+@keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.sc-dd::-webkit-scrollbar{width:3px}
+.sc-dd::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+/* dd header */
+.sdd-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:1}
+.sdd-head-txt{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.sdd-close{width:26px;height:26px;border-radius:var(--r1);display:grid;place-items:center;color:var(--muted);font-size:14px;transition:all .15s}
+.sdd-close:hover{background:var(--bg2);color:var(--ink)}
+/* dd row */
+.sdd-row{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:background .12s;position:relative}
+.sdd-row:hover,.sdd-row.kb{background:var(--bg2)}
+.sdd-thumb{width:48px;height:48px;border-radius:var(--r2);object-fit:cover;flex-shrink:0}
+.sdd-info{flex:1;min-width:0}
+.sdd-name{font-weight:700;font-size:14px;color:var(--ink);margin-bottom:3px}
+.sdd-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px}
+.sdd-chip{padding:2px 7px;border-radius:var(--rpill);background:var(--brand-mist);color:var(--brand);font-size:10px;font-weight:700;letter-spacing:.04em}
+.sdd-snip{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdd-arr{font-size:13px;color:var(--muted);flex-shrink:0;transition:transform .15s}
+.sdd-row:hover .sdd-arr{transform:translateX(-4px)}
+mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:inherit}
+/* dd empty */
+.sdd-empty{padding:44px 20px;text-align:center}
+.sdd-empty-ico{font-size:44px;opacity:.4;margin-bottom:12px}
+.sdd-empty-t{font-family:var(--f-display);font-size:1.5rem;color:var(--ink);margin-bottom:6px}
+.sdd-empty-d{font-size:13px;color:var(--muted);margin-bottom:16px}
+.sdd-sug-wrap{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.sdd-sug{padding:8px 18px;border-radius:var(--rpill);border:1.5px solid var(--line2);color:var(--brand);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
+.sdd-sug:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-2px)}
+/* sc tags */
+.sc-qtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.sc-qt{padding:5px 12px;border-radius:var(--rpill);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;background:rgba(255,255,255,.06);transition:all .15s;cursor:pointer}
+.sc-qt:hover{border-color:rgba(75,184,112,.5);color:#7de89e;background:rgba(27,107,58,.25)}
+/* sc stats */
+.sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid rgba(255,255,255,.1);margin-top:18px;padding-top:18px}
+.sc-stat{text-align:center}
+.sc-stat-n{font-family:var(--f-display);font-size:1.8rem;color:#fff;line-height:1}
+.sc-stat-l{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.04em}
+
+/* ═══════════════════════════════════════════
+   HOME — CATEGORIES STRIP
+═══════════════════════════════════════════ */
+.cats-section{padding:80px 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:44px}
+.sh-titles{}
+.sh-kicker{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sh-kicker::before{content:'';width:20px;height:1px;background:var(--brand)}
+.sh-title{font-family:var(--f-display);font-size:clamp(2rem,3.5vw,3.2rem);color:var(--ink);line-height:1.1;letter-spacing:-.025em}
+.sec-link{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--rpill);border:1.5px solid var(--line2);color:var(--brand);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
+.sec-link:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,107,58,.3)}
+
+.cat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.cat-card{position:relative;border-radius:var(--r4);overflow:hidden;height:320px;cursor:pointer;box-shadow:var(--s2);transition:transform .4s var(--ease-out),box-shadow .4s}
+.cat-card:hover{transform:translateY(-8px);box-shadow:var(--s4)}
+.cat-card-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.52) saturate(.85);transition:transform .7s var(--ease-out),filter .4s}
+.cat-card:hover .cat-card-bg{transform:scale(1.07);filter:brightness(.45) saturate(1.1)}
+.cat-card-veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(10,20,13,.92) 100%)}
+.cat-card-body{position:absolute;bottom:0;left:0;right:0;padding:28px;transition:transform .3s var(--ease-out)}
+.cat-card:hover .cat-card-body{transform:translateY(-5px)}
+.cat-card-icon{font-size:42px;display:block;margin-bottom:12px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));transition:transform .4s var(--ease-spring)}
+.cat-card:hover .cat-card-icon{transform:scale(1.15) rotate(-5deg)}
+.cat-card-name{font-family:var(--f-display);font-size:2rem;color:#fff;margin-bottom:8px}
+.cat-card-meta{display:flex;align-items:center;justify-content:space-between}
+.cat-card-pill{padding:4px 14px;border-radius:var(--rpill);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);font-size:13px;color:rgba(255,255,255,.75)}
+.cat-card-arr{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);display:grid;place-items:center;color:#fff;font-size:14px;transition:all .25s var(--ease-spring)}
+.cat-card:hover .cat-card-arr{background:var(--brand);border-color:var(--brand);transform:scale(1.1)}
+
+/* ═══════════════════════════════════════════
+   HOME — FEATURED
+═══════════════════════════════════════════ */
+.featured-section{padding:80px 0;background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+/* ═══════════════════════════════════════════
+   HOME — STATS
+═══════════════════════════════════════════ */
+.stats-section{background:var(--brand-d);padding:72px 0;position:relative;overflow:hidden}
+.stats-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 50% 50%,rgba(75,184,112,.1) 0%,transparent 70%)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);border-radius:var(--r4);overflow:hidden;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)}
+.stat-box{padding:40px 24px;text-align:center;position:relative;transition:background .2s}
+.stat-box:hover{background:rgba(255,255,255,.04)}
+.stat-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--brand-xl),var(--gold-l));transform:scaleX(0);transition:transform .4s var(--ease-spring)}
+.stat-box:hover::before{transform:scaleX(1)}
+.stat-ico{font-size:30px;display:block;margin-bottom:14px}
+.stat-n{font-family:var(--f-display);font-size:3rem;color:#fff;line-height:1;margin-bottom:8px}
+.stat-l{font-size:12px;color:rgba(255,255,255,.38);letter-spacing:.1em;text-transform:uppercase}
+
+/* ═══════════════════════════════════════════
+   PLANT CARDS
+═══════════════════════════════════════════ */
+.plants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px}
+.pcard{background:var(--card);border-radius:var(--r4);overflow:hidden;border:1px solid var(--line);box-shadow:var(--s1);cursor:pointer;position:relative;opacity:0;animation:cardIn .5s var(--ease-out) forwards;transition:transform .4s var(--ease-out),box-shadow .4s,border-color .2s}
+.pcard:hover{transform:translateY(-12px) scale(1.012);box-shadow:var(--s4),0 0 0 1px rgba(27,107,58,.12);border-color:var(--line2)}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.pcard-img{position:relative;height:220px;overflow:hidden}
+.pcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease-out)}
+.pcard:hover .pcard-img img{transform:scale(1.09)}
+.pcard-img-veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(10,20,13,.8) 100%);opacity:.7;transition:opacity .3s}
+.pcard:hover .pcard-img-veil{opacity:.95}
+.pcard-bgs{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:5px}
+.pcbg{padding:3px 9px;border-radius:var(--rpill);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(8px)}
+.pcbg-cat{background:rgba(27,107,58,.82);color:#fff}
+.pcbg-cat.fr{background:rgba(184,134,11,.85)}
+.pcbg-cat.or{background:rgba(160,60,100,.82)}
+.pcbg-hot{background:rgba(255,255,255,.9);color:var(--brand-d)}
+.pcard-fav{position:absolute;top:10px;left:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-size:15px;transition:all .2s var(--ease-spring);z-index:2}
+.pcard-fav:hover{transform:scale(1.2)}
+.pcard-fav.on{background:rgba(255,80,80,.2);border-color:rgba(255,80,80,.35);animation:hPop .35s var(--ease-spring)}
+@keyframes hPop{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+.pcard-hover-bar{position:absolute;bottom:0;left:0;right:0;padding:0 14px 12px;opacity:0;transform:translateY(8px);transition:all .25s var(--ease-out);pointer-events:none}
+.pcard:hover .pcard-hover-bar{opacity:1;transform:none;pointer-events:auto}
+.pcard-hover-inner{display:flex;gap:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);border-radius:var(--r2);padding:8px 12px}
+.phi{flex:1;text-align:center}
+.phi-v{font-size:12px;font-weight:700;color:#fff}
+.phi-l{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
+.pcard-body{padding:18px 20px 20px}
+.pcard-sci{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:4px;letter-spacing:.01em}
+.pcard-name{font-family:var(--f-display);font-size:1.45rem;color:var(--ink);line-height:1.2;margin-bottom:3px}
+.pcard-en{font-size:12px;color:var(--muted);margin-bottom:10px}
+.pcard-ov{font-size:13px;color:var(--slate);line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px}
+.pcard-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.ptag{padding:3px 9px;border-radius:var(--rpill);background:var(--bg2);color:var(--slate);border:1px solid var(--line);font-size:11px;font-weight:600}
+.pcard-ft{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line)}
+.pcard-yield{font-size:12px;color:var(--brand);font-weight:700}
+.pcard-diff{display:flex;gap:2px}
+.pcd-on{color:var(--brand-xl);font-size:12px}
+.pcd-off{color:var(--line2);font-size:12px}
+.btn-pcard{padding:7px 16px;border-radius:var(--rpill);background:var(--brand-d);color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;transition:all .2s var(--ease-spring)}
+.btn-pcard:hover{background:var(--brand);transform:scale(1.06);box-shadow:0 4px 14px rgba(27,107,58,.35)}
+
+/* skeleton */
+.sk{background:linear-gradient(100deg,var(--bg2) 30%,var(--bg3) 50%,var(--bg2) 70%);background-size:400%;animation:skA 1.6s ease-in-out infinite;border-radius:var(--r2)}
+@keyframes skA{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.sk-card{border-radius:var(--r4);overflow:hidden;border:1px solid var(--line);background:var(--card)}
+.sk-img{height:220px;border-radius:0}
+.sk-bd{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.sk-ln{height:12px}
+
+/* ═══════════════════════════════════════════
+   CATEGORY PAGE
+═══════════════════════════════════════════ */
+.cat-page-hero{position:relative;height:320px;overflow:hidden;display:flex;align-items:flex-end}
+.cph-img{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.45) saturate(.8);transition:transform 15s ease-in-out;transform:scale(1.05)}
+.cph-img.zoomed{transform:scale(1)}
+.cph-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,13,.3) 0%,rgba(10,20,13,.85) 100%)}
+.cph-body{position:relative;z-index:1;padding:32px 32px 36px;width:100%}
+.cph-back{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--rpill);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:rgba(255,255,255,.75);font-size:13px;font-weight:600;margin-bottom:20px;transition:all .2s;cursor:pointer;border:1px solid rgba(255,255,255,.18)}
+.cph-back:hover{background:rgba(255,255,255,.2);color:#fff}
+.cph-icon{font-size:48px;display:block;margin-bottom:12px}
+.cph-name{font-family:var(--f-display);font-size:3rem;color:#fff;margin-bottom:6px}
+.cph-desc{font-size:15px;color:rgba(255,255,255,.6);max-width:560px}
+
+.cat-page-content{padding:48px 0 80px}
+.cpg-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:36px}
+.cpg-toolbar-left{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cpg-title{font-size:18px;font-weight:700;color:var(--ink)}
+.cpg-count{font-size:13px;color:var(--muted);font-weight:600}
+.cpg-sort{-webkit-appearance:none;appearance:none;padding:8px 34px 8px 14px;border-radius:var(--r2);border:1.5px solid var(--line);background:var(--card);color:var(--ink2);font-family:var(--f-ui);font-size:13px;font-weight:600;transition:border-color .15s}
+.cpg-sort:hover,.cpg-sort:focus{border-color:var(--brand)}
+.cpg-sub-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.cpg-fc{padding:7px 16px;border-radius:var(--rpill);font-size:13px;font-weight:600;color:var(--slate);border:1.5px solid var(--line);background:transparent;transition:all .2s var(--ease-spring);cursor:pointer}
+.cpg-fc:hover{border-color:var(--line2);color:var(--ink)}
+.cpg-fc.on{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 4px 14px rgba(27,107,58,.3)}
+
+/* ═══════════════════════════════════════════
+   SEARCH PAGE
+═══════════════════════════════════════════ */
+.search-page{padding:60px 0 100px}
+.sp-bar-wrap{max-width:680px;margin:0 auto 48px;text-align:center}
+.sp-title{font-family:var(--f-display);font-size:2.8rem;color:var(--ink);margin-bottom:8px}
+.sp-sub{font-size:15px;color:var(--muted);margin-bottom:28px}
+.sp-bar{display:flex;align-items:center;background:var(--card);border:2px solid var(--line2);border-radius:var(--rpill);padding:4px 4px 4px 20px;box-shadow:var(--s2);transition:border-color .15s,box-shadow .2s}
+.sp-bar:focus-within{border-color:var(--brand);box-shadow:var(--sglow)}
+.sp-bar i{font-size:18px;color:var(--muted);flex-shrink:0;font-style:normal}
+.sp-bar-inp{flex:1;padding:11px 14px;background:transparent;color:var(--ink);font-size:16px;border:none;min-width:0}
+.sp-bar-inp::placeholder{color:var(--muted)}
+.sp-bar-btn{padding:11px 28px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-weight:700;font-size:14px;transition:all .2s var(--ease-spring);flex-shrink:0}
+.sp-bar-btn:hover{background:var(--brand-l);transform:scale(1.04)}
+.sp-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.sp-chip{padding:6px 16px;border-radius:var(--rpill);border:1px solid var(--line);color:var(--slate);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--card)}
+.sp-chip:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-pale)}
+.sp-results-area{max-width:920px;margin:0 auto}
+.sp-results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px}
+.sp-res-count{font-size:14px;color:var(--muted);font-weight:600}
+.sp-result-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--card);border-radius:var(--r3);border:1px solid var(--line);margin-bottom:12px;cursor:pointer;transition:all .2s var(--ease-spring);animation:riIn .3s var(--ease-out) both}
+@keyframes riIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.sp-result-item:hover{border-color:var(--line2);box-shadow:var(--s2);transform:translateX(-4px)}
+.sp-ri-img{width:72px;height:72px;border-radius:var(--r2);object-fit:cover;flex-shrink:0}
+.sp-ri-body{flex:1;min-width:0}
+.sp-ri-name{font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px}
+.sp-ri-fields{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.sp-ri-field{padding:2px 8px;border-radius:var(--rpill);background:var(--brand-mist);color:var(--brand);font-size:11px;font-weight:700}
+.sp-ri-snip{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-ri-score{flex-shrink:0;font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);padding:4px 10px;border-radius:var(--rpill)}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-bg{position:fixed;inset:0;z-index:700;display:none;align-items:flex-end;justify-content:center}
+@media(min-width:680px){.modal-bg{align-items:center;padding:24px}}
+.modal-bg.on{display:flex;animation:bgIn .28s ease forwards}
+@keyframes bgIn{from{opacity:0}to{opacity:1}}
+.modal-veil{position:absolute;inset:0;background:rgba(8,18,11,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.modal-box{position:relative;z-index:1;background:var(--bg);width:100%;max-width:960px;max-height:95svh;border-radius:var(--r4) var(--r4) 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--s5);animation:mboxUp .42s var(--ease-spring)}
+@media(min-width:680px){.modal-box{border-radius:var(--r4);max-height:90vh}}
+@keyframes mboxUp{from{transform:translateY(50px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-handle{width:32px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+@media(min-width:680px){.modal-handle{display:none}}
+.modal-close{position:absolute;top:14px;left:14px;width:36px;height:36px;border-radius:50%;background:rgba(10,20,13,.5);backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;font-size:16px;z-index:20;transition:all .2s var(--ease-spring)}
+.modal-close:hover{background:rgba(10,20,13,.8);transform:scale(1.12) rotate(90deg)}
+.modal-scroll{overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+/* modal hero */
+.mh{position:relative;height:260px;flex-shrink:0}
+.mh img{width:100%;height:100%;object-fit:cover}
+.mh-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,18,11,.1) 0%,rgba(8,18,11,.88) 100%)}
+.mh-info{position:absolute;bottom:20px;right:22px;left:58px;color:#fff}
+.mh-en{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px}
+.mh-name{font-family:var(--f-display);font-size:clamp(2rem,5vw,2.8rem);line-height:1.1}
+.mh-sci{font-style:italic;font-size:13px;color:rgba(255,255,255,.45);margin-top:4px}
+.mh-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mh-chip{padding:3px 10px;border-radius:var(--rpill);background:rgba(27,107,58,.3);border:1px solid rgba(27,107,58,.5);font-size:11px;color:rgba(255,255,255,.88);font-weight:700}
+/* modal quick */
+.mquick{padding:18px 22px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.mq{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--line);transition:border-color .15s}
+.mq:hover{border-color:var(--line2)}
+.mq-i{font-size:18px}
+.mq-lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.mq-v{font-size:13px;font-weight:700;color:var(--ink);margin-top:1px}
+/* modal actions */
+.mact{padding:14px 22px;display:flex;gap:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ma{display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
+.ma-p{background:var(--brand);color:#fff;flex:1;justify-content:center;box-shadow:0 4px 16px rgba(27,107,58,.3)}
+.ma-p:hover{background:var(--brand-l);transform:translateY(-2px)}
+.ma-p.fv{background:var(--red)}
+.ma-s{background:var(--bg2);color:var(--ink2);border:1px solid var(--line2)}
+.ma-s:hover{background:var(--bg3);transform:translateY(-1px)}
+/* modal tabs */
+.mtabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex-shrink:0;position:sticky;top:0;background:var(--bg);z-index:10}
+.mtabs::-webkit-scrollbar{display:none}
+.mt{flex-shrink:0;padding:13px 18px;font-size:13px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;cursor:pointer}
+.mt:hover{color:var(--ink)}
+.mt.on{color:var(--brand);border-bottom-color:var(--brand)}
+/* tab panels */
+.tp{display:none;padding:26px}
+.tp.on{display:block;animation:tpIn .28s var(--ease-out)}
+@keyframes tpIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.tp-ov{font-size:15px;line-height:1.85;color:var(--slate);border-right:3px solid var(--brand);padding-right:16px;margin-bottom:24px}
+.tp-h{font-family:var(--f-display);font-size:1.3rem;color:var(--ink);margin:20px 0 14px;display:flex;align-items:center;gap:10px}
+.tp-h::after{content:'';flex:1;height:1px;background:var(--line)}
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin:14px 0}
+.ic{padding:15px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .15s}
+.ic:hover{border-color:var(--line2);box-shadow:var(--s1)}
+.ic-i{font-size:22px;margin-bottom:7px;display:block}
+.ic-l{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:4px}
+.ic-v{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
+.ft-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.ft-tbl thead th{padding:10px 14px;text-align:right;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg2);border-bottom:2px solid var(--line2)}
+.ft-tbl tbody td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--ink);transition:background .12s}
+.ft-tbl tbody tr:hover td{background:var(--bg2)}
+.ft-tbl tbody tr:last-child td{border-bottom:none}
+.dis-card{border-radius:var(--r2);border:1px solid var(--line);overflow:hidden;margin-bottom:12px;transition:border-color .2s}
+.dis-card:hover{border-color:var(--line2)}
+.dis-card.خطير{border-right:4px solid var(--red)}
+.dis-card.متوسط{border-right:4px solid var(--orange)}
+.dis-card.خفيف{border-right:4px solid var(--green)}
+.dis-head{display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap}
+.dis-nm{font-weight:700;color:var(--ink)}
+.dis-pt{font-size:12px;color:var(--muted);font-style:italic;flex:1}
+.dis-sv{padding:3px 10px;border-radius:var(--rpill);font-size:11px;font-weight:700}
+.dis-sv.خطير{background:rgba(192,57,43,.1);color:var(--red)}
+.dis-sv.متوسط{background:rgba(230,126,34,.12);color:var(--orange)}
+.dis-sv.خفيف{background:rgba(39,174,96,.1);color:var(--green)}
+.dis-body{padding:4px 16px 14px;border-top:1px solid var(--line)}
+.dis-body p{font-size:13px;color:var(--slate);margin:5px 0;line-height:1.55}
+.dis-body strong{color:var(--ink)}
+.tl{display:flex;flex-direction:column;padding:4px 0}
+.tl-r{display:flex;gap:13px;align-items:flex-start;padding:7px 0;position:relative}
+.tl-r:not(:last-child)::after{content:'';position:absolute;right:11px;top:28px;bottom:0;width:2px;background:var(--line)}
+.tl-dot{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0;box-shadow:0 0 0 3px rgba(27,107,58,.15)}
+.tl-s{font-weight:700;color:var(--ink);font-size:14px}
+.tl-d{font-size:12px;color:var(--muted);margin-top:2px}
+.tip-list{display:flex;flex-direction:column;gap:9px}
+.tip-row{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .2s var(--ease-spring)}
+.tip-row:hover{border-color:var(--line2);transform:translateX(-4px)}
+.tip-n{width:27px;height:27px;border-radius:var(--r1);background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.tip-t{font-size:14px;color:var(--ink);line-height:1.6}
+.var-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin:12px 0}
+.var-c{padding:14px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .2s}
+.var-c:hover{border-color:var(--gold-l);box-shadow:0 0 0 1px rgba(184,134,11,.18)}
+.var-nm{font-weight:700;font-size:14px;color:var(--ink)}
+.var-m{font-size:11px;color:var(--muted);margin-top:3px}
+.var-y{font-size:12px;color:var(--brand);font-weight:700;margin-top:7px}
+.def-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin:12px 0}
+.def-c{padding:12px;background:var(--bg2);border-radius:var(--r2);border-right:3px solid var(--gold-l)}
+.def-e{font-weight:700;font-size:13px;color:var(--ink)}
+.def-s{font-size:12px;color:var(--slate);margin-top:4px;line-height:1.5}
+.nutri-g{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0}
+.nutri-r{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:var(--r1)}
+.nutri-k{font-size:13px;color:var(--slate)}
+.nutri-v{font-size:13px;font-weight:700;color:var(--ink)}
+.econ-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.econ-c{padding:16px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);text-align:center}
+.econ-ico{font-size:26px;display:block;margin-bottom:8px}
+.econ-v{font-weight:700;font-size:14px;color:var(--ink);margin-bottom:4px}
+.econ-l{font-size:11px;color:var(--muted)}
+.ptags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.ptag-btn{padding:5px 13px;border-radius:var(--rpill);background:var(--bg2);color:var(--slate);font-size:12px;font-weight:600;border:1px solid var(--line);transition:all .15s}
+.ptag-btn:hover{border-color:var(--line2);color:var(--ink)}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+.footer{background:var(--brand-d);padding:68px 0 0}
+.footer-grid{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px}
+.flogo{font-family:var(--f-display);font-size:26px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.footer-brand p{font-size:14px;color:rgba(255,255,255,.38);line-height:1.8;max-width:280px}
+.footer h4{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px}
+.footer a{display:block;font-size:14px;color:rgba(255,255,255,.45);margin-bottom:9px;transition:color .15s}
+.footer a:hover{color:var(--brand-xl)}
+.footer-bot{border-top:1px solid rgba(255,255,255,.06);padding:20px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-bot span{font-size:12px;color:rgba(255,255,255,.22)}
+
+/* ═══════════════════════════════════════════
+   LOAD MORE + SCROLL TOP
+═══════════════════════════════════════════ */
+.lm-wrap{text-align:center;margin-top:48px}
+.btn-lm{padding:14px 48px;border-radius:var(--rpill);background:transparent;color:var(--brand);border:2px solid var(--line2);font-size:14px;font-weight:700;transition:all .25s var(--ease-spring);letter-spacing:.04em}
+.btn-lm:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-3px);box-shadow:0 12px 32px rgba(27,107,58,.35)}
+#stk{position:fixed;bottom:26px;left:20px;width:44px;height:44px;border-radius:50%;background:var(--brand-d);color:#fff;font-size:18px;display:grid;place-items:center;box-shadow:var(--s3);opacity:0;transform:scale(0) translateY(20px);transition:all .25s var(--ease-spring);z-index:200;border:1px solid rgba(255,255,255,.08)}
+#stk.on{opacity:1;transform:scale(1) translateY(0)}
+#stk:hover{background:var(--brand);transform:scale(1.12) translateY(0)}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+#tw{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:8500;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
+.toast{padding:11px 22px;border-radius:var(--rpill);font-size:13px;font-weight:700;pointer-events:auto;animation:tIn .4s var(--ease-spring);box-shadow:var(--s3);display:flex;align-items:center;gap:8px}
+.toast.ok{background:var(--brand);color:#fff}
+.toast.err{background:var(--red);color:#fff}
+.toast.inf{background:var(--brand-d);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.1)}
+@keyframes tIn{from{transform:translateY(-14px) scale(.88);opacity:0}to{transform:none;opacity:1}}
+
+/* ═══════════════════════════════════════════
+   AUTH MODAL
+═══════════════════════════════════════════ */
+.auth-bg{position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+.auth-bg.on{display:flex;animation:bgIn .25s ease}
+.auth-veil{position:absolute;inset:0;background:rgba(8,18,11,.82);backdrop-filter:blur(14px)}
+.auth-box{position:relative;z-index:1;background:var(--bg);border-radius:var(--r4);width:100%;max-width:440px;overflow:hidden;box-shadow:var(--s5);animation:mboxUp .4s var(--ease-spring)}
+.auth-top{background:var(--brand-d);padding:36px 28px 32px;text-align:center;position:relative}
+.auth-top-icon{font-size:48px;display:block;margin-bottom:14px}
+.auth-top-t{font-family:var(--f-display);font-size:1.9rem;color:#fff}
+.auth-top-s{font-size:13px;color:rgba(255,255,255,.42);margin-top:4px}
+.auth-close{position:absolute;top:14px;left:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);display:grid;place-items:center;font-size:15px;transition:all .15s}
+.auth-close:hover{background:rgba(255,255,255,.2);color:#fff}
+.auth-body{padding:28px}
+.auth-tabs{display:flex;background:var(--bg2);border-radius:var(--rpill);padding:4px;gap:4px;border:1px solid var(--line);margin-bottom:24px}
+.at{flex:1;padding:9px;border-radius:var(--rpill);font-size:13px;font-weight:700;color:var(--muted);transition:all .2s}
+.at.on{background:var(--card);color:var(--brand);box-shadow:var(--s1)}
+.aform{display:flex;flex-direction:column;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:700;color:var(--brand);letter-spacing:.06em;text-transform:uppercase}
+.fg input,.fg select{padding:12px 14px;border-radius:var(--r2);border:1.5px solid var(--line);background:var(--bg2);color:var(--ink);font-size:16px;transition:border-color .15s,box-shadow .2s}
+.fg input:focus,.fg select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(27,107,58,.12)}
+.str-bar{height:3px;background:var(--line);border-radius:2px;margin-top:5px;overflow:hidden}
+.str-f{height:100%;width:0;border-radius:2px;transition:width .2s,background .2s}
+.btn-sub{padding:13px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-weight:700;font-size:15px;transition:all .2s var(--ease-spring)}
+.btn-sub:hover{background:var(--brand-l);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,107,58,.35)}
+.adiv{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
+.adiv::before,.adiv::after{content:'';flex:1;height:1px;background:var(--line)}
+.btn-goo{padding:11px;border-radius:var(--rpill);background:var(--bg2);color:var(--ink);font-weight:700;font-size:14px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s var(--ease-spring)}
+.btn-goo:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:var(--s2)}
+/* ripple */
+.rip{position:absolute;border-radius:50%;background:rgba(27,107,58,.18);animation:ripA .7s linear;pointer-events:none}
+@keyframes ripA{0%{transform:scale(0);opacity:.7}100%{transform:scale(4);opacity:0}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .hp3,.hp4{display:none}
+  .hp1{width:160px;height:210px;right:2%}
+  .hp2{width:130px;height:170px;right:18%;bottom:30%}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:768px){
+  .cat-cards{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr}
+  .econ-g{grid-template-columns:1fr}
+  .ig{grid-template-columns:1fr 1fr}
+  .mact{flex-direction:column}
+  .ma-p{flex:none}
+}
+@media(max-width:500px){
+  .plants-grid{grid-template-columns:1fr}
+  .hero-h1{font-size:2.8rem}
+  .nutri-g{grid-template-columns:1fr}
+  .def-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur-r"></div>
+
+<!-- PROGRESS -->
+<div id="pgbar"></div>
+
+<!-- LOADER -->
+<div id="ldr">
+  <div class="l-logo">Nabtex</div>
+  <div class="l-tag">نبتيكس — الموسوعة الزراعية</div>
+  <div class="l-line"></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-bg"></div>
+  <div class="nav-inner">
+    <a href="#" class="logo" onclick="showPage('home');return false">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/>
+          <path d="M5 20c2-3 5-5 7-8"/>
+        </svg>
+      </div>
+      <span class="logo-name"><span>N</span>abtex</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nl active" id="nl-home" onclick="showPage('home');return false">الرئيسية</a>
+      <a href="#" class="nl" id="nl-veg" onclick="showCatPage('vegetables');return false">خضروات</a>
+      <a href="#" class="nl" id="nl-fr" onclick="showCatPage('fruits');return false">فاكهة</a>
+      <a href="#" class="nl" id="nl-or" onclick="showCatPage('ornamental');return false">زينة</a>
+      <a href="#" class="nl" id="nl-srch" onclick="showPage('search');return false">بحث</a>
+    </div>
+    <div class="nav-actions">
+      <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر">🌙</button>
+      <button class="btn-nav-o" onclick="openAuth('login')">دخول</button>
+      <button class="btn-nav-f" onclick="openAuth('reg')">ابدأ مجاناً</button>
+      <button class="ham" id="ham">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="mob-menu" id="mob-menu">
+    <a href="#" class="nl" onclick="showPage('home');closeMob()">الرئيسية</a>
+    <a href="#" class="nl" onclick="showCatPage('vegetables');closeMob()">خضروات</a>
+    <a href="#" class="nl" onclick="showCatPage('fruits');closeMob()">فاكهة</a>
+    <a href="#" class="nl" onclick="showCatPage('ornamental');closeMob()">زينة</a>
+    <a href="#" class="nl" onclick="showPage('search');closeMob()">بحث</a>
+    <a href="#" class="nl" onclick="openAuth('login');closeMob()">تسجيل الدخول</a>
+    <a href="#" class="nl" onclick="openAuth('reg');closeMob()">إنشاء حساب</a>
+  </div>
+</nav>
+
+<!-- ══════════ PAGE: HOME ══════════ -->
+<div class="page active" id="pg-home">
+
+  <!-- ════ HERO — CINEMATIC ════ -->
+  <section class="hero" id="hero-sec">
+
+    <!-- background layers -->
+    <div class="hero-bg-img"></div>
+    <div class="hero-noise"></div>
+    <canvas class="hero-canvas" id="hero-canvas"></canvas>
+    <div class="hero-orb1"></div>
+    <div class="hero-orb2"></div>
+    <div class="hero-orb3"></div>
+    <div class="hero-veil-t"></div>
+    <div class="hero-veil-b"></div>
+
+    <!-- floating plant images -->
+    <div class="hero-plants">
+      <div class="hp hp1"><img src="https://images.unsplash.com/photo-1558818498-28c1e002b655?w=400&q=80" alt="طماطم"></div>
+      <div class="hp hp2"><img src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400&q=80" alt="مانجو"></div>
+      <div class="hp hp3"><img src="https://images.unsplash.com/photo-1548460519-c0d3d2eb0f37?w=400&q=80" alt="ورد"></div>
+      <div class="hp hp4"><img src="https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=80" alt="فراولة"></div>
+    </div>
+
+    <!-- main content -->
+    <div class="hero-content">
+      <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>الموسوعة الزراعية الأولى عربياً</div>
+
+      <h1 class="hero-h1">
+        <span class="line"><span class="word">علم الزراعة</span></span>
+        <span class="line"><span class="word">في يد <span class="ita">كل مزارع</span></span></span>
+      </h1>
+
+      <p class="hero-sub">موسوعة متكاملة لأكثر من 150 نبات — تسميد، ري، أمراض، حصاد، واقتصاديات.<br>بيانات مستندة إلى FAO ووزارة الزراعة المصرية.</p>
+
+      <div class="hero-ctas">
+        <button class="btn-hero-p" onclick="showPage('search')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          ابحث الآن
+        </button>
+        <button class="btn-hero-s" onclick="showCatPage('vegetables')">🥦 تصفح الخضروات</button>
+      </div>
+
+      <div class="hero-pills">
+        <button class="hpill" onclick="showPage('search');setTimeout(()=>doFullSearch('تسميد البطاطس'),50)">💊 تسميد البطاطس</button>
+        <button class="hpill" onclick="showPage('search');setTimeout(()=>doFullSearch('أمراض الطماطم'),50)">🦠 أمراض الطماطم</button>
+        <button class="hpill" onclick="showPage('search');setTimeout(()=>doFullSearch('نبات داخلي'),50)">🏠 نباتات داخلية</button>
+        <button class="hpill" onclick="showPage('search');setTimeout(()=>doFullSearch('للتصدير'),50)">✈️ للتصدير</button>
+      </div>
+
+      <!-- Search Card -->
+      <div class="search-card" id="hero-sc">
+        <div class="sc-label">ابحث في الموسوعة</div>
+        <div style="position:relative">
+          <div class="sc-bar">
+            <i id="sc-ico" style="font-style:normal;padding:0 14px;color:rgba(255,255,255,.4);font-size:17px">🔍</i>
+            <input class="sc-inp" id="sc-inp" type="text" placeholder="تسميد، أمراض، ري، حصاد..." autocomplete="off">
+            <button class="sc-go" onclick="heroSearch()">بحث</button>
+          </div>
+          <div class="sc-dd" id="sc-dd"></div>
+        </div>
+        <div class="sc-qtags">
+          <button class="sc-qt" onclick="heroQS('ري تنقيط')">💧 ري تنقيط</button>
+          <button class="sc-qt" onclick="heroQS('بياض دقيقي')">🦠 بياض دقيقي</button>
+          <button class="sc-qt" onclick="heroQS('للتصدير')">✈️ للتصدير</button>
+          <button class="sc-qt" onclick="heroQS('سهل')">⭐ سهل الزراعة</button>
+          <button class="sc-qt" onclick="heroQS('داخلي')">🏠 داخلي</button>
+        </div>
+        <div class="sc-stats" id="sc-stats"></div>
+      </div>
+    </div><!-- .hero-content -->
+
+    <!-- scroll hint -->
+    <div class="hero-scroll">
+      <span>اكتشف</span>
+      <div class="hero-scroll-line"></div>
+    </div>
+
+    <!-- wave -->
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style="width:100%;height:70px;display:block">
+        <path d="M0,48 C240,16 480,72 720,40 C960,8 1200,64 1440,32 L1440,80 L0,80Z" fill="var(--bg)"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="cats-section">
+    <div class="W">
+      <div class="sec-head">
+        <div class="sh-titles">
+          <div class="sh-kicker">تصفح</div>
+          <h2 class="sh-title">اختر القسم</h2>
+        </div>
+      </div>
+      <div class="cat-cards">
+        <div class="cat-card" onclick="showCatPage('vegetables')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🥦</span>
+            <div class="cat-card-name">الخضروات</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-veg">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+        <div class="cat-card" onclick="showCatPage('fruits')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🍎</span>
+            <div class="cat-card-name">الفاكهة</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-fr">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+        <div class="cat-card" onclick="showCatPage('ornamental')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🌸</span>
+            <div class="cat-card-name">نباتات الزينة</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-or">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured -->
+  <section class="featured-section">
+    <div class="W">
+      <div class="sec-head">
+        <div class="sh-titles">
+          <div class="sh-kicker">الأكثر طلباً</div>
+          <h2 class="sh-title">نباتات مميزة</h2>
+        </div>
+        <button class="sec-link" onclick="showPage('search')">عرض الكل ←</button>
+      </div>
+      <div class="plants-grid" id="home-featured"></div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-section">
+    <div class="W">
+      <div class="stats-row" id="home-stats"></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="W">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="flogo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-xl)" stroke-width="2" stroke-linecap="round" width="26"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/></svg>
+            Nabtex
+          </div>
+          <p>موسوعة زراعية احترافية للمزارع المصري والعربي. بيانات موثقة من FAO ووزارة الزراعة المصرية.</p>
+        </div>
+        <div>
+          <h4>الأقسام</h4>
+          <a href="#" onclick="showCatPage('vegetables');return false">الخضروات</a>
+          <a href="#" onclick="showCatPage('fruits');return false">الفاكهة</a>
+          <a href="#" onclick="showCatPage('ornamental');return false">نباتات الزينة</a>
+        </div>
+        <div>
+          <h4>بحث سريع</h4>
+          <a href="#" onclick="showPage('search');doFullSearch('تسميد');return false">التسميد</a>
+          <a href="#" onclick="showPage('search');doFullSearch('أمراض');return false">الأمراض</a>
+          <a href="#" onclick="showPage('search');doFullSearch('ري');return false">الري</a>
+          <a href="#" onclick="showPage('search');doFullSearch('حصاد');return false">الحصاد</a>
+        </div>
+        <div>
+          <h4>المصادر</h4>
+          <a href="#">وزارة الزراعة المصرية</a>
+          <a href="#">FAO</a>
+          <a href="#">مركز البحوث الزراعية</a>
+        </div>
+      </div>
+      <div class="footer-bot">
+        <span>© 2024 Nabtex — نبتيكس. جميع الحقوق محفوظة.</span>
+        <span>صُنع بـ ❤️ للمزارع المصري</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ══════════ PAGE: CATEGORY ══════════ -->
+<div class="page" id="pg-cat">
+  <div class="cat-page-hero" id="cph-wrap">
+    <div class="cph-img" id="cph-img"></div>
+    <div class="cph-veil"></div>
+    <div class="cph-body W">
+      <button class="cph-back" onclick="showPage('home')">← العودة للرئيسية</button>
+      <span class="cph-icon" id="cph-icon"></span>
+      <div class="cph-name" id="cph-name"></div>
+      <div class="cph-desc" id="cph-desc"></div>
+    </div>
+  </div>
+  <section class="cat-page-content">
+    <div class="W">
+      <div class="cpg-toolbar">
+        <div class="cpg-toolbar-left">
+          <div class="cpg-title" id="cpt-title"></div>
+          <span class="cpg-count" id="cpt-count"></span>
+        </div>
+        <select class="cpg-sort" id="cpt-sort" onchange="App.catSort=this.value;App.renderCatGrid()">
+          <option value="pop">الأشهر أولاً</option>
+          <option value="az">الاسم أ–ي</option>
+          <option value="easy">الأسهل</option>
+          <option value="yield">الأعلى إنتاجاً</option>
+        </select>
+      </div>
+      <div class="cpg-sub-filter" id="cpg-subs"></div>
+      <div class="plants-grid" id="cat-grid"></div>
+      <div class="lm-wrap" id="cat-lm"><button class="btn-lm" onclick="App.loadMoreCat()">تحميل المزيد ↓</button></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════ PAGE: SEARCH ══════════ -->
+<div class="page" id="pg-search">
+  <section class="search-page">
+    <div class="W">
+      <div class="sp-bar-wrap">
+        <h1 class="sp-title">البحث الذكي</h1>
+        <p class="sp-sub">ابحث في أكثر من 150 نبات — تسميد، ري، أمراض، حصاد، اقتصاديات</p>
+        <div class="sp-bar">
+          <i id="sp-ico">🔍</i>
+          <input class="sp-bar-inp" id="sp-inp" type="text" placeholder="ابحث عن أي شيء... تسميد البطاطس، أمراض الطماطم، نبات للصحراء..." autocomplete="off">
+          <button class="sp-bar-btn" onclick="doFullSearch()">بحث</button>
+        </div>
+        <div class="sp-chips">
+          <button class="sp-chip" onclick="doFullSearch('تسميد')">💊 تسميد</button>
+          <button class="sp-chip" onclick="doFullSearch('ري')">💧 ري</button>
+          <button class="sp-chip" onclick="doFullSearch('أمراض')">🦠 أمراض</button>
+          <button class="sp-chip" onclick="doFullSearch('حصاد')">🌾 حصاد</button>
+          <button class="sp-chip" onclick="doFullSearch('للتصدير')">✈️ للتصدير</button>
+          <button class="sp-chip" onclick="doFullSearch('نبات داخلي')">🏠 نباتات داخلية</button>
+          <button class="sp-chip" onclick="doFullSearch('سهل الزراعة')">⭐ سهل</button>
+          <button class="sp-chip" onclick="doFullSearch('مقاوم الجفاف')">🌵 مقاوم الجفاف</button>
+        </div>
+      </div>
+      <div class="sp-results-area" id="sp-results">
+        <!-- results here -->
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════ PLANT MODAL ══════════ -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-veil" onclick="closeModal()"></div>
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-scroll" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="auth-bg" id="auth-bg">
+  <div class="auth-veil" onclick="closeAuth()"></div>
+  <div class="auth-box">
+    <div class="auth-top">
+      <button class="auth-close" onclick="closeAuth()">✕</button>
+      <span class="auth-top-icon">🌿</span>
+      <div class="auth-top-t">Nabtex</div>
+      <div class="auth-top-s">سجّل دخولك للوصول لكامل الميزات</div>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="at on" id="at-l" onclick="swAuth('login')">دخول</button>
+        <button class="at" id="at-r" onclick="swAuth('reg')">حساب جديد</button>
+      </div>
+      <form class="aform" id="af-l" onsubmit="hLogin(event)">
+        <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
+        <div class="fg"><label>كلمة المرور</label><input type="password" required placeholder="••••••••"></div>
+        <button type="submit" class="btn-sub">تسجيل الدخول</button>
+        <div class="adiv">أو</div>
+        <button type="button" class="btn-goo" onclick="showToast('⚙️ أضف Firebase config لتفعيل Google','inf')">
+          <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
+          متابعة بـ Google
+        </button>
+      </form>
+      <form class="aform" id="af-r" style="display:none" onsubmit="hReg(event)">
+        <div class="fg"><label>الاسم الكامل</label><input type="text" required minlength="3"></div>
+        <div class="fg"><label>البريد الإلكتروني</label><input type="email" required></div>
+        <div class="fg"><label>كلمة المرور</label><input type="password" required minlength="8" oninput="chkStr(this.value)"><div class="str-bar"><div class="str-f" id="str-f"></div></div></div>
+        <div class="fg"><label>دورك</label><select><option>🌾 مزارع</option><option>👨‍🔬 خبير زراعي</option><option>🎓 طالب</option><option>🏢 شركة</option></select></div>
+        <button type="submit" class="btn-sub">إنشاء الحساب</button>
+        <div class="adiv">أو</div>
+        <button type="button" class="btn-goo" onclick="showToast('⚙️ أضف Firebase config','inf')">
+          <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
+          التسجيل بـ Google
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="tw"></div>
+<button id="stk" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ═════════════════════════════════════════
+// DATABASE — Accurate plant images
+// ═════════════════════════════════════════
+const DB = [
+  // ─── VEGETABLES ───
+  {id:"v1",name:"طماطم",nameEn:"Tomato",nameSci:"Solanum lycopersicum",cat:"vegetables",sub:"ثمرية",
+   img:"https://images.unsplash.com/photo-1558818498-28c1e002b655?w=600&q=80",
+   tags:["صيفي","تصدير","شائع"],diff:3,pop:98,featured:true,export:true,
+   ov:"الطماطم المحصول الأول في مصر إنتاجاً وتصديراً. أكثر من 8 ملايين طن سنوياً تُصدَّر لأوروبا والدول العربية. تُزرع في 27 محافظة وهي ركيزة الأمن الغذائي المصري.",
+   soil:{type:"طينية رملية",ph:6.5,drain:"جيد جداً"},
+   climate:{tmin:10,tmax:35,tideal:"20–28°م",humid:"45–65%",sun:"8 ساعات"},
+   regions:["الإسكندرية","البحيرة","الشرقية","الدقهلية","الفيوم"],
+   plant:{s1:{name:"شتوية",months:"أكتوبر–نوفمبر"},s2:{name:"صيفية",months:"فبراير–مارس"},best:"الشتوية"},
+   space:{rows:100,plants:50,depth:1.5,ppf:2800},
+   seeds:{qty:"150–200 جم/فدان",germ:"7–10 أيام",age:"35–45 يوم"},
+   stages:[{s:"إنبات",d:"7–10"},{s:"شتلة",d:"35–45"},{s:"نمو خضري",d:"30–40"},{s:"إزهار",d:"20–25"},{s:"عقد ثمار",d:"15–20"},{s:"نضج",d:"20–30"}],
+   period:"90–120 يوم",yield:"15–25 طن/فدان",
+   irr:{method:"تنقيط أو خطوط",winter:"كل 4–5 أيام",summer:"كل 1–2 يوم",flower:"كل 2–3 أيام",total:"4500–5500 م³/موسم",crit:["الإزهار – ري منتظم يمنع تساقط الأزهار","عقد الثمار – لا انقطاع"],stop:"7–10 أيام"},
+   fert:{pre:"20–25 م³ سماد بلدي",sched:[{t:"عند الشتل",tp:"N",qty:"30 وحدة",m:"أرضي",p:"يوريا 46%"},{t:"أسبوع 3",tp:"N+K",qty:"30N+30K",m:"أرضي",p:"نترات البوتاسيوم"},{t:"الإزهار",tp:"P+K",qty:"20P+40K",m:"ورقي",p:"MKP"},{t:"عقد ثمار",tp:"Ca+B",qty:"2كجم/100لتر",m:"ورقي",p:"كالسيوم بورون"}],
+    total:{N:"100–120",P:"50–60",K:"80–100",Ca:"20–30 كجم"},
+    def:{N:"اصفرار الأوراق القديمة",K:"احتراق حواف الأوراق",Ca:"تعفن طرف الثمرة"}},
+   diseases:[{name:"اللفحة المبكرة",sci:"Alternaria solani",type:"فطري",symp:{e:"بقع بنية صغيرة",a:"حلقات متحدة المركز"},prev:["بذور معتمدة","تجنب الري المسائي"],treat:{chem:[{p:"مانكوزيب 80%",d:"2.5 جم/لتر",int:"كل 7 أيام"}]},sev:"متوسط"},
+    {name:"فيروس TYLCV",sci:"TYLCV Virus",type:"فيروسي",symp:{e:"اصفرار وتجعد الأوراق",a:"تقزم النبات"},prev:["مكافحة الذبابة البيضاء","أصناف مقاومة"],treat:{chem:[{p:"إيمداكلوبريد",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"خطير"}],
+   pests:[{name:"التربس",type:"حشري",damage:"يمتص العصارة وينقل الفيروسات",treat:"أبامكتين 1سم/لتر",sev:"عالي"}],
+   pest:["أبامكتين","كونفيدور","مانكوزيب","ريدوميل جولد"],
+   harvest:{signs:["اللون الأحمر 70–80%","تليين خفيف"],method:"يدوي أو ميكانيكي",time:"الصباح الباكر",intv:"كل 3–5 أيام",post:{temp:"12–15°م",life:"2–3 أسابيع",pack:"صناديق كرتون",grade:"قطر 47مم+"}},
+   nutri:{p100:{"السعرات":"18 كيلوكالوري","الماء":"94.5 جم","البروتين":"0.9 جم","الكربوهيدرات":"3.9 جم"},ben:["يقلل خطر السرطان","يحمي القلب","مضاد أكسدة"]},
+   econ:{costs:"8000–12000 جنيه/فدان",rev:"30,000–150,000 جنيه",profit:"22,000–138,000 جنيه",best:"نوفمبر–يناير",markets:["إيطاليا","هولندا","ألمانيا"]},
+   vars:[{name:"Castle Rock F1",co:"Seminis",y:"25–35 طن",for:"تصدير"},{name:"بلدي أحمر",co:"محلي",y:"12–18 طن",for:"محلي"}],
+   tips:["التقليم الجانبي يزيد حجم الثمار 30%","الكالسيوم الورقي كل أسبوعين يمنع تعفن الطرف","المصائد الصفراء تقلل الحشرات الناقلة","الري الصباحي يمنع الأمراض الفطرية"]},
+
+  {id:"v2",name:"بطاطس",nameEn:"Potato",nameSci:"Solanum tuberosum",cat:"vegetables",sub:"درنية",
+   img:"https://images.unsplash.com/photo-1508313880080-c4bef0730395?w=600&q=80",
+   tags:["شتوي","تصدير","غذاء رئيسي"],diff:3,pop:95,featured:true,export:true,
+   ov:"مصر من أكبر مصدري البطاطس عالمياً بأكثر من مليون طن سنوياً. تُصدَّر لهولندا وبريطانيا والكويت. تُزرع في موسمين وإنتاجيتها عالية.",
+   soil:{type:"رملية خفيفة",ph:6,drain:"ممتاز"},climate:{tmin:7,tmax:30,tideal:"15–22°م",humid:"60–75%",sun:"6–8 ساعات"},
+   regions:["المنوفية","البحيرة","الشرقية","الإسماعيلية"],
+   plant:{s1:{name:"الأول",months:"أغسطس–سبتمبر"},s2:{name:"الثاني",months:"ديسمبر–يناير"},best:"الأول"},
+   space:{rows:75,plants:25,depth:10,ppf:6400},seeds:{qty:"1.5–2 طن/فدان درنات",germ:"14–21 يوم",age:"مباشر"},
+   stages:[{s:"إنبات",d:"14–21"},{s:"نمو خضري",d:"30–45"},{s:"تكوين درنات",d:"30–40"},{s:"تكبير",d:"30–40"},{s:"نضج",d:"15–20"}],
+   period:"90–120 يوم",yield:"8–15 طن/فدان",
+   irr:{method:"تنقيط أو رش",winter:"كل 5–7 أيام",summer:"كل 3–4 أيام",flower:"كل 3–4 أيام",total:"3500–4500 م³/موسم",crit:["تكوين الدرنات – ري منتظم حرج"],stop:"3 أسابيع"},
+   fert:{pre:"15–20 م³ سماد بلدي",sched:[{t:"قبل الزراعة",tp:"P",qty:"150 كجم",m:"أرضي",p:"سوبر فوسفات 15%"},{t:"الزراعة",tp:"N",qty:"40 وحدة",m:"أرضي",p:"نترات نشادر"},{t:"أسبوع 4–5",tp:"N+K",qty:"40N+60K",m:"أرضي",p:"نترات البوتاسيوم"},{t:"تكوين درنات",tp:"K",qty:"50 وحدة",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"120–150",P:"60–80",K:"120–150"},def:{N:"اصفرار أوراق سفلية",K:"احتراق الحواف",Mg:"اصفرار بين العروق"}},
+   diseases:[{name:"اللفحة المتأخرة",sci:"Phytophthora infestans",type:"فطري",symp:{e:"بقع مائية",a:"تعفن سريع"},prev:["أصناف مقاومة","رش وقائي"],treat:{chem:[{p:"ريدوميل جولد",d:"2.5 جم/لتر",int:"كل 7 أيام"}]},sev:"خطير"}],
+   pests:[{name:"حفار الدرنات",type:"حشري",damage:"أنفاق تخفض الجودة",treat:"فورس جرانيول",sev:"عالي"}],
+   pest:["ريدوميل جولد","أكروبات","فورس جرانيول"],
+   harvest:{signs:["اصفرار 70% الأوراق","سهولة انفصال القشرة"],method:"آلي أو يدوي",time:"الصباح",intv:"دفعة واحدة",post:{temp:"4–8°م",life:"3–6 أشهر",pack:"أكياس شبك",grade:"قطر 35–85مم"}},
+   nutri:{p100:{"السعرات":"77 كيلوكالوري","الكربوهيدرات":"17.5 جم","البروتين":"2 جم","الألياف":"2.2 جم"},ben:["مصدر طاقة ممتاز","يدعم القلب","غني بمضادات الأكسدة"]},
+   econ:{costs:"10000–15000 جنيه/فدان",rev:"12,000–60,000 جنيه",profit:"2,000–45,000 جنيه",best:"مارس–مايو",markets:["هولندا","بريطانيا","الكويت"]},
+   vars:[{name:"سبونتا",co:"هولندي",y:"12–18 طن",for:"تصدير"},{name:"ديامانت",co:"هولندي",y:"10–15 طن",for:"محلي"}],
+   tips:["استخدام تقاوٍ معتمدة إلزامي","مسافة 75×25 سم للإنتاج المثالي","قطع الجزء العلوي قبل الحصاد بأسبوعين يقسي القشرة","مراقبة اللفحة في الطقس الرطب البارد"]},
+
+  {id:"v3",name:"خيار",nameEn:"Cucumber",nameSci:"Cucumis sativus",cat:"vegetables",sub:"ثمرية",
+   img:"https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=600&q=80",
+   tags:["صيفي","سريع","مربح"],diff:2,pop:88,featured:true,export:false,
+   ov:"الخيار من أسرع الخضروات دورةً إنتاجية — يُحصد خلال 55–70 يوماً من الزراعة. طلبه مرتفع طوال العام وإنتاجه مستمر لأشهر عدة.",
+   soil:{type:"طينية رملية خفيفة",ph:6.5,drain:"جيد"},climate:{tmin:15,tmax:38,tideal:"25–32°م",humid:"50–70%",sun:"8 ساعات"},
+   regions:["الإسماعيلية","الشرقية","الدقهلية","البحيرة"],
+   plant:{s1:{name:"صيفي",months:"فبراير–مارس"},s2:{name:"نيلي",months:"يوليو–أغسطس"},best:"الصيفي"},
+   space:{rows:100,plants:50,depth:2,ppf:2600},seeds:{qty:"600–800 جم/فدان",germ:"4–7 أيام",age:"20–25 يوم أو مباشر"},
+   stages:[{s:"إنبات",d:"4–7"},{s:"نمو خضري",d:"20–25"},{s:"إزهار",d:"10–15"},{s:"عقد",d:"10–15"},{s:"حصاد مستمر",d:"30–50"}],
+   period:"55–70 يوم",yield:"6–12 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 3–4 أيام",summer:"كل 1–2 يوم",flower:"كل 2 أيام",total:"3000–4000 م³/موسم",crit:["تكوين الثمار – ري منتظم يمنع المرارة"],stop:"3–4 أيام"},
+   fert:{pre:"15 م³ سماد بلدي",sched:[{t:"الزراعة",tp:"N",qty:"25 وحدة",m:"أرضي",p:"يوريا"},{t:"أسبوع 3",tp:"NPK",qty:"20-20-20",m:"تقطير",p:"NPK مركب"},{t:"الإزهار",tp:"P+K",qty:"15P+30K",m:"ورقي",p:"MKP"},{t:"عقد ثمار",tp:"K+Ca",qty:"30K+1Ca",m:"تقطير",p:"نترات الكالسيوم"}],
+    total:{N:"80–100",P:"40–50",K:"60–80"},def:{N:"اصفرار عام",Ca:"تعفن طرف الثمرة"}},
+   diseases:[{name:"البياض الزغبي",sci:"Pseudoperonospora cubensis",type:"فطري",symp:{e:"بقع صفراء زاوية",a:"نمو رمادي تحت الأوراق"},prev:["تهوية جيدة","تجنب الرطوبة العالية"],treat:{chem:[{p:"ريدوميل جولد",d:"2.5 جم/لتر",int:"كل 7 أيام"}]},sev:"خطير"},
+    {name:"البياض الدقيقي",sci:"Sphaerotheca fuliginea",type:"فطري",symp:{e:"بودرة بيضاء على الأوراق",a:"اصفرار وجفاف"},prev:["تهوية"],treat:{chem:[{p:"تيلت 25%",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"عنكبوت أحمر",type:"أكاروس",damage:"يمتص العصارة",treat:"أبامكتين 1.8%",sev:"عالي"}],
+   pest:["ريدوميل جولد","تيلت","أبامكتين","كونفيدور"],
+   harvest:{signs:["أخضر داكن لامع","طول 15–20 سم","صلابة عند الضغط"],method:"يدوي",time:"الصباح الباكر",intv:"كل يوم أو يومين",post:{temp:"10–12°م",life:"10–14 يوم"}},
+   nutri:{p100:{"السعرات":"16 كيلوكالوري","الماء":"95 جم","الألياف":"0.5 جم"},ben:["ترطيب الجسم","مدر للبول","منخفض السعرات"]},
+   econ:{costs:"5000–8000 جنيه/فدان",rev:"6,000–36,000 جنيه",profit:"1,000–28,000 جنيه",best:"مارس–أبريل",markets:[]},
+   vars:[{name:"بيتا ألفا",co:"هجين",y:"8–12 طن",for:"هواء طلق"},{name:"فاروس",co:"هجين",y:"10–15 طن",for:"صوبات"}],
+   tips:["التدعيم على أسلاك يزيد الإنتاج 30%","الحصاد اليومي يحفز إنتاج جديد","تجنب الري على الأوراق","إزالة الأوراق السفلية يحسن التهوية"]},
+
+  {id:"v4",name:"فلفل",nameEn:"Bell Pepper",nameSci:"Capsicum annuum",cat:"vegetables",sub:"ثمرية",
+   img:"https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&q=80",
+   tags:["صيفي","تصدير","ملون"],diff:3,pop:82,featured:false,export:true,
+   ov:"الفلفل محصول ذو عائد اقتصادي مرتفع. مصر تصدر الفلفل الملون لأوروبا في الشتاء. أعلى محتوى من فيتامين C بين الخضروات.",
+   soil:{type:"طينية رملية",ph:6.5,drain:"جيد"},climate:{tmin:15,tmax:35,tideal:"20–30°م",humid:"50–70%",sun:"8 ساعات"},
+   regions:["أسوان","قنا","المنيا","الشرقية"],
+   plant:{s1:{name:"شتوي",months:"سبتمبر–أكتوبر"},s2:{name:"صيفي",months:"فبراير–مارس"},best:"الشتوي"},
+   space:{rows:70,plants:50,depth:1,ppf:3200},seeds:{qty:"200–250 جم/فدان",germ:"10–14 يوم",age:"35–45 يوم"},
+   stages:[{s:"إنبات",d:"10–14"},{s:"شتلة",d:"35–45"},{s:"نمو",d:"30–40"},{s:"إزهار",d:"20–30"},{s:"تلوين",d:"20–30"}],
+   period:"90–130 يوم",yield:"4–8 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 4–6 أيام",summer:"كل 2–3 أيام",flower:"كل 3–4 أيام",total:"4500–5500 م³/موسم",crit:["الإزهار – ري منتظم يمنع تساقط الأزهار"],stop:"5–7 أيام"},
+   fert:{pre:"15–20 م³ سماد بلدي",sched:[{t:"الشتل",tp:"N",qty:"25 وحدة",m:"أرضي",p:"يوريا"},{t:"أسبوع 4",tp:"NPK",qty:"20-15-20",m:"أرضي",p:"NPK مركب"},{t:"الإزهار",tp:"P+K+Ca",qty:"10P+30K+2Ca",m:"ورقي",p:"MKP+كالسيوم"},{t:"تكبير ثمار",tp:"K",qty:"40 وحدة",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"80–100",P:"40–60",K:"80–100"},def:{N:"اصفرار عام",Ca:"تعفن طرف الثمرة",B:"تشوه وتصلب"}},
+   diseases:[{name:"الذبول الفيوزاري",sci:"Fusarium oxysporum",type:"فطري",symp:{e:"ذبول أوراق سفلية",a:"موت النبات"},prev:["دورة زراعية 4 سنوات","تعقيم التربة"],treat:{chem:[{p:"فوليكور",d:"0.75 مل/لتر",int:"كل 10 أيام"}]},sev:"خطير"}],
+   pests:[{name:"المن",type:"حشري",damage:"ينقل الفيروسات",treat:"إيمداكلوبريد",sev:"متوسط"}],
+   pest:["فوليكور","ريدوميل","كونفيدور"],
+   harvest:{signs:["لون كامل","حجم كامل","صلابة"],method:"يدوي",time:"الصباح",intv:"كل 5–7 أيام",post:{temp:"8–10°م",life:"2–3 أسابيع"}},
+   nutri:{p100:{"السعرات":"31 كيلوكالوري","فيتامين C":"128 مجم","فيتامين A":"3131 IU"},ben:["أعلى فيتامين C","يدعم المناعة","مضاد السرطان"]},
+   econ:{costs:"8000–12000 جنيه/فدان",rev:"12,000–64,000 جنيه",profit:"4,000–52,000 جنيه",best:"ديسمبر–فبراير",markets:["ألمانيا","هولندا","السعودية"]},
+   vars:[{name:"كاليفورنيا وندر",co:"هجين",y:"5–8 طن",for:"تصدير"},{name:"حار بلدي",co:"محلي",y:"3–5 طن",for:"محلي"}],
+   tips:["شتلات عمرها 35–45 يوم مثالية","الدعم بالخوازيق يمنع السقوط","الحصاد المبكر يشجع الإثمار"]},
+
+  {id:"v5",name:"باذنجان",nameEn:"Eggplant",nameSci:"Solanum melongena",cat:"vegetables",sub:"ثمرية",
+   img:"https://images.unsplash.com/photo-1659426697688-6c4a19e8e4f0?w=600&q=80",
+   tags:["صيفي","سهل الزراعة","شعبي"],diff:2,pop:80,featured:false,export:false,
+   ov:"الباذنجان من الأكثر استهلاكاً في مصر. سهل الزراعة ويتحمل الحرارة العالية. موسم حصاده يمتد لـ 6 أشهر متواصلة مما يجعله مصدر دخل مستمر.",
+   soil:{type:"طينية رملية",ph:6,drain:"جيد"},climate:{tmin:18,tmax:38,tideal:"25–32°م",humid:"50–65%",sun:"8 ساعات"},
+   regions:["الشرقية","البحيرة","الدقهلية","الغربية"],
+   plant:{s1:{name:"صيفي",months:"فبراير–مارس"},s2:{name:"نيلي",months:"يونيو–يوليو"},best:"الصيفي"},
+   space:{rows:80,plants:60,depth:1,ppf:2400},seeds:{qty:"150 جم/فدان",germ:"10–15 يوم",age:"45–60 يوم"},
+   stages:[{s:"إنبات",d:"10–15"},{s:"شتلة",d:"45–60"},{s:"نمو خضري",d:"30–40"},{s:"إزهار",d:"20–30"},{s:"حصاد مستمر",d:"120–180"}],
+   period:"100–130 يوم للأول",yield:"8–15 طن/فدان",
+   irr:{method:"خطوط أو تنقيط",winter:"كل 5–7 أيام",summer:"كل 2–3 أيام",flower:"كل 3–4 أيام",total:"4000–5000 م³/موسم",crit:["الإزهار والعقد"],stop:"5 أيام"},
+   fert:{pre:"20 م³ سماد بلدي",sched:[{t:"الشتل",tp:"N",qty:"20 وحدة",m:"أرضي",p:"يوريا"},{t:"أسبوع 4",tp:"N+K",qty:"25N+25K",m:"أرضي",p:"نترات البوتاسيوم"},{t:"الإزهار",tp:"P+K",qty:"15P+30K",m:"ورقي",p:"MKP"},{t:"كل شهر",tp:"N+K",qty:"20N+20K",m:"أرضي",p:"NPK مركب"}],
+    total:{N:"90–120",P:"40–50",K:"70–90"},def:{N:"اصفرار وضعف نمو",Fe:"اصفرار الأوراق الحديثة"}},
+   diseases:[{name:"فيروس الحلقة",sci:"Ring Spot Virus",type:"فيروسي",symp:{e:"حلقات صفراء",a:"تشوه وتقزم"},prev:["مكافحة المن"],treat:{chem:[{p:"إيمداكلوبريد",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"دودة ورق القطن",type:"حشري",damage:"تأكل الأوراق",treat:"إيندوكساكارب",sev:"عالي"}],
+   pest:["إيمداكلوبريد","إيندوكساكارب","مانكوزيب"],
+   harvest:{signs:["لمعان بنفسجي","الضغط يترك أثراً","حجم مناسب"],method:"يدوي بمقص",time:"الصباح",intv:"كل 5–7 أيام",post:{temp:"10–12°م",life:"10–14 يوم"}},
+   nutri:{p100:{"السعرات":"25 كيلوكالوري","الألياف":"3 جم","الكربوهيدرات":"5.9 جم"},ben:["غني بمضادات الأكسدة","يدعم صحة الدماغ","يخفض الكوليسترول"]},
+   econ:{costs:"6000–9000 جنيه/فدان",rev:"8,000–45,000 جنيه",profit:"2,000–36,000 جنيه",best:"مارس–مايو",markets:[]},
+   vars:[{name:"بلدي بنفسجي",co:"محلي",y:"8–12 طن",for:"محلي"},{name:"برايت شاينز",co:"هجين",y:"12–16 طن",for:"تصدير"}],
+   tips:["شتلات 45–60 يوم تعطي مبكرة","التقليم الخفيف يزيد الثمار","موسم الحصاد يصل لـ 6 أشهر بعناية جيدة"]},
+
+  // ─── FRUITS ───
+  {id:"f1",name:"مانجو",nameEn:"Mango",nameSci:"Mangifera indica",cat:"fruits",sub:"استوائية",
+   img:"https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&q=80",
+   tags:["صيفي","تصدير","ملكي"],diff:3,pop:96,featured:true,export:true,
+   ov:"مصر من أكبر منتجي المانجو عالمياً بأكثر من 900,000 طن سنوياً. صنف الألفونصو المصري يُصدَّر لأوروبا والخليج. استثمار طويل الأجل يدوم 20–30 سنة.",
+   soil:{type:"رملية إلى طينية رملية",ph:6,drain:"ممتاز"},climate:{tmin:15,tmax:45,tideal:"24–35°م",humid:"50–75%",sun:"8+ ساعات"},
+   regions:["الإسماعيلية","القليوبية","البحيرة","أسوان"],
+   plant:{s1:{name:"ربيعي",months:"مارس–أبريل"},best:"مارس"},
+   space:{rows:8,plants:8,depth:60,ppf:60},seeds:{qty:"60 شتلة/فدان",germ:"25–30 يوم",age:"9–12 شهر"},
+   stages:[{s:"تأسيس",d:"365–730"},{s:"نمو خضري",d:"730"},{s:"بداية إثمار",d:"1095"},{s:"إنتاج كامل",d:"1825+"}],
+   period:"3–5 سنوات للإثمار",yield:"2–8 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 15–20 يوم",summer:"كل 7–10 أيام",flower:"إيقاف يحفز الإزهار",total:"2000–3000 م³/سنة",crit:["الإزهار – جفاف يحفز","تكبير الثمار – ري منتظم"],stop:"3–4 أسابيع"},
+   fert:{pre:"30–40 كجم بلدي/شجرة",sched:[{t:"فبراير",tp:"N",qty:"500–1000 جم/شجرة",m:"أرضي",p:"يوريا"},{t:"أبريل",tp:"NPK",qty:"200-200-300 جم",m:"أرضي",p:"NPK مركب"},{t:"يونيو",tp:"K",qty:"300 جم",m:"أرضي",p:"كبريتات البوتاسيوم"},{t:"أغسطس",tp:"N",qty:"100 جم",m:"أرضي",p:"نترات نشادر"}],
+    total:{N:"1–2 كجم/شجرة",P:"0.5–1 كجم",K:"1–2 كجم"},def:{Zn:"اصفرار صغار الأوراق",Fe:"اصفرار بين العروق"}},
+   diseases:[{name:"الأنثراكنوز",sci:"Colletotrichum gloeosporioides",type:"فطري",symp:{e:"بقع سوداء على الأزهار",a:"تساقط الأزهار"},prev:["رش وقائي عند الإزهار"],treat:{chem:[{p:"بروبيكونازول",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"خطير"}],
+   pests:[{name:"خنفساء الثمار",type:"حشري",damage:"ثقب وتعفن الثمار",treat:"ديازينون + مصائد",sev:"عالي"}],
+   pest:["بروبيكونازول","ديازينون","إيمداكلوبريد"],
+   harvest:{signs:["تحول اللون","عطر قوي","تليين خفيف"],method:"يدوي مع ترك العنق",time:"الصباح الباكر",intv:"كل 3–5 أيام",post:{temp:"13–18°م",life:"2–4 أسابيع",grade:"200–400 جم للتصدير"}},
+   nutri:{p100:{"السعرات":"60 كيلوكالوري","فيتامين C":"36.4 مجم","فيتامين A":"1082 IU"},ben:["يقوي المناعة","يحسن الجلد","يدعم الهضم"]},
+   econ:{costs:"15000–25000 جنيه/فدان/سنة",rev:"10,000–120,000 جنيه",profit:"استثمار 20–30 سنة",best:"يونيو–أغسطس",markets:["أوروبا","الخليج","روسيا"]},
+   vars:[{name:"ألفونصو",co:"محلي",y:"3–6 طن",for:"تصدير درجة أولى"},{name:"هندي",co:"محلي",y:"5–8 طن",for:"محلي وتصدير"},{name:"كيت",co:"أمريكي",y:"4–7 طن",for:"تصدير"}],
+   tips:["إيقاف الري في يناير يحفز الإزهار","التقليم بعد الحصاد ضروري للموسم القادم","الرش بنترات البوتاسيوم 3% يحفز الإزهار"]},
+
+  {id:"f2",name:"فراولة",nameEn:"Strawberry",nameSci:"Fragaria ananassa",cat:"fruits",sub:"حمراء",
+   img:"https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=600&q=80",
+   tags:["شتوي","تصدير","مربح جداً"],diff:4,pop:90,featured:true,export:true,
+   ov:"مصر تحتل مرتبة متقدمة في تصدير الفراولة لأوروبا وروسيا. عائد اقتصادي استثنائي يصل لـ 170,000 جنيه/فدان. تُزرع في المناطق الساحلية والدلتا.",
+   soil:{type:"رملية خفيفة حمضية",ph:6,drain:"ممتاز"},climate:{tmin:7,tmax:26,tideal:"15–22°م",humid:"60–75%",sun:"8–10 ساعات"},
+   regions:["الإسكندرية","البحيرة","شبراخيت","قطور","الفيوم"],
+   plant:{s1:{name:"رئيسي",months:"سبتمبر–أكتوبر"},best:"سبتمبر"},
+   space:{rows:30,plants:30,depth:5,ppf:16000},seeds:{qty:"16000 شتلة/فدان",germ:"شتلات جاهزة",age:"شتلات مبردة"},
+   stages:[{s:"تجذر",d:"20–30"},{s:"نمو خضري",d:"30–45"},{s:"إزهار",d:"15–20"},{s:"نضج",d:"20–30"},{s:"حصاد مستمر",d:"60–90"}],
+   period:"70–100 يوم للأول",yield:"2–5 طن/فدان",
+   irr:{method:"تنقيط تحت البلاستيك",winter:"كل 2–3 أيام",summer:"لا تزرع صيفاً",flower:"يومياً",total:"2500–3500 م³/موسم",crit:["الإزهار – ري منتظم ثابت"],stop:"يوم واحد"},
+   fert:{pre:"20 م³ سماد بلدي + 100 كجم فوسفات",sched:[{t:"الزراعة",tp:"NPK",qty:"10-5-10",m:"تقطير",p:"NPK سائل"},{t:"كل أسبوع",tp:"NPK",qty:"20-20-20",m:"تقطير",p:"NPK سائل"},{t:"الإزهار",tp:"K+Ca",qty:"رفع تدريجي",m:"تقطير",p:"نترات الكالسيوم"}],
+    total:{N:"50–70 كجم",P:"30–40",K:"60–80"},def:{Ca:"تعفن الطرف",B:"تشوه الثمار"}},
+   diseases:[{name:"عفن الرمادي",sci:"Botrytis cinerea",type:"فطري",symp:{e:"بقع رمادية بودرية",a:"تعفن كامل"},prev:["تهوية","بلاستيك","حصاد مبكر"],treat:{chem:[{p:"سويتش 62.5",d:"1 جم/لتر",int:"كل 7–10 أيام"}]},sev:"خطير"}],
+   pests:[{name:"حلم الفراولة",type:"أكاروس",damage:"يمتص العصارة",treat:"هكسيثيازوكس",sev:"عالي"}],
+   pest:["سويتش 62.5","بروبيكونازول","هكسيثيازوكس"],
+   harvest:{signs:["أحمر 90%","رائحة قوية","تليين خفيف"],method:"يدوي بالعنق",time:"الصباح الباكر",intv:"يومياً",post:{temp:"0–2°م",life:"5–7 أيام طازج",grade:"25 جم+ للتصدير"}},
+   nutri:{p100:{"السعرات":"32 كيلوكالوري","فيتامين C":"58.8 مجم","الألياف":"2 جم"},ben:["أعلى من البرتقال فيتامين C","يقي القلب","مضاد التهاب"]},
+   econ:{costs:"20000–30000 جنيه/فدان",rev:"30,000–200,000 جنيه",profit:"10,000–170,000 جنيه",best:"يناير–مارس",markets:["روسيا","ألمانيا","هولندا"]},
+   vars:[{name:"سويت شارلي",co:"أمريكي",y:"2–3.5 طن",for:"طازج"},{name:"كاماروزا",co:"إسباني",y:"3–5 طن",for:"تجميد"}],
+   tips:["البلاستيك الأسود يحافظ على الرطوبة","الأسرة المرتفعة تحسن الصرف","الحصاد اليومي يحافظ على الجودة"]},
+
+  {id:"f3",name:"برتقال",nameEn:"Orange",nameSci:"Citrus sinensis",cat:"fruits",sub:"حمضيات",
+   img:"https://images.unsplash.com/photo-1547514701-42782101795e?w=600&q=80",
+   tags:["شتوي","تصدير","حمضيات"],diff:3,pop:92,featured:true,export:true,
+   ov:"مصر من أكبر منتجي البرتقال في الشرق الأوسط بأكثر من 3 ملايين طن سنوياً. البلدي المصري مشهور بحلاوته ويُصدَّر لروسيا وأوروبا.",
+   soil:{type:"طينية رملية",ph:6.5,drain:"جيد"},climate:{tmin:5,tmax:38,tideal:"20–30°م",humid:"50–75%",sun:"8 ساعات"},
+   regions:["الإسكندرية","البحيرة","الدقهلية","الشرقية"],
+   plant:{s1:{name:"ربيعي",months:"فبراير–أبريل"},best:"مارس"},
+   space:{rows:6,plants:5,depth:50,ppf:130},seeds:{qty:"130 شتلة مطعومة",germ:"شتلات",age:"1–2 سنة"},
+   stages:[{s:"تأسيس",d:"730"},{s:"نمو",d:"1095"},{s:"بداية إثمار",d:"1460"},{s:"إنتاج كامل",d:"1825+"}],
+   period:"3–5 سنوات للإثمار",yield:"3–8 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 15–20 يوم",summer:"كل 7–12 يوم",flower:"تقليل يحفز الإزهار",total:"2000–3000 م³/سنة",crit:["عقد الثمار – ري منتظم"],stop:"أسبوعان"},
+   fert:{pre:"40 كجم بلدي/شجرة",sched:[{t:"فبراير",tp:"N",qty:"500 جم",m:"أرضي",p:"يوريا 46%"},{t:"مايو",tp:"NPK",qty:"200-100-200 جم",m:"أرضي",p:"NPK مركب"},{t:"أغسطس",tp:"K",qty:"400 جم",m:"أرضي",p:"كبريتات البوتاسيوم"},{t:"أكتوبر",tp:"K",qty:"300 جم",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"1–2 كجم/شجرة",P:"0.5–1 كجم",K:"1–2 كجم"},def:{Zn:"أوراق صغيرة مصطبغة",Fe:"اصفرار بين العروق",Mg:"اصفرار الأوراق القديمة"}},
+   diseases:[{name:"التصمغ",sci:"Phytophthora citrophthora",type:"فطري",symp:{e:"إفراز صمغ من الجذع",a:"تقرح وموت اللحاء"},prev:["تجنب الغرق","صرف جيد"],treat:{chem:[{p:"فوسيتيل ألومنيوم",d:"3 جم/لتر",int:"شهرياً"}]},sev:"خطير"}],
+   pests:[{name:"التريبس",type:"حشري",damage:"خدوش فضية على الثمار",treat:"أبامكتين + كبريت",sev:"متوسط"}],
+   pest:["فوسيتيل ألومنيوم","أبامكتين","كبريت وتابل"],
+   harvest:{signs:["اللون البرتقالي الكامل","حلاوة العصير","حجم مناسب"],method:"يدوي بمقص",time:"الصباح",intv:"دفعات متعددة",post:{temp:"5–10°م",life:"3–6 أسابيع"}},
+   nutri:{p100:{"السعرات":"47 كيلوكالوري","فيتامين C":"53.2 مجم","الألياف":"2.4 جم"},ben:["يقوي المناعة","يحسن امتصاص الحديد","يحمي القلب"]},
+   econ:{costs:"12000–20000 جنيه/فدان/سنة",rev:"6,000–40,000 جنيه",profit:"استثمار 20–30 سنة",best:"نوفمبر–فبراير",markets:["روسيا","السعودية","هولندا"]},
+   vars:[{name:"البلدي",co:"مصري",y:"3–6 طن",for:"محلي وتصدير"},{name:"نافيلين",co:"أمريكي",y:"4–8 طن",for:"تصدير"}],
+   tips:["التطعيم على أصول قوية يزيد الإنتاج","التسميد بالزنك ورقياً مهم جداً","الري المنتظم يمنع تشقق الثمار"]},
+
+  {id:"f4",name:"رمان",nameEn:"Pomegranate",nameSci:"Punica granatum",cat:"fruits",sub:"صحراوية",
+   img:"https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=600&q=80",
+   tags:["مقاوم للجفاف","تصدير","طبي"],diff:2,pop:78,featured:false,export:true,
+   ov:"أقوى الفواكه طبياً وأشدها تحملاً للجفاف والملوحة والحرارة. مثالي لمشاريع التوسع في الصحراء والأراضي الجديدة.",
+   soil:{type:"متنوعة حتى ملحية",ph:7,drain:"جيد"},climate:{tmin:0,tmax:45,tideal:"20–38°م",humid:"25–65%",sun:"كاملة"},
+   regions:["الأقصر","أسوان","المنيا","الفيوم"],
+   plant:{s1:{name:"ربيعي",months:"فبراير–مارس"},best:"الربيعي"},
+   space:{rows:5,plants:4,depth:50,ppf:200},seeds:{qty:"200 شتلة/فدان",germ:"عقل جذور",age:"1–2 سنة"},
+   stages:[{s:"تأسيس",d:"730"},{s:"بداية إثمار",d:"1095"},{s:"إنتاج اقتصادي",d:"1460+"}],
+   period:"2–3 سنوات للإثمار",yield:"2–6 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 15–20 يوم",summer:"كل 7–10 أيام",flower:"كل 5–7 أيام",total:"1500–2500 م³/سنة",crit:["الإزهار وعقد الثمار"],stop:"أسبوعان"},
+   fert:{pre:"30 كجم بلدي/شجرة",sched:[{t:"فبراير",tp:"N+P",qty:"300 جم يوريا",m:"أرضي",p:"يوريا"},{t:"يونيو",tp:"N+K",qty:"200N+300K",m:"أرضي",p:"نترات البوتاسيوم"},{t:"أغسطس",tp:"K",qty:"400 جم",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"0.5–1 كجم/شجرة",P:"0.3–0.5",K:"1–1.5 كجم"},def:{Fe:"اصفرار الأوراق الحديثة",N:"اصفرار عام"}},
+   diseases:[{name:"عفن الثمار",sci:"Aspergillus spp.",type:"فطري",symp:{e:"بقع بنية على القشرة",a:"تعفن الحبوب"},prev:["حصاد في الوقت","تهوية"],treat:{chem:[{p:"مانكوزيب",d:"2 جم/لتر",int:"كل 14 يوم"}]},sev:"متوسط"}],
+   pests:[{name:"بق دقيقي",type:"حشري",damage:"يمتص العصارة",treat:"كلورفيرينيبوس",sev:"متوسط"}],
+   pest:["مانكوزيب","كلورفيرينيبوس","نيم أويل"],
+   harvest:{signs:["قرقعة عند الضغط","أحمر داكن","شكل مضلع"],method:"يدوي بمقص",time:"الصباح",intv:"دفعات متعددة",post:{temp:"5–8°م",life:"2–3 أشهر"}},
+   nutri:{p100:{"السعرات":"83 كيلوكالوري","الألياف":"4 جم","فيتامين C":"10.2 مجم"},ben:["أقوى مضاد أكسدة","يحمي من السرطان","يقوي القلب"]},
+   econ:{costs:"10000–15000 جنيه/فدان/سنة",rev:"10,000–90,000 جنيه",profit:"استثمار 15–20 سنة",best:"سبتمبر–نوفمبر",markets:["هولندا","ألمانيا","روسيا"]},
+   vars:[{name:"وندرفول",co:"أمريكي",y:"4–6 طن",for:"تصدير"},{name:"مانفالوطي",co:"محلي",y:"3–5 طن",for:"محلي"}],
+   tips:["التقليم السنوي يحافظ على الشكل","يتحمل الملوحة أكثر من معظم الفواكه","التسميد بالبوتاسيوم يحسن اللون والحلاوة"]},
+
+  // ─── ORNAMENTAL ───
+  {id:"o1",name:"ورد",nameEn:"Rose",nameSci:"Rosa hybrida",cat:"ornamental",sub:"زهرية",
+   img:"https://images.unsplash.com/photo-1548460519-c0d3d2eb0f37?w=600&q=80",
+   tags:["شتوي","تصدير","عطري"],diff:3,pop:95,featured:true,export:true,
+   ov:"ملك الزهور. مصر تُصدِّر ملايين الأزهار يومياً للأسواق الأوروبية. صناعة الورد المصري تشمل الطازج والمجفف وزيت الورد ذي القيمة الاستثنائية.",
+   soil:{type:"طينية رملية خصبة",ph:6.5,drain:"جيد"},climate:{tmin:10,tmax:32,tideal:"18–25°م",humid:"50–65%",sun:"6–8 ساعات"},
+   regions:["القاهرة","الجيزة","الإسكندرية","البحيرة"],
+   plant:{s1:{name:"خريفي",months:"سبتمبر–أكتوبر"},s2:{name:"ربيعي",months:"فبراير–مارس"},best:"الخريفي"},
+   space:{rows:100,plants:50,depth:30,ppf:2400},seeds:{qty:"2400 شتلة/عقلة",germ:"عقل جذرية",age:"3–6 أشهر"},
+   stages:[{s:"تجذر",d:"30–45"},{s:"نمو خضري",d:"45–60"},{s:"تبرعم",d:"20–30"},{s:"إزهار مستمر",d:"مستمر"}],
+   period:"60–90 يوم للأول",yield:"30,000–60,000 زهرة/فدان/سنة",
+   irr:{method:"تنقيط تحت الأوراق",winter:"كل 3–4 أيام",summer:"كل 1–2 يوم",flower:"كل 2–3 أيام",total:"3000–4000 م³/سنة",crit:["مرحلة التبرعم – ري منتظم"],stop:"48 ساعة"},
+   fert:{pre:"20 م³ سماد بلدي",sched:[{t:"كل أسبوعين",tp:"NPK",qty:"20-10-20",m:"تقطير",p:"NPK سائل"},{t:"قبل الإزهار",tp:"P+K",qty:"10-30-30",m:"تقطير",p:"MKP+KNO3"},{t:"بعد الحصاد",tp:"N",qty:"رفع النيتروجين",m:"أرضي",p:"يوريا"}],
+    total:{N:"100–150 كجم",P:"60–80",K:"120–160"},def:{Fe:"اصفرار البراعم",N:"ضعف النمو"}},
+   diseases:[{name:"البياض الدقيقي",sci:"Sphaerotheca pannosa",type:"فطري",symp:{e:"بودرة بيضاء على البراعم",a:"تشوه وعدم فتح"},prev:["تهوية جيدة"],treat:{chem:[{p:"بروبيكونازول",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"متوسط"},
+    {name:"عفن الرمادي",sci:"Botrytis cinerea",type:"فطري",symp:{e:"بقع رمادية على البتلات",a:"تعفن البراعم"},prev:["تهوية"],treat:{chem:[{p:"سويتش",d:"1 جم/لتر",int:"كل 7 أيام"}]},sev:"خطير"}],
+   pests:[{name:"عنكبوت أحمر",type:"أكاروس",damage:"نقاط صفراء وجفاف",treat:"أبامكتين + كبريت",sev:"عالي"}],
+   pest:["بروبيكونازول","سويتش","أبامكتين","كبريت"],
+   harvest:{signs:["فتح البرعم ¼","لون كامل","عنق قوي"],method:"يدوي بمقص مطهر",time:"الصباح الباكر",intv:"يومياً",post:{temp:"2–5°م",life:"7–14 يوم",grade:"طول 50–90 سم"}},
+   nutri:{p100:{"الاستخدام":"زينة وعطور"},ben:["مضاد التهاب","مهدئ أعصاب","للبشرة والتجميل"]},
+   econ:{costs:"25000–40000 جنيه/فدان",rev:"15,000–120,000 جنيه",profit:"مجدٍ سنوياً",best:"فبراير ومارس",markets:["هولندا","ألمانيا","روسيا"]},
+   vars:[{name:"هايبريد تي",co:"هولندي",y:"50000+ زهرة",for:"تصدير"},{name:"بلدي",co:"محلي",y:"30000 زهرة",for:"محلي"}],
+   tips:["التقليم الشديد بعد كل موسم","الرش بالنيتروجين بعد التقليم يسرع التعافي","الصوبات تحمي وتطيل الإنتاج"]},
+
+  {id:"o2",name:"ياسمين",nameEn:"Jasmine",nameSci:"Jasminum sambac",cat:"ornamental",sub:"عطرية",
+   img:"https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&q=80",
+   tags:["صيفي","عطري","تصدير","زيت"],diff:2,pop:88,featured:true,export:true,
+   ov:"عطر مصر الخالد. مصر تنتج أكبر كمية زيت ياسمين في العالم — يدخل في عطور Chanel وDior. يعيش 20–30 سنة ويدر دخلاً سنوياً ممتازاً.",
+   soil:{type:"طينية رملية",ph:6.5,drain:"جيد"},climate:{tmin:15,tmax:38,tideal:"22–32°م",humid:"50–70%",sun:"6–8 ساعات"},
+   regions:["الجيزة","القاهرة","الإسماعيلية","الشرقية"],
+   plant:{s1:{name:"ربيعي",months:"مارس–أبريل"},best:"مارس"},
+   space:{rows:100,plants:80,depth:30,ppf:1200},seeds:{qty:"1200 عقلة/فدان",germ:"30–45 يوم",age:"3–6 أشهر"},
+   stages:[{s:"تجذر",d:"30–45"},{s:"نمو",d:"60–90"},{s:"إزهار أول",d:"90–120"},{s:"إنتاج مستمر",d:"20 سنة+"}],
+   period:"6–9 أشهر للإزهار",yield:"500كجم–1.5 طن أزهار/فدان",
+   irr:{method:"تنقيط",winter:"كل 10–15 يوم",summer:"كل 5–7 أيام",flower:"كل 5–6 أيام",total:"2000–3000 م³/سنة",crit:["الإزهار الصيفي – ري منتظم"],stop:"48 ساعة"},
+   fert:{pre:"15 م³ سماد بلدي",sched:[{t:"فبراير–مارس",tp:"N+P",qty:"300 جم يوريا",m:"أرضي",p:"يوريا"},{t:"مايو–يونيو",tp:"N+K",qty:"200N+200K",m:"أرضي",p:"نترات البوتاسيوم"},{t:"أغسطس",tp:"K",qty:"200 جم",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"80–120 كجم",P:"40–60",K:"80–100"},def:{N:"ضعف وصفار",Fe:"اصفرار براعم جديدة"}},
+   diseases:[{name:"عفن جذري",sci:"Phytophthora spp.",type:"فطري",symp:{e:"ذبول مفاجئ",a:"سواد الجذور"},prev:["تجنب الغرق"],treat:{chem:[{p:"ريدوميل",d:"2.5 جم/لتر",int:"شهرياً"}]},sev:"خطير"}],
+   pests:[{name:"حشرة الدرع",type:"حشري",damage:"يمتص العصارة",treat:"زيت معدني",sev:"متوسط"}],
+   pest:["ريدوميل","نيم أويل","زيت معدني"],
+   harvest:{signs:["براعم بيضاء مكتملة","رائحة قوية","الفجر"],method:"يدوي من الفجر حتى 9ص",time:"الفجر",intv:"يومياً في الصيف",post:{temp:"ظل بارد",life:"24–48 ساعة"}},
+   nutri:{p100:{"الاستخدام":"عطري طبي"},ben:["مضاد اكتئاب","مسكن طبيعي","للبشرة والشعر"]},
+   econ:{costs:"8000–12000 جنيه/فدان",rev:"20,000–150,000 جنيه",profit:"مربح جداً طويل الأمد",best:"يونيو–أغسطس",markets:["فرنسا","إيطاليا","ألمانيا"]},
+   vars:[{name:"بلدي مصري",co:"محلي",y:"عالي",for:"زيت العطر"}],
+   tips:["التقليم السنوي يجدد المجموع","الحصاد الصباحي أعلى تركيز عطر","التسميد بالحديد مهم جداً للخضرة"]},
+
+  {id:"o3",name:"صبار",nameEn:"Cactus",nameSci:"Cactaceae spp.",cat:"ornamental",sub:"صحراوية",
+   img:"https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600&q=80",
+   tags:["صحراء","سهل جداً","داخلي","مقاوم الجفاف"],diff:1,pop:80,featured:false,export:false,
+   ov:"أكثر النباتات تحملاً للجفاف والحرارة. يكاد لا يحتاج عناية. أشكاله المتنوعة تجعله قطعة ديكور حية تدوم لعقود.",
+   soil:{type:"رملية مع بيرلايت",ph:7,drain:"ممتاز"},climate:{tmin:-5,tmax:50,tideal:"20–38°م",humid:"10–40%",sun:"كاملة 6+ ساعات"},
+   regions:["مناطق جافة","داخلي","صحراء"],
+   plant:{s1:{name:"طوال العام",months:"الربيع أفضل"},best:"الربيع"},
+   space:{rows:0,plants:0,depth:5,ppf:0},seeds:{qty:"نباتات أو عقل",germ:"1–3 أسابيع",age:"جاهز"},
+   stages:[{s:"زراعة",d:"1"},{s:"تجذر",d:"14–21"},{s:"نمو بطيء",d:"مستمر"}],
+   period:"سنوات للنضج",yield:"ديكوري",
+   irr:{method:"ري يدوي نادر",winter:"مرة كل 30–45 يوم",summer:"مرة كل 14–21 يوم",flower:"نفسه",total:"ضئيل جداً",crit:["الإفراط في الري قاتل"],stop:"لا ينطبق"},
+   fert:{pre:"تربة خاصة بالصبار",sched:[{t:"مرة في الربيع",tp:"سماد خفيف",qty:"ربع الجرعة",m:"ري خفيف",p:"NPK 5-10-5"}],total:{N:"تسميد سنوي بسيط"},def:{N:"نمو بطيء جداً"}},
+   diseases:[{name:"تعفن الجذور",sci:"Erwinia spp.",type:"بكتيري",symp:{e:"تليين القاعدة",a:"انهيار النبات"},prev:["تجنب الري الزائد","صرف ممتاز"],treat:{chem:[{p:"قطع الجزء المتعفن",d:"جراحي فوري",int:"فوري"}]},sev:"خطير"}],
+   pests:[{name:"بق دقيقي أبيض",type:"حشري",damage:"بقع قطنية بيضاء",treat:"كحول + قطعة قطن",sev:"منخفض"}],
+   pest:["نيم أويل","صابون حشري"],
+   harvest:{signs:["لا ينطبق"],method:"تكاثر بالعقل أو البذور",time:"الربيع",intv:"موسمي",post:{temp:"15–30°م",life:"عقود"}},
+   nutri:{p100:{"الاستخدام":"ديكوري بالأساس"},ben:["ينقي الهواء","مريح بصرياً","بعض الأنواع صالح للأكل"]},
+   econ:{costs:"20–300 جنيه/نبات",rev:"30–1000 جنيه/نبات",profit:"مشتل صبار مربح",best:"طوال العام",markets:[]},
+   vars:[{name:"أوبونتيا",co:"متعدد",y:"ثمار صالحة",for:"خارجي"},{name:"إيكينوكاكتوس",co:"متعدد",y:"ديكوري",for:"داخلي"}],
+   tips:["القاعدة الذهبية: الري الأقل أفضل","أصص طينية تصرف الماء بشكل أفضل","الضوء المباشر ضروري لمنع الامتداد","يمكن تركه بدون ري أسابيع في الشتاء"]},
+
+  {id:"o4",name:"مونستيرا",nameEn:"Monstera",nameSci:"Monstera deliciosa",cat:"ornamental",sub:"داخلية",
+   img:"https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&q=80",
+   tags:["داخلي","سهل العناية","ديكور","عصري"],diff:1,pop:85,featured:false,export:false,
+   ov:"نبات داخلي أيقوني عالمياً بأوراقه الكبيرة المفصصة. يتحمل الضوء المنخفض ويتكيف مع درجات حرارة مختلفة. سهل التكاثر ومربح في مشاتل النباتات الداخلية.",
+   soil:{type:"خلطة جيدة الصرف",ph:6,drain:"جيد مع بيرلايت"},climate:{tmin:15,tmax:35,tideal:"20–30°م",humid:"60–80%",sun:"ضوء غير مباشر"},
+   regions:["مناطق مغلقة مكيفة","شرفات مظللة"],
+   plant:{s1:{name:"طوال العام",months:"الربيع أفضل"},best:"الربيع"},
+   space:{rows:0,plants:0,depth:20,ppf:0},seeds:{qty:"عقل أو نباتات جاهزة",germ:"20–30 يوم",age:"جاهز"},
+   stages:[{s:"تجذر",d:"20–30"},{s:"نمو تدريجي",d:"مستمر"},{s:"أوراق كبيرة",d:"6–12 شهر"}],
+   period:"سنوات",yield:"نبات ديكوري",
+   irr:{method:"ري يدوي",winter:"كل 10–14 يوم",summer:"كل 7 أيام",flower:"نفسه",total:"حسب الأصيص",crit:["الإفراط يسبب تعفن الجذور"],stop:"لا ينطبق"},
+   fert:{pre:"تربة غنية بالكمبوست",sched:[{t:"شهرياً",tp:"NPK سائل",qty:"نصف الجرعة",m:"ري",p:"NPK 20-20-20"}],total:{N:"تسميد شهري"},def:{N:"أوراق صفراء",Fe:"اصفرار مع بقاء العروق"}},
+   diseases:[{name:"تعفن الجذور",sci:"Pythium spp.",type:"فطري",symp:{e:"اصفرار مفاجئ",a:"تعفن الجذور"},prev:["تقليل الري","صرف جيد"],treat:{chem:[{p:"ريدوميل",d:"1 جم/لتر",int:"شهرياً"}]},sev:"متوسط"}],
+   pests:[{name:"حشرة القشر",type:"حشري",damage:"تمتص العصارة",treat:"كحول + صابون",sev:"منخفض"}],
+   pest:["نيم أويل","صابون حشري"],
+   harvest:{signs:["لا ينطبق"],method:"تكاثر بعقل الساق",time:"الربيع",intv:"موسمي",post:{temp:"15–25°م",life:"سنوات"}},
+   nutri:{p100:{"الاستخدام":"ديكوري"},ben:["ينقي الهواء","يقلل التوتر","يحسن الإنتاجية"]},
+   econ:{costs:"100–500 جنيه/نبات",rev:"150–2000 جنيه/نبات",profit:"مشتل نباتات داخلية مربح",best:"طوال العام",markets:[]},
+   vars:[{name:"ديليسيوزا",co:"متعدد",y:"أوراق كبيرة",for:"داخلي"},{name:"فارييجاتا",co:"نادر",y:"مرقطة",for:"نباتات فاخرة"}],
+   tips:["امسح الأوراق أسبوعياً بقطعة مبللة","يحتاج دعماً للتسلق كلما كبر","قلل الري في الشتاء","الرطوبة العالية تحسن الأوراق"]},
+];
+
+// ═════════════════════════════════════════
+// SEARCH ENGINE
+// ═════════════════════════════════════════
+const SE = {
+  W:{name:10,nameEn:9,tags:8,diseases:7,ov:6,tips:5,fert:5,irr:5,pests:4,soil:4,climate:4,regions:3,pest:3,harvest:3,nutri:2,vars:2,econ:2},
+  SYN:{
+    "تسميد":["fert","نيتروجين","بوتاسيوم","فوسفور","يوريا","سماد"],
+    "سماد":["fert","عضوي","بلدي","كمبوست"],
+    "ري":["irr","تنقيط","مياه","م³","رش"],
+    "جفاف":["مقاوم الجفاف","رملية","جاف","صحراء"],
+    "مرض":["diseases","فطري","فيروسي","بكتيري"],
+    "بياض":["بياض دقيقي","بياض زغبي","Mildew"],
+    "لفحة":["blight","Phytophthora","Alternaria"],
+    "عفن":["rot","Botrytis","Pythium"],
+    "حشرة":["pests","تربس","دودة","أكاروس","المن"],
+    "فيروس":["virus","TYLCV","virus"],
+    "حصاد":["harvest","نضج","قطف"],
+    "تربة":["soil","طينية","رملية"],
+    "صحراء":["مقاوم الجفاف","رملية","جاف"],
+    "تصدير":["export","أوروبا","خليج"],
+    "سهل":["سهل العناية","سهل الزراعة","diff:1"],
+    "داخلي":["داخلية","أصيص","داخل"],
+    "عطر":["عطري","زيت عطر"],
+    "ملوحة":["ملحية","يتحمل الملوحة"],
+    "للتصدير":["export","أوروبا","خليج","تصدير"],
+    "نبات داخلي":["داخلية","أصيص","داخل"]
+  },
+  FN:{name:"📛 الاسم",nameEn:"📛 الاسم",tags:"🏷️ الوسوم",diseases:"🦠 الأمراض",pests:"🐛 الآفات",ov:"📋 نظرة عامة",tips:"💡 النصائح",fert:"💊 التسميد",irr:"💧 الري",soil:"🌱 التربة",climate:"🌡️ المناخ",regions:"📍 المناطق",pest:"🧪 المبيدات",harvest:"🌾 الحصاد",nutri:"🥗 التغذية",vars:"🔬 الأصناف",econ:"💰 الاقتصاد"},
+  FT:{fert:"fert",irr:"irr",diseases:"dis",pests:"dis",pest:"dis",tips:"tips",harvest:"harv",vars:"tips",econ:"harv",soil:"cult",climate:"cult",regions:"cult"},
+  tok(q){return q.trim().replace(/[،,]/g,' ').split(/\s+/).filter(w=>w.length>1).map(w=>w.replace(/^ال/,''))},
+  txt(p,f){const v=p[f];if(!v)return '';if(typeof v==='string')return v;if(Array.isArray(v))return v.map(i=>typeof i==='object'?JSON.stringify(i):String(i)).join(' ');if(typeof v==='object')return JSON.stringify(v);return String(v)},
+  snip(t,k){const i=t.toLowerCase().indexOf(k.toLowerCase());if(i<0)return t.slice(0,90);return (i>30?'…':'')+t.slice(Math.max(0,i-25),i+75)+(i+75<t.length?'…':'')},
+  hl(t,q){if(!t||!q)return t||'';const toks=this.tok(q);toks.forEach(k=>{[k,...(this.SYN[k]||[]),...(this.SYN[k.replace(/^ال/,'')]||[])].slice(0,4).forEach(tm=>{const re=new RegExp('('+tm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');t=t.replace(re,'<mark class="hl">$1</mark>')})});return t},
+  lev(a,b){const m=Array.from({length:b.length+1},(_,i)=>[i]);m[0]=Array.from({length:a.length+1},(_,i)=>i);for(let i=1;i<=b.length;i++)for(let j=1;j<=a.length;j++)m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);return m[b.length][a.length]},
+  suggest(q){return DB.map(p=>({n:p.name,d:this.lev(q,p.name)})).sort((a,b)=>a.d-b.d).find(x=>x.d<=3)?.n||null},
+  search(q){
+    if(!q||q.trim().length<2)return[];
+    const toks=this.tok(q);
+    const res=DB.map(p=>{
+      let sc=0,flds=[],snps=[];
+      toks.forEach(t=>{
+        const terms=[t,...(this.SYN[t]||[]),...(this.SYN[t.replace(/^ال/,'')]||[]),...(this.SYN[q]||[])];
+        const uniq=[...new Set(terms)];
+        Object.keys(this.W).forEach(f=>{
+          const tx=this.txt(p,f);
+          uniq.forEach(tm=>{
+            if(tx.toLowerCase().includes(tm.toLowerCase())){
+              sc+=this.W[f];
+              if(!flds.includes(f))flds.push(f);
+              if(snps.length<2)snps.push({f,fn:this.FN[f],tx:this.snip(tx,tm)});
+            }
+          });
+        });
+      });
+      // also check full query
+      const fullTx=Object.keys(this.W).map(f=>this.txt(p,f)).join(' ');
+      if(fullTx.toLowerCase().includes(q.toLowerCase())&&sc===0){sc=5;flds=['ov']}
+      return{p,sc,flds,snps};
+    }).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc);
+    return res;
+  }
+};
+
+// ═════════════════════════════════════════
+// APP STATE
+// ═════════════════════════════════════════
+const App = {
+  dark: localStorage.getItem('nb-dark')==='1',
+  favs: new Set(JSON.parse(localStorage.getItem('nb-favs')||'[]')),
+  hist: JSON.parse(localStorage.getItem('nb-hist')||'[]'),
+  curCat: null,
+  catSort: 'pop',
+  catVis: 12,
+  catSub: 'all',
+
+  init(){
+    if(this.dark) document.body.setAttribute('data-dark','');
+    document.getElementById('thm-btn').textContent = this.dark?'☀️':'🌙';
+    this._loader();
+    this._cursor();
+    this._scroll();
+    this._initSearch();
+    this._buildHome();
+    this._heroCanvas();
+    this._heroWords();
+  },
+
+  _loader(){
+    setTimeout(()=>{
+      const l=document.getElementById('ldr');
+      l.classList.add('out');
+      setTimeout(()=>l.remove(),800);
+    },2000);
+  },
+
+  _cursor(){
+    const c=document.getElementById('cur');
+    const r=document.getElementById('cur-r');
+    if(!c||window.matchMedia('(pointer:coarse)').matches)return;
+    let rx=0,ry=0,ax=0,ay=0;
+    document.addEventListener('mousemove',e=>{ax=e.clientX;ay=e.clientY;c.style.left=ax+'px';c.style.top=ay+'px'},{passive:true});
+    const anim=()=>{rx+=(ax-rx)*.14;ry+=(ay-ry)*.14;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(anim)};anim();
+    document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,.pcard,.cat-card,.ccat'))r.classList.add('h')});
+    document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,.pcard,.cat-card,.ccat'))r.classList.remove('h')});
+  },
+
+  _scroll(){
+    const bar=document.getElementById('pgbar');
+    const stk=document.getElementById('stk');
+    const nav=document.getElementById('nav');
+    window.addEventListener('scroll',()=>{
+      const pct=scrollY/(document.documentElement.scrollHeight-innerHeight)||0;
+      bar.style.transform=`scaleX(${pct})`;
+      stk.classList.toggle('on',scrollY>400);
+      nav.classList.toggle('up',scrollY>10);
+    },{passive:true});
+  },
+
+  _buildHome(){
+    // stats
+    const vn=DB.filter(p=>p.cat==='vegetables').length;
+    const fn=DB.filter(p=>p.cat==='fruits').length;
+    const on=DB.filter(p=>p.cat==='ornamental').length;
+    document.getElementById('cat-pill-veg').textContent=vn+' نبات';
+    document.getElementById('cat-pill-fr').textContent=fn+' نبات';
+    document.getElementById('cat-pill-or').textContent=on+' نبات';
+    // hero sc stats
+    document.getElementById('sc-stats').innerHTML=[
+      {n:DB.length,l:'نبات'},{n:DB.reduce((a,p)=>a+(p.diseases?.length||0),0),l:'مرض موثق'},{n:DB.reduce((a,p)=>a+(p.tips?.length||0),0),l:'نصيحة'}
+    ].map(s=>`<div class="sc-stat"><div class="sc-stat-n" data-target="${s.n}">0</div><div class="sc-stat-l">${s.l}</div></div>`).join('');
+    // featured
+    const fg=document.getElementById('home-featured');
+    fg.innerHTML=[...Array(6)].map(()=>`<div class="sk-card"><div class="sk sk-img"></div><div class="sk-bd"><div class="sk sk-ln"></div><div class="sk sk-ln" style="width:60%"></div><div class="sk sk-ln" style="width:80%"></div></div></div>`).join('');
+    setTimeout(()=>{
+      fg.innerHTML=DB.filter(p=>p.featured).slice(0,6).map((p,i)=>this.card(p,i)).join('');
+      this._io();
+    },500);
+    // stats belt
+    document.getElementById('home-stats').innerHTML=[
+      {ico:'🌱',n:DB.length,l:'نبات في الموسوعة'},
+      {ico:'🥦',n:vn,l:'خضروة مُوثّقة'},
+      {ico:'🍎',n:fn,l:'فاكهة مُوثّقة'},
+      {ico:'🌸',n:on,l:'نبات زينة'},
+    ].map(s=>`<div class="stat-box"><span class="stat-ico">${s.ico}</span><div class="stat-n" data-target="${s.n}">0</div><div class="stat-l">${s.l}</div></div>`).join('');
+    this._io();
+  },
+
+  _initSearch(){
+    const inp=document.getElementById('sc-inp');
+    if(!inp)return;
+    let t;
+    inp.addEventListener('input',()=>{
+      clearTimeout(t);
+      const ico=document.getElementById('sc-ico');
+      ico.style.animation='spin .5s linear infinite';
+      t=setTimeout(()=>{ico.style.animation='';this.renderHeroDd(inp.value)},260);
+    });
+    inp.addEventListener('focus',()=>{if(!inp.value.trim())this.renderHeroDdHist()});
+    inp.addEventListener('keydown',e=>this.handleHeroKeys(e));
+    document.addEventListener('click',e=>{if(!e.target.closest('#hero-sc')&&!e.target.closest('.search-card'))closeScDd()});
+    // search page
+    const sinp=document.getElementById('sp-inp');
+    if(sinp){
+      sinp.addEventListener('keydown',e=>{if(e.key==='Enter')doFullSearch()});
+    }
+  },
+
+  renderHeroDd(q){
+    const dd=document.getElementById('sc-dd');
+    if(!q||q.trim().length<2){this.renderHeroDdHist();return}
+    const res=SE.search(q);
+    if(!res.length){
+      const sug=SE.suggest(q);
+      dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">لا نتائج</span><button class="sdd-close" onclick="closeScDd()">✕</button></div><div class="sdd-empty"><div class="sdd-empty-ico">🔍</div><div class="sdd-empty-t">لم أجد شيئاً</div><div class="sdd-empty-d">لا توجد نتائج لـ "${q}"</div>${sug?`<div class="sdd-sug-wrap"><button class="sdd-sug" onclick="heroQS('${sug}')">هل تقصد: ${sug}؟</button></div>`:''}</div>`;
+      dd.classList.add('on');return;
+    }
+    dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">${res.length} نتيجة</span><button class="sdd-close" onclick="closeScDd()">✕</button></div>${res.slice(0,6).map((r,i)=>this.heroSrRow(r,q,i)).join('')}`;
+    dd.classList.add('on');
+    this._logSearch(q);
+  },
+
+  heroSrRow(r,q,i){
+    const{p,flds,snps}=r;
+    return `<div class="sdd-row" style="animation-delay:${i*35}ms" onclick="openFromHeroSr('${p.id}','${flds[0]||'ov'}')">
+      <img class="sdd-thumb" src="${p.img}" alt="${p.name}" loading="lazy">
+      <div class="sdd-info">
+        <div class="sdd-name">${SE.hl(p.name,q)}</div>
+        <div class="sdd-chips">${flds.slice(0,3).map(f=>`<span class="sdd-chip">${SE.FN[f]||f}</span>`).join('')}</div>
+        ${snps[0]?`<div class="sdd-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+      </div>
+      <span class="sdd-arr">←</span>
+    </div>`;
+  },
+
+  renderHeroDdHist(){
+    const dd=document.getElementById('sc-dd');
+    if(!this.hist.length)return;
+    dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">🕐 آخر البحث</span><button class="sdd-close" onclick="clearHist()">مسح</button></div>${this.hist.slice(0,5).map(h=>`<div class="sdd-row" onclick="heroQS('${h}')"><span style="font-size:20px">🔍</span><div class="sdd-info"><div class="sdd-name">${h}</div></div></div>`).join('')}`;
+    dd.classList.add('on');
+  },
+
+  handleHeroKeys(e){
+    const dd=document.getElementById('sc-dd');
+    const rows=dd.querySelectorAll('.sdd-row');
+    const cur=dd.querySelector('.kb');
+    let idx=[...rows].indexOf(cur);
+    if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,rows.length-1)}
+    else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,0)}
+    else if(e.key==='Enter'){if(cur){cur.click()}else{heroSearch()};return}
+    else if(e.key==='Escape'){closeScDd();return}else return;
+    rows.forEach(r=>r.classList.remove('kb'));
+    rows[idx]?.classList.add('kb');rows[idx]?.scrollIntoView({block:'nearest'});
+  },
+
+  _logSearch(q){
+    this.hist=this.hist.filter(x=>x!==q);this.hist.unshift(q);this.hist.splice(20);
+    localStorage.setItem('nb-hist',JSON.stringify(this.hist));
+  },
+
+  card(p,i){
+    const fav=this.favs.has(p.id);
+    const cc=p.cat==='fruits'?'fr':p.cat==='ornamental'?'or':'';
+    const diff=[...Array(5)].map((_,j)=>`<span class="pcd-${j<p.diff?'on':'off'}">★</span>`).join('');
+    return `<div class="pcard" style="animation-delay:${Math.min(i,9)*60}ms" onclick="openModal('${p.id}')">
+      <div class="pcard-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <div class="pcard-img-veil"></div>
+        <div class="pcard-bgs">
+          <span class="pcbg pcbg-cat ${cc}">${p.sub}</span>
+          ${p.featured?'<span class="pcbg pcbg-hot">⭐ مميز</span>':''}
+          ${p.export?'<span class="pcbg" style="background:rgba(184,134,11,.85);color:#fff">✈️ تصدير</span>':''}
+        </div>
+        <button class="pcard-fav${fav?' on':''}" onclick="event.stopPropagation();App.togFav('${p.id}',this)">${fav?'❤️':'🤍'}</button>
+        <div class="pcard-hover-bar">
+          <div class="pcard-hover-inner">
+            <div class="phi"><div class="phi-v">${p.yield||'–'}</div><div class="phi-l">الإنتاج</div></div>
+            <div class="phi"><div class="phi-v">${p.period||'–'}</div><div class="phi-l">المدة</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-sci">${p.nameSci}</div>
+        <div class="pcard-name">${p.name}</div>
+        <div class="pcard-en">${p.nameEn}</div>
+        <div class="pcard-ov">${p.ov}</div>
+        <div class="pcard-tags">${(p.tags||[]).slice(0,3).map(t=>`<span class="ptag">${t}</span>`).join('')}</div>
+        <div class="pcard-ft">
+          <span class="pcard-yield">🌾 ${p.yield||'–'}</span>
+          <div class="pcard-diff">${diff}</div>
+          <button class="btn-pcard" onclick="event.stopPropagation();openModal('${p.id}')">تفاصيل</button>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  togFav(id,btn){
+    const was=this.favs.has(id);
+    was?this.favs.delete(id):this.favs.add(id);
+    localStorage.setItem('nb-favs',JSON.stringify([...this.favs]));
+    if(btn){btn.className='pcard-fav'+(this.favs.has(id)?' on':'');btn.textContent=this.favs.has(id)?'❤️':'🤍'}
+    showToast(was?'تم الحذف من المفضلة':'❤️ أُضيف للمفضلة',was?'inf':'ok');
+  },
+
+  // ─── CATEGORY PAGE ───
+  buildCatPage(catId){
+    this.curCat=catId;this.catVis=12;this.catSub='all';this.catSort='pop';
+    document.getElementById('cpt-sort').value='pop';
+    const meta={
+      vegetables:{name:'الخضروات',icon:'🥦',desc:'خضروات متنوعة مع تفاصيل التسميد والري والأمراض والحصاد',img:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1400&q=80'},
+      fruits:{name:'الفاكهة',icon:'🍎',desc:'أشهر فواكه مصر من المانجو والفراولة والحمضيات والرمان',img:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=1400&q=80'},
+      ornamental:{name:'نباتات الزينة',icon:'🌸',desc:'ورد وياسمين وصبار ونباتات داخلية للتجميل والتصدير',img:'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1400&q=80'}
+    }[catId];
+    document.getElementById('cph-img').style.backgroundImage=`url('${meta.img}')`;
+    document.getElementById('cph-icon').textContent=meta.icon;
+    document.getElementById('cph-name').textContent=meta.name;
+    document.getElementById('cph-desc').textContent=meta.desc;
+    document.getElementById('cpt-title').textContent=meta.name;
+    // sub-filters
+    const plants=DB.filter(p=>p.cat===catId);
+    const subs=[...new Set(plants.map(p=>p.sub))];
+    document.getElementById('cpg-subs').innerHTML=[
+      `<button class="cpg-fc on" data-sub="all" onclick="App.setSubFilt(this,'all')">الكل (${plants.length})</button>`,
+      ...subs.map(s=>`<button class="cpg-fc" data-sub="${s}" onclick="App.setSubFilt(this,'${s}')">${s} (${plants.filter(p=>p.sub===s).length})</button>`)
+    ].join('');
+    this.renderCatGrid();
+    // zoom hero img
+    setTimeout(()=>{document.getElementById('cph-img').classList.add('zoomed')},100);
+  },
+
+  setSubFilt(btn,sub){
+    this.catSub=sub;this.catVis=12;
+    document.querySelectorAll('.cpg-fc').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    this.renderCatGrid();
+  },
+
+  getFilteredCat(){
+    let d=DB.filter(p=>p.cat===this.curCat);
+    if(this.catSub!=='all')d=d.filter(p=>p.sub===this.catSub);
+    if(this.catSort==='az')d.sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+    else if(this.catSort==='easy')d.sort((a,b)=>a.diff-b.diff);
+    else if(this.catSort==='yield')d.sort((a,b)=>b.pop-a.pop);
+    else d.sort((a,b)=>b.pop-a.pop);
+    return d;
+  },
+
+  renderCatGrid(){
+    const g=document.getElementById('cat-grid');
+    const d=this.getFilteredCat();
+    document.getElementById('cpt-count').textContent=d.length+' نبات';
+    g.innerHTML=[...Array(Math.min(6,d.length))].map(()=>`<div class="sk-card"><div class="sk sk-img"></div><div class="sk-bd"><div class="sk sk-ln"></div><div class="sk sk-ln" style="width:60%"></div></div></div>`).join('');
+    setTimeout(()=>{
+      g.innerHTML=d.slice(0,this.catVis).map((p,i)=>this.card(p,i)).join('');
+      this._io();
+    },350);
+    document.getElementById('cat-lm').style.display=d.length>this.catVis?'block':'none';
+  },
+
+  loadMoreCat(){
+    const d=this.getFilteredCat();
+    if(this.catVis>=d.length)return;
+    this.catVis=Math.min(this.catVis+12,d.length);
+    const g=document.getElementById('cat-grid');
+    const slice=d.slice(this.catVis-12,this.catVis);
+    g.insertAdjacentHTML('beforeend',slice.map((p,i)=>this.card(p,this.catVis-12+i)).join(''));
+    this._io();
+    document.getElementById('cat-lm').style.display=d.length>this.catVis?'block':'none';
+  },
+
+  _io(){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(!e.isIntersecting)return;
+        const n=e.target.querySelector('[data-target]');
+        if(n)counter(n);io.unobserve(e.target);
+      });
+    },{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+    document.querySelectorAll('.pcard,.stat-box,.sc-stat').forEach(el=>io.observe(el));
+  },
+
+  toggleTheme(){
+    this.dark=!this.dark;
+    localStorage.setItem('nb-dark',this.dark?'1':'0');
+    this.dark?document.body.setAttribute('data-dark',''):document.body.removeAttribute('data-dark');
+    document.getElementById('thm-btn').textContent=this.dark?'☀️':'🌙';
+    showToast(this.dark?'🌙 الوضع الداكن':'☀️ الوضع الفاتح','inf');
+  }
+};
+
+// ═════════════════════════════════════════
+// COUNTER
+// ═════════════════════════════════════════
+function counter(el){
+  const tg=parseInt(el.dataset.target)||0,dur=1400,start=performance.now();
+  const up=now=>{const p=Math.min((now-start)/dur,1);const e2=p===1?1:1-Math.pow(2,-10*p);el.textContent=Math.floor(e2*tg).toLocaleString('ar');if(p<1)requestAnimationFrame(up)};
+  requestAnimationFrame(up);
+}
+
+// ═════════════════════════════════════════
+// PAGE ROUTER
+// ═════════════════════════════════════════
+let currentPage='home';
+function showPage(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+pg).classList.add('active');
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('active'));
+  currentPage=pg;
+  window.scrollTo({top:0,behavior:'smooth'});
+  // update nav active
+  if(pg==='home')document.getElementById('nl-home')?.classList.add('active');
+  if(pg==='search')document.getElementById('nl-srch')?.classList.add('active');
+}
+
+function showCatPage(catId){
+  showPage('cat');
+  const map={vegetables:'nl-veg',fruits:'nl-fr',ornamental:'nl-or'};
+  document.getElementById(map[catId])?.classList.add('active');
+  App.buildCatPage(catId);
+}
+
+// ═════════════════════════════════════════
+// SEARCH FUNCTIONS
+// ═════════════════════════════════════════
+function heroSearch(){
+  const q=document.getElementById('sc-inp').value.trim();
+  if(q){showPage('search');setTimeout(()=>doFullSearch(q),100);}
+}
+function heroQS(q){
+  document.getElementById('sc-inp').value=q;App.renderHeroDd(q);
+}
+function closeScDd(){document.getElementById('sc-dd').classList.remove('on')}
+function clearHist(){App.hist=[];localStorage.removeItem('nb-hist');closeScDd()}
+function openFromHeroSr(id,field){closeScDd();openModal(id,SE.FT[field]||'ov')}
+
+function doFullSearch(q){
+  if(typeof q==='string'&&q){document.getElementById('sp-inp').value=q}
+  const query=document.getElementById('sp-inp')?.value?.trim()||q||'';
+  const area=document.getElementById('sp-results');
+  if(!area)return;
+  if(!query){
+    area.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🔍</div><p style="font-size:15px">اكتب في خانة البحث لعرض النتائج</p></div>';
+    return;
+  }
+  const ico=document.getElementById('sp-ico');
+  if(ico)ico.style.animation='spin .5s linear infinite';
+  setTimeout(()=>{
+    if(ico)ico.style.animation='';
+    const res=SE.search(query);
+    App._logSearch(query);
+    if(!res.length){
+      const sug=SE.suggest(query);
+      area.innerHTML=`<div style="text-align:center;padding:60px 20px"><div style="font-size:56px;margin-bottom:16px;opacity:.4">🔍</div><h2 style="font-family:var(--f-display);font-size:2rem;color:var(--ink);margin-bottom:8px">لم أجد نتائج</h2><p style="color:var(--muted);font-size:14px;margin-bottom:20px">لا توجد نتائج لـ "${query}"</p>${sug?`<button class="sdd-sug" onclick="doFullSearch('${sug}')">هل تقصد: ${sug}؟</button>`:''}</div>`;
+      return;
+    }
+    area.innerHTML=`<div class="sp-results-head"><span class="sp-res-count">${res.length} نتيجة لـ "<strong>${query}</strong>"</span></div>${res.map((r,i)=>spRow(r,query,i)).join('')}`;
+  },200);
+}
+
+function spRow(r,q,i){
+  const{p,flds,snps,sc}=r;
+  return `<div class="sp-result-item" style="animation-delay:${i*40}ms" onclick="openModal('${p.id}','${SE.FT[flds[0]]||'ov'}')">
+    <img class="sp-ri-img" src="${p.img}" alt="${p.name}" loading="lazy">
+    <div class="sp-ri-body">
+      <div class="sp-ri-name">${SE.hl(p.name,q)}</div>
+      <div class="sp-ri-fields">${flds.slice(0,4).map(f=>`<span class="sp-ri-field">${SE.FN[f]||f}</span>`).join('')}</div>
+      ${snps[0]?`<div class="sp-ri-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+    </div>
+    <span class="sp-ri-score">صلة ${sc}</span>
+  </div>`;
+}
+
+// ═════════════════════════════════════════
+// MODAL
+// ═════════════════════════════════════════
+let CP=null,CT='ov';
+function openModal(id,tab='ov'){
+  CP=DB.find(p=>p.id===id);if(!CP)return;CT=tab;
+  document.getElementById('modal-content').innerHTML=buildModal();
+  swTab(tab);
+  document.getElementById('modal-bg').classList.add('on');
+  document.body.style.overflow='hidden';
+  document.addEventListener('keydown',_onEsc);
+  const box=document.querySelector('.modal-box');
+  let sy=0;
+  box.addEventListener('touchstart',e=>{sy=e.touches[0].clientY},{passive:true,once:true});
+  box.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>80)closeModal()},{once:true});
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('on');
+  document.body.style.overflow='';
+  document.removeEventListener('keydown',_onEsc);
+}
+function _onEsc(e){if(e.key==='Escape')closeModal()}
+
+function buildModal(){
+  const p=CP;
+  const fav=App.favs.has(p.id);
+  const diff=[...Array(5)].map((_,i)=>`<span style="color:${i<p.diff?'var(--brand-xl)':'var(--line2)'}">★</span>`).join('');
+  return `
+  <div class="mh">
+    <img src="${p.img}" alt="${p.name}">
+    <div class="mh-grad"></div>
+    <div class="mh-info">
+      <div class="mh-en">${p.nameEn} · ${p.sub}</div>
+      <div class="mh-name">${p.name}</div>
+      <div class="mh-sci">${p.nameSci}</div>
+      <div class="mh-chips">
+        <span class="mh-chip">${p.cat==='vegetables'?'🥦 خضروات':p.cat==='fruits'?'🍎 فاكهة':'🌸 زينة'}</span>
+        ${p.export?'<span class="mh-chip">✈️ للتصدير</span>':''}
+        ${p.featured?'<span class="mh-chip">⭐ مميز</span>':''}
+      </div>
+    </div>
+  </div>
+  <div class="mquick">
+    <div class="mq"><span class="mq-i">⭐</span><div><div class="mq-lbl">الصعوبة</div><div class="mq-v" style="font-size:14px">${diff}</div></div></div>
+    <div class="mq"><span class="mq-i">🌾</span><div><div class="mq-lbl">الإنتاج</div><div class="mq-v">${p.yield||'–'}</div></div></div>
+    <div class="mq"><span class="mq-i">⏱️</span><div><div class="mq-lbl">المدة</div><div class="mq-v">${p.period||'–'}</div></div></div>
+  </div>
+  <div class="mact">
+    <button class="ma ma-p${fav?' fv':''}" id="mfav-btn" onclick="App.togFav('${p.id}',null);this.className='ma ma-p'+(App.favs.has('${p.id}')?' fv':'');this.textContent=App.favs.has('${p.id}')?'❤️ في المفضلة':'🤍 أضف للمفضلة'">${fav?'❤️ في المفضلة':'🤍 أضف للمفضلة'}</button>
+    <button class="ma ma-s" onclick="shareP()">🔗 مشاركة</button>
+    <button class="ma ma-s" onclick="print()">🖨️</button>
+  </div>
+  <div class="mtabs" id="m-tabs">
+    ${[{id:'ov',l:'📋 عام'},{id:'cult',l:'🌱 زراعة'},{id:'irr',l:'💧 ري'},{id:'fert',l:'💊 تسميد'},{id:'dis',l:'🦠 أمراض'},{id:'harv',l:'🌾 حصاد'},{id:'tips',l:'💡 نصائح'}].map(t=>`<button class="mt" id="mt-${t.id}" onclick="swTab('${t.id}')">${t.l}</button>`).join('')}
+  </div>
+  <div id="m-panels"></div>`;
+}
+
+function swTab(id){
+  CT=id;
+  document.querySelectorAll('.mt').forEach(t=>t.classList.remove('on'));
+  document.getElementById('mt-'+id)?.classList.add('on');
+  const el=document.getElementById('m-panels');
+  if(el)el.innerHTML=`<div class="tp on">${buildTab(id)}</div>`;
+}
+
+function buildTab(id){
+  const p=CP;
+  if(id==='ov')return `
+    <p class="tp-ov">${p.ov}</p>
+    <div class="tp-h">🌱 التربة والمناخ</div>
+    <div class="ig">
+      <div class="ic"><span class="ic-i">🌱</span><div class="ic-l">نوع التربة</div><div class="ic-v">${p.soil?.type||'–'}</div></div>
+      <div class="ic"><span class="ic-i">🧪</span><div class="ic-l">pH المثالي</div><div class="ic-v">${p.soil?.ph||'–'}</div></div>
+      <div class="ic"><span class="ic-i">🌡️</span><div class="ic-l">الحرارة المثلى</div><div class="ic-v">${p.climate?.tideal||'–'}</div></div>
+      <div class="ic"><span class="ic-i">☀️</span><div class="ic-l">الإضاءة</div><div class="ic-v">${p.climate?.sun||'–'}</div></div>
+      <div class="ic"><span class="ic-i">💧</span><div class="ic-l">الرطوبة</div><div class="ic-v">${p.climate?.humid||'–'}</div></div>
+      <div class="ic"><span class="ic-i">📍</span><div class="ic-l">مناطق الزراعة</div><div class="ic-v">${(p.regions||[]).slice(0,4).join(' · ')}</div></div>
+    </div>
+    ${p.nutri&&Object.keys(p.nutri.p100||{}).length?`
+    <div class="tp-h">🥗 القيمة الغذائية / 100جم</div>
+    <div class="nutri-g">${Object.entries(p.nutri.p100).map(([k,v])=>`<div class="nutri-r"><span class="nutri-k">${k}</span><span class="nutri-v">${v}</span></div>`).join('')}</div>
+    ${p.nutri.ben?.length?`<div class="tp-h">💚 الفوائد الصحية</div><div class="tip-list">${p.nutri.ben.map((b,i)=>`<div class="tip-row"><span class="tip-n">${i+1}</span><span class="tip-t">${b}</span></div>`).join('')}</div>`:''}`:''}`;
+
+  if(id==='cult')return `
+    <div class="tp-h">📅 مواعيد الزراعة</div>
+    <div class="tip-list">${Object.values(p.plant||{}).filter(v=>v&&typeof v==='object').map(s=>`<div class="tip-row"><span class="tip-n">📅</span><span class="tip-t"><strong>${s.name}</strong>: ${s.months}</span></div>`).join('')}${p.plant?.best?`<div class="tip-row" style="border-color:var(--brand)"><span class="tip-n" style="background:var(--gold-l)">⭐</span><span class="tip-t"><strong>الأفضل: ${p.plant.best}</strong></span></div>`:''}</div>
+    <div class="tp-h">📐 المسافات</div>
+    <div class="ig">
+      <div class="ic"><span class="ic-i">↕️</span><div class="ic-l">بين الصفوف</div><div class="ic-v">${p.space?.rows||'–'} سم</div></div>
+      <div class="ic"><span class="ic-i">↔️</span><div class="ic-l">بين النباتات</div><div class="ic-v">${p.space?.plants||'–'} سم</div></div>
+      <div class="ic"><span class="ic-i">⬇️</span><div class="ic-l">عمق الزراعة</div><div class="ic-v">${p.space?.depth||'–'} سم</div></div>
+      <div class="ic"><span class="ic-i">🌿</span><div class="ic-l">نبات/فدان</div><div class="ic-v">${p.space?.ppf?.toLocaleString('ar')||'–'}</div></div>
+    </div>
+    <div class="tp-h">🌱 البذور والشتل</div>
+    <div class="ig">
+      <div class="ic"><span class="ic-i">⚖️</span><div class="ic-l">الكمية</div><div class="ic-v">${p.seeds?.qty||'–'}</div></div>
+      <div class="ic"><span class="ic-i">📅</span><div class="ic-l">الإنبات</div><div class="ic-v">${p.seeds?.germ||'–'}</div></div>
+      <div class="ic"><span class="ic-i">🌱</span><div class="ic-l">عمر الشتلة</div><div class="ic-v">${p.seeds?.age||'–'}</div></div>
+    </div>
+    ${p.stages?.length?`<div class="tp-h">📈 مراحل النمو</div><div class="tl">${p.stages.map((s,i)=>`<div class="tl-r"><div class="tl-dot">${i+1}</div><div><div class="tl-s">${s.s}</div><div class="tl-d">${s.d} يوم</div></div></div>`).join('')}</div>`:''}`
+
+  if(id==='irr')return `
+    <div class="ig"><div class="ic" style="grid-column:1/-1"><span class="ic-i">💧</span><div class="ic-l">طريقة الري</div><div class="ic-v">${p.irr?.method||'–'}</div></div></div>
+    <div class="tp-h">📅 جدول الري</div>
+    <div class="ig">
+      <div class="ic"><span class="ic-i">❄️</span><div class="ic-l">الشتاء</div><div class="ic-v">${p.irr?.winter||'–'}</div></div>
+      <div class="ic"><span class="ic-i">☀️</span><div class="ic-l">الصيف</div><div class="ic-v">${p.irr?.summer||'–'}</div></div>
+      <div class="ic"><span class="ic-i">🌸</span><div class="ic-l">الإزهار</div><div class="ic-v">${p.irr?.flower||'–'}</div></div>
+      <div class="ic"><span class="ic-i">💦</span><div class="ic-l">الاحتياج الكلي</div><div class="ic-v">${p.irr?.total||'–'}</div></div>
+    </div>
+    ${p.irr?.crit?.length?`<div class="tp-h">⚡ المراحل الحرجة</div><div class="tip-list">${p.irr.crit.map(s=>`<div class="tip-row"><span class="tip-n" style="background:var(--red)">!</span><span class="tip-t">${s}</span></div>`).join('')}</div>`:''}`
+
+  if(id==='fert'){const f=p.fert;return `
+    <div class="ig">${Object.entries(f?.total||{}).map(([k,v])=>`<div class="ic"><span class="ic-i">💊</span><div class="ic-l">${k}</div><div class="ic-v">${v}</div></div>`).join('')}</div>
+    ${f?.pre?`<div class="tip-row" style="margin:12px 0"><span class="tip-n">🌱</span><span class="tip-t"><strong>قبل الزراعة:</strong> ${f.pre}</span></div>`:''}
+    <div class="tp-h">📅 برنامج التسميد</div>
+    <div style="overflow-x:auto"><table class="ft-tbl"><thead><tr><th>التوقيت</th><th>النوع</th><th>الكمية</th><th>الطريقة</th><th>المنتج</th></tr></thead><tbody>${(f?.sched||[]).map(r=>`<tr><td>${r.t}</td><td>${r.tp}</td><td>${r.qty}</td><td>${r.m}</td><td>${r.p}</td></tr>`).join('')}</tbody></table></div>
+    ${f?.def?`<div class="tp-h">⚠️ أعراض نقص العناصر</div><div class="def-grid">${Object.entries(f.def).map(([k,v])=>`<div class="def-c"><div class="def-e">${k}</div><div class="def-s">${v}</div></div>`).join('')}</div>`:''}`}
+
+  if(id==='dis')return `
+    ${(p.diseases||[]).map(d=>`<div class="dis-card ${d.sev||''}">
+      <div class="dis-head"><span class="dis-nm">${d.name}</span><span class="dis-pt">${d.sci||''}</span>${d.sev?`<span class="dis-sv ${d.sev}">${d.sev==='خطير'?'🔴':d.sev==='متوسط'?'🟡':'🟢'} ${d.sev}</span>`:''}</div>
+      <div class="dis-body">
+        ${d.symp?`<p><strong>الأعراض:</strong> ${typeof d.symp==='object'?Object.values(d.symp).join(' · '):d.symp}</p>`:''}
+        ${d.treat?.chem?`<p><strong>العلاج:</strong> ${d.treat.chem.map(t=>`${t.p} — ${t.d} — ${t.int}`).join(' | ')}</p>`:''}
+        ${d.prev?.length?`<p><strong>الوقاية:</strong> ${d.prev.join(' · ')}</p>`:''}</div>
+    </div>`).join('')}
+    <div class="tp-h">🧪 المبيدات الموصى بها</div>
+    <div class="ptags">${(p.pest||[]).map(pp=>`<span class="ptag-btn">${pp}</span>`).join('')}</div>`
+
+  if(id==='harv')return `
+    <div class="tp-h">🌾 علامات النضج</div>
+    <div class="tip-list">${(p.harvest?.signs||[]).map(s=>`<div class="tip-row"><span class="tip-n">✓</span><span class="tip-t">${s}</span></div>`).join('')}</div>
+    <div class="ig">
+      <div class="ic"><span class="ic-i">🤲</span><div class="ic-l">الطريقة</div><div class="ic-v">${p.harvest?.method||'–'}</div></div>
+      <div class="ic"><span class="ic-i">⏰</span><div class="ic-l">التوقيت</div><div class="ic-v">${p.harvest?.time||'–'}</div></div>
+      <div class="ic"><span class="ic-i">🔄</span><div class="ic-l">الفترة</div><div class="ic-v">${p.harvest?.intv||'–'}</div></div>
+      ${p.harvest?.post?.temp?`<div class="ic"><span class="ic-i">🌡️</span><div class="ic-l">درجة التخزين</div><div class="ic-v">${p.harvest.post.temp}</div></div>`:''}
+      ${p.harvest?.post?.life?`<div class="ic"><span class="ic-i">⏳</span><div class="ic-l">الصلاحية</div><div class="ic-v">${p.harvest.post.life}</div></div>`:''}
+      ${p.harvest?.post?.grade?`<div class="ic"><span class="ic-i">✈️</span><div class="ic-l">معيار التصدير</div><div class="ic-v">${p.harvest.post.grade}</div></div>`:''}
+    </div>
+    ${p.econ?`<div class="tp-h">💰 التحليل الاقتصادي</div>
+    <div class="econ-g">
+      <div class="econ-c"><span class="econ-ico">💸</span><div class="econ-v">${p.econ.costs||'–'}</div><div class="econ-l">التكاليف</div></div>
+      <div class="econ-c"><span class="econ-ico">💵</span><div class="econ-v">${p.econ.rev||'–'}</div><div class="econ-l">الإيراد</div></div>
+      <div class="econ-c"><span class="econ-ico">📈</span><div class="econ-v">${p.econ.profit||'–'}</div><div class="econ-l">الربح</div></div>
+    </div>
+    ${p.econ.markets?.length?`<div class="ptags">${p.econ.markets.map(m=>`<span class="ptag-btn">🌍 ${m}</span>`).join('')}</div>`:''}`:''}`
+
+  if(id==='tips')return `
+    <div class="tp-h">💡 نصائح الخبراء</div>
+    <div class="tip-list">${(p.tips||[]).map((t,i)=>`<div class="tip-row"><span class="tip-n">${i+1}</span><span class="tip-t">${t}</span></div>`).join('')}</div>
+    ${p.vars?.length?`<div class="tp-h">🔬 الأصناف المتاحة</div><div class="var-grid">${p.vars.map(v=>`<div class="var-c"><div class="var-nm">${v.name}</div><div class="var-m">${v.co}</div><div class="var-m">${v.for||''}</div>${v.y?`<div class="var-y">🌾 ${v.y}</div>`:''}</div>`).join('')}</div>`:''}`
+
+  return '';
+}
+
+function shareP(){if(navigator.share&&CP)navigator.share({title:CP.name,text:CP.ov,url:location.href});else{navigator.clipboard?.writeText(location.href);showToast('✅ تم نسخ الرابط','ok')}}
+
+// ═════════════════════════════════════════
+// AUTH
+// ═════════════════════════════════════════
+function openAuth(tab){document.getElementById('auth-bg').classList.add('on');swAuth(tab)}
+function closeAuth(){document.getElementById('auth-bg').classList.remove('on')}
+function swAuth(tab){
+  document.getElementById('af-l').style.display=tab==='login'?'flex':'none';
+  document.getElementById('af-r').style.display=tab==='reg'?'flex':'none';
+  document.getElementById('at-l').classList.toggle('on',tab==='login');
+  document.getElementById('at-r').classList.toggle('on',tab==='reg');
+}
+function chkStr(v){const f=document.getElementById('str-f');let s=0;if(v.length>=8)s++;if(/[A-Za-z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;f.style.width=['0%','25%','50%','75%','100%'][s];f.style.background=['','#c0392b','#e67e22','#27ae60','#1B6B3A'][s]}
+function hLogin(e){e.preventDefault();showToast('⚙️ أضف Firebase config لتفعيل الدخول','inf');closeAuth()}
+function hReg(e){e.preventDefault();showToast('⚙️ أضف Firebase config لتفعيل التسجيل','inf');closeAuth()}
+
+// ═════════════════════════════════════════
+// TOAST
+// ═════════════════════════════════════════
+function showToast(msg,type='inf'){
+  const w=document.getElementById('tw');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;el.textContent=msg;w.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(-12px) scale(.9)';el.style.transition='all .3s';setTimeout(()=>el.remove(),300)},2700);
+}
+
+// ═════════════════════════════════════════
+// RIPPLE
+// ═════════════════════════════════════════
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('button,.pcard,.cat-card');if(!btn)return;
+  const r=document.createElement('span');r.className='rip';
+  const rc=btn.getBoundingClientRect();const sz=Math.max(rc.width,rc.height)*2;
+  r.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-rc.left-sz/2}px;top:${e.clientY-rc.top-sz/2}px`;
+  btn.style.position='relative';btn.style.overflow='hidden';btn.appendChild(r);
+  setTimeout(()=>r.remove(),750);
+});
+
+// ═════════════════════════════════════════
+// NAV
+// ═════════════════════════════════════════
+document.getElementById('ham').addEventListener('click',function(){
+  this.classList.toggle('x');
+  const m=document.getElementById('mob-menu');
+  m.style.display=m.style.display==='flex'?'none':'flex';
+});
+function closeMob(){document.getElementById('ham').classList.remove('x');document.getElementById('mob-menu').style.display='none'}
+document.getElementById('thm-btn').addEventListener('click',()=>App.toggleTheme());
+
+// ═════════════════════════════════════════
+// START
+// ═════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>App.init());
+</script>
+</body>
+</html> 
