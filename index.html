@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-   <meta name="google-site-verification" content="firebase=nabtex-b8475" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="نبتيكس Nabtex — موسوعة زراعية احترافية">
@@ -147,6 +146,13 @@ img{display:block;max-width:100%}
 @media(max-width:768px){
   .nav-links,.nav-actions .btn-nav-o{display:none}
   .ham{display:flex}
+  .btn-nav-o {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+  .nav-actions {
+    gap: 4px;
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -589,6 +595,13 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 @media(max-width:768px){
   .nav-links,.nav-actions .btn-nav-o{display:none}
   .ham{display:flex}
+  .btn-nav-o {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+  .nav-actions {
+    gap: 4px;
+  }
   .cat-cards{grid-template-columns:1fr;gap:14px}
   .cat-card{height:240px}
   .cat-card-name{font-size:1.7rem}
@@ -717,6 +730,33 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .search-card { margin: 16px 0 24px !important; padding: 16px; }
   .hero { min-height: 100vh; min-height: 100svh; padding-bottom: 50px; }
 }
+
+/* تحسينات نافذة المصادقة على الهواتف */
+@media (max-width: 520px) {
+  .auth-bg {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .auth-box {
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 0;
+  }
+  .auth-body {
+    padding: 20px;
+  }
+  .aform {
+    gap: 12px;
+  }
+  .fg input, .fg select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  .btn-sub, .btn-goo {
+    padding: 12px;
+  }
+}
 </style>
 
 </head>
@@ -760,7 +800,12 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
       <button class="btn-nav-o" id="loginBtn" onclick="openAuth('login')">دخول</button>
       <button class="btn-nav-o" id="registerBtn" onclick="openAuth('reg')">ابدأ مجاناً</button>
       <div id="userMenu" style="display:none; position:relative;">
-        <button class="nav-icon-btn" id="userAvatarBtn">👤</button>
+        <button class="nav-icon-btn" id="userAvatarBtn" style="padding:0; display:flex; align-items:center; justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
         <div id="userDropdown" style="display:none; position:absolute; top:100%; left:0; background:var(--card); border-radius:12px; box-shadow:var(--s3); padding:8px; min-width:160px; z-index:100;">
           <div id="userNameDisplay" style="padding:8px 12px; border-bottom:1px solid var(--line); font-weight:bold;"></div>
           <a href="#" onclick="showPage('profile'); closeMob(); return false" style="display:block; padding:8px 12px; text-decoration:none; color:var(--ink);">👤 ملفي الشخصي</a>
@@ -1134,14 +1179,19 @@ async function loadUserFavorites() {
       const favs = favDoc.data().plants || [];
       userFavorites = new Set(favs);
     } else {
+      // Create empty favorites document for new user
+      await db.collection('favorites').doc(currentUser.uid).set({ plants: [] });
       userFavorites.clear();
     }
     // Sync with App.favs
     App.favs = userFavorites;
     refreshAllFavIcons();
   } catch (err) {
-    console.error("Error loading favorites:", err);
-    showToast("⚠️ فشل تحميل المفضلة", "err");
+    console.warn("Error loading favorites:", err);
+    // Fallback to empty favorites, don't show error to user
+    userFavorites.clear();
+    App.favs = new Set();
+    refreshAllFavIcons();
   }
 }
 
@@ -1174,9 +1224,11 @@ async function loadUserProfile() {
   const profileEmail = document.getElementById('profileEmail');
   const profileRole = document.getElementById('profileRole');
   const profileFavCount = document.getElementById('profileFavCount');
+  
   if (profileName) profileName.textContent = currentUser.displayName || currentUser.email.split('@')[0];
   if (profileEmail) profileEmail.textContent = currentUser.email;
   if (profileFavCount) profileFavCount.textContent = userFavorites.size;
+  
   try {
     const userDoc = await db.collection('users').doc(currentUser.uid).get();
     if (userDoc.exists) {
@@ -1187,6 +1239,7 @@ async function loadUserProfile() {
     }
   } catch (err) {
     console.error("Error loading user role:", err);
+    if (profileRole) profileRole.textContent = 'مزارع';
   }
 }
 
@@ -1243,7 +1296,22 @@ async function signInWithGoogle() {
     closeAuth();
     showPage('profile');
   } catch (error) {
-    showToast('فشل تسجيل الدخول بـ Google', 'err');
+    console.error("Google sign-in error:", error);
+    let msg = 'فشل تسجيل الدخول بـ Google: ';
+    switch (error.code) {
+      case 'auth/popup-blocked':
+        msg += 'الرجاء السماح للنوافذ المنبثقة في المتصفح';
+        break;
+      case 'auth/cancelled-popup-request':
+        msg += 'تم إلغاء طلب تسجيل الدخول';
+        break;
+      case 'auth/unauthorized-domain':
+        msg += 'النطاق غير مصرح به. أضف النطاق في Firebase Console (Authentication → Authorized domains).';
+        break;
+      default:
+        msg += error.message;
+    }
+    showToast(msg, 'err');
   }
 }
 
@@ -2290,7 +2358,7 @@ function buildTab(id){
     <div class="ig">${Object.entries(f?.total||{}).map(([k,v])=>`<div class="ic"><span class="ic-i">💊</span><div class="ic-l">${k}</div><div class="ic-v">${v}</div></div>`).join('')}</div>
     ${f?.pre?`<div class="tip-row" style="margin:12px 0"><span class="tip-n">🌱</span><span class="tip-t"><strong>قبل الزراعة:</strong> ${f.pre}</span></div>`:''}
     <div class="tp-h">📅 برنامج التسميد</div>
-    <div style="overflow-x:auto"><table class="ft-tbl"><thead><tr><th>التوقيت</th><th>النوع</th><th>الكمية</th><th>الطريقة</th><th>المنتج</th></tr></thead><tbody>${(f?.sched||[]).map(r=>`<tr><td>${r.t}</td><td>${r.tp}</td><td>${r.qty}</td><td>${r.m}</td><td>${r.p}</td></tr>`).join('')}</tbody></table></div>
+    <div style="overflow-x:auto"><table class="ft-tbl"><thead><tr><th>التوقيت</th><th>النوع</th><th>الكمية</th><th>الطريقة</th><th>المنتج</th> </thead><tbody>${(f?.sched||[]).map(r=>`<tr><td>${r.t}</td><td>${r.tp}</td><td>${r.qty}</td><td>${r.m}</td><td>${r.p}</td></tr>`).join('')}</tbody></table></div>
     ${f?.def?`<div class="tp-h">⚠️ أعراض نقص العناصر</div><div class="def-grid">${Object.entries(f.def).map(([k,v])=>`<div class="def-c"><div class="def-e">${k}</div><div class="def-s">${v}</div></div>`).join('')}</div>`:''}`}
   if(id==='dis')return `
     ${(p.diseases||[]).map(d=>`<div class="dis-card ${d.sev||''}">
@@ -2352,6 +2420,18 @@ function setupMobileMenuOutsideClick() {
   });
 }
 setupMobileMenuOutsideClick();
+
+// User dropdown toggle
+document.getElementById('userAvatarBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('userDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+});
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('userMenu');
+  const dropdown = document.getElementById('userDropdown');
+  if (menu && dropdown && !menu.contains(e.target)) dropdown.style.display = 'none';
+});
 
 document.getElementById('thm-btn').addEventListener('click',()=>App.toggleTheme());
 
