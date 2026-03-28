@@ -100,7 +100,7 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV
+   NAV (مع رابط الأمراض)
 ═══════════════════════════════════════════ */
 .nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
 .nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
@@ -899,6 +899,86 @@ body.modal-open { overflow: hidden; }
   font-weight: bold;
   color: var(--ink);
 }
+
+/* تحسينات إضافية للشاشات الصغيرة جداً */
+@media (max-width: 400px) {
+  .hero-ctas .btn-hero-p, .hero-ctas .btn-hero-s, .hero-ctas .btn-hero-diseases {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  .hero-pills .hpill {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  .search-card {
+    padding: 12px;
+  }
+  .sc-stats {
+    font-size: 12px;
+  }
+  .sc-stat-n {
+    font-size: 1.2rem;
+  }
+  .profile-card {
+    margin: 0 12px;
+  }
+  .profile-stats {
+    gap: 12px;
+  }
+  .profile-stats .stat-number {
+    font-size: 22px;
+  }
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+  }
+  .edit-profile-btn, .edit-role-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  .sp-bar {
+    padding: 2px 2px 2px 10px;
+  }
+  .sp-bar-inp {
+    font-size: 14px;
+    padding: 8px 8px;
+  }
+  .sp-bar-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .sp-chip {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+  .cpg-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cpg-sort {
+    width: 100%;
+  }
+  .cpg-sub-filter {
+    gap: 4px;
+  }
+  .cpg-fc {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .disease-card {
+    margin: 0 8px;
+  }
+  .disease-card-name {
+    font-size: 1.2rem;
+  }
+  .disease-card-desc {
+    font-size: 12px;
+  }
+  .disease-card-affected {
+    font-size: 11px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1031,7 +1111,7 @@ body.modal-open { overflow: hidden; }
       </div>
     </div>
     <div class="hero-scroll">
-      <span>اكتشف</span>
+      <!-- تم إزالة كلمة "اكتشف" -->
       <div class="hero-scroll-line"></div>
     </div>
     <div class="hero-wave">
@@ -1404,6 +1484,10 @@ const firebaseConfig = {
   appId: "1:568685866343:web:7f938e92b562a6c862d3c2",
   measurementId: "G-50TNNDM704"
 };
+
+// ملاحظة: لضمان عمل تسجيل الدخول عبر Google عند استضافة الموقع على nabtex.netlify.app،
+// يجب إضافة النطاق "nabtex.netlify.app" إلى قائمة النطاقات المسموحة في Firebase Console:
+// Authentication → Settings → Authorized domains
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -2598,7 +2682,7 @@ async function signInWithGoogle() {
         msg += 'تم إلغاء طلب تسجيل الدخول';
         break;
       case 'auth/unauthorized-domain':
-        msg += 'النطاق غير مصرح به. أضف النطاق في Firebase Console (Authentication → Authorized domains).';
+        msg += 'النطاق غير مصرح به. أضف النطاق في Firebase Console (Authentication → Settings → Authorized domains).';
         break;
       default:
         msg += error.message;
@@ -3232,9 +3316,31 @@ document.addEventListener('DOMContentLoaded',()=>{
     el.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
   });
 });
+
+// ======================== إضافة دوال تسجيل الدخول المفقودة ========================
+async function hLogin(event) {
+  event.preventDefault();
+  const form = event.target;
+  const email = form.querySelector('input[type="email"]').value;
+  const password = form.querySelector('input[type="password"]').value;
+  await signInWithEmail(email, password);
+}
+
+async function hReg(event) {
+  event.preventDefault();
+  const form = event.target;
+  const name = form.querySelector('input[type="text"]').value;
+  const email = form.querySelector('input[type="email"]').value;
+  const password = form.querySelector('input[type="password"]').value;
+  const confirm = form.querySelectorAll('input[type="password"]')[1].value;
+  const roleSelect = form.querySelector('select');
+  const role = roleSelect.options[roleSelect.selectedIndex].text;
+  await signUpWithEmail(name, email, password, role, confirm);
+}
 </script>
 </body>
 </html>
+  
   
   
   
