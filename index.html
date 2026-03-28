@@ -100,7 +100,7 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV (مع رابط الأمراض)
+   NAV
 ═══════════════════════════════════════════ */
 .nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
 .nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
@@ -248,7 +248,7 @@ img{display:block;max-width:100%}
 .sc-inp::placeholder{color:rgba(255,255,255,0.7);font-size:14px;}
 .sc-go{margin:5px;padding:9px 20px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-size:13px;font-weight:700;transition:all .2s var(--ease-spring);flex-shrink:0}
 .sc-go:hover{background:var(--brand-l);transform:scale(1.05)}
-.sc-dd{position:absolute;top:calc(100% + 8px);right:0;left:0;background:var(--card);border-radius:var(--r3);border:1px solid var(--line2);box-shadow:var(--s5);display:none;z-index:600;max-height:400px;overflow-y:auto}
+.sc-dd{position:absolute;top:calc(100% + 8px);right:0;left:0;background:var(--card);border-radius:var(--r3);border:1px solid var(--line2);box-shadow:var(--s5);display:none;z-index:600;max-height:500px;overflow-y:auto}
 .sc-dd.on{display:block;animation:ddIn .22s var(--ease-out)}
 @keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .sc-dd::-webkit-scrollbar{width:3px}
@@ -869,6 +869,36 @@ body.modal-open { overflow: hidden; }
 .affected-plants-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .affected-plant-tag{background:var(--brand-mist);color:var(--brand);padding:5px 12px;border-radius:40px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
 .affected-plant-tag:hover{background:var(--brand);color:#fff;transform:translateY(-2px);}
+
+/* تحسين القائمة المنسدلة للمستخدم */
+#userDropdown {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--s4);
+  padding: 8px;
+  min-width: 200px;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line2);
+  transition: all 0.2s ease;
+}
+#userDropdown a, #userDropdown button {
+  display: block;
+  padding: 10px 16px;
+  text-align: right;
+  border-radius: 12px;
+  transition: background 0.15s;
+  font-size: 14px;
+}
+#userDropdown a:hover, #userDropdown button:hover {
+  background: var(--bg2);
+}
+#userNameDisplay {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-weight: bold;
+  color: var(--ink);
+}
 </style>
 </head>
 <body>
@@ -1362,7 +1392,8 @@ body.modal-open { overflow: hidden; }
 
 <div id="tw"></div>
 <button id="stk" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
-  <script>
+
+<script>
 // ======================== FIREBASE CONFIG ========================
 const firebaseConfig = {
   apiKey: "AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM",
@@ -1829,7 +1860,7 @@ const DiseasesDB = [
   }
 ];
 
-// ======================== SEARCH ENGINE (يحوي النباتات والأمراض) ========================
+// ======================== SEARCH ENGINE ========================
 const SE = {
   W:{name:10,nameEn:9,tags:8,diseases:7,ov:6,tips:5,fert:5,irr:5,pests:4,soil:4,climate:4,regions:3,pest:3,harvest:3,nutri:2,vars:2,econ:2},
   SYN:{
@@ -1911,7 +1942,7 @@ const SE = {
   }
 };
 
-// ======================== APP OBJECT (مع تحسين البحث والمفضلة) ========================
+// ======================== APP OBJECT ========================
 const App = {
   dark: localStorage.getItem('nb-dark')==='1',
   favs: new Set(JSON.parse(localStorage.getItem('nb-favs')||'[]')),
@@ -1932,7 +1963,6 @@ const App = {
     this._heroCanvas();
     this._heroWords();
     setTimeout(_observeReveals,700);
-    // تحديث إحصائيات الأمراض
     document.getElementById('cat-pill-diseases').textContent = DiseasesDB.length+' أمراض';
   },
 
@@ -2026,7 +2056,7 @@ const App = {
       dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">لا نتائج</span><button class="sdd-close" onclick="closeScDd()">✕</button></div><div class="sdd-empty"><div class="sdd-empty-ico">🔍</div><div class="sdd-empty-t">لم أجد شيئاً</div><div class="sdd-empty-d">لا توجد نتائج لـ "${q}"</div>${sug?`<div class="sdd-sug-wrap"><button class="sdd-sug" onclick="heroQS('${sug}')">هل تقصد: ${sug}؟</button></div>`:''}</div>`;
       dd.classList.add('on');return;
     }
-    dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">${res.length} نتيجة</span><button class="sdd-close" onclick="closeScDd()">✕</button></div>${res.slice(0,6).map((r,i)=>this.heroSrRow(r,q,i)).join('')}`;
+    dd.innerHTML=`<div class="sdd-head"><span class="sdd-head-txt">${res.length} نتيجة</span><button class="sdd-close" onclick="closeScDd()">✕</button></div>${res.slice(0,10).map((r,i)=>this.heroSrRow(r,q,i)).join('')}`;
     dd.classList.add('on');
     this._logSearch(q);
   },
@@ -2338,7 +2368,7 @@ function refreshAllFavIcons() {
   });
 }
 
-// ======================== PROFILE FUNCTIONS (PREMIUM) ========================
+// ======================== PROFILE FUNCTIONS ========================
 async function loadUserProfile() {
   if (!currentUser) return;
   const profileName = document.getElementById('profileName');
@@ -2353,7 +2383,6 @@ async function loadUserProfile() {
   if (profileEmail) profileEmail.textContent = currentUser.email;
   if (profileFavCount) profileFavCount.textContent = userFavorites.size;
   
-  // تاريخ الانضمام
   try {
     const userDoc = await db.collection('users').doc(currentUser.uid).get();
     if (userDoc.exists) {
@@ -2361,8 +2390,11 @@ async function loadUserProfile() {
       userRole = role;
       if (profileRoleSpan) profileRoleSpan.textContent = role;
       if (userDoc.data().createdAt) {
-        const date = userDoc.data().createdAt.toDate();
-        if (profileJoinDate) profileJoinDate.textContent = date.toLocaleDateString('ar-EG');
+        const createdDate = userDoc.data().createdAt.toDate();
+        const now = new Date();
+        const diffTime = Math.abs(now - createdDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (profileJoinDate) profileJoinDate.textContent = diffDays + ' يوم';
       } else {
         if (profileJoinDate) profileJoinDate.textContent = '--';
       }
@@ -2377,7 +2409,7 @@ async function loadUserProfile() {
     userRole = 'مزارع';
     if (profileJoinDate) profileJoinDate.textContent = '--';
   }
-  // طريقة التسجيل
+  
   if (currentUser.providerData) {
     const provider = currentUser.providerData[0]?.providerId;
     if (provider === 'google.com') userProvider = 'Google';
@@ -2385,7 +2417,7 @@ async function loadUserProfile() {
     else userProvider = '--';
     if (profileProvider) profileProvider.textContent = userProvider;
   }
-  // صورة رمزية (اختيارية)
+  
   const profileAvatar = document.getElementById('profileAvatar');
   const profileAvatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
   if (currentUser.photoURL) {
@@ -2405,7 +2437,6 @@ function toggleProfileEdit() {
   const saveBtn = document.getElementById('saveProfileBtn');
   const roleEditBtn = document.querySelector('.edit-role-btn');
   if (profileEditMode) {
-    // تحويل الاسم إلى حقل إدخال
     const currentName = profileNameSpan.textContent;
     const input = document.createElement('input');
     input.type = 'text';
@@ -2419,14 +2450,13 @@ function toggleProfileEdit() {
     saveBtn.style.display = 'block';
     roleEditBtn.style.display = 'inline-block';
   } else {
-    // إلغاء التعديل
     const input = document.getElementById('editNameInput');
     if (input) {
       profileNameSpan.textContent = input.value;
     }
     editBtn.textContent = '✏️ تعديل';
     saveBtn.style.display = 'none';
-    roleEditBtn.style.display = 'inline-block'; // يبقى ظاهراً
+    roleEditBtn.style.display = 'inline-block';
   }
 }
 
@@ -2446,7 +2476,6 @@ function editRole() {
   select.style.cssText = 'padding:6px 12px; border-radius:40px; border:1px solid var(--line); background:var(--bg2); color:var(--ink);';
   roleSpan.innerHTML = '';
   roleSpan.appendChild(select);
-  // تغيير زر التعديل إلى حفظ
   const roleEditBtn = document.querySelector('.edit-role-btn');
   roleEditBtn.textContent = 'حفظ';
   roleEditBtn.onclick = saveRoleEdit;
@@ -2459,11 +2488,9 @@ function saveRoleEdit() {
   const roleSpan = document.getElementById('profileRole');
   roleSpan.textContent = newRole;
   userRole = newRole.replace(/[🌾👨‍🔬🎓🏢]\s*/, '');
-  // حفظ الدور في Firebase
   if (currentUser) {
     db.collection('users').doc(currentUser.uid).set({ role: userRole }, { merge: true }).catch(console.error);
   }
-  // إعادة زر التعديل
   const roleEditBtn = document.querySelector('.edit-role-btn');
   roleEditBtn.textContent = 'تعديل';
   roleEditBtn.onclick = editRole;
@@ -2478,7 +2505,6 @@ async function saveProfileChanges() {
       await currentUser.updateProfile({ displayName: newName });
     }
   }
-  // صورة رمزية (إذا تم اختيار ملف)
   if (tempAvatarFile) {
     const storageRef = storage.ref();
     const avatarRef = storageRef.child(`avatars/${currentUser.uid}`);
@@ -2487,9 +2513,8 @@ async function saveProfileChanges() {
     await currentUser.updateProfile({ photoURL: avatarUrl });
     tempAvatarFile = null;
   }
-  // تحديث الواجهة
   await loadUserProfile();
-  toggleProfileEdit(); // إغلاق وضع التعديل
+  toggleProfileEdit();
   showToast('✅ تم حفظ الملف الشخصي', 'ok');
 }
 
@@ -2794,6 +2819,10 @@ let currentPage='home';
 let _pgTimer=null;
 
 function showPage(pg,opts={}){
+  // إغلاق القائمة المنسدلة للمستخدم عند تغيير الصفحة
+  const dropdown = document.getElementById('userDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  
   if(currentPage===pg&&!opts.force)return;
   const prev=document.getElementById('pg-'+currentPage);
   const next=document.getElementById('pg-'+pg);
@@ -3088,6 +3117,7 @@ function setupMobileMenuOutsideClick() {
 }
 setupMobileMenuOutsideClick();
 
+// قائمة المستخدم المنبثقة
 document.getElementById('userAvatarBtn').addEventListener('click', function(e) {
   e.stopPropagation();
   const dropdown = document.getElementById('userDropdown');
@@ -3096,7 +3126,9 @@ document.getElementById('userAvatarBtn').addEventListener('click', function(e) {
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('userMenu');
   const dropdown = document.getElementById('userDropdown');
-  if (menu && dropdown && !menu.contains(e.target)) dropdown.style.display = 'none';
+  if (menu && dropdown && !menu.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
 });
 
 document.getElementById('thm-btn').addEventListener('click',()=>App.toggleTheme());
@@ -3203,3 +3235,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
+  
+  
+  
+  
