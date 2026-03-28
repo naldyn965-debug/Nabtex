@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,45 +19,29 @@
 
 <style>
 /* ═══════════════════════════════════════════
-   DESIGN TOKENS
+   DESIGN TOKENS — PREMIUM DAY MODE
 ═══════════════════════════════════════════ */
 :root{
-  --brand:#1B6B3A;--brand-d:#134d2a;--brand-l:#2d9055;
-  --brand-xl:#4ab870;--brand-mist:#e8f5ee;--brand-pale:#f2faf5;
-
-  /* neutrals */
-  --ink:#0f1f16;--ink2:#1e3a28;
-  --slate:#3a5945;--muted:#6b8f78;
-  --line:#e0ede5;--line2:#c8ddd2;
-  --bg:#f8fdf9;--bg2:#f0f7f2;--bg3:#e8f2eb;
+  --brand:#1B6B3A;--brand-d:#0f552e;--brand-l:#2d9a58;
+  --brand-xl:#5fc97e;--brand-mist:#eef8f0;--brand-pale:#f5fbf6;
+  --ink:#1e2a24;--ink2:#2c3e32;
+  --slate:#3e5d48;--muted:#6d8f7a;
+  --line:#e2eee5;--line2:#cfe2d4;
+  --bg:#fafef9;--bg2:#f3faf4;--bg3:#ecf5ee;
   --white:#ffffff;
-
-  /* accent gold */
-  --gold:#b8860b;--gold-l:#d4a017;--gold-pale:#fdf8e8;
-
-  /* status */
+  --gold:#c9871a;--gold-l:#e5a343;--gold-pale:#fff6e8;
   --red:#c0392b;--orange:#e67e22;--green:#27ae60;
-
-  /* surfaces */
-  --card:var(--white);--glass:rgba(248,253,249,.9);
-
-  /* shadows */
-  --s1:0 1px 4px rgba(15,31,22,.06);
-  --s2:0 3px 12px rgba(15,31,22,.08);
-  --s3:0 8px 28px rgba(15,31,22,.11);
-  --s4:0 16px 56px rgba(15,31,22,.15);
-  --s5:0 32px 80px rgba(15,31,22,.18);
-  --sglow:0 0 0 3px rgba(27,107,58,.18);
-
-  /* type */
+  --card:var(--white);--glass:rgba(250,254,249,.9);
+  --s1:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);
+  --s2:0 4px 12px rgba(0,0,0,0.04),0 2px 4px rgba(0,0,0,0.02);
+  --s3:0 8px 28px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.02);
+  --s4:0 16px 48px rgba(0,0,0,0.08),0 8px 24px rgba(0,0,0,0.04);
+  --s5:0 24px 64px rgba(0,0,0,0.12),0 12px 32px rgba(0,0,0,0.06);
+  --sglow:0 0 0 3px rgba(27,107,58,.12);
   --f-ui:'Cairo',sans-serif;
   --f-display:'Cormorant Garamond',serif;
-
-  /* spacing */
   --max:1380px;
   --r1:6px;--r2:10px;--r3:16px;--r4:24px;--rpill:9999px;
-
-  /* easing */
   --ease-out:cubic-bezier(.16,1,.3,1);
   --ease-spring:cubic-bezier(.34,1.56,.64,1);
   --ease-smooth:cubic-bezier(.65,0,.35,1);
@@ -66,6 +51,11 @@
   --card:#162019;--glass:rgba(11,22,13,.92);
   --ink:#e2f0e6;--ink2:#c0d9c6;--slate:#8ab89a;--muted:#5a8068;
   --line:rgba(27,107,58,.15);--line2:rgba(27,107,58,.25);
+  --s1:0 1px 4px rgba(0,0,0,.3);
+  --s2:0 4px 12px rgba(0,0,0,.4);
+  --s3:0 8px 28px rgba(0,0,0,.5);
+  --s4:0 16px 48px rgba(0,0,0,.6);
+  --s5:0 24px 64px rgba(0,0,0,.7);
 }
 
 /* ═══════════════════════════════════════════
@@ -78,7 +68,7 @@ a{text-decoration:none;color:inherit}
 button{cursor:pointer;border:none;outline:none;font-family:var(--f-ui);background:none}
 input,select{font-family:var(--f-ui);outline:none}
 img{display:block;max-width:100%}
-::selection{background:rgba(27,107,58,.2)}
+::selection{background:rgba(27,107,58,.1)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
 
@@ -93,11 +83,6 @@ img{display:block;max-width:100%}
 @keyframes ldIn{to{opacity:1;transform:none}}
 @keyframes lLine{to{width:200px}}
 @keyframes ldOut{to{opacity:0;transform:scale(1.04);pointer-events:none}}
-
-/* ═══════════════════════════════════════════
-   PROGRESS BAR
-═══════════════════════════════════════════ */
-#pgbar{position:fixed;top:0;left:0;right:0;height:2.5px;z-index:8000;background:linear-gradient(90deg,var(--brand),var(--gold-l),var(--brand-xl));transform-origin:left;transform:scaleX(0);transition:transform .08s linear}
 
 /* ═══════════════════════════════════════════
    CUSTOM CURSOR
@@ -115,11 +100,11 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV
+   NAV (مع رابط الأمراض)
 ═══════════════════════════════════════════ */
-.nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0)}
-.nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--line);transition:box-shadow .3s}
-.nav.up .nav-bg{box-shadow:var(--s3)}
+.nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
+.nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
+.nav.up .nav-bg{backdrop-filter:blur(28px);background:var(--glass);box-shadow:var(--s3);}
 .nav-inner{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:10px}
 .logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
 .logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,var(--brand-l),var(--brand-d));display:grid;place-items:center;box-shadow:var(--s2);transition:transform .3s var(--ease-spring)}
@@ -127,15 +112,40 @@ img{display:block;max-width:100%}
 .logo:hover .logo-mark{transform:rotate(-8deg) scale(1.1)}
 .logo-name{font-family:var(--f-display);font-size:22px;color:var(--ink);letter-spacing:.01em}
 .logo-name span{color:var(--brand)}
-.nav-links{display:flex;gap:2px;margin-right:32px}
+.nav-links{display:flex;gap:2px;margin-right:32px;flex-wrap:wrap}
 .nl{padding:6px 14px;border-radius:var(--rpill);font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;letter-spacing:.01em}
 .nl:hover{color:var(--brand);background:var(--brand-pale)}
 .nl.active{color:var(--brand);font-weight:700}
 .nav-actions{display:flex;align-items:center;gap:8px;margin-right:auto}
-.nav-icon-btn{width:38px;height:38px;border-radius:var(--rpill);display:grid;place-items:center;border:1px solid var(--line);color:var(--slate);font-size:17px;transition:all .2s var(--ease-spring);background:var(--card)}
+.nav-icon-btn{width:38px;height:38px;border-radius:var(--rpill);display:grid;place-items:center;border:1px solid var(--line);color:var(--slate);font-size:17px;transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);background:var(--card)}
 .nav-icon-btn:hover{transform:scale(1.08);border-color:var(--brand);color:var(--brand)}
-.btn-nav-o{padding:8px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;border:1.5px solid var(--line2);color:var(--brand);transition:all .2s var(--ease-spring)}
-.btn-nav-o:hover{border-color:var(--brand);background:var(--brand-pale);transform:translateY(-1px)}
+.btn-nav-o{padding:8px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);}
+#loginBtn.btn-nav-o{
+  border:1.5px solid var(--line2);
+  color:var(--brand);
+  background:transparent;
+}
+#registerBtn.btn-nav-o{
+  background:var(--brand);
+  color:#fff;
+  border:none;
+  box-shadow:0 2px 8px rgba(27,107,58,0.2);
+}
+#registerBtn.btn-nav-o:hover{
+  background:var(--brand-l);
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(27,107,58,0.4);
+  animation:glowPulse 1.2s ease-in-out infinite;
+}
+@keyframes glowPulse{
+  0%,100%{box-shadow:0 2px 8px rgba(27,107,58,0.2);}
+  50%{box-shadow:0 0 20px 5px rgba(75,184,112,0.5),0 4px 12px rgba(27,107,58,0.3);}
+}
+#loginBtn.btn-nav-o:hover{
+  border-color:var(--brand);
+  background:var(--brand-pale);
+  transform:translateY(-1px);
+}
 .ham{display:none;flex-direction:column;gap:5px;padding:8px;border-radius:var(--r2)}
 .ham span{display:block;width:20px;height:1.5px;background:var(--ink);border-radius:1px;transition:all .2s var(--ease-smooth)}
 .ham.x span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
@@ -146,13 +156,8 @@ img{display:block;max-width:100%}
 @media(max-width:768px){
   .nav-links,.nav-actions .btn-nav-o{display:none}
   .ham{display:flex}
-  .btn-nav-o {
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-  }
-  .nav-actions {
-    gap: 4px;
-  }
+  .btn-nav-o{padding:6px 12px !important;font-size:11px !important;}
+  .nav-actions{gap:4px;}
 }
 
 /* ═══════════════════════════════════════════
@@ -162,7 +167,7 @@ img{display:block;max-width:100%}
 .page.active{display:block}
 .reveal{opacity:0;transform:translateY(28px)}
 @media(pointer:fine){
-  .btn-hero-p:active,.btn-hero-s:active,.sc-go:active,.sp-bar-btn:active,.btn-lm:active,.btn-pcard:active,.ma-p:active,.ma-s:active,.nav-btn:active,.btn-nav-o:active{
+  .btn-hero-p:active,.btn-hero-s:active,.btn-hero-diseases:active,.sc-go:active,.sp-bar-btn:active,.btn-lm:active,.btn-pcard:active,.ma-p:active,.ma-s:active,.nav-btn:active,.btn-nav-o:active{
     transform:scale(.97)!important;opacity:.9;transition:transform .08s ease,opacity .08s ease!important
   }
   .cat-card:active{transform:translateY(-4px) scale(.98)!important;transition:transform .1s ease!important}
@@ -217,6 +222,8 @@ img{display:block;max-width:100%}
 .btn-hero-p:hover::before{opacity:1}
 .btn-hero-s{padding:15px 30px;border-radius:var(--rpill);border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.88);font-size:15px;font-weight:700;transition:all .25s var(--ease-spring);background:rgba(255,255,255,.08);backdrop-filter:blur(12px)}
 .btn-hero-s:hover{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.15);transform:translateY(-2px)}
+.btn-hero-diseases{padding:15px 30px;border-radius:var(--rpill);border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.88);font-size:15px;font-weight:700;transition:all .25s var(--ease-spring);background:rgba(255,255,255,.08);backdrop-filter:blur(12px)}
+.btn-hero-diseases:hover{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.15);transform:translateY(-2px)}
 .hero-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;opacity:0;animation:fadeUp .7s 1.15s var(--ease-out) forwards}
 .hpill{padding:8px 18px;border-radius:var(--rpill);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);font-size:13px;font-weight:600;transition:all .2s var(--ease-spring);cursor:pointer;backdrop-filter:blur(8px)}
 .hpill:hover{border-color:rgba(125,232,158,.5);color:#7de89e;background:rgba(27,107,58,.25);transform:translateY(-2px)}
@@ -227,11 +234,10 @@ img{display:block;max-width:100%}
 .hero-wave{position:absolute;bottom:-1px;left:0;right:0;z-index:3}
 
 /* ═══════════════════════════════════════════
-   HOME — SEARCH CARD (dark glass)
+   HOME — SEARCH CARD
 ═══════════════════════════════════════════ */
-.search-card{position:relative;z-index:4;width:100%;max-width:580px;margin:32px auto 0;background:rgba(255,255,255,.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--r3);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1);padding:24px;opacity:0;animation:fadeUp .7s 1.3s var(--ease-out) forwards}
-@keyframes scIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.sc-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.search-card{position:relative;z-index:4;width:100%;max-width:580px;margin:32px auto 0;background:rgba(0,0,0,0.55) !important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--r3);border:1px solid rgba(255,255,255,0.25);box-shadow:0 20px 40px rgba(0,0,0,0.4);padding:24px;opacity:0;animation:fadeUp .7s 1.3s var(--ease-out) forwards}
+.sc-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .sc-label::before{content:'';width:16px;height:1px;background:rgba(255,255,255,.3)}
 .sc-bar{display:flex;align-items:center;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--rpill);transition:border-color .15s,box-shadow .2s;position:relative}
 .sc-bar:focus-within{border-color:rgba(75,184,112,.6);box-shadow:0 0 0 3px rgba(27,107,58,.25)}
@@ -239,7 +245,7 @@ img{display:block;max-width:100%}
 .sc-bar-icon.spin{animation:spin .5s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .sc-inp{flex:1;padding:14px 0;background:transparent;color:#fff;font-size:15px;border:none;min-width:0}
-.sc-inp::placeholder{color:rgba(255,255,255,.38)}
+.sc-inp::placeholder{color:rgba(255,255,255,0.7);font-size:14px;}
 .sc-go{margin:5px;padding:9px 20px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-size:13px;font-weight:700;transition:all .2s var(--ease-spring);flex-shrink:0}
 .sc-go:hover{background:var(--brand-l);transform:scale(1.05)}
 .sc-dd{position:absolute;top:calc(100% + 8px);right:0;left:0;background:var(--card);border-radius:var(--r3);border:1px solid var(--line2);box-shadow:var(--s5);display:none;z-index:600;max-height:400px;overflow-y:auto}
@@ -270,15 +276,15 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sdd-sug{padding:8px 18px;border-radius:var(--rpill);border:1.5px solid var(--line2);color:var(--brand);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
 .sdd-sug:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-2px)}
 .sc-qtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.sc-qt{padding:5px 12px;border-radius:var(--rpill);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;background:rgba(255,255,255,.06);transition:all .15s;cursor:pointer}
+.sc-qt{padding:5px 12px;border-radius:var(--rpill);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);font-size:12px;font-weight:600;background:rgba(255,255,255,.15);transition:all .15s;cursor:pointer}
 .sc-qt:hover{border-color:rgba(75,184,112,.5);color:#7de89e;background:rgba(27,107,58,.25)}
 .sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid rgba(255,255,255,.1);margin-top:18px;padding-top:18px}
 .sc-stat{text-align:center}
 .sc-stat-n{font-family:var(--f-display);font-size:1.8rem;color:#fff;line-height:1}
-.sc-stat-l{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.04em}
+.sc-stat-l{font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px;letter-spacing:.04em}
 
 /* ═══════════════════════════════════════════
-   HOME — CATEGORIES STRIP
+   HOME — CATEGORIES STRIP (7 أقسام)
 ═══════════════════════════════════════════ */
 .cats-section{padding:80px 0}
 .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:44px}
@@ -288,7 +294,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sh-title{font-family:var(--f-display);font-size:clamp(2rem,3.5vw,3.2rem);color:var(--ink);line-height:1.1;letter-spacing:-.025em}
 .sec-link{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--rpill);border:1.5px solid var(--line2);color:var(--brand);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
 .sec-link:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,107,58,.3)}
-.cat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.cat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
 .cat-card{position:relative;border-radius:var(--r4);overflow:hidden;height:320px;cursor:pointer;box-shadow:var(--s2);transition:transform .4s var(--ease-out),box-shadow .4s}
 .cat-card:hover{transform:translateY(-8px);box-shadow:var(--s4)}
 .cat-card-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.52) saturate(.85);transition:transform .7s var(--ease-out),filter .4s}
@@ -303,15 +309,18 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .cat-card-pill{padding:4px 14px;border-radius:var(--rpill);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);font-size:13px;color:rgba(255,255,255,.75)}
 .cat-card-arr{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);display:grid;place-items:center;color:#fff;font-size:14px;transition:all .25s var(--ease-spring)}
 .cat-card:hover .cat-card-arr{background:var(--brand);border-color:var(--brand);transform:scale(1.1)}
+@media (max-width: 1100px) {
+  .cat-cards { grid-template-columns: repeat(2,1fr); gap: 20px; }
+}
+@media (max-width: 768px) {
+  .cat-cards { grid-template-columns: 1fr; gap: 14px; }
+  .cat-card { height: 240px; }
+}
 
 /* ═══════════════════════════════════════════
-   HOME — FEATURED
+   HOME — FEATURED & STATS
 ═══════════════════════════════════════════ */
 .featured-section{padding:80px 0;background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-
-/* ═══════════════════════════════════════════
-   HOME — STATS
-═══════════════════════════════════════════ */
 .stats-section{background:var(--brand-d);padding:72px 0;position:relative;overflow:hidden}
 .stats-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 50% 50%,rgba(75,184,112,.1) 0%,transparent 70%)}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);border-radius:var(--r4);overflow:hidden;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)}
@@ -324,47 +333,47 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .stat-l{font-size:12px;color:rgba(255,255,255,.38);letter-spacing:.1em;text-transform:uppercase}
 
 /* ═══════════════════════════════════════════
-   PLANT CARDS
+   PLANT CARDS (تحسينات نهائية)
 ═══════════════════════════════════════════ */
 .plants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px}
-.pcard{background:var(--card);border-radius:var(--r4);overflow:hidden;border:1px solid var(--line);box-shadow:var(--s1);cursor:pointer;position:relative;opacity:0;animation:cardIn .5s var(--ease-out) forwards;transition:transform .4s var(--ease-out),box-shadow .4s,border-color .2s}
-.pcard:hover{transform:translateY(-12px) scale(1.012);box-shadow:var(--s4),0 0 0 1px rgba(27,107,58,.12);border-color:var(--line2)}
-@keyframes cardIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-.pcard-img{position:relative;height:220px;overflow:hidden}
-.pcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease-out)}
-.pcard:hover .pcard-img img{transform:scale(1.09)}
-.pcard-img-veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(10,20,13,.8) 100%);opacity:.7;transition:opacity .3s}
-.pcard:hover .pcard-img-veil{opacity:.95}
-.pcard-bgs{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:5px}
-.pcbg{padding:3px 9px;border-radius:var(--rpill);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(8px)}
-.pcbg-cat{background:rgba(27,107,58,.82);color:#fff}
-.pcbg-cat.fr{background:rgba(184,134,11,.85)}
-.pcbg-cat.or{background:rgba(160,60,100,.82)}
-.pcbg-hot{background:rgba(255,255,255,.9);color:var(--brand-d)}
-.pcard-fav{position:absolute;top:10px;left:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-size:15px;transition:all .2s var(--ease-spring);z-index:2}
-.pcard-fav:hover{transform:scale(1.2)}
-.pcard-fav.on{background:rgba(255,80,80,.2);border-color:rgba(255,80,80,.35);animation:hPop .35s var(--ease-spring)}
-@keyframes hPop{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
-.pcard-hover-bar{position:absolute;bottom:0;left:0;right:0;padding:0 14px 12px;opacity:0;transform:translateY(8px);transition:all .25s var(--ease-out);pointer-events:none}
-.pcard:hover .pcard-hover-bar{opacity:1;transform:none;pointer-events:auto}
-.pcard-hover-inner{display:flex;gap:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);border-radius:var(--r2);padding:8px 12px}
-.phi{flex:1;text-align:center}
-.phi-v{font-size:12px;font-weight:700;color:#fff}
-.phi-l{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
-.pcard-body{padding:18px 20px 20px}
-.pcard-sci{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:4px;letter-spacing:.01em}
-.pcard-name{font-family:var(--f-display);font-size:1.45rem;color:var(--ink);line-height:1.2;margin-bottom:3px}
-.pcard-en{font-size:12px;color:var(--muted);margin-bottom:10px}
-.pcard-ov{font-size:13px;color:var(--slate);line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px}
-.pcard-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-.ptag{padding:3px 9px;border-radius:var(--rpill);background:var(--bg2);color:var(--slate);border:1px solid var(--line);font-size:11px;font-weight:600}
-.pcard-ft{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line)}
-.pcard-yield{font-size:12px;color:var(--brand);font-weight:700}
-.pcard-diff{display:flex;gap:2px}
-.pcd-on{color:var(--brand-xl);font-size:12px}
-.pcd-off{color:var(--line2);font-size:12px}
-.btn-pcard{padding:7px 16px;border-radius:var(--rpill);background:var(--brand-d);color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;transition:all .2s var(--ease-spring)}
-.btn-pcard:hover{background:var(--brand);transform:scale(1.06);box-shadow:0 4px 14px rgba(27,107,58,.35)}
+.pcard{background:var(--card);border-radius:24px;border:1px solid rgba(27,107,58,0.12);box-shadow:var(--s2);transition:all 0.35s cubic-bezier(0.2,0,0,1);overflow:hidden;position:relative;cursor:pointer;opacity:0;animation:cardAppear 0.5s cubic-bezier(0.2,0.9,0.4,1.1) forwards;}
+.pcard:hover{transform:translateY(-10px) scale(1.01);box-shadow:var(--s4),0 0 0 1px rgba(27,107,58,0.1);border-color:transparent;}
+@keyframes cardAppear{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.pcard-img{position:relative;height:220px;overflow:hidden;}
+.pcard-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s cubic-bezier(0.2,0.9,0.4,1.1);}
+.pcard:hover .pcard-img img{transform:scale(1.05);}
+.pcard-img-veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(10,20,13,.8) 100%);opacity:0.6;transition:opacity 0.3s;}
+.pcard:hover .pcard-img-veil{opacity:0.8;}
+.pcard-bgs{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:6px;z-index:2;}
+.pcbg{padding:4px 12px;border-radius:40px;font-size:10px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;backdrop-filter:blur(4px);background:rgba(0,0,0,0.6);color:white;border:1px solid rgba(255,255,255,0.2);}
+.pcbg-cat{background:rgba(27,107,58,0.85);}
+.pcbg-cat.fr{background:rgba(184,134,11,0.85);}
+.pcbg-cat.or{background:rgba(160,60,100,0.85);}
+.pcbg-hot{background:rgba(184,134,11,0.9);color:#fff;}
+.pcard-fav{position:absolute;top:14px;left:14px;width:36px;height:36px;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;transition:all 0.25s ease;z-index:2;border:1px solid rgba(255,255,255,0.3);}
+.pcard-fav:hover{transform:scale(1.15);background:rgba(0,0,0,0.6);}
+.pcard-fav.on{background:rgba(255,80,80,0.7);color:#ffcccc;border-color:rgba(255,255,255,0.6);}
+.pcard-hover-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);transform:translateY(100%);transition:transform 0.3s ease;z-index:2;pointer-events:none;}
+.pcard:hover .pcard-hover-bar{transform:translateY(0);}
+.pcard-hover-inner{display:flex;gap:12px;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);border-radius:40px;padding:8px 12px;justify-content:space-around;}
+.phi{flex:1;text-align:center;}
+.phi-v{font-size:12px;font-weight:700;color:#fff;}
+.phi-l{font-size:9px;color:rgba(255,255,255,0.7);margin-top:2px;text-transform:uppercase;}
+.pcard-body{padding:20px 20px 24px;background:var(--card);transition:background 0.2s;}
+.pcard-sci{font-size:11px;color:var(--muted);letter-spacing:0.02em;margin-bottom:6px;}
+.pcard-name{font-family:var(--f-display);font-size:1.4rem;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.2;}
+.pcard-en{font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;}
+.pcard-ov{font-size:13px;color:var(--slate);line-height:1.55;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pcard-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.ptag{padding:4px 10px;border-radius:30px;background:var(--brand-mist);color:var(--brand);font-size:10px;font-weight:600;transition:all 0.2s;}
+.ptag:hover{background:var(--brand);color:white;transform:scale(1.05);}
+.pcard-ft{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line);margin-top:4px;}
+.pcard-yield{font-size:12px;font-weight:700;color:var(--brand);background:var(--brand-pale);padding:4px 10px;border-radius:40px;}
+.pcard-diff{display:flex;gap:3px;font-size:12px;}
+.pcd-on{color:#f5b042;}
+.pcd-off{color:var(--line2);}
+.btn-pcard{background:var(--brand-d);color:white;padding:8px 18px;border-radius:40px;font-size:12px;font-weight:700;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);cursor:pointer;}
+.btn-pcard:hover{background:var(--brand);transform:scale(1.05);box-shadow:0 4px 12px rgba(27,107,58,0.3);}
 .sk{background:linear-gradient(100deg,var(--bg2) 30%,var(--bg3) 50%,var(--bg2) 70%);background-size:400%;animation:skA 1.6s ease-in-out infinite;border-radius:var(--r2)}
 @keyframes skA{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .sk-card{border-radius:var(--r4);overflow:hidden;border:1px solid var(--line);background:var(--card)}
@@ -373,7 +382,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sk-ln{height:12px}
 
 /* ═══════════════════════════════════════════
-   CATEGORY PAGE
+   CATEGORY PAGE (للمحاصيل)
 ═══════════════════════════════════════════ */
 .cat-page-hero{position:relative;height:320px;overflow:hidden;display:flex;align-items:flex-end}
 .cph-img{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.45) saturate(.8);transition:transform 15s ease-in-out;transform:scale(1.05)}
@@ -429,113 +438,109 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sp-ri-score{flex-shrink:0;font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);padding:4px 10px;border-radius:var(--rpill)}
 
 /* ═══════════════════════════════════════════
-   MODAL
+   MODAL (للمحاصيل)
 ═══════════════════════════════════════════ */
-.modal-bg{position:fixed;inset:0;z-index:700;display:none;align-items:flex-end;justify-content:center}
-@media(min-width:680px){.modal-bg{align-items:center;padding:24px}}
+body.modal-open { overflow: hidden; }
+.modal-bg{position:fixed;inset:0;z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.on{display:flex;animation:bgIn .28s ease forwards}
-@keyframes bgIn{from{opacity:0}to{opacity:1}}
-.modal-veil{position:absolute;inset:0;background:rgba(8,18,11,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.modal-box{position:relative;z-index:1;background:var(--bg);width:100%;max-width:960px;max-height:95svh;border-radius:var(--r4) var(--r4) 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--s5);animation:mboxUp .42s var(--ease-spring)}
-@media(min-width:680px){.modal-box{border-radius:var(--r4);max-height:90vh}}
-@keyframes mboxUp{from{transform:translateY(50px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-.modal-handle{width:32px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
-@media(min-width:680px){.modal-handle{display:none}}
-.modal-close{position:absolute;top:14px;left:14px;width:36px;height:36px;border-radius:50%;background:rgba(10,20,13,.5);backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;font-size:16px;z-index:20;transition:all .2s var(--ease-spring)}
-.modal-close:hover{background:rgba(10,20,13,.8);transform:scale(1.12) rotate(90deg)}
-.modal-scroll{overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.modal-veil{position:absolute;inset:0;background:rgba(8,18,11,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer}
+.modal-box{position:relative;z-index:1;background:var(--bg);width:100%;max-width:960px;max-height:90vh;border-radius:var(--r4);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--s5);animation:mboxUp .4s var(--ease-spring)}
+.modal-close{position:absolute;top:20px;right:20px;width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;cursor:pointer;z-index:30;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);border:1px solid rgba(255,255,255,0.2);}
+.modal-close:hover{background:rgba(0,0,0,0.9);transform:rotate(90deg) scale(1.1);}
+.modal-scroll{overflow-y:auto;flex:1;padding:0;max-height:calc(90vh - 20px)}
 .mh{position:relative;height:260px;flex-shrink:0}
 .mh img{width:100%;height:100%;object-fit:cover}
 .mh-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,18,11,.1) 0%,rgba(8,18,11,.88) 100%)}
-.mh-info{position:absolute;bottom:20px;right:22px;left:58px;color:#fff}
-.mh-en{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px}
+.mh-info{position:absolute;bottom:24px;left:24px;right:70px;color:#fff}
+.mh-en{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px}
 .mh-name{font-family:var(--f-display);font-size:clamp(2rem,5vw,2.8rem);line-height:1.1}
-.mh-sci{font-style:italic;font-size:13px;color:rgba(255,255,255,.45);margin-top:4px}
-.mh-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.mh-chip{padding:3px 10px;border-radius:var(--rpill);background:rgba(27,107,58,.3);border:1px solid rgba(27,107,58,.5);font-size:11px;color:rgba(255,255,255,.88);font-weight:700}
-.mquick{padding:18px 22px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
-.mq{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--line);transition:border-color .15s}
+.mh-sci{font-style:italic;font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.mh-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mh-chip{padding:4px 12px;border-radius:var(--rpill);background:rgba(27,107,58,.4);border:1px solid rgba(27,107,58,.6);font-size:11px;color:rgba(255,255,255,.9);font-weight:700}
+.mquick{padding:18px 24px;display:flex;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--bg2)}
+.mq{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:var(--r2);background:var(--card);border:1px solid var(--line);transition:border-color .15s}
 .mq:hover{border-color:var(--line2)}
-.mq-i{font-size:18px}
+.mq-i{font-size:20px}
 .mq-lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.07em;text-transform:uppercase}
-.mq-v{font-size:13px;font-weight:700;color:var(--ink);margin-top:1px}
-.mact{padding:14px 22px;display:flex;gap:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.ma{display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring)}
-.ma-p{background:var(--brand);color:#fff;flex:1;justify-content:center;box-shadow:0 4px 16px rgba(27,107,58,.3)}
-.ma-p:hover{background:var(--brand-l);transform:translateY(-2px)}
-.ma-p.fv{background:var(--red)}
+.mq-v{font-size:14px;font-weight:700;color:var(--ink);margin-top:2px}
+.mact{padding:14px 24px;display:flex;gap:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ma{display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all .2s var(--ease-spring);cursor:pointer}
+.ma-p{background:var(--brand);color:#fff;flex:1;justify-content:center;box-shadow:0 4px 12px rgba(27,107,58,.25)}
+.ma-p:hover{background:var(--brand-l);transform:translateY(-2px);box-shadow:0 0 15px rgba(75,184,112,0.6);}
+.ma-p.fv{background:var(--red);}
 .ma-s{background:var(--bg2);color:var(--ink2);border:1px solid var(--line2)}
-.ma-s:hover{background:var(--bg3);transform:translateY(-1px)}
-.mtabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex-shrink:0;position:sticky;top:0;background:var(--bg);z-index:10}
+.ma-s:hover{background:var(--bg3);transform:translateY(-1px);box-shadow:0 0 12px rgba(27,107,58,0.3);}
+.mtabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex-shrink:0;position:sticky;top:0;background:var(--bg);z-index:10;padding:0 8px}
 .mtabs::-webkit-scrollbar{display:none}
-.mt{flex-shrink:0;padding:13px 18px;font-size:13px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;cursor:pointer}
+.mt{flex-shrink:0;padding:14px 20px;font-size:13px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;cursor:pointer}
 .mt:hover{color:var(--ink)}
 .mt.on{color:var(--brand);border-bottom-color:var(--brand)}
-.tp{display:none;padding:26px}
-.tp.on{display:block;animation:tpIn .28s var(--ease-out)}
-@keyframes tpIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.tp{display:none;padding:24px}
+.tp.on{display:block;animation:fadeSlideUp 0.35s cubic-bezier(0.2,0.9,0.4,1.1);}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 .tp-ov{font-size:15px;line-height:1.85;color:var(--slate);border-right:3px solid var(--brand);padding-right:16px;margin-bottom:24px}
 .tp-h{font-family:var(--f-display);font-size:1.3rem;color:var(--ink);margin:20px 0 14px;display:flex;align-items:center;gap:10px}
 .tp-h::after{content:'';flex:1;height:1px;background:var(--line)}
-.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin:14px 0}
-.ic{padding:15px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .15s}
-.ic:hover{border-color:var(--line2);box-shadow:var(--s1)}
-.ic-i{font-size:22px;margin-bottom:7px;display:block}
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:18px 0}
+.ic{padding:16px;background:var(--bg2);border-radius:16px;border:1px solid var(--line);transition:all 0.2s;text-align:center}
+.ic:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:var(--s1)}
+.ic-i{font-size:26px;margin-bottom:8px;display:block}
 .ic-l{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:4px}
 .ic-v{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
-.ft-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
-.ft-tbl thead th{padding:10px 14px;text-align:right;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg2);border-bottom:2px solid var(--line2)}
-.ft-tbl tbody td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--ink);transition:background .12s}
+.ft-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+.ft-tbl thead th{padding:12px 14px;text-align:right;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg2);border-bottom:2px solid var(--line2)}
+.ft-tbl tbody td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink);transition:background .12s}
 .ft-tbl tbody tr:hover td{background:var(--bg2)}
 .ft-tbl tbody tr:last-child td{border-bottom:none}
-.dis-card{border-radius:var(--r2);border:1px solid var(--line);overflow:hidden;margin-bottom:12px;transition:border-color .2s}
-.dis-card:hover{border-color:var(--line2)}
+.dis-card{border-radius:16px;border:1px solid var(--line);overflow:hidden;margin-bottom:12px;transition:all 0.2s}
+.dis-card:hover{transform:translateY(-2px);box-shadow:var(--s2);border-color:var(--line2)}
 .dis-card.خطير{border-right:4px solid var(--red)}
 .dis-card.متوسط{border-right:4px solid var(--orange)}
 .dis-card.خفيف{border-right:4px solid var(--green)}
-.dis-head{display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap}
-.dis-nm{font-weight:700;color:var(--ink)}
+.dis-head{display:flex;align-items:center;gap:10px;padding:14px 18px;flex-wrap:wrap;background:var(--bg2)}
+.dis-nm{font-weight:800;font-size:1rem;color:var(--ink)}
 .dis-pt{font-size:12px;color:var(--muted);font-style:italic;flex:1}
-.dis-sv{padding:3px 10px;border-radius:var(--rpill);font-size:11px;font-weight:700}
+.dis-sv{padding:4px 12px;border-radius:40px;font-size:11px;font-weight:700}
 .dis-sv.خطير{background:rgba(192,57,43,.1);color:var(--red)}
 .dis-sv.متوسط{background:rgba(230,126,34,.12);color:var(--orange)}
 .dis-sv.خفيف{background:rgba(39,174,96,.1);color:var(--green)}
-.dis-body{padding:4px 16px 14px;border-top:1px solid var(--line)}
-.dis-body p{font-size:13px;color:var(--slate);margin:5px 0;line-height:1.55}
+.dis-body{padding:16px 18px;border-top:1px solid var(--line);background:var(--card)}
+.dis-body p{font-size:13px;color:var(--slate);margin:8px 0;line-height:1.55}
 .dis-body strong{color:var(--ink)}
 .tl{display:flex;flex-direction:column;padding:4px 0}
-.tl-r{display:flex;gap:13px;align-items:flex-start;padding:7px 0;position:relative}
+.tl-r{display:flex;gap:13px;align-items:flex-start;padding:8px 0;position:relative}
 .tl-r:not(:last-child)::after{content:'';position:absolute;right:11px;top:28px;bottom:0;width:2px;background:var(--line)}
-.tl-dot{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0;box-shadow:0 0 0 3px rgba(27,107,58,.15)}
+.tl-dot{width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;box-shadow:0 0 0 3px rgba(27,107,58,.15)}
 .tl-s{font-weight:700;color:var(--ink);font-size:14px}
 .tl-d{font-size:12px;color:var(--muted);margin-top:2px}
 .tip-list{display:flex;flex-direction:column;gap:9px}
-.tip-row{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .2s var(--ease-spring)}
-.tip-row:hover{border-color:var(--line2);transform:translateX(-4px)}
-.tip-n{width:27px;height:27px;border-radius:var(--r1);background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
-.tip-t{font-size:14px;color:var(--ink);line-height:1.6}
-.var-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin:12px 0}
-.var-c{padding:14px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);transition:all .2s}
-.var-c:hover{border-color:var(--gold-l);box-shadow:0 0 0 1px rgba(184,134,11,.18)}
-.var-nm{font-weight:700;font-size:14px;color:var(--ink)}
-.var-m{font-size:11px;color:var(--muted);margin-top:3px}
-.var-y{font-size:12px;color:var(--brand);font-weight:700;margin-top:7px}
+.tip-row{display:flex;gap:11px;align-items:flex-start;padding:14px 18px;background:var(--bg2);border-radius:16px;border:1px solid var(--line);transition:all 0.2s}
+.tip-row:hover{border-color:var(--line2);transform:translateX(-4px);box-shadow:var(--s1)}
+.tip-n{width:28px;height:28px;border-radius:30px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0}
+.tip-t{font-size:14px;color:var(--ink);line-height:1.5}
+.var-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:12px 0}
+.var-c{padding:16px;background:var(--bg2);border-radius:16px;border:1px solid var(--line);transition:all 0.2s}
+.var-c:hover{border-color:var(--gold-l);transform:translateY(-2px);box-shadow:var(--s1)}
+.var-nm{font-weight:800;font-size:1rem;color:var(--ink)}
+.var-m{font-size:11px;color:var(--muted);margin-top:4px}
+.var-y{font-size:12px;color:var(--brand);font-weight:700;margin-top:8px}
 .def-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin:12px 0}
-.def-c{padding:12px;background:var(--bg2);border-radius:var(--r2);border-right:3px solid var(--gold-l)}
+.def-c{padding:12px;background:var(--bg2);border-radius:12px;border-right:3px solid var(--gold-l)}
 .def-e{font-weight:700;font-size:13px;color:var(--ink)}
 .def-s{font-size:12px;color:var(--slate);margin-top:4px;line-height:1.5}
-.nutri-g{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0}
-.nutri-r{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:var(--r1)}
+.nutri-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0}
+.nutri-r{display:flex;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-radius:12px}
 .nutri-k{font-size:13px;color:var(--slate)}
 .nutri-v{font-size:13px;font-weight:700;color:var(--ink)}
-.econ-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
-.econ-c{padding:16px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line);text-align:center}
-.econ-ico{font-size:26px;display:block;margin-bottom:8px}
-.econ-v{font-weight:700;font-size:14px;color:var(--ink);margin-bottom:4px}
-.econ-l{font-size:11px;color:var(--muted)}
+.econ-g{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.econ-c{padding:18px 12px;background:var(--bg2);border-radius:16px;border:1px solid var(--line);text-align:center;transition:transform 0.2s}
+.econ-c:hover{transform:translateY(-3px)}
+.econ-ico{font-size:28px;display:block;margin-bottom:8px}
+.econ-v{font-weight:800;font-size:1.2rem;color:var(--ink);margin-bottom:4px}
+.econ-l{font-size:10px;color:var(--muted);text-transform:uppercase}
 .ptags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 .ptag-btn{padding:5px 13px;border-radius:var(--rpill);background:var(--bg2);color:var(--slate);font-size:12px;font-weight:600;border:1px solid var(--line);transition:all .15s}
-.ptag-btn:hover{border-color:var(--line2);color:var(--ink)}
+.ptag-btn:hover{border-color:var(--line2);color:var(--ink);box-shadow:0 0 8px rgba(27,107,58,0.3);}
 .footer{background:var(--brand-d);padding:68px 0 0}
 .footer-grid{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px}
 .flogo{font-family:var(--f-display);font-size:26px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
@@ -547,10 +552,10 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .footer-bot span{font-size:12px;color:rgba(255,255,255,.22)}
 .lm-wrap{text-align:center;margin-top:48px}
 .btn-lm{padding:14px 48px;border-radius:var(--rpill);background:transparent;color:var(--brand);border:2px solid var(--line2);font-size:14px;font-weight:700;transition:all .25s var(--ease-spring);letter-spacing:.04em}
-.btn-lm:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-3px);box-shadow:0 12px 32px rgba(27,107,58,.35)}
+.btn-lm:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-3px);box-shadow:0 0 20px rgba(75,184,112,0.6);}
 #stk{position:fixed;bottom:26px;left:20px;width:44px;height:44px;border-radius:50%;background:var(--brand-d);color:#fff;font-size:18px;display:grid;place-items:center;box-shadow:var(--s3);opacity:0;transform:scale(0) translateY(20px);transition:all .25s var(--ease-spring);z-index:200;border:1px solid rgba(255,255,255,.08)}
 #stk.on{opacity:1;transform:scale(1) translateY(0)}
-#stk:hover{background:var(--brand);transform:scale(1.12) translateY(0)}
+#stk:hover{background:var(--brand);transform:scale(1.12) translateY(0);box-shadow:0 0 12px rgba(75,184,112,0.5);}
 #tw{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:8500;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:center}
 .toast{padding:11px 22px;border-radius:var(--rpill);font-size:13px;font-weight:700;pointer-events:auto;animation:tIn .4s var(--ease-spring);box-shadow:var(--s3);display:flex;align-items:center;gap:8px}
 .toast.ok{background:var(--brand);color:#fff}
@@ -579,11 +584,11 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .str-bar{height:3px;background:var(--line);border-radius:2px;margin-top:5px;overflow:hidden}
 .str-f{height:100%;width:0;border-radius:2px;transition:width .2s,background .2s}
 .btn-sub{padding:13px;border-radius:var(--rpill);background:var(--brand);color:#fff;font-weight:700;font-size:15px;transition:all .2s var(--ease-spring)}
-.btn-sub:hover{background:var(--brand-l);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,107,58,.35)}
+.btn-sub:hover{background:var(--brand-l);transform:translateY(-2px);box-shadow:0 0 15px rgba(75,184,112,0.6);}
 .adiv{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
 .adiv::before,.adiv::after{content:'';flex:1;height:1px;background:var(--line)}
 .btn-goo{padding:11px;border-radius:var(--rpill);background:var(--bg2);color:var(--ink);font-weight:700;font-size:14px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s var(--ease-spring)}
-.btn-goo:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:var(--s2)}
+.btn-goo:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:0 0 12px rgba(27,107,58,0.3);}
 .rip{position:absolute;border-radius:50%;background:rgba(27,107,58,.18);animation:ripA .7s linear;pointer-events:none}
 @keyframes ripA{0%{transform:scale(0);opacity:.7}100%{transform:scale(4);opacity:0}}
 @media(max-width:1100px){
@@ -593,45 +598,31 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
 }
 @media(max-width:768px){
-  .nav-links,.nav-actions .btn-nav-o{display:none}
-  .ham{display:flex}
-  .btn-nav-o {
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-  }
-  .nav-actions {
-    gap: 4px;
-  }
-  .cat-cards{grid-template-columns:1fr;gap:14px}
-  .cat-card{height:240px}
-  .cat-card-name{font-size:1.7rem}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .footer-grid{grid-template-columns:1fr;gap:28px}
+  .hero{padding-top:80px;min-height:100svh}
+  .hero-content{margin-top:20px;padding-top:10px}
+  .hero-eyebrow{margin-top:0;margin-bottom:16px}
+  .plants-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+  .pcard-img{height:200px}
+  .pcard-body{padding:16px}
+  .pcard-name{font-size:1.3rem}
+  .ig{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .var-grid{grid-template-columns:1fr}
   .econ-g{grid-template-columns:1fr}
-  .ig{grid-template-columns:1fr 1fr}
-  .mact{flex-direction:column}
-  .ma-p{flex:none}
-  .hero-plants{display:none}
-  .hero-content{padding:0 20px}
-  .hero-scroll{display:none}
-  .search-card{padding:18px;margin-top:24px}
-  .sec-head{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:28px}
-  .cats-section,.featured-section{padding:52px 0}
-  .stats-section{padding:48px 0}
-  .plants-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-  .cph-name{font-size:2.2rem}
-  .cph-body{padding:20px 20px 28px}
-  .cat-page-content{padding:28px 0 56px}
-  .cpg-toolbar{flex-direction:column;align-items:flex-start}
-  .sp-result-item{gap:12px;padding:12px}
-  .sp-ri-img{width:56px;height:56px}
+  .nutri-g{grid-template-columns:1fr}
+  .mt{padding:10px 14px;font-size:12px}
+  .tip-row{padding:12px}
+  .modal-box{max-height:85vh;border-radius:20px}
+  .mh{height:200px}
+  .mh-info{bottom:16px;left:16px;right:60px}
+  .modal-close{top:12px;right:12px;width:40px;height:40px;font-size:20px}
+  .disease-modal-close{top:12px;right:12px;width:40px;height:40px;font-size:20px}
 }
 @media(max-width:520px){
   .plants-grid{grid-template-columns:1fr;gap:14px}
   .hero-h1{font-size:clamp(2.2rem,9vw,3rem)}
   .hero-sub{font-size:14px;margin-bottom:28px}
   .hero-ctas{flex-direction:column;align-items:stretch;gap:10px}
-  .btn-hero-p,.btn-hero-s{justify-content:center;padding:14px 20px}
+  .btn-hero-p,.btn-hero-s,.btn-hero-diseases{justify-content:center;padding:14px 20px}
   .hero-pills{gap:6px}
   .hpill{font-size:12px;padding:7px 13px}
   .nutri-g{grid-template-columns:1fr}
@@ -647,7 +638,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .mtabs .mt{padding:12px 13px;font-size:12px}
   .tp{padding:16px}
   .ig{grid-template-columns:1fr}
-  .modal-box{border-radius:20px 20px 0 0}
+  .modal-box{border-radius:20px}
   .pcard-ft{flex-wrap:wrap;gap:8px}
   .W{padding:0 16px}
   .cpg-sub-filter{gap:6px}
@@ -667,7 +658,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .tp-ov{font-size:14px}
   .dis-head{flex-wrap:wrap;gap:6px}
   .tl-r::after{right:10px}
-  .mh{height:220px}
+  .mh{height:200px}
   .mh-name{font-size:1.8rem}
   .sdd-row{padding:10px 14px}
   .sp-results-area{padding:0}
@@ -675,7 +666,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 @media(pointer:coarse){
   .pcard:active{transform:scale(.97)!important;box-shadow:var(--s1)!important;transition:transform .12s,box-shadow .12s!important}
   .cat-card:active{transform:scale(.97)!important;transition:transform .12s!important}
-  .btn-hero-p:active,.btn-hero-s:active,.btn-nav-o:active,.ma-p:active,.sc-go:active,.sp-bar-btn:active,.btn-lm:active,.btn-pcard:active{transform:scale(.96)!important;opacity:.9;transition:transform .1s!important}
+  .btn-hero-p:active,.btn-hero-s:active,.btn-hero-diseases:active,.btn-nav-o:active,.ma-p:active,.sc-go:active,.sp-bar-btn:active,.btn-lm:active,.btn-pcard:active{transform:scale(.96)!important;opacity:.9;transition:transform .1s!important}
   .hpill:active,.sc-qt:active,.sp-chip:active,.cpg-fc:active,.cph-back:active,.nl:active{transform:scale(.94)!important;transition:transform .1s!important}
   .sdd-row:active,.sp-result-item:active,.tip-row:active{background:var(--bg3)!important}
 }
@@ -705,14 +696,13 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .pcard::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.055) 50%,transparent 60%);transform:translateX(-100%);transition:transform .6s ease;z-index:1;pointer-events:none}
   .pcard:hover::before{transform:translateX(200%)}
 }
-.btn-hero-p,.btn-nav-o,.ma-p,.sc-go,.sp-bar-btn{position:relative;overflow:hidden}
-.btn-hero-p::before,.btn-nav-o::before,.ma-p::before,.sc-go::before,.sp-bar-btn::before{content:'';position:absolute;top:-50%;left:-80%;width:55%;height:200%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-18deg);transition:left .5s ease;pointer-events:none;z-index:0}
-.btn-hero-p:hover::before,.btn-nav-o:hover::before,.ma-p:hover::before,.sc-go:hover::before,.sp-bar-btn:hover::before{left:130%}
+.btn-hero-p,.btn-hero-diseases,.btn-nav-o,.ma-p,.sc-go,.sp-bar-btn{position:relative;overflow:hidden}
+.btn-hero-p::before,.btn-hero-diseases::before,.btn-nav-o::before,.ma-p::before,.sc-go::before,.sp-bar-btn::before{content:'';position:absolute;top:-50%;left:-80%;width:55%;height:200%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-18deg);transition:left .5s ease;pointer-events:none;z-index:0}
+.btn-hero-p:hover::before,.btn-hero-diseases:hover::before,.btn-nav-o:hover::before,.ma-p:hover::before,.sc-go:hover::before,.sp-bar-btn:hover::before{left:130%}
 .btn-hero-p span,.btn-hero-p svg{position:relative;z-index:1}
 #stk{bottom:calc(26px + env(safe-area-inset-bottom,0px))}
 .mob-menu{overflow:hidden;max-height:0;opacity:0;transition:max-height .32s var(--ease-out),opacity .28s ease,padding .28s ease;display:flex!important;padding-top:0;padding-bottom:0}
 .mob-menu.open{max-height:420px;opacity:1;padding-top:12px;padding-bottom:20px}
-.modal-handle{animation:handlePulse 2s 1s ease-in-out 3}
 .toast{max-width:88vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-result-item{animation:riIn .4s var(--ease-out) both}
 .pcard{animation-fill-mode:both}
@@ -730,7 +720,6 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   .search-card { margin: 16px 0 24px !important; padding: 16px; }
   .hero { min-height: 100vh; min-height: 100svh; padding-bottom: 50px; }
 }
-
 /* تحسينات نافذة المصادقة على الهواتف */
 @media (max-width: 520px) {
   .auth-bg {
@@ -757,17 +746,135 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
     padding: 12px;
   }
 }
-</style>
 
+/* تحسينات صفحة الأمراض */
+.diseases-page .diseases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+.disease-card {
+  background: var(--card);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: var(--s2);
+  cursor: pointer;
+}
+.disease-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--s4);
+}
+.disease-card-img {
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+.disease-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.disease-card:hover .disease-card-img img {
+  transform: scale(1.05);
+}
+.disease-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+.disease-card-body {
+  padding: 20px;
+}
+.disease-card-name {
+  font-family: var(--f-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.disease-card-sci {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+.disease-card-desc {
+  font-size: 13px;
+  color: var(--slate);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.disease-card-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.disease-tag {
+  padding: 4px 12px;
+  border-radius: 40px;
+  background: var(--bg2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand);
+}
+.disease-card-affected {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.disease-card-affected span:first-child {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* تحسين نافذة الأمراض */
+.disease-modal-bg{position:fixed;inset:0;z-index:701;display:none;align-items:center;justify-content:center;padding:20px}
+.disease-modal-bg.on{display:flex;animation:bgIn .28s ease forwards}
+.disease-modal-veil{position:absolute;inset:0;background:rgba(8,18,11,.85);backdrop-filter:blur(12px);cursor:pointer}
+.disease-modal-box{position:relative;z-index:1;background:var(--bg);width:100%;max-width:800px;max-height:85vh;border-radius:var(--r4);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--s5);animation:mboxUp .4s var(--ease-spring)}
+.disease-modal-close{position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;cursor:pointer;z-index:30;transition:all 0.2s ease;border:none}
+.disease-modal-close:hover{background:rgba(0,0,0,0.9);transform:rotate(90deg);}
+.disease-modal-scroll{overflow-y:auto;flex:1;padding:0}
+.disease-modal-header{position:relative;height:200px;flex-shrink:0}
+.disease-modal-header img{width:100%;height:100%;object-fit:cover}
+.disease-modal-header .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,18,11,.1) 0%,rgba(8,18,11,.85) 100%)}
+.disease-modal-header .info{position:absolute;bottom:20px;left:24px;right:70px;color:#fff}
+.disease-modal-header .info h2{font-family:var(--f-display);font-size:2rem;margin-bottom:4px}
+.disease-modal-header .info p{font-size:13px;opacity:.8}
+.disease-modal-content{padding:24px}
+.disease-modal-section{margin-bottom:24px}
+.disease-modal-section h3{font-family:var(--f-display);font-size:1.2rem;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.disease-modal-section h3 i{font-size:20px}
+.disease-modal-section p{font-size:14px;line-height:1.6;color:var(--slate)}
+.disease-modal-section ul{margin-top:8px;padding-right:20px}
+.disease-modal-section li{font-size:14px;color:var(--slate);margin-bottom:6px}
+.affected-plants-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.affected-plant-tag{background:var(--brand-mist);color:var(--brand);padding:5px 12px;border-radius:40px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.affected-plant-tag:hover{background:var(--brand);color:#fff;transform:translateY(-2px);}
+</style>
 </head>
 <body>
-
-<!-- CURSOR -->
+  <!-- CURSOR -->
 <div id="cur"></div>
 <div id="cur-r"></div>
-
-<!-- PROGRESS -->
-<div id="pgbar"></div>
 
 <!-- LOADER -->
 <div id="ldr">
@@ -793,6 +900,10 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
       <a href="#" class="nl" id="nl-veg" onclick="showCatPage('vegetables');return false">خضروات</a>
       <a href="#" class="nl" id="nl-fr" onclick="showCatPage('fruits');return false">فاكهة</a>
       <a href="#" class="nl" id="nl-or" onclick="showCatPage('ornamental');return false">زينة</a>
+      <a href="#" class="nl" id="nl-med" onclick="showCatPage('medicinal');return false">طبية وعطرية</a>
+      <a href="#" class="nl" id="nl-field" onclick="showCatPage('fieldcrops');return false">محاصيل حقلية</a>
+      <a href="#" class="nl" id="nl-cit" onclick="showCatPage('citrus');return false">موالح</a>
+      <a href="#" class="nl" id="nl-diseases" onclick="showDiseasesPage();return false">أمراض النبات</a>
       <a href="#" class="nl" id="nl-srch" onclick="showPage('search');return false">بحث</a>
     </div>
     <div class="nav-actions" id="nav-actions">
@@ -820,6 +931,10 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
     <a href="#" class="nl" onclick="showCatPage('vegetables');closeMob()">خضروات</a>
     <a href="#" class="nl" onclick="showCatPage('fruits');closeMob()">فاكهة</a>
     <a href="#" class="nl" onclick="showCatPage('ornamental');closeMob()">زينة</a>
+    <a href="#" class="nl" onclick="showCatPage('medicinal');closeMob()">طبية وعطرية</a>
+    <a href="#" class="nl" onclick="showCatPage('fieldcrops');closeMob()">محاصيل حقلية</a>
+    <a href="#" class="nl" onclick="showCatPage('citrus');closeMob()">موالح</a>
+    <a href="#" class="nl" onclick="showDiseasesPage();closeMob()">أمراض النبات</a>
     <a href="#" class="nl" onclick="showPage('search');closeMob()">بحث</a>
     <a href="#" class="nl" id="mobLogin" onclick="openAuth('login');closeMob()">تسجيل الدخول</a>
     <a href="#" class="nl" id="mobRegister" onclick="openAuth('reg');closeMob()">إنشاء حساب</a>
@@ -857,6 +972,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
           ابحث الآن
         </button>
         <button class="btn-hero-s" onclick="showCatPage('vegetables')">🥦 تصفح الخضروات</button>
+        <button class="btn-hero-diseases" onclick="showDiseasesPage()">🦠 تصفح أمراض النبات</button>
       </div>
       <div class="hero-pills">
         <button class="hpill" onclick="showPage('search');setTimeout(()=>doFullSearch('تسميد البطاطس'),50)">💊 تسميد البطاطس</button>
@@ -940,6 +1056,54 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
             </div>
           </div>
         </div>
+        <div class="cat-card" onclick="showCatPage('medicinal')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1628557465833-6a6a2c53c5e7?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🌿</span>
+            <div class="cat-card-name">طبية وعطرية</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-med">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+        <div class="cat-card" onclick="showCatPage('fieldcrops')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🌾</span>
+            <div class="cat-card-name">محاصيل حقلية</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-field">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+        <div class="cat-card" onclick="showCatPage('citrus')">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🍊</span>
+            <div class="cat-card-name">موالح</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-cit">... نبات</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
+        <div class="cat-card" onclick="showDiseasesPage()">
+          <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1585067189945-e9b2f9bbac30?w=900&q=80')"></div>
+          <div class="cat-card-veil"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-icon">🦠</span>
+            <div class="cat-card-name">أمراض النبات</div>
+            <div class="cat-card-meta">
+              <span class="cat-card-pill" id="cat-pill-diseases">3 أمراض</span>
+              <div class="cat-card-arr">←</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -968,7 +1132,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
       <div class="footer-grid">
         <div class="footer-brand">
           <div class="flogo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-xl)" stroke-width="2" stroke-linecap="round" width="26"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-xl)" stroke-width="2" stroke-linecap="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/></svg>
             Nabtex
           </div>
           <p>موسوعة زراعية احترافية للمزارع المصري والعربي. بيانات موثقة من FAO ووزارة الزراعة المصرية.</p>
@@ -978,6 +1142,10 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
           <a href="#" onclick="showCatPage('vegetables');return false">الخضروات</a>
           <a href="#" onclick="showCatPage('fruits');return false">الفاكهة</a>
           <a href="#" onclick="showCatPage('ornamental');return false">نباتات الزينة</a>
+          <a href="#" onclick="showCatPage('medicinal');return false">طبية وعطرية</a>
+          <a href="#" onclick="showCatPage('fieldcrops');return false">محاصيل حقلية</a>
+          <a href="#" onclick="showCatPage('citrus');return false">موالح</a>
+          <a href="#" onclick="showDiseasesPage();return false">أمراض النبات</a>
         </div>
         <div>
           <h4>بحث سريع</h4>
@@ -1063,30 +1231,71 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
   </section>
 </div>
 
-<!-- ══════════ PAGE: PROFILE ══════════ -->
+<!-- ══════════ PAGE: PROFILE (PREMIUM) ══════════ -->
 <div class="page" id="pg-profile">
   <section class="profile-page" style="padding: 80px 0; min-height: 80vh;">
     <div class="W">
-      <div class="profile-card" style="max-width: 600px; margin: 0 auto; background: var(--card); border-radius: var(--r4); padding: 32px; box-shadow: var(--s3);">
-        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 28px;">
-          <div style="width: 80px; height: 80px; background: var(--brand-mist); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px;">👤</div>
-          <div>
-            <h2 id="profileName" style="font-family: var(--f-display); font-size: 1.8rem; color: var(--ink);">--</h2>
-            <p id="profileEmail" style="color: var(--muted);">--</p>
+      <div class="profile-card" style="max-width: 700px; margin: 0 auto; background: var(--card); border-radius: var(--r4); box-shadow: var(--s4); overflow: hidden;">
+        <div style="background: linear-gradient(135deg, var(--brand-d) 0%, var(--brand) 100%); padding: 32px; text-align: center;">
+          <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border: 4px solid white; overflow: hidden;">
+            <img id="profileAvatar" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <span id="profileAvatarPlaceholder" style="font-size: 48px;">👤</span>
           </div>
+          <div class="profile-name-edit" style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+            <h2 id="profileName" style="font-family: var(--f-display); font-size: 1.8rem; color: white; margin: 0;">--</h2>
+            <button class="edit-profile-btn" onclick="toggleProfileEdit()" style="background: rgba(255,255,255,0.2); border: none; border-radius: 40px; padding: 6px 14px; color: white; font-size: 12px; cursor: pointer; transition: all 0.2s;">✏️ تعديل</button>
+          </div>
+          <p id="profileEmail" style="color: rgba(255,255,255,0.8); margin-top: 8px;">--</p>
         </div>
-        <div style="border-top: 1px solid var(--line); padding-top: 20px;">
-          <div class="fg" style="margin-bottom: 16px;">
-            <label>الدور</label>
-            <div id="profileRole" style="padding: 8px 12px; background: var(--bg2); border-radius: var(--r2); color: var(--ink);">--</div>
+        <div style="padding: 32px;">
+          <div class="profile-stats" style="display: flex; gap: 24px; justify-content: space-around; margin-bottom: 32px;">
+            <div style="text-align: center;">
+              <div class="stat-number" style="font-size: 28px; font-weight: bold; color: var(--brand);" id="profileFavCount">0</div>
+              <div style="font-size: 12px; color: var(--muted);">المفضلات</div>
+            </div>
+            <div style="text-align: center;">
+              <div class="stat-number" style="font-size: 28px; font-weight: bold; color: var(--brand);" id="profileJoinDate">--</div>
+              <div style="font-size: 12px; color: var(--muted);">تاريخ الانضمام</div>
+            </div>
           </div>
-          <div class="fg" style="margin-bottom: 16px;">
-            <label>عدد المفضلات</label>
-            <div id="profileFavCount" style="padding: 8px 12px; background: var(--bg2); border-radius: var(--r2); color: var(--brand); font-weight: bold;">0</div>
+          <div class="profile-info" style="border-top: 1px solid var(--line); padding-top: 24px;">
+            <div class="info-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line);">
+              <span style="font-weight: 600; color: var(--ink);">الدور</span>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span id="profileRole" style="color: var(--slate);">--</span>
+                <button class="edit-role-btn" onclick="editRole()" style="background: none; border: none; color: var(--brand); font-size: 12px; cursor: pointer;">تعديل</button>
+              </div>
+            </div>
+            <div class="info-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+              <span style="font-weight: 600; color: var(--ink);">طريقة التسجيل</span>
+              <span id="profileProvider" style="color: var(--slate);">--</span>
+            </div>
           </div>
-          <button class="btn-sub" onclick="showToast('🔧 سيتم تفعيل التعديل قريباً', 'inf')" style="margin-top: 20px; width: 100%;">تعديل الملف الشخصي</button>
+          <div class="profile-actions" style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-sub" onclick="saveProfileChanges()" id="saveProfileBtn" style="display: none; flex: 1;">💾 حفظ التغييرات</button>
+            <button class="btn-sub" onclick="changePassword()" style="background: var(--bg2); color: var(--ink); border: 1px solid var(--line);">🔐 تغيير كلمة المرور</button>
+          </div>
         </div>
       </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════ PAGE: DISEASES ══════════ -->
+<div class="page" id="pg-diseases">
+  <div class="cat-page-hero" style="height: 320px; overflow: hidden; display: flex; align-items: flex-end;">
+    <div class="cph-img" style="background-image: url('https://images.unsplash.com/photo-1585067189945-e9b2f9bbac30?w=1400&q=80'); background-size: cover; background-position: center; filter: brightness(.45) saturate(.8);"></div>
+    <div class="cph-veil"></div>
+    <div class="cph-body W">
+      <button class="cph-back" onclick="showPage('home')">← العودة للرئيسية</button>
+      <span class="cph-icon">🦠</span>
+      <div class="cph-name">أمراض النبات</div>
+      <div class="cph-desc">تعرف على أكثر الأمراض شيوعاً وأعراضها وطرق العلاج والوقاية</div>
+    </div>
+  </div>
+  <section class="diseases-page" style="padding: 48px 0 80px;">
+    <div class="W">
+      <div class="diseases-grid" id="diseases-grid"></div>
     </div>
   </section>
 </div>
@@ -1095,9 +1304,17 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 <div class="modal-bg" id="modal-bg">
   <div class="modal-veil" onclick="closeModal()"></div>
   <div class="modal-box">
-    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-scroll" id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ══════════ DISEASE MODAL ══════════ -->
+<div class="disease-modal-bg" id="disease-modal-bg">
+  <div class="disease-modal-veil" onclick="closeDiseaseModal()"></div>
+  <div class="disease-modal-box">
+    <button class="disease-modal-close" onclick="closeDiseaseModal()">✕</button>
+    <div class="disease-modal-scroll" id="disease-modal-content"></div>
   </div>
 </div>
 
@@ -1145,9 +1362,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 
 <div id="tw"></div>
 <button id="stk" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
-
-<!-- ========== بداية الجزء الثاني (JavaScript) ========== -->
-<script>
+  <script>
 // ======================== FIREBASE CONFIG ========================
 const firebaseConfig = {
   apiKey: "AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM",
@@ -1162,276 +1377,20 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 // ======================== GLOBAL STATE ========================
 let currentUser = null;
-let userFavorites = new Set(); // plant IDs for logged-in user
-
-// ======================== FAVORITE FUNCTIONS ========================
-async function loadUserFavorites() {
-  if (!currentUser) {
-    userFavorites.clear();
-    return;
-  }
-  try {
-    const favDoc = await db.collection('favorites').doc(currentUser.uid).get();
-    if (favDoc.exists) {
-      const favs = favDoc.data().plants || [];
-      userFavorites = new Set(favs);
-    } else {
-      // Create empty favorites document for new user
-      await db.collection('favorites').doc(currentUser.uid).set({ plants: [] });
-      userFavorites.clear();
-    }
-    // Sync with App.favs
-    App.favs = userFavorites;
-    refreshAllFavIcons();
-  } catch (err) {
-    console.warn("Error loading favorites:", err);
-    // Fallback to empty favorites, don't show error to user
-    userFavorites.clear();
-    App.favs = new Set();
-    refreshAllFavIcons();
-  }
-}
-
-async function saveUserFavorites() {
-  if (!currentUser) return;
-  const favArray = Array.from(userFavorites);
-  try {
-    await db.collection('favorites').doc(currentUser.uid).set({ plants: favArray });
-  } catch (err) {
-    console.error("Error saving favorites:", err);
-    showToast("⚠️ فشل حفظ المفضلة", "err");
-  }
-}
-
-function refreshAllFavIcons() {
-  document.querySelectorAll('.pcard-fav').forEach(btn => {
-    const id = btn.getAttribute('data-id');
-    if (id) {
-      const isFav = currentUser ? userFavorites.has(id) : App.favs.has(id);
-      btn.classList.toggle('on', isFav);
-      btn.textContent = isFav ? '❤️' : '🤍';
-    }
-  });
-}
-
-// ======================== PROFILE FUNCTIONS ========================
-async function loadUserProfile() {
-  if (!currentUser) return;
-  const profileName = document.getElementById('profileName');
-  const profileEmail = document.getElementById('profileEmail');
-  const profileRole = document.getElementById('profileRole');
-  const profileFavCount = document.getElementById('profileFavCount');
-  
-  if (profileName) profileName.textContent = currentUser.displayName || currentUser.email.split('@')[0];
-  if (profileEmail) profileEmail.textContent = currentUser.email;
-  if (profileFavCount) profileFavCount.textContent = userFavorites.size;
-  
-  try {
-    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-    if (userDoc.exists) {
-      const role = userDoc.data().role || 'مزارع';
-      if (profileRole) profileRole.textContent = role;
-    } else {
-      if (profileRole) profileRole.textContent = 'مزارع';
-    }
-  } catch (err) {
-    console.error("Error loading user role:", err);
-    if (profileRole) profileRole.textContent = 'مزارع';
-  }
-}
-
-// ======================== AUTH FUNCTIONS ========================
-async function signInWithEmail(email, password) {
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    showToast('✅ تم تسجيل الدخول بنجاح', 'ok');
-    closeAuth();
-    showPage('profile');
-  } catch (error) {
-    let msg = 'فشل تسجيل الدخول: ';
-    switch (error.code) {
-      case 'auth/user-not-found': msg += 'البريد الإلكتروني غير مسجل'; break;
-      case 'auth/wrong-password': msg += 'كلمة المرور غير صحيحة'; break;
-      case 'auth/invalid-email': msg += 'البريد الإلكتروني غير صالح'; break;
-      default: msg += error.message;
-    }
-    showToast(msg, 'err');
-  }
-}
-
-async function signUpWithEmail(name, email, password, role, confirmPassword) {
-  if (password !== confirmPassword) {
-    showToast('❌ كلمتا المرور غير متطابقتين', 'err');
-    return;
-  }
-  try {
-    const userCred = await auth.createUserWithEmailAndPassword(email, password);
-    await userCred.user.updateProfile({ displayName: name });
-    await db.collection('users').doc(userCred.user.uid).set({
-      name: name,
-      email: email,
-      role: role,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
-    closeAuth();
-    showPage('profile');
-  } catch (error) {
-    let msg = 'فشل التسجيل: ';
-    if (error.code === 'auth/email-already-in-use') msg += 'البريد الإلكتروني مستخدم بالفعل';
-    else if (error.code === 'auth/weak-password') msg += 'كلمة المرور ضعيفة';
-    else msg += error.message;
-    showToast(msg, 'err');
-  }
-}
-
-async function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    const result = await auth.signInWithPopup(provider);
-    showToast(`مرحباً ${result.user.displayName || result.user.email}`, 'ok');
-    closeAuth();
-    showPage('profile');
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    let msg = 'فشل تسجيل الدخول بـ Google: ';
-    switch (error.code) {
-      case 'auth/popup-blocked':
-        msg += 'الرجاء السماح للنوافذ المنبثقة في المتصفح';
-        break;
-      case 'auth/cancelled-popup-request':
-        msg += 'تم إلغاء طلب تسجيل الدخول';
-        break;
-      case 'auth/unauthorized-domain':
-        msg += 'النطاق غير مصرح به. أضف النطاق في Firebase Console (Authentication → Authorized domains).';
-        break;
-      default:
-        msg += error.message;
-    }
-    showToast(msg, 'err');
-  }
-}
-
-async function logoutUser() {
-  try {
-    await auth.signOut();
-    showToast('تم تسجيل الخروج', 'inf');
-    closeMob();
-    showPage('home');
-  } catch (err) {
-    showToast('حدث خطأ أثناء تسجيل الخروج', 'err');
-  }
-}
-
-function updateAuthUI(user) {
-  const loginBtn = document.getElementById('loginBtn');
-  const registerBtn = document.getElementById('registerBtn');
-  const userMenu = document.getElementById('userMenu');
-  const userNameDisplay = document.getElementById('userNameDisplay');
-  const mobLogin = document.getElementById('mobLogin');
-  const mobRegister = document.getElementById('mobRegister');
-  const mobLogout = document.getElementById('mobLogout');
-
-  if (user) {
-    loginBtn.style.display = 'none';
-    registerBtn.style.display = 'none';
-    userMenu.style.display = 'block';
-    const displayName = user.displayName || user.email.split('@')[0];
-    userNameDisplay.textContent = `مرحباً، ${displayName}`;
-    if (mobLogin) mobLogin.style.display = 'none';
-    if (mobRegister) mobRegister.style.display = 'none';
-    if (mobLogout) mobLogout.style.display = 'block';
-  } else {
-    loginBtn.style.display = 'block';
-    registerBtn.style.display = 'block';
-    userMenu.style.display = 'none';
-    if (mobLogin) mobLogin.style.display = 'block';
-    if (mobRegister) mobRegister.style.display = 'block';
-    if (mobLogout) mobLogout.style.display = 'none';
-  }
-}
-
-// ======================== AUTH EVENT LISTENER ========================
-auth.onAuthStateChanged(async (user) => {
-  currentUser = user;
-  updateAuthUI(user);
-  if (user) {
-    await loadUserFavorites();
-    await loadUserProfile();
-  } else {
-    userFavorites.clear();
-    // Load local favorites for guest
-    const localFavs = JSON.parse(localStorage.getItem('nb-favs') || '[]');
-    App.favs = new Set(localFavs);
-    refreshAllFavIcons();
-  }
-  // Re-render any visible grids to reflect favorites
-  if (document.getElementById('pg-home').classList.contains('active')) {
-    App._buildHome();
-  } else if (document.getElementById('pg-cat').classList.contains('active') && App.curCat) {
-    App.renderCatGrid();
-  }
-});
-
-// ======================== UI HELPERS ========================
-function closeAuth() {
-  document.getElementById('auth-bg').classList.remove('on');
-}
-function openAuth(tab) {
-  document.getElementById('auth-bg').classList.add('on');
-  swAuth(tab);
-}
-function swAuth(tab) {
-  const loginForm = document.getElementById('af-l');
-  const regForm = document.getElementById('af-r');
-  const loginTab = document.getElementById('at-l');
-  const regTab = document.getElementById('at-r');
-  if (tab === 'login') {
-    loginForm.style.display = 'flex';
-    regForm.style.display = 'none';
-    loginTab.classList.add('on');
-    regTab.classList.remove('on');
-  } else {
-    loginForm.style.display = 'none';
-    regForm.style.display = 'flex';
-    loginTab.classList.remove('on');
-    regTab.classList.add('on');
-  }
-}
-
-function chkStr(val) {
-  const f = document.getElementById('str-f');
-  let strength = 0;
-  if (val.length >= 8) strength++;
-  if (/[A-Za-z]/.test(val)) strength++;
-  if (/[0-9]/.test(val)) strength++;
-  if (/[^A-Za-z0-9]/.test(val)) strength++;
-  const percents = ['0%', '25%', '50%', '75%', '100%'];
-  const colors = ['', '#c0392b', '#e67e22', '#27ae60', '#1B6B3A'];
-  f.style.width = percents[strength];
-  f.style.background = colors[strength];
-}
-
-function showToast(msg, type = 'inf') {
-  const w = document.getElementById('tw');
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  w.appendChild(el);
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-12px) scale(.9)';
-    el.style.transition = 'all .3s';
-    setTimeout(() => el.remove(), 300);
-  }, 2700);
-}
+let userFavorites = new Set();
+let userRole = 'مزارع';
+let userJoinDate = null;
+let userProvider = 'email';
+let profileEditMode = false;
+let tempAvatarFile = null;
 
 // ======================== DATABASE ========================
 const DB = [
-  // طماطم
+  // ========== الخضروات ==========
   {id:"v1",name:"طماطم",nameEn:"Tomato",nameSci:"Solanum lycopersicum",cat:"vegetables",sub:"ثمرية",
    img:"https://images.unsplash.com/photo-1558818498-28c1e002b655?w=600&q=80",
    tags:["صيفي","تصدير","شائع"],diff:3,pop:98,featured:true,export:true,
@@ -1457,7 +1416,6 @@ const DB = [
    econ:{costs:"8000–12000 جنيه/فدان",rev:"30,000–150,000 جنيه",profit:"22,000–138,000 جنيه",best:"نوفمبر–يناير",markets:["إيطاليا","هولندا","ألمانيا"]},
    vars:[{name:"Castle Rock F1",co:"Seminis",y:"25–35 طن",for:"تصدير"},{name:"بلدي أحمر",co:"محلي",y:"12–18 طن",for:"محلي"}],
    tips:["التقليم الجانبي يزيد حجم الثمار 30%","الكالسيوم الورقي كل أسبوعين يمنع تعفن الطرف","المصائد الصفراء تقلل الحشرات الناقلة","الري الصباحي يمنع الأمراض الفطرية"]},
-  // بطاطس
   {id:"v2",name:"بطاطس",nameEn:"Potato",nameSci:"Solanum tuberosum",cat:"vegetables",sub:"درنية",
    img:"https://images.unsplash.com/photo-1508313880080-c4bef0730395?w=600&q=80",
    tags:["شتوي","تصدير","غذاء رئيسي"],diff:3,pop:95,featured:true,export:true,
@@ -1479,7 +1437,6 @@ const DB = [
    econ:{costs:"10000–15000 جنيه/فدان",rev:"12,000–60,000 جنيه",profit:"2,000–45,000 جنيه",best:"مارس–مايو",markets:["هولندا","بريطانيا","الكويت"]},
    vars:[{name:"سبونتا",co:"هولندي",y:"12–18 طن",for:"تصدير"},{name:"ديامانت",co:"هولندي",y:"10–15 طن",for:"محلي"}],
    tips:["استخدام تقاوٍ معتمدة إلزامي","مسافة 75×25 سم للإنتاج المثالي","قطع الجزء العلوي قبل الحصاد بأسبوعين يقسي القشرة","مراقبة اللفحة في الطقس الرطب البارد"]},
-  // خيار
   {id:"v3",name:"خيار",nameEn:"Cucumber",nameSci:"Cucumis sativus",cat:"vegetables",sub:"ثمرية",
    img:"https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=600&q=80",
    tags:["صيفي","سريع","مربح"],diff:2,pop:88,featured:true,export:false,
@@ -1502,7 +1459,6 @@ const DB = [
    econ:{costs:"5000–8000 جنيه/فدان",rev:"6,000–36,000 جنيه",profit:"1,000–28,000 جنيه",best:"مارس–أبريل",markets:[]},
    vars:[{name:"بيتا ألفا",co:"هجين",y:"8–12 طن",for:"هواء طلق"},{name:"فاروس",co:"هجين",y:"10–15 طن",for:"صوبات"}],
    tips:["التدعيم على أسلاك يزيد الإنتاج 30%","الحصاد اليومي يحفز إنتاج جديد","تجنب الري على الأوراق","إزالة الأوراق السفلية يحسن التهوية"]},
-  // فلفل
   {id:"v4",name:"فلفل",nameEn:"Bell Pepper",nameSci:"Capsicum annuum",cat:"vegetables",sub:"ثمرية",
    img:"https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&q=80",
    tags:["صيفي","تصدير","ملون"],diff:3,pop:82,featured:false,export:true,
@@ -1524,7 +1480,7 @@ const DB = [
    econ:{costs:"8000–12000 جنيه/فدان",rev:"12,000–64,000 جنيه",profit:"4,000–52,000 جنيه",best:"ديسمبر–فبراير",markets:["ألمانيا","هولندا","السعودية"]},
    vars:[{name:"كاليفورنيا وندر",co:"هجين",y:"5–8 طن",for:"تصدير"},{name:"حار بلدي",co:"محلي",y:"3–5 طن",for:"محلي"}],
    tips:["شتلات عمرها 35–45 يوم مثالية","الدعم بالخوازيق يمنع السقوط","الحصاد المبكر يشجع الإثمار"]},
-  // مانجو
+  // ========== الفاكهة ==========
   {id:"f1",name:"مانجو",nameEn:"Mango",nameSci:"Mangifera indica",cat:"fruits",sub:"استوائية",
    img:"https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&q=80",
    tags:["صيفي","تصدير","ملكي"],diff:3,pop:96,featured:true,export:true,
@@ -1546,7 +1502,6 @@ const DB = [
    econ:{costs:"15000–25000 جنيه/فدان/سنة",rev:"10,000–120,000 جنيه",profit:"استثمار 20–30 سنة",best:"يونيو–أغسطس",markets:["أوروبا","الخليج","روسيا"]},
    vars:[{name:"ألفونصو",co:"محلي",y:"3–6 طن",for:"تصدير درجة أولى"},{name:"هندي",co:"محلي",y:"5–8 طن",for:"محلي وتصدير"},{name:"كيت",co:"أمريكي",y:"4–7 طن",for:"تصدير"}],
    tips:["إيقاف الري في يناير يحفز الإزهار","التقليم بعد الحصاد ضروري للموسم القادم","الرش بنترات البوتاسيوم 3% يحفز الإزهار"]},
-  // فراولة
   {id:"f2",name:"فراولة",nameEn:"Strawberry",nameSci:"Fragaria ananassa",cat:"fruits",sub:"حمراء",
    img:"https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=600&q=80",
    tags:["شتوي","تصدير","مربح جداً"],diff:4,pop:90,featured:true,export:true,
@@ -1568,7 +1523,6 @@ const DB = [
    econ:{costs:"20000–30000 جنيه/فدان",rev:"30,000–200,000 جنيه",profit:"10,000–170,000 جنيه",best:"يناير–مارس",markets:["روسيا","ألمانيا","هولندا"]},
    vars:[{name:"سويت شارلي",co:"أمريكي",y:"2–3.5 طن",for:"طازج"},{name:"كاماروزا",co:"إسباني",y:"3–5 طن",for:"تجميد"}],
    tips:["البلاستيك الأسود يحافظ على الرطوبة","الأسرة المرتفعة تحسن الصرف","الحصاد اليومي يحافظ على الجودة"]},
-  // برتقال
   {id:"f3",name:"برتقال",nameEn:"Orange",nameSci:"Citrus sinensis",cat:"fruits",sub:"حمضيات",
    img:"https://images.unsplash.com/photo-1547514701-42782101795e?w=600&q=80",
    tags:["شتوي","تصدير","حمضيات"],diff:3,pop:92,featured:true,export:true,
@@ -1590,7 +1544,6 @@ const DB = [
    econ:{costs:"12000–20000 جنيه/فدان/سنة",rev:"6,000–40,000 جنيه",profit:"استثمار 20–30 سنة",best:"نوفمبر–فبراير",markets:["روسيا","السعودية","هولندا"]},
    vars:[{name:"البلدي",co:"مصري",y:"3–6 طن",for:"محلي وتصدير"},{name:"نافيلين",co:"أمريكي",y:"4–8 طن",for:"تصدير"}],
    tips:["التطعيم على أصول قوية يزيد الإنتاج","التسميد بالزنك ورقياً مهم جداً","الري المنتظم يمنع تشقق الثمار"]},
-  // رمان
   {id:"f4",name:"رمان",nameEn:"Pomegranate",nameSci:"Punica granatum",cat:"fruits",sub:"صحراوية",
    img:"https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=600&q=80",
    tags:["مقاوم للجفاف","تصدير","طبي"],diff:2,pop:78,featured:false,export:true,
@@ -1612,7 +1565,7 @@ const DB = [
    econ:{costs:"10000–15000 جنيه/فدان/سنة",rev:"10,000–90,000 جنيه",profit:"استثمار 15–20 سنة",best:"سبتمبر–نوفمبر",markets:["هولندا","ألمانيا","روسيا"]},
    vars:[{name:"وندرفول",co:"أمريكي",y:"4–6 طن",for:"تصدير"},{name:"مانفالوطي",co:"محلي",y:"3–5 طن",for:"محلي"}],
    tips:["التقليم السنوي يحافظ على الشكل","يتحمل الملوحة أكثر من معظم الفواكه","التسميد بالبوتاسيوم يحسن اللون والحلاوة"]},
-  // ورد
+  // ========== الزينة ==========
   {id:"o1",name:"ورد",nameEn:"Rose",nameSci:"Rosa hybrida",cat:"ornamental",sub:"زهرية",
    img:"https://images.unsplash.com/photo-1490750967868-88df5691cc76?w=600&q=80",
    tags:["شتوي","تصدير","عطري"],diff:3,pop:95,featured:true,export:true,
@@ -1635,7 +1588,6 @@ const DB = [
    econ:{costs:"25000–40000 جنيه/فدان",rev:"15,000–120,000 جنيه",profit:"مجدٍ سنوياً",best:"فبراير ومارس",markets:["هولندا","ألمانيا","روسيا"]},
    vars:[{name:"هايبريد تي",co:"هولندي",y:"50000+ زهرة",for:"تصدير"},{name:"بلدي",co:"محلي",y:"30000 زهرة",for:"محلي"}],
    tips:["التقليم الشديد بعد كل موسم","الرش بالنيتروجين بعد التقليم يسرع التعافي","الصوبات تحمي وتطيل الإنتاج"]},
-  // ياسمين
   {id:"o2",name:"ياسمين",nameEn:"Jasmine",nameSci:"Jasminum sambac",cat:"ornamental",sub:"عطرية",
    img:"https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&q=80",
    tags:["صيفي","عطري","تصدير","زيت"],diff:2,pop:88,featured:true,export:true,
@@ -1657,7 +1609,6 @@ const DB = [
    econ:{costs:"8000–12000 جنيه/فدان",rev:"20,000–150,000 جنيه",profit:"مربح جداً طويل الأمد",best:"يونيو–أغسطس",markets:["فرنسا","إيطاليا","ألمانيا"]},
    vars:[{name:"بلدي مصري",co:"محلي",y:"عالي",for:"زيت العطر"}],
    tips:["التقليم السنوي يجدد المجموع","الحصاد الصباحي أعلى تركيز عطر","التسميد بالحديد مهم جداً للخضرة"]},
-  // صبار
   {id:"o3",name:"صبار",nameEn:"Cactus",nameSci:"Cactaceae spp.",cat:"ornamental",sub:"صحراوية",
    img:"https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600&q=80",
    tags:["صحراء","سهل جداً","داخلي","مقاوم الجفاف"],diff:1,pop:80,featured:false,export:false,
@@ -1678,7 +1629,6 @@ const DB = [
    econ:{costs:"20–300 جنيه/نبات",rev:"30–1000 جنيه/نبات",profit:"مشتل صبار مربح",best:"طوال العام",markets:[]},
    vars:[{name:"أوبونتيا",co:"متعدد",y:"ثمار صالحة",for:"خارجي"},{name:"إيكينوكاكتوس",co:"متعدد",y:"ديكوري",for:"داخلي"}],
    tips:["القاعدة الذهبية: الري الأقل أفضل","أصص طينية تصرف الماء بشكل أفضل","الضوء المباشر ضروري لمنع الامتداد","يمكن تركه بدون ري أسابيع في الشتاء"]},
-  // مونستيرا
   {id:"o4",name:"مونستيرا",nameEn:"Monstera",nameSci:"Monstera deliciosa",cat:"ornamental",sub:"داخلية",
    img:"https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&q=80",
    tags:["داخلي","سهل العناية","ديكور","عصري"],diff:1,pop:85,featured:false,export:false,
@@ -1698,10 +1648,188 @@ const DB = [
    nutri:{p100:{"الاستخدام":"ديكوري"},ben:["ينقي الهواء","يقلل التوتر","يحسن الإنتاجية"]},
    econ:{costs:"100–500 جنيه/نبات",rev:"150–2000 جنيه/نبات",profit:"مشتل نباتات داخلية مربح",best:"طوال العام",markets:[]},
    vars:[{name:"ديليسيوزا",co:"متعدد",y:"أوراق كبيرة",for:"داخلي"},{name:"فارييجاتا",co:"نادر",y:"مرقطة",for:"نباتات فاخرة"}],
-   tips:["امسح الأوراق أسبوعياً بقطعة مبللة","يحتاج دعماً للتسلق كلما كبر","قلل الري في الشتاء","الرطوبة العالية تحسن الأوراق"]}
+   tips:["امسح الأوراق أسبوعياً بقطعة مبللة","يحتاج دعماً للتسلق كلما كبر","قلل الري في الشتاء","الرطوبة العالية تحسن الأوراق"]},
+  // ========== النباتات الطبية والعطرية ==========
+  {id:"m1",name:"نعناع",nameEn:"Mint",nameSci:"Mentha piperita",cat:"medicinal",sub:"أوراق عطرية",
+   img:"https://images.unsplash.com/photo-1628557465833-6a6a2c53c5e7?w=600&q=80",
+   tags:["عطري","طبي","سهل"],diff:1,pop:94,featured:true,export:true,
+   ov:"النعناع من أشهر النباتات الطبية والعطرية. يستخدم في المشروبات والعلاج. يُزرع بسهولة في المنازل والحقول، ويتميز بنموه السريع وانتشاره.",
+   soil:{type:"طينية رملية خفيفة",ph:6.5,drain:"جيد"},climate:{tmin:10,tmax:35,tideal:"20–30°م",humid:"50–70%",sun:"6 ساعات"},
+   regions:["الفيوم","بني سويف","المنيا","القليوبية"],
+   plant:{s1:{name:"ربيعي",months:"مارس–أبريل"},s2:{name:"خريفي",months:"سبتمبر–أكتوبر"},best:"الربيعي"},
+   space:{rows:50,plants:30,depth:2,ppf:66000},seeds:{qty:"عقل أو جذور",germ:"10–15 يوم",age:"شتلات"},
+   stages:[{s:"إنبات",d:"10–15"},{s:"نمو",d:"20–30"},{s:"حصاد أول",d:"60–75"},{s:"حصاد ثاني",d:"45–60"}],
+   period:"60–90 يوم",yield:"1–2 طن/فدان (ناشف)",
+   irr:{method:"تنقيط أو رش",winter:"كل 5–7 أيام",summer:"كل 2–3 أيام",flower:"كل 2–3 أيام",total:"2500–3000 م³/موسم",crit:["مرحلة النمو – ري منتظم"],stop:"3 أيام"},
+   fert:{pre:"10 م³ سماد بلدي",sched:[{t:"الزراعة",tp:"N",qty:"20 وحدة",m:"أرضي",p:"يوريا"},{t:"بعد كل حشة",tp:"N",qty:"15 وحدة",m:"أرضي",p:"نترات نشادر"}],
+    total:{N:"50–70",P:"30–40",K:"40–50"},def:{N:"اصفرار الأوراق",Fe:"اصفرار بين العروق"}},
+   diseases:[{name:"الصدأ",sci:"Puccinia menthae",type:"فطري",symp:{e:"بقع برتقالية",a:"جفاف الأوراق"},prev:["تهوية","عدم الري العلوي"],treat:{chem:[{p:"مانكوزيب",d:"2.5 جم/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"الجاسيد",type:"حشري",damage:"يمتص العصارة",treat:"أبامكتين",sev:"متوسط"}],
+   pest:["مانكوزيب","أبامكتين","نيم أويل"],
+   harvest:{signs:["قبل التزهير","نمو كامل"],method:"يدوي أو ميكانيكي",time:"الصباح",intv:"كل 45–60 يوم",post:{temp:"30–35°م",life:"سنة في التجفيف"}},
+   nutri:{p100:{"الزيوت الطيارة":"1–3%","مضادات أكسدة":"عالية"},ben:["يهضم","مسكن","مضاد للغثيان"]},
+   econ:{costs:"5000–8000 جنيه/فدان",rev:"15,000–40,000 جنيه",profit:"10,000–32,000 جنيه",best:"أبريل–مايو",markets:["شركات الأدوية","أسواق التوابل"]},
+   vars:[{name:"بلدي",co:"محلي",y:"1–1.5 طن",for:"عطري"},{name:"بيبرمينت",co:"أجنبي",y:"2–3 طن",for:"زيت"}],
+   tips:["التكاثر بالعقل يضمن الجودة","الحشة الأولى قبل الإزهار أعلى تركيز","تجنب الرطوبة الزائدة على الأوراق"]},
+  {id:"m2",name:"زعتر",nameEn:"Thyme",nameSci:"Thymus vulgaris",cat:"medicinal",sub:"أوراق عطرية",
+   img:"https://images.unsplash.com/photo-1618824888568-daf3f0b6dbbf?w=600&q=80",
+   tags:["عطري","طبي","مقاوم جفاف"],diff:2,pop:87,featured:true,export:true,
+   ov:"الزعتر نبات عطري معمر، يستخدم كتوابل وفي الطب الشعبي. يتحمل الجفاف والحرارة، وهو مطلوب للتصدير.",
+   soil:{type:"رملية خفيفة جيدة الصرف",ph:7,drain:"ممتاز"},climate:{tmin:10,tmax:40,tideal:"20–35°م",humid:"30–50%",sun:"8 ساعات"},
+   regions:["سيناء","مطروح","الفيوم","الوادي الجديد"],
+   plant:{s1:{name:"ربيعي",months:"مارس–أبريل"},best:"الربيعي"},
+   space:{rows:60,plants:40,depth:2,ppf:40000},seeds:{qty:"بذور أو شتلات",germ:"14–21 يوم",age:"شتلات 45 يوم"},
+   stages:[{s:"إنبات",d:"14–21"},{s:"نمو",d:"30–45"},{s:"حصاد أول",d:"90–120"},{s:"حصاد ثان",d:"60–90"}],
+   period:"3–4 أشهر للحشة",yield:"1–1.5 طن/فدان (ناشف)",
+   irr:{method:"تنقيط",winter:"كل 10–14 يوم",summer:"كل 5–7 أيام",flower:"كل 5–7 أيام",total:"2000–2500 م³/موسم",crit:["التأسيس – ري منتظم"],stop:"أسبوع"},
+   fert:{pre:"10 م³ سماد بلدي",sched:[{t:"الزراعة",tp:"N",qty:"15 وحدة",m:"أرضي",p:"يوريا"},{t:"بعد الحشة",tp:"N+K",qty:"15N+20K",m:"أرضي",p:"نترات البوتاسيوم"}],
+    total:{N:"30–40",P:"20–30",K:"40–50"},def:{N:"اصفرار عام",K:"احتراق الأوراق القديمة"}},
+   diseases:[{name:"البياض الدقيقي",sci:"Erysiphe spp.",type:"فطري",symp:{e:"بودرة بيضاء",a:"تشوه"},prev:["تهوية"],treat:{chem:[{p:"كبريت ميكروني",d:"2 جم/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"المن",type:"حشري",damage:"يمتص العصارة",treat:"إيمداكلوبريد",sev:"متوسط"}],
+   pest:["كبريت ميكروني","إيمداكلوبريد","نيم أويل"],
+   harvest:{signs:["بداية التزهير"],method:"يدوي أو ميكانيكي",time:"الصباح",intv:"كل 60–90 يوم",post:{temp:"35–40°م",life:"سنة"}},
+   nutri:{p100:{"الزيوت الطيارة":"1–2.5%","مضادات أكسدة":"عالية"},ben:["مطهر","طارد للبلغم","يقوي المناعة"]},
+   econ:{costs:"4000–6000 جنيه/فدان",rev:"12,000–30,000 جنيه",profit:"8,000–24,000 جنيه",best:"مايو–يونيو",markets:["شركات الأدوية","أسواق التوابل"]},
+   vars:[{name:"بلدي",co:"محلي",y:"1–1.2 طن",for:"عطري"},{name:"فرنسي",co:"فرنسي",y:"1.5–2 طن",for:"زيت"}],
+   tips:["لا تفرط في الري","التجفيف في الظل يحافظ على الزيوت","التقليم الخفيف بعد الحشة يسرع النمو"]},
+  // ========== المحاصيل الحقلية (صور محسنة) ==========
+  {id:"c1",name:"قمح",nameEn:"Wheat",nameSci:"Triticum aestivum",cat:"fieldcrops",sub:"حبوب",
+   img:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=600&q=80",
+   tags:["شتوي","استراتيجي","غذاء رئيسي"],diff:2,pop:99,featured:true,export:false,
+   ov:"القمح المحصول الاستراتيجي الأول في مصر. يزرع في الأراضي القديمة والجديدة، وتعمل الدولة على زيادة الإنتاجية لتقليل الفجوة الغذائية.",
+   soil:{type:"طينية جيدة الصرف",ph:7,drain:"جيد"},climate:{tmin:5,tmax:35,tideal:"15–25°م",humid:"40–60%",sun:"8 ساعات"},
+   regions:["الدقهلية","الشرقية","المنوفية","الغربية","الفيوم"],
+   plant:{s1:{name:"شتوي",months:"نوفمبر–ديسمبر"},best:"نوفمبر"},
+   space:{rows:15,plants:10,depth:5,ppf:400000},seeds:{qty:"60–80 كجم/فدان",germ:"5–10 أيام",age:"مباشر"},
+   stages:[{s:"إنبات",d:"5–10"},{s:"تفريع",d:"30–50"},{s:"استطالة",d:"30–40"},{s:"تزهير",d:"10–15"},{s:"نضج",d:"30–40"}],
+   period:"150–170 يوم",yield:"18–25 أردب/فدان (1 أردب = 150 كجم)",
+   irr:{method:"ري بالغمر أو تنقيط",winter:"كل 10–15 يوم",flower:"كل 10–12 يوم",total:"3500–4500 م³/موسم",crit:["التفريع – ري منتظم","التزهير – ري حرج"],stop:"قبل الحصاد بأسبوعين"},
+   fert:{pre:"150 كجم سوبر فوسفات",sched:[{t:"الزراعة",tp:"P",qty:"150 كجم",m:"أرضي",p:"سوبر فوسفات"},{t:"الرية الأولى",tp:"N",qty:"60 وحدة",m:"أرضي",p:"يوريا"},{t:"الرية الثانية",tp:"N",qty:"40 وحدة",m:"أرضي",p:"يوريا"}],
+    total:{N:"100–120",P:"60–80",K:"50–70"},def:{N:"اصفرار الأوراق",P:"ضعف التفريع"}},
+   diseases:[{name:"الصدأ الأصفر",sci:"Puccinia striiformis",type:"فطري",symp:{e:"خطوط صفراء",a:"جفاف"},prev:["أصناف مقاومة","رش وقائي"],treat:{chem:[{p:"تيبوكونازول",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"خطير"}],
+   pests:[{name:"المن",type:"حشري",damage:"يمتص العصارة",treat:"إيمداكلوبريد",sev:"متوسط"}],
+   pest:["تيبوكونازول","إيمداكلوبريد"],
+   harvest:{signs:["اصفرار السنابل","صلابة الحبوب"],method:"كومباين",time:"الصباح",intv:"دفعة واحدة",post:{temp:"12–15°م",life:"سنة"}},
+   nutri:{p100:{"كربوهيدرات":"71 جم","بروتين":"13 جم","ألياف":"12 جم"},ben:["مصدر أساسي للطاقة","غني بفيتامينات B"]},
+   econ:{costs:"8000–12000 جنيه/فدان",rev:"10,000–20,000 جنيه",profit:"2,000–8,000 جنيه",best:"أبريل–مايو",markets:["شركات المطاحن","المحليات"]},
+   vars:[{name:"سخا 95",co:"محلي",y:"20–25 أردب",for:"استراتيجي"},{name:"جيزة 171",co:"محلي",y:"18–22 أردب",for:"جودة عالية"}],
+   tips:["الزراعة في موعدها المثالي تزيد الإنتاج 30%","الري في مرحلة التفريع مهم جداً","الرش بمبيدات الصدأ الوقائية ضرورية"]},
+  {id:"c2",name:"ذرة",nameEn:"Corn",nameSci:"Zea mays",cat:"fieldcrops",sub:"حبوب",
+   img:"https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=600&q=80",
+   tags:["صيفي","علف","غذاء"],diff:2,pop:95,featured:true,export:false,
+   ov:"الذرة الشامية محصول صيفي مهم، يستخدم للحبوب والعلف الأخضر. مصر من أكبر منتجي الذرة في المنطقة، وتستخدم في صناعة الأعلاف والزيوت.",
+   soil:{type:"طينية خصبة",ph:6.8,drain:"جيد"},climate:{tmin:15,tmax:40,tideal:"25–35°م",humid:"50–70%",sun:"8 ساعات"},
+   regions:["الشرقية","الدقهلية","كفر الشيخ","المنيا","بني سويف"],
+   plant:{s1:{name:"صيفي",months:"مايو–يونيو"},best:"مايو"},
+   space:{rows:70,plants:25,depth:5,ppf:28000},seeds:{qty:"8–10 كجم/فدان",germ:"5–8 أيام",age:"مباشر"},
+   stages:[{s:"إنبات",d:"5–8"},{s:"نمو",d:"30–40"},{s:"تزهير",d:"20–30"},{s:"عقد كيزان",d:"20–30"},{s:"نضج",d:"30–40"}],
+   period:"110–130 يوم",yield:"3–4 طن/فدان (حبوب)",
+   irr:{method:"ري بالغمر أو تنقيط",winter:"كل 7–10 أيام",summer:"كل 4–6 أيام",flower:"كل 5–7 أيام",total:"4500–5500 م³/موسم",crit:["التزهير – ري حرج"],stop:"أسبوعين"},
+   fert:{pre:"100 كجم سوبر فوسفات",sched:[{t:"الزراعة",tp:"P",qty:"100 كجم",m:"أرضي",p:"سوبر فوسفات"},{t:"ري المحاياة",tp:"N",qty:"50 وحدة",m:"أرضي",p:"يوريا"},{t:"ري الثانية",tp:"N",qty:"40 وحدة",m:"أرضي",p:"يوريا"}],
+    total:{N:"90–120",P:"50–70",K:"70–90"},def:{N:"اصفرار الأوراق",K:"احتراق الحواف"}},
+   diseases:[{name:"لفحة الأوراق",sci:"Exserohilum turcicum",type:"فطري",symp:{e:"بقع رمادية",a:"جفاف"},prev:["أصناف مقاومة","تهوية"],treat:{chem:[{p:"آزوكسيستروبين",d:"0.5 مل/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"دودة القصب",type:"حشري",damage:"ثقوب في الساق",treat:"كلوربيريفوس",sev:"عالي"}],
+   pest:["آزوكسيستروبين","كلوربيريفوس"],
+   harvest:{signs:["جفاف الأوراق","صلابة الحبوب"],method:"كومباين أو يدوي",time:"الصباح",intv:"دفعة واحدة",post:{temp:"12–15°م",life:"سنة"}},
+   nutri:{p100:{"نشا":"70 جم","ألياف":"7 جم","بروتين":"9 جم"},ben:["مصدر طاقة","ألياف"]},
+   econ:{costs:"7000–10000 جنيه/فدان",rev:"12,000–25,000 جنيه",profit:"5,000–15,000 جنيه",best:"سبتمبر–أكتوبر",markets:["مصانع الأعلاف","الاستهلاك البشري"]},
+   vars:[{name:"هجين فردي 10",co:"محلي",y:"3–4 طن",for:"حبوب"},{name:"هجين فردي 20",co:"محلي",y:"3.5–4.5 طن",for:"علف"}],
+   tips:["الري المنتظم مهم جداً","إضافة البوتاسيوم تزيد من مقاومة الأمراض","الزراعة في مصاطب توفر المياه"]},
+  // ========== الموالح ==========
+  {id:"t1",name:"يوسفي",nameEn:"Mandarin",nameSci:"Citrus reticulata",cat:"citrus",sub:"حمضيات",
+   img:"https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=600&q=80",
+   tags:["شتوي","تصدير","فيتامين C"],diff:3,pop:89,featured:true,export:true,
+   ov:"اليوسفي من أفضل أنواع الموالح المصرية. يتميز بقشرة سهلة التقشير وطعم حلو، ويُصدَّر للأسواق الأوروبية والعربية.",
+   soil:{type:"طينية رملية جيدة الصرف",ph:6.5,drain:"جيد"},climate:{tmin:5,tmax:38,tideal:"20–30°م",humid:"50–70%",sun:"8 ساعات"},
+   regions:["الإسماعيلية","البحيرة","الدقهلية","القليوبية"],
+   plant:{s1:{name:"ربيعي",months:"فبراير–مارس"},best:"مارس"},
+   space:{rows:6,plants:5,depth:50,ppf:130},seeds:{qty:"130 شتلة مطعومة",germ:"شتلات",age:"1–2 سنة"},
+   stages:[{s:"تأسيس",d:"730"},{s:"نمو",d:"1095"},{s:"بداية إثمار",d:"1460"},{s:"إنتاج كامل",d:"1825+"}],
+   period:"3–4 سنوات للإثمار",yield:"6–10 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 15–20 يوم",summer:"كل 7–10 أيام",flower:"كل 7–10 أيام",total:"2500–3500 م³/سنة",crit:["عقد الثمار – ري منتظم"],stop:"أسبوعان"},
+   fert:{pre:"40 كجم بلدي/شجرة",sched:[{t:"فبراير",tp:"N",qty:"500 جم",m:"أرضي",p:"يوريا"},{t:"مايو",tp:"NPK",qty:"200-100-200 جم",m:"أرضي",p:"NPK مركب"},{t:"أغسطس",tp:"K",qty:"400 جم",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"1–1.5 كجم/شجرة",P:"0.5–0.8",K:"1–1.5"},def:{Zn:"أوراق صغيرة",Fe:"اصفرار بين العروق"}},
+   diseases:[{name:"التصمغ",sci:"Phytophthora spp.",type:"فطري",symp:{e:"إفراز صمغ",a:"تقرح"},prev:["تجنب الغرق","صرف جيد"],treat:{chem:[{p:"فوسيتيل ألومنيوم",d:"3 جم/لتر",int:"شهرياً"}]},sev:"خطير"}],
+   pests:[{name:"التربس",type:"حشري",damage:"خدوش على الثمار",treat:"أبامكتين",sev:"متوسط"}],
+   pest:["فوسيتيل ألومنيوم","أبامكتين","زيت معدني"],
+   harvest:{signs:["لون برتقالي","سهولة التقشير"],method:"يدوي بمقص",time:"الصباح",intv:"دفعات",post:{temp:"5–8°م",life:"3–4 أسابيع"}},
+   nutri:{p100:{"السعرات":"53 كيلوكالوري","فيتامين C":"26.7 مجم","الألياف":"1.8 جم"},ben:["يقوي المناعة","مضاد أكسدة"]},
+   econ:{costs:"12000–18000 جنيه/فدان/سنة",rev:"20,000–60,000 جنيه",profit:"استثمار 20 سنة",best:"نوفمبر–يناير",markets:["أوروبا","الخليج"]},
+   vars:[{name:"اليوسفي البلدي",co:"محلي",y:"6–8 طن",for:"محلي"},{name:"كليمنتينا",co:"إسباني",y:"8–10 طن",for:"تصدير"}],
+   tips:["التقليم السنوي ضروري","الرش بالزنك مهم للأوراق","التسميد المتوازن يحسن الطعم"]},
+  {id:"t2",name:"ليمون",nameEn:"Lemon",nameSci:"Citrus limon",cat:"citrus",sub:"حمضيات",
+   img:"https://images.unsplash.com/photo-1590502593747-42a996133562?w=600&q=80",
+   tags:["صيفي","تصدير","فيتامين C"],diff:3,pop:92,featured:true,export:true,
+   ov:"الليمون محصول مهم للعصائر والتوابل. مصر من أكبر منتجيه في العالم، ويتميز الليمون المصري بجودته العالية وحموضته المثالية.",
+   soil:{type:"طينية رملية",ph:6.5,drain:"جيد"},climate:{tmin:10,tmax:40,tideal:"20–35°م",humid:"50–75%",sun:"8 ساعات"},
+   regions:["الإسكندرية","البحيرة","الشرقية","المنيا"],
+   plant:{s1:{name:"ربيعي",months:"فبراير–مارس"},best:"مارس"},
+   space:{rows:6,plants:5,depth:50,ppf:130},seeds:{qty:"130 شتلة مطعومة",germ:"شتلات",age:"1–2 سنة"},
+   stages:[{s:"تأسيس",d:"730"},{s:"نمو",d:"1095"},{s:"بداية إثمار",d:"1460"},{s:"إنتاج كامل",d:"1825+"}],
+   period:"3–4 سنوات للإثمار",yield:"8–12 طن/فدان",
+   irr:{method:"تنقيط",winter:"كل 15–20 يوم",summer:"كل 7–10 أيام",flower:"كل 7–10 أيام",total:"3000–4000 م³/سنة",crit:["عقد الثمار – ري منتظم"],stop:"أسبوعان"},
+   fert:{pre:"40 كجم بلدي/شجرة",sched:[{t:"فبراير",tp:"N",qty:"500 جم",m:"أرضي",p:"يوريا"},{t:"مايو",tp:"NPK",qty:"200-100-200 جم",m:"أرضي",p:"NPK مركب"},{t:"أغسطس",tp:"K",qty:"400 جم",m:"أرضي",p:"كبريتات البوتاسيوم"}],
+    total:{N:"1–1.5 كجم/شجرة",P:"0.5–0.8",K:"1–1.5"},def:{Zn:"أوراق صغيرة",Fe:"اصفرار"}},
+   diseases:[{name:"التبقع",sci:"Alternaria citri",type:"فطري",symp:{e:"بقع بنية",a:"تشوه"},prev:["رش وقائي"],treat:{chem:[{p:"مانكوزيب",d:"2.5 جم/لتر",int:"كل 10 أيام"}]},sev:"متوسط"}],
+   pests:[{name:"المن",type:"حشري",damage:"تجعد الأوراق",treat:"إيمداكلوبريد",sev:"متوسط"}],
+   pest:["مانكوزيب","إيمداكلوبريد","زيت معدني"],
+   harvest:{signs:["لون أصفر","حجم مناسب"],method:"يدوي بمقص",time:"الصباح",intv:"دفعات",post:{temp:"10–12°م",life:"2–3 أسابيع"}},
+   nutri:{p100:{"السعرات":"29 كيلوكالوري","فيتامين C":"53 مجم","الألياف":"2.8 جم"},ben:["مضاد أكسدة","يعزز المناعة"]},
+   econ:{costs:"12000–18000 جنيه/فدان/سنة",rev:"25,000–70,000 جنيه",profit:"استثمار 20 سنة",best:"يوليو–سبتمبر",markets:["أوروبا","الخليج"]},
+   vars:[{name:"البلدي",co:"محلي",y:"8–10 طن",for:"عصائر"},{name:"يوريكا",co:"أمريكي",y:"10–12 طن",for:"تصدير"}],
+   tips:["الحصاد في الصباح الباكر","الري المنتظم يمنع تشقق الثمار","التقليم يحسن جودة الثمار"]}
 ];
 
-// ======================== SEARCH ENGINE ========================
+// ======================== DISEASES DATA ========================
+const DiseasesDB = [
+  {
+    id:"d1",
+    name:"البياض الدقيقي",
+    nameEn:"Powdery Mildew",
+    sci:"Erysiphe cichoracearum, Sphaerotheca fuliginea",
+    img:"https://images.unsplash.com/photo-1585067189945-e9b2f9bbac30?w=600&q=80",
+    type:"فطري",
+    severity:"متوسط",
+    affectedPlants:["طماطم","خيار","فلفل","كوسة","ورد","ياسمين"],
+    symptoms:["ظهور طبقة بيضاء بودرية على الأوراق","تشوه الأوراق والبراعم","جفاف الأوراق مع تقدم الإصابة","توقف النمو"],
+    causes:["رطوبة عالية","تهوية ضعيفة","كثافة زراعية عالية","ظل زائد"],
+    treatment:["رش الكبريت الميكروني 2 جم/لتر","رش توبسين إم 70% 1 جم/لتر","الرش المتكرر كل 7-10 أيام","استخدام مبيدات جهازية مثل تيلت 25%"],
+    prevention:["تهوية جيدة","تجنب الري على الأوراق","زراعة أصناف مقاومة","إزالة الأجزاء المصابة"],
+    description:"مرض فطري شائع يصيب العديد من المحاصيل والخضر والفاكهة. يظهر على شكل طبقة بيضاء تشبه الدقيق على الأوراق والبراعم."
+  },
+  {
+    id:"d2",
+    name:"اللفحة المتأخرة",
+    nameEn:"Late Blight",
+    sci:"Phytophthora infestans",
+    img:"https://images.pexels.com/photos/7195520/pexels-photo-7195520.jpeg?w=600&q=80",
+    type:"فطري",
+    severity:"خطير",
+    affectedPlants:["طماطم","بطاطس","فلفل","باذنجان"],
+    symptoms:["بقع مائية على الأوراق","تتحول إلى بنية سوداء","نمو أبيض على الجانب السفلي في الرطوبة","تعفن الثمار والدرنات"],
+    causes:["رطوبة عالية","درجات حرارة معتدلة (15-20°م)","الري بالرش","تناوب المحاصيل غير الجيد"],
+    treatment:["ريدوميل جولد 2.5 جم/لتر","مانكوزيب 2.5 جم/لتر","أكروبات 2 جم/لتر","يجب التناوب بين المبيدات"],
+    prevention:["زراعة أصناف مقاومة","تجنب الري بالرش","التهوية الجيدة","إزالة النباتات المصابة فوراً","دورة زراعية 3-4 سنوات"],
+    description:"أخطر أمراض الطماطم والبطاطس. يسبب خسائر كبيرة في الحقل والمخزن. ينتشر بسرعة في الطقس البارد الرطب."
+  },
+  {
+    id:"d3",
+    name:"فيروس تجعد الأوراق الصفراء",
+    nameEn:"Tomato Yellow Leaf Curl Virus (TYLCV)",
+    sci:"Begomovirus",
+    img:"https://images.pexels.com/photos/7195521/pexels-photo-7195521.jpeg?w=600&q=80",
+    type:"فيروسي",
+    severity:"خطير",
+    affectedPlants:["طماطم","فلفل","باذنجان","تبغ"],
+    symptoms:["تجعد الأوراق إلى أعلى","اصفرار بين العروق","تقزم النبات","تساقط الأزهار","ضعف الإثمار"],
+    causes:["ينقله الذبابة البيضاء (Bemisia tabaci)","زراعة شتلات ملوثة","وجود عوائل برية","ارتفاع درجة الحرارة"],
+    treatment:["لا يوجد علاج مباشر للفيروس","مكافحة الناقل (الذبابة البيضاء)","إيميداكلوبريد 0.5 مل/لتر","أبامكتين 1 سم/لتر","إزالة النباتات المصابة"],
+    prevention:["استخدام شتلات سليمة","مكافحة الذبابة البيضاء بانتظام","استخدام مصائد صفراء لاصقة","زراعة أصناف مقاومة","عزل المحاصيل"],
+    description:"فيروس خطير يصيب الطماطم والفلفل، ينتقل عن طريق الذبابة البيضاء. يسبب أضراراً كبيرة في الإنتاج وقد يؤدي إلى فقدان كامل للمحصول."
+  }
+];
+
+// ======================== SEARCH ENGINE (يحوي النباتات والأمراض) ========================
 const SE = {
   W:{name:10,nameEn:9,tags:8,diseases:7,ov:6,tips:5,fert:5,irr:5,pests:4,soil:4,climate:4,regions:3,pest:3,harvest:3,nutri:2,vars:2,econ:2},
   SYN:{
@@ -1733,11 +1861,11 @@ const SE = {
   snip(t,k){const i=t.toLowerCase().indexOf(k.toLowerCase());if(i<0)return t.slice(0,90);return (i>30?'…':'')+t.slice(Math.max(0,i-25),i+75)+(i+75<t.length?'…':'')},
   hl(t,q){if(!t||!q)return t||'';const toks=this.tok(q);toks.forEach(k=>{[k,...(this.SYN[k]||[]),...(this.SYN[k.replace(/^ال/,'')]||[])].slice(0,4).forEach(tm=>{const re=new RegExp('('+tm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');t=t.replace(re,'<mark class="hl">$1</mark>')})});return t},
   lev(a,b){const m=Array.from({length:b.length+1},(_,i)=>[i]);m[0]=Array.from({length:a.length+1},(_,i)=>i);for(let i=1;i<=b.length;i++)for(let j=1;j<=a.length;j++)m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);return m[b.length][a.length]},
-  suggest(q){return DB.map(p=>({n:p.name,d:this.lev(q,p.name)})).sort((a,b)=>a.d-b.d).find(x=>x.d<=3)?.n||null},
+  suggest(q){return DB.concat(DiseasesDB.map(d=>({...d,type:"disease"}))).map(item=>({n:item.name,d:this.lev(q,item.name)})).sort((a,b)=>a.d-b.d).find(x=>x.d<=3)?.n||null},
   search(q){
     if(!q||q.trim().length<2)return[];
     const toks=this.tok(q);
-    const res=DB.map(p=>{
+    const plantResults = DB.map(p=>{
       let sc=0,flds=[],snps=[];
       toks.forEach(t=>{
         const terms=[t,...(this.SYN[t]||[]),...(this.SYN[t.replace(/^ال/,'')]||[]),...(this.SYN[q]||[])];
@@ -1755,13 +1883,35 @@ const SE = {
       });
       const fullTx=Object.keys(this.W).map(f=>this.txt(p,f)).join(' ');
       if(fullTx.toLowerCase().includes(q.toLowerCase())&&sc===0){sc=5;flds=['ov']}
-      return{p,sc,flds,snps};
-    }).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc);
-    return res;
+      return {type:"plant",item:p,sc,flds,snps};
+    }).filter(x=>x.sc>0);
+    const diseaseResults = DiseasesDB.map(d=>{
+      let sc=0,flds=[],snps=[];
+      toks.forEach(t=>{
+        const terms=[t,...(this.SYN[t]||[]),...(this.SYN[t.replace(/^ال/,'')]||[]),...(this.SYN[q]||[])];
+        const uniq=[...new Set(terms)];
+        const fields = ["name","nameEn","sci","description","symptoms","causes","treatment","prevention","affectedPlants"];
+        fields.forEach(f=>{
+          const tx = Array.isArray(d[f]) ? d[f].join(' ') : (d[f]||'');
+          uniq.forEach(tm=>{
+            if(tx.toLowerCase().includes(tm.toLowerCase())){
+              sc+=5;
+              if(!flds.includes(f))flds.push(f);
+              if(snps.length<2)snps.push({f,fn:this.FN[f]||f,tx:this.snip(tx,tm)});
+            }
+          });
+        });
+      });
+      if(sc===0)return null;
+      return {type:"disease",item:d,sc,flds,snps};
+    }).filter(x=>x!==null);
+    const combined = [...plantResults, ...diseaseResults];
+    combined.sort((a,b)=>b.sc-a.sc);
+    return combined;
   }
 };
 
-// ======================== APP OBJECT ========================
+// ======================== APP OBJECT (مع تحسين البحث والمفضلة) ========================
 const App = {
   dark: localStorage.getItem('nb-dark')==='1',
   favs: new Set(JSON.parse(localStorage.getItem('nb-favs')||'[]')),
@@ -1782,6 +1932,8 @@ const App = {
     this._heroCanvas();
     this._heroWords();
     setTimeout(_observeReveals,700);
+    // تحديث إحصائيات الأمراض
+    document.getElementById('cat-pill-diseases').textContent = DiseasesDB.length+' أمراض';
   },
 
   _loader(){
@@ -1804,42 +1956,44 @@ const App = {
   },
 
   _scroll(){
-    const bar=document.getElementById('pgbar');
     const stk=document.getElementById('stk');
     const nav=document.getElementById('nav');
     window.addEventListener('scroll',()=>{
-      const pct=scrollY/(document.documentElement.scrollHeight-innerHeight)||0;
-      bar.style.transform=`scaleX(${pct})`;
       stk.classList.toggle('on',scrollY>400);
       nav.classList.toggle('up',scrollY>10);
     },{passive:true});
   },
 
   _buildHome(){
-    // stats
     const vn=DB.filter(p=>p.cat==='vegetables').length;
     const fn=DB.filter(p=>p.cat==='fruits').length;
     const on=DB.filter(p=>p.cat==='ornamental').length;
+    const mn=DB.filter(p=>p.cat==='medicinal').length;
+    const fcn=DB.filter(p=>p.cat==='fieldcrops').length;
+    const cn=DB.filter(p=>p.cat==='citrus').length;
     document.getElementById('cat-pill-veg').textContent=vn+' نبات';
     document.getElementById('cat-pill-fr').textContent=fn+' نبات';
     document.getElementById('cat-pill-or').textContent=on+' نبات';
-    // hero sc stats
+    document.getElementById('cat-pill-med').textContent=mn+' نبات';
+    document.getElementById('cat-pill-field').textContent=fcn+' نبات';
+    document.getElementById('cat-pill-cit').textContent=cn+' نبات';
     document.getElementById('sc-stats').innerHTML=[
-      {n:DB.length,l:'نبات'},{n:DB.reduce((a,p)=>a+(p.diseases?.length||0),0),l:'مرض موثق'},{n:DB.reduce((a,p)=>a+(p.tips?.length||0),0),l:'نصيحة'}
+      {n:DB.length,l:'نبات'},{n:DB.reduce((a,p)=>a+(p.diseases?.length||0),0)+DiseasesDB.length,l:'مرض موثق'},{n:DB.reduce((a,p)=>a+(p.tips?.length||0),0),l:'نصيحة'}
     ].map(s=>`<div class="sc-stat"><div class="sc-stat-n" data-target="${s.n}">0</div><div class="sc-stat-l">${s.l}</div></div>`).join('');
-    // featured
     const fg=document.getElementById('home-featured');
     fg.innerHTML=[...Array(6)].map(()=>`<div class="sk-card"><div class="sk sk-img"></div><div class="sk-bd"><div class="sk sk-ln"></div><div class="sk sk-ln" style="width:60%"></div><div class="sk sk-ln" style="width:80%"></div></div></div>`).join('');
     setTimeout(()=>{
       fg.innerHTML=DB.filter(p=>p.featured).slice(0,6).map((p,i)=>this.card(p,i)).join('');
       this._io();
     },500);
-    // stats belt
     document.getElementById('home-stats').innerHTML=[
       {ico:'🌱',n:DB.length,l:'نبات في الموسوعة'},
       {ico:'🥦',n:vn,l:'خضروة مُوثّقة'},
       {ico:'🍎',n:fn,l:'فاكهة مُوثّقة'},
       {ico:'🌸',n:on,l:'نبات زينة'},
+      {ico:'🌿',n:mn,l:'طبية وعطرية'},
+      {ico:'🌾',n:fcn,l:'محاصيل حقلية'},
+      {ico:'🍊',n:cn,l:'موالح'}
     ].map(s=>`<div class="stat-box"><span class="stat-ico">${s.ico}</span><div class="stat-n" data-target="${s.n}">0</div><div class="stat-l">${s.l}</div></div>`).join('');
     this._io();
   },
@@ -1857,7 +2011,6 @@ const App = {
     inp.addEventListener('focus',()=>{if(!inp.value.trim())this.renderHeroDdHist()});
     inp.addEventListener('keydown',e=>this.handleHeroKeys(e));
     document.addEventListener('click',e=>{if(!e.target.closest('#hero-sc')&&!e.target.closest('.search-card'))closeScDd()});
-    // search page
     const sinp=document.getElementById('sp-inp');
     if(sinp){
       sinp.addEventListener('keydown',e=>{if(e.key==='Enter')doFullSearch()});
@@ -1879,16 +2032,28 @@ const App = {
   },
 
   heroSrRow(r,q,i){
-    const{p,flds,snps}=r;
-    return `<div class="sdd-row" style="animation-delay:${i*35}ms" onclick="openFromHeroSr('${p.id}','${flds[0]||'ov'}')">
-      <img class="sdd-thumb" src="${p.img}" alt="${p.name}" loading="lazy">
-      <div class="sdd-info">
-        <div class="sdd-name">${SE.hl(p.name,q)}</div>
-        <div class="sdd-chips">${flds.slice(0,3).map(f=>`<span class="sdd-chip">${SE.FN[f]||f}</span>`).join('')}</div>
-        ${snps[0]?`<div class="sdd-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
-      </div>
-      <span class="sdd-arr">←</span>
-    </div>`;
+    const{item,type,flds,snps}=r;
+    if(type==='plant'){
+      return `<div class="sdd-row" style="animation-delay:${i*35}ms" onclick="openFromHeroSr('${item.id}','${flds[0]||'ov'}')">
+        <img class="sdd-thumb" src="${item.img}" alt="${item.name}" loading="lazy">
+        <div class="sdd-info">
+          <div class="sdd-name">${SE.hl(item.name,q)} <span style="font-size:10px; color:var(--brand);">🌱 نبات</span></div>
+          <div class="sdd-chips">${flds.slice(0,3).map(f=>`<span class="sdd-chip">${SE.FN[f]||f}</span>`).join('')}</div>
+          ${snps[0]?`<div class="sdd-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+        </div>
+        <span class="sdd-arr">←</span>
+      </div>`;
+    } else {
+      return `<div class="sdd-row" style="animation-delay:${i*35}ms" onclick="openDiseaseModal('${item.id}')">
+        <img class="sdd-thumb" src="${item.img}" alt="${item.name}" loading="lazy">
+        <div class="sdd-info">
+          <div class="sdd-name">${SE.hl(item.name,q)} <span style="font-size:10px; color:var(--red);">🦠 مرض</span></div>
+          <div class="sdd-chips"><span class="sdd-chip">${item.type}</span><span class="sdd-chip">${item.severity}</span></div>
+          ${snps[0]?`<div class="sdd-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+        </div>
+        <span class="sdd-arr">←</span>
+      </div>`;
+    }
   },
 
   renderHeroDdHist(){
@@ -1963,7 +2128,7 @@ const App = {
         this.favs.add(id);
       }
       saveUserFavorites();
-      loadUserProfile(); // update profile fav count
+      loadUserProfile();
     } else {
       if (was) this.favs.delete(id);
       else this.favs.add(id);
@@ -1976,16 +2141,17 @@ const App = {
     showToast(was?'تم الحذف من المفضلة':'❤️ أُضيف للمفضلة','inf');
   },
 
-  // CATEGORY PAGE
   buildCatPage(catId){
     this.curCat=catId;this.catVis=12;this.catSub='all';this.catSort='pop';
     document.getElementById('cpt-sort').value='pop';
     const meta={
       vegetables:{name:'الخضروات',icon:'🥦',desc:'خضروات متنوعة مع تفاصيل التسميد والري والأمراض والحصاد',img:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1400&q=80'},
       fruits:{name:'الفاكهة',icon:'🍎',desc:'أشهر فواكه مصر من المانجو والفراولة والحمضيات والرمان',img:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=1400&q=80'},
-      ornamental:{name:'نباتات الزينة',icon:'🌸',desc:'ورد وياسمين وصبار ونباتات داخلية للتجميل والتصدير',img:'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=1400&q=80'}
+      ornamental:{name:'نباتات الزينة',icon:'🌸',desc:'ورد وياسمين وصبار ونباتات داخلية للتجميل والتصدير',img:'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=1400&q=80'},
+      medicinal:{name:'النباتات الطبية والعطرية',icon:'🌿',desc:'نعناع، زعتر، وزيوت عطرية للعلاج والتصدير',img:'https://images.unsplash.com/photo-1628557465833-6a6a2c53c5e7?w=1400&q=80'},
+      fieldcrops:{name:'المحاصيل الحقلية',icon:'🌾',desc:'قمح، ذرة، وأهم المحاصيل الاستراتيجية',img:'https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=1400&q=80'},
+      citrus:{name:'الموالح',icon:'🍊',desc:'يوسفي، ليمون، برتقال — أهم محاصيل التصدير',img:'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=1400&q=80'}
     }[catId];
-    // reset hero animations
     ['cph-icon','cph-name','cph-desc','cph-back'].forEach(id=>{
       const el=document.getElementById(id);
       if(!el)return;
@@ -2001,7 +2167,6 @@ const App = {
     document.getElementById('cph-name').textContent=meta.name;
     document.getElementById('cph-desc').textContent=meta.desc;
     document.getElementById('cpt-title').textContent=meta.name;
-    // sub-filters
     const plants=DB.filter(p=>p.cat===catId);
     const subs=[...new Set(plants.map(p=>p.sub))];
     document.getElementById('cpg-subs').innerHTML=[
@@ -2126,6 +2291,497 @@ const App = {
   }
 };
 
+// ======================== FAVORITE FUNCTIONS ========================
+async function loadUserFavorites() {
+  if (!currentUser) {
+    userFavorites.clear();
+    return;
+  }
+  try {
+    const favDoc = await db.collection('favorites').doc(currentUser.uid).get();
+    if (favDoc.exists) {
+      const favs = favDoc.data().plants || [];
+      userFavorites = new Set(favs);
+    } else {
+      await db.collection('favorites').doc(currentUser.uid).set({ plants: [] });
+      userFavorites.clear();
+    }
+    App.favs = userFavorites;
+    refreshAllFavIcons();
+  } catch (err) {
+    console.warn("Error loading favorites:", err);
+    userFavorites.clear();
+    App.favs = new Set();
+    refreshAllFavIcons();
+  }
+}
+
+async function saveUserFavorites() {
+  if (!currentUser) return;
+  const favArray = Array.from(userFavorites);
+  try {
+    await db.collection('favorites').doc(currentUser.uid).set({ plants: favArray });
+  } catch (err) {
+    console.error("Error saving favorites:", err);
+    showToast("⚠️ فشل حفظ المفضلة", "err");
+  }
+}
+
+function refreshAllFavIcons() {
+  document.querySelectorAll('.pcard-fav').forEach(btn => {
+    const id = btn.getAttribute('data-id');
+    if (id) {
+      const isFav = currentUser ? userFavorites.has(id) : App.favs.has(id);
+      btn.classList.toggle('on', isFav);
+      btn.textContent = isFav ? '❤️' : '🤍';
+    }
+  });
+}
+
+// ======================== PROFILE FUNCTIONS (PREMIUM) ========================
+async function loadUserProfile() {
+  if (!currentUser) return;
+  const profileName = document.getElementById('profileName');
+  const profileEmail = document.getElementById('profileEmail');
+  const profileRoleSpan = document.getElementById('profileRole');
+  const profileFavCount = document.getElementById('profileFavCount');
+  const profileJoinDate = document.getElementById('profileJoinDate');
+  const profileProvider = document.getElementById('profileProvider');
+  
+  const displayName = currentUser.displayName || currentUser.email.split('@')[0];
+  if (profileName) profileName.textContent = displayName;
+  if (profileEmail) profileEmail.textContent = currentUser.email;
+  if (profileFavCount) profileFavCount.textContent = userFavorites.size;
+  
+  // تاريخ الانضمام
+  try {
+    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+    if (userDoc.exists) {
+      const role = userDoc.data().role || 'مزارع';
+      userRole = role;
+      if (profileRoleSpan) profileRoleSpan.textContent = role;
+      if (userDoc.data().createdAt) {
+        const date = userDoc.data().createdAt.toDate();
+        if (profileJoinDate) profileJoinDate.textContent = date.toLocaleDateString('ar-EG');
+      } else {
+        if (profileJoinDate) profileJoinDate.textContent = '--';
+      }
+    } else {
+      if (profileRoleSpan) profileRoleSpan.textContent = 'مزارع';
+      userRole = 'مزارع';
+      if (profileJoinDate) profileJoinDate.textContent = '--';
+    }
+  } catch (err) {
+    console.error("Error loading user role:", err);
+    if (profileRoleSpan) profileRoleSpan.textContent = 'مزارع';
+    userRole = 'مزارع';
+    if (profileJoinDate) profileJoinDate.textContent = '--';
+  }
+  // طريقة التسجيل
+  if (currentUser.providerData) {
+    const provider = currentUser.providerData[0]?.providerId;
+    if (provider === 'google.com') userProvider = 'Google';
+    else if (provider === 'password') userProvider = 'البريد الإلكتروني';
+    else userProvider = '--';
+    if (profileProvider) profileProvider.textContent = userProvider;
+  }
+  // صورة رمزية (اختيارية)
+  const profileAvatar = document.getElementById('profileAvatar');
+  const profileAvatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
+  if (currentUser.photoURL) {
+    profileAvatar.src = currentUser.photoURL;
+    profileAvatar.style.display = 'block';
+    profileAvatarPlaceholder.style.display = 'none';
+  } else {
+    profileAvatar.style.display = 'none';
+    profileAvatarPlaceholder.style.display = 'flex';
+  }
+}
+
+function toggleProfileEdit() {
+  profileEditMode = !profileEditMode;
+  const profileNameSpan = document.getElementById('profileName');
+  const editBtn = document.querySelector('.edit-profile-btn');
+  const saveBtn = document.getElementById('saveProfileBtn');
+  const roleEditBtn = document.querySelector('.edit-role-btn');
+  if (profileEditMode) {
+    // تحويل الاسم إلى حقل إدخال
+    const currentName = profileNameSpan.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.id = 'editNameInput';
+    input.style.cssText = 'font-size:1.8rem; font-family:var(--f-display); background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:4px 12px; width:200px; text-align:center;';
+    profileNameSpan.innerHTML = '';
+    profileNameSpan.appendChild(input);
+    input.focus();
+    editBtn.textContent = 'إلغاء';
+    saveBtn.style.display = 'block';
+    roleEditBtn.style.display = 'inline-block';
+  } else {
+    // إلغاء التعديل
+    const input = document.getElementById('editNameInput');
+    if (input) {
+      profileNameSpan.textContent = input.value;
+    }
+    editBtn.textContent = '✏️ تعديل';
+    saveBtn.style.display = 'none';
+    roleEditBtn.style.display = 'inline-block'; // يبقى ظاهراً
+  }
+}
+
+function editRole() {
+  const roleSpan = document.getElementById('profileRole');
+  const currentRole = roleSpan.textContent;
+  const select = document.createElement('select');
+  select.id = 'editRoleSelect';
+  const roles = ['🌾 مزارع', '👨‍🔬 خبير زراعي', '🎓 طالب', '🏢 شركة'];
+  roles.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r;
+    opt.textContent = r;
+    if (r === currentRole) opt.selected = true;
+    select.appendChild(opt);
+  });
+  select.style.cssText = 'padding:6px 12px; border-radius:40px; border:1px solid var(--line); background:var(--bg2); color:var(--ink);';
+  roleSpan.innerHTML = '';
+  roleSpan.appendChild(select);
+  // تغيير زر التعديل إلى حفظ
+  const roleEditBtn = document.querySelector('.edit-role-btn');
+  roleEditBtn.textContent = 'حفظ';
+  roleEditBtn.onclick = saveRoleEdit;
+}
+
+function saveRoleEdit() {
+  const select = document.getElementById('editRoleSelect');
+  if (!select) return;
+  const newRole = select.value;
+  const roleSpan = document.getElementById('profileRole');
+  roleSpan.textContent = newRole;
+  userRole = newRole.replace(/[🌾👨‍🔬🎓🏢]\s*/, '');
+  // حفظ الدور في Firebase
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).set({ role: userRole }, { merge: true }).catch(console.error);
+  }
+  // إعادة زر التعديل
+  const roleEditBtn = document.querySelector('.edit-role-btn');
+  roleEditBtn.textContent = 'تعديل';
+  roleEditBtn.onclick = editRole;
+}
+
+async function saveProfileChanges() {
+  if (!currentUser) return;
+  const newNameInput = document.getElementById('editNameInput');
+  if (newNameInput) {
+    const newName = newNameInput.value.trim();
+    if (newName && newName !== currentUser.displayName) {
+      await currentUser.updateProfile({ displayName: newName });
+    }
+  }
+  // صورة رمزية (إذا تم اختيار ملف)
+  if (tempAvatarFile) {
+    const storageRef = storage.ref();
+    const avatarRef = storageRef.child(`avatars/${currentUser.uid}`);
+    await avatarRef.put(tempAvatarFile);
+    const avatarUrl = await avatarRef.getDownloadURL();
+    await currentUser.updateProfile({ photoURL: avatarUrl });
+    tempAvatarFile = null;
+  }
+  // تحديث الواجهة
+  await loadUserProfile();
+  toggleProfileEdit(); // إغلاق وضع التعديل
+  showToast('✅ تم حفظ الملف الشخصي', 'ok');
+}
+
+function changePassword() {
+  if (userProvider === 'Google') {
+    showToast('⚠️ حساب Google لا يمكن تغيير كلمة المرور يدوياً', 'err');
+    return;
+  }
+  const newPass = prompt('أدخل كلمة المرور الجديدة (8 أحرف على الأقل)');
+  if (newPass && newPass.length >= 8) {
+    currentUser.updatePassword(newPass).then(() => {
+      showToast('✅ تم تغيير كلمة المرور بنجاح', 'ok');
+    }).catch(err => {
+      showToast('❌ فشل تغيير كلمة المرور: ' + err.message, 'err');
+    });
+  } else if (newPass) {
+    showToast('❌ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'err');
+  }
+}
+
+// ======================== AUTH FUNCTIONS ========================
+async function signInWithEmail(email, password) {
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    showToast('✅ تم تسجيل الدخول بنجاح', 'ok');
+    closeAuth();
+    showPage('profile');
+  } catch (error) {
+    let msg = 'فشل تسجيل الدخول: ';
+    switch (error.code) {
+      case 'auth/user-not-found': msg += 'البريد الإلكتروني غير مسجل'; break;
+      case 'auth/wrong-password': msg += 'كلمة المرور غير صحيحة'; break;
+      case 'auth/invalid-email': msg += 'البريد الإلكتروني غير صالح'; break;
+      default: msg += error.message;
+    }
+    showToast(msg, 'err');
+  }
+}
+
+async function signUpWithEmail(name, email, password, role, confirmPassword) {
+  if (password !== confirmPassword) {
+    showToast('❌ كلمتا المرور غير متطابقتين', 'err');
+    return;
+  }
+  try {
+    const userCred = await auth.createUserWithEmailAndPassword(email, password);
+    await userCred.user.updateProfile({ displayName: name });
+    await db.collection('users').doc(userCred.user.uid).set({
+      name: name,
+      email: email,
+      role: role,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
+    closeAuth();
+    showPage('profile');
+  } catch (error) {
+    let msg = 'فشل التسجيل: ';
+    if (error.code === 'auth/email-already-in-use') msg += 'البريد الإلكتروني مستخدم بالفعل';
+    else if (error.code === 'auth/weak-password') msg += 'كلمة المرور ضعيفة';
+    else msg += error.message;
+    showToast(msg, 'err');
+  }
+}
+
+async function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await auth.signInWithPopup(provider);
+    showToast(`مرحباً ${result.user.displayName || result.user.email}`, 'ok');
+    closeAuth();
+    showPage('profile');
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    let msg = 'فشل تسجيل الدخول بـ Google: ';
+    switch (error.code) {
+      case 'auth/popup-blocked':
+        msg += 'الرجاء السماح للنوافذ المنبثقة في المتصفح';
+        break;
+      case 'auth/cancelled-popup-request':
+        msg += 'تم إلغاء طلب تسجيل الدخول';
+        break;
+      case 'auth/unauthorized-domain':
+        msg += 'النطاق غير مصرح به. أضف النطاق في Firebase Console (Authentication → Authorized domains).';
+        break;
+      default:
+        msg += error.message;
+    }
+    showToast(msg, 'err');
+  }
+}
+
+async function logoutUser() {
+  try {
+    await auth.signOut();
+    showToast('تم تسجيل الخروج', 'inf');
+    closeMob();
+    showPage('home');
+  } catch (err) {
+    showToast('حدث خطأ أثناء تسجيل الخروج', 'err');
+  }
+}
+
+function updateAuthUI(user) {
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const userMenu = document.getElementById('userMenu');
+  const userNameDisplay = document.getElementById('userNameDisplay');
+  const mobLogin = document.getElementById('mobLogin');
+  const mobRegister = document.getElementById('mobRegister');
+  const mobLogout = document.getElementById('mobLogout');
+
+  if (user) {
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    userMenu.style.display = 'block';
+    const displayName = user.displayName || user.email.split('@')[0];
+    userNameDisplay.textContent = `مرحباً، ${displayName}`;
+    if (mobLogin) mobLogin.style.display = 'none';
+    if (mobRegister) mobRegister.style.display = 'none';
+    if (mobLogout) mobLogout.style.display = 'block';
+  } else {
+    loginBtn.style.display = 'block';
+    registerBtn.style.display = 'block';
+    userMenu.style.display = 'none';
+    if (mobLogin) mobLogin.style.display = 'block';
+    if (mobRegister) mobRegister.style.display = 'block';
+    if (mobLogout) mobLogout.style.display = 'none';
+  }
+}
+
+// ======================== AUTH EVENT LISTENER ========================
+auth.onAuthStateChanged(async (user) => {
+  currentUser = user;
+  updateAuthUI(user);
+  if (user) {
+    await loadUserFavorites();
+    await loadUserProfile();
+  } else {
+    userFavorites.clear();
+    const localFavs = JSON.parse(localStorage.getItem('nb-favs') || '[]');
+    App.favs = new Set(localFavs);
+    refreshAllFavIcons();
+  }
+  if (document.getElementById('pg-home').classList.contains('active')) {
+    App._buildHome();
+  } else if (document.getElementById('pg-cat').classList.contains('active') && App.curCat) {
+    App.renderCatGrid();
+  }
+});
+
+// ======================== UI HELPERS ========================
+function closeAuth() {
+  document.getElementById('auth-bg').classList.remove('on');
+}
+function openAuth(tab) {
+  document.getElementById('auth-bg').classList.add('on');
+  swAuth(tab);
+}
+function swAuth(tab) {
+  const loginForm = document.getElementById('af-l');
+  const regForm = document.getElementById('af-r');
+  const loginTab = document.getElementById('at-l');
+  const regTab = document.getElementById('at-r');
+  if (tab === 'login') {
+    loginForm.style.display = 'flex';
+    regForm.style.display = 'none';
+    loginTab.classList.add('on');
+    regTab.classList.remove('on');
+  } else {
+    loginForm.style.display = 'none';
+    regForm.style.display = 'flex';
+    loginTab.classList.remove('on');
+    regTab.classList.add('on');
+  }
+}
+
+function chkStr(val) {
+  const f = document.getElementById('str-f');
+  let strength = 0;
+  if (val.length >= 8) strength++;
+  if (/[A-Za-z]/.test(val)) strength++;
+  if (/[0-9]/.test(val)) strength++;
+  if (/[^A-Za-z0-9]/.test(val)) strength++;
+  const percents = ['0%', '25%', '50%', '75%', '100%'];
+  const colors = ['', '#c0392b', '#e67e22', '#27ae60', '#1B6B3A'];
+  f.style.width = percents[strength];
+  f.style.background = colors[strength];
+}
+
+function showToast(msg, type = 'inf') {
+  const w = document.getElementById('tw');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  w.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-12px) scale(.9)';
+    el.style.transition = 'all .3s';
+    setTimeout(() => el.remove(), 300);
+  }, 2700);
+}
+
+// ======================== DISEASES PAGE FUNCTIONS ========================
+function showDiseasesPage(){
+  showPage('diseases');
+  renderDiseasesGrid();
+}
+function renderDiseasesGrid(){
+  const grid=document.getElementById('diseases-grid');
+  if(!grid)return;
+  grid.innerHTML=DiseasesDB.map((d,i)=>`
+    <div class="disease-card" onclick="openDiseaseModal('${d.id}')">
+      <div class="disease-card-img">
+        <img src="${d.img}" alt="${d.name}">
+        <div class="disease-card-badge">${d.type} · ${d.severity}</div>
+      </div>
+      <div class="disease-card-body">
+        <h3 class="disease-card-name">${d.name}</h3>
+        <div class="disease-card-sci">${d.sci}</div>
+        <p class="disease-card-desc">${d.description}</p>
+        <div class="disease-card-tags">
+          ${d.affectedPlants.slice(0,3).map(p=>`<span class="disease-tag">${p}</span>`).join('')}
+          ${d.affectedPlants.length>3?`<span class="disease-tag">+${d.affectedPlants.length-3}</span>`:''}
+        </div>
+        <div class="disease-card-affected"><span>النباتات المصابة:</span> <span>${d.affectedPlants.join(', ')}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+function openDiseaseModal(id){
+  const d=DiseasesDB.find(d=>d.id===id);
+  if(!d)return;
+  const modal=document.getElementById('disease-modal-content');
+  modal.innerHTML=`
+    <div class="disease-modal-header">
+      <img src="${d.img}" alt="${d.name}">
+      <div class="grad"></div>
+      <div class="info">
+        <h2>${d.name}</h2>
+        <p>${d.nameEn} · ${d.sci}</p>
+      </div>
+    </div>
+    <div class="disease-modal-content">
+      <div class="disease-modal-section">
+        <h3><i>🦠</i> نظرة عامة</h3>
+        <p>${d.description}</p>
+      </div>
+      <div class="disease-modal-section">
+        <h3><i>⚠️</i> الأعراض</h3>
+        <ul>${d.symptoms.map(s=>`<li>${s}</li>`).join('')}</ul>
+      </div>
+      <div class="disease-modal-section">
+        <h3><i>🌡️</i> الأسباب والعوامل المساعدة</h3>
+        <ul>${d.causes.map(c=>`<li>${c}</li>`).join('')}</ul>
+      </div>
+      <div class="disease-modal-section">
+        <h3><i>💊</i> العلاج</h3>
+        <ul>${d.treatment.map(t=>`<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div class="disease-modal-section">
+        <h3><i>🛡️</i> الوقاية</h3>
+        <ul>${d.prevention.map(p=>`<li>${p}</li>`).join('')}</ul>
+      </div>
+      <div class="disease-modal-section">
+        <h3><i>🌿</i> النباتات المعرضة للإصابة</h3>
+        <div class="affected-plants-list">
+          ${d.affectedPlants.map(plant=>`<span class="affected-plant-tag" onclick="closeDiseaseModal();showPlantSearch('${plant}')">${plant}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('disease-modal-bg').classList.add('on');
+  document.body.classList.add('modal-open');
+  document.addEventListener('keydown',_onDiseaseEsc);
+}
+function closeDiseaseModal(){
+  document.getElementById('disease-modal-bg').classList.remove('on');
+  document.body.classList.remove('modal-open');
+  document.removeEventListener('keydown',_onDiseaseEsc);
+}
+function _onDiseaseEsc(e){if(e.key==='Escape')closeDiseaseModal();}
+function showPlantSearch(plantName){
+  showPage('search');
+  setTimeout(()=>{
+    const inp=document.getElementById('sp-inp');
+    if(inp) inp.value=plantName;
+    doFullSearch(plantName);
+  },100);
+}
+
 // ======================== COUNTER ========================
 function counter(el){
   const tg=parseInt(el.dataset.target)||0,dur=1400,start=performance.now();
@@ -2146,6 +2802,7 @@ function showPage(pg,opts={}){
   document.querySelectorAll('.nl').forEach(l=>l.classList.remove('active'));
   if(pg==='home')document.getElementById('nl-home')?.classList.add('active');
   if(pg==='search')document.getElementById('nl-srch')?.classList.add('active');
+  if(pg==='diseases')document.getElementById('nl-diseases')?.classList.add('active');
   window.scrollTo(0,0);
   document.documentElement.scrollTop=0;
   if(prev&&prev!==next){
@@ -2191,7 +2848,7 @@ function _triggerReveals(container){
 }
 
 function showCatPage(catId){
-  const map={vegetables:'nl-veg',fruits:'nl-fr',ornamental:'nl-or'};
+  const map={vegetables:'nl-veg', fruits:'nl-fr', ornamental:'nl-or', medicinal:'nl-med', fieldcrops:'nl-field', citrus:'nl-cit'};
   showPage('cat');
   document.getElementById(map[catId])?.classList.add('active');
   App.buildCatPage(catId);
@@ -2234,19 +2891,31 @@ function doFullSearch(q){
 }
 
 function spRow(r,q,i){
-  const{p,flds,snps,sc}=r;
-  return `<div class="sp-result-item" style="animation-delay:${i*40}ms" onclick="openModal('${p.id}','${SE.FT[flds[0]]||'ov'}')">
-    <img class="sp-ri-img" src="${p.img}" alt="${p.name}" loading="lazy">
-    <div class="sp-ri-body">
-      <div class="sp-ri-name">${SE.hl(p.name,q)}</div>
-      <div class="sp-ri-fields">${flds.slice(0,4).map(f=>`<span class="sp-ri-field">${SE.FN[f]||f}</span>`).join('')}</div>
-      ${snps[0]?`<div class="sp-ri-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
-    </div>
-    <span class="sp-ri-score">صلة ${sc}</span>
-  </div>`;
+  const{item,type,flds,snps,sc}=r;
+  if(type==='plant'){
+    return `<div class="sp-result-item" style="animation-delay:${i*40}ms" onclick="openModal('${item.id}','${SE.FT[flds[0]]||'ov'}')">
+      <img class="sp-ri-img" src="${item.img}" alt="${item.name}" loading="lazy">
+      <div class="sp-ri-body">
+        <div class="sp-ri-name">${SE.hl(item.name,q)} <span style="font-size:10px; color:var(--brand);">🌱 نبات</span></div>
+        <div class="sp-ri-fields">${flds.slice(0,4).map(f=>`<span class="sp-ri-field">${SE.FN[f]||f}</span>`).join('')}</div>
+        ${snps[0]?`<div class="sp-ri-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+      </div>
+      <span class="sp-ri-score">صلة ${sc}</span>
+    </div>`;
+  } else {
+    return `<div class="sp-result-item" style="animation-delay:${i*40}ms" onclick="openDiseaseModal('${item.id}')">
+      <img class="sp-ri-img" src="${item.img}" alt="${item.name}" loading="lazy">
+      <div class="sp-ri-body">
+        <div class="sp-ri-name">${SE.hl(item.name,q)} <span style="font-size:10px; color:var(--red);">🦠 مرض</span></div>
+        <div class="sp-ri-fields"><span class="sp-ri-field">${item.type}</span><span class="sp-ri-field">${item.severity}</span></div>
+        ${snps[0]?`<div class="sp-ri-snip">${SE.hl(snps[0].tx,q)}</div>`:''}
+      </div>
+      <span class="sp-ri-score">صلة ${sc}</span>
+    </div>`;
+  }
 }
 
-// ======================== MODAL ========================
+// ======================== PLANT MODAL ========================
 let CP=null,CT='ov';
 function openModal(id,tab='ov'){
   CP=DB.find(p=>p.id===id);if(!CP)return;CT=tab;
@@ -2254,15 +2923,13 @@ function openModal(id,tab='ov'){
   swTab(tab);
   document.getElementById('modal-bg').classList.add('on');
   document.body.style.overflow='hidden';
+  document.body.classList.add('modal-open');
   document.addEventListener('keydown',_onEsc);
-  const box=document.querySelector('.modal-box');
-  let sy=0;
-  box.addEventListener('touchstart',e=>{sy=e.touches[0].clientY},{passive:true,once:true});
-  box.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>80)closeModal()},{once:true});
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('on');
   document.body.style.overflow='';
+  document.body.classList.remove('modal-open');
   document.removeEventListener('keydown',_onEsc);
 }
 function _onEsc(e){if(e.key==='Escape')closeModal()}
@@ -2280,7 +2947,7 @@ function buildModal(){
       <div class="mh-name">${p.name}</div>
       <div class="mh-sci">${p.nameSci}</div>
       <div class="mh-chips">
-        <span class="mh-chip">${p.cat==='vegetables'?'🥦 خضروات':p.cat==='fruits'?'🍎 فاكهة':'🌸 زينة'}</span>
+        <span class="mh-chip">${p.cat==='vegetables'?'🥦 خضروات':p.cat==='fruits'?'🍎 فاكهة':p.cat==='ornamental'?'🌸 زينة':p.cat==='medicinal'?'🌿 طبية وعطرية':p.cat==='fieldcrops'?'🌾 محاصيل حقلية':'🍊 موالح'}</span>
         ${p.export?'<span class="mh-chip">✈️ للتصدير</span>':''}
         ${p.featured?'<span class="mh-chip">⭐ مميز</span>':''}
       </div>
@@ -2358,7 +3025,7 @@ function buildTab(id){
     <div class="ig">${Object.entries(f?.total||{}).map(([k,v])=>`<div class="ic"><span class="ic-i">💊</span><div class="ic-l">${k}</div><div class="ic-v">${v}</div></div>`).join('')}</div>
     ${f?.pre?`<div class="tip-row" style="margin:12px 0"><span class="tip-n">🌱</span><span class="tip-t"><strong>قبل الزراعة:</strong> ${f.pre}</span></div>`:''}
     <div class="tp-h">📅 برنامج التسميد</div>
-    <div style="overflow-x:auto"><table class="ft-tbl"><thead><tr><th>التوقيت</th><th>النوع</th><th>الكمية</th><th>الطريقة</th><th>المنتج</th> </thead><tbody>${(f?.sched||[]).map(r=>`<tr><td>${r.t}</td><td>${r.tp}</td><td>${r.qty}</td><td>${r.m}</td><td>${r.p}</td></tr>`).join('')}</tbody></table></div>
+    <div style="overflow-x:auto"><table class="ft-tbl"><thead> <th>التوقيت</th><th>النوع</th><th>الكمية</th><th>الطريقة</th><th>المنتج</th> </thead><tbody>${(f?.sched||[]).map(r=>`<tr><td>${r.t}</td><td>${r.tp}</td><td>${r.qty}</td><td>${r.m}</td><td>${r.p}</td></tr>`).join('')}</tbody></table></div>
     ${f?.def?`<div class="tp-h">⚠️ أعراض نقص العناصر</div><div class="def-grid">${Object.entries(f.def).map(([k,v])=>`<div class="def-c"><div class="def-e">${k}</div><div class="def-s">${v}</div></div>`).join('')}</div>`:''}`}
   if(id==='dis')return `
     ${(p.diseases||[]).map(d=>`<div class="dis-card ${d.sev||''}">
@@ -2421,7 +3088,6 @@ function setupMobileMenuOutsideClick() {
 }
 setupMobileMenuOutsideClick();
 
-// User dropdown toggle
 document.getElementById('userAvatarBtn').addEventListener('click', function(e) {
   e.stopPropagation();
   const dropdown = document.getElementById('userDropdown');
@@ -2530,7 +3196,7 @@ App.buildCatPage=function(catId){
 
 // ======================== PREVENT DOUBLE-SCROLL on iOS ========================
 document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.modal-scroll,.sc-dd,.mtabs').forEach(el=>{
+  document.querySelectorAll('.modal-scroll,.sc-dd,.mtabs,.disease-modal-scroll').forEach(el=>{
     el.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
   });
 });
