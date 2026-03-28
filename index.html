@@ -100,7 +100,7 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV (مع رابط الأمراض)
+   NAV (مع رابط الأمراض) — تم إزالة بحث، محاصيل حقلية، موالح
 ═══════════════════════════════════════════ */
 .nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
 .nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
@@ -160,6 +160,7 @@ img{display:block;max-width:100%}
   .nav-actions{gap:4px;}
 }
 
+/* باقي التنسيقات (كما هي بدون تغيير) */
 /* ═══════════════════════════════════════════
    PAGES SYSTEM — CINEMATIC TRANSITIONS
 ═══════════════════════════════════════════ */
@@ -899,86 +900,6 @@ body.modal-open { overflow: hidden; }
   font-weight: bold;
   color: var(--ink);
 }
-
-/* تحسينات إضافية للشاشات الصغيرة جداً */
-@media (max-width: 400px) {
-  .hero-ctas .btn-hero-p, .hero-ctas .btn-hero-s, .hero-ctas .btn-hero-diseases {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-  .hero-pills .hpill {
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-  .search-card {
-    padding: 12px;
-  }
-  .sc-stats {
-    font-size: 12px;
-  }
-  .sc-stat-n {
-    font-size: 1.2rem;
-  }
-  .profile-card {
-    margin: 0 12px;
-  }
-  .profile-stats {
-    gap: 12px;
-  }
-  .profile-stats .stat-number {
-    font-size: 22px;
-  }
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 8px;
-  }
-  .edit-profile-btn, .edit-role-btn {
-    font-size: 11px;
-    padding: 4px 10px;
-  }
-  .sp-bar {
-    padding: 2px 2px 2px 10px;
-  }
-  .sp-bar-inp {
-    font-size: 14px;
-    padding: 8px 8px;
-  }
-  .sp-bar-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-  .sp-chip {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-  .cpg-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .cpg-sort {
-    width: 100%;
-  }
-  .cpg-sub-filter {
-    gap: 4px;
-  }
-  .cpg-fc {
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-  .disease-card {
-    margin: 0 8px;
-  }
-  .disease-card-name {
-    font-size: 1.2rem;
-  }
-  .disease-card-desc {
-    font-size: 12px;
-  }
-  .disease-card-affected {
-    font-size: 11px;
-  }
-}
 </style>
 </head>
 <body>
@@ -993,7 +914,7 @@ body.modal-open { overflow: hidden; }
   <div class="l-line"></div>
 </div>
 
-<!-- NAV -->
+<!-- NAV (تم إزالة: بحث، محاصيل حقلية، موالح) -->
 <nav class="nav" id="nav">
   <div class="nav-bg"></div>
   <div class="nav-inner">
@@ -1011,10 +932,8 @@ body.modal-open { overflow: hidden; }
       <a href="#" class="nl" id="nl-fr" onclick="showCatPage('fruits');return false">فاكهة</a>
       <a href="#" class="nl" id="nl-or" onclick="showCatPage('ornamental');return false">زينة</a>
       <a href="#" class="nl" id="nl-med" onclick="showCatPage('medicinal');return false">طبية وعطرية</a>
-      <a href="#" class="nl" id="nl-field" onclick="showCatPage('fieldcrops');return false">محاصيل حقلية</a>
-      <a href="#" class="nl" id="nl-cit" onclick="showCatPage('citrus');return false">موالح</a>
+      <!-- تم إزالة: محاصيل حقلية، موالح، بحث -->
       <a href="#" class="nl" id="nl-diseases" onclick="showDiseasesPage();return false">أمراض النبات</a>
-      <a href="#" class="nl" id="nl-srch" onclick="showPage('search');return false">بحث</a>
     </div>
     <div class="nav-actions" id="nav-actions">
       <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر">🌙</button>
@@ -1042,10 +961,8 @@ body.modal-open { overflow: hidden; }
     <a href="#" class="nl" onclick="showCatPage('fruits');closeMob()">فاكهة</a>
     <a href="#" class="nl" onclick="showCatPage('ornamental');closeMob()">زينة</a>
     <a href="#" class="nl" onclick="showCatPage('medicinal');closeMob()">طبية وعطرية</a>
-    <a href="#" class="nl" onclick="showCatPage('fieldcrops');closeMob()">محاصيل حقلية</a>
-    <a href="#" class="nl" onclick="showCatPage('citrus');closeMob()">موالح</a>
+    <!-- تم إزالة: محاصيل حقلية، موالح، بحث -->
     <a href="#" class="nl" onclick="showDiseasesPage();closeMob()">أمراض النبات</a>
-    <a href="#" class="nl" onclick="showPage('search');closeMob()">بحث</a>
     <a href="#" class="nl" id="mobLogin" onclick="openAuth('login');closeMob()">تسجيل الدخول</a>
     <a href="#" class="nl" id="mobRegister" onclick="openAuth('reg');closeMob()">إنشاء حساب</a>
     <a href="#" class="nl" id="mobLogout" style="display:none;" onclick="logoutUser();closeMob()">تسجيل الخروج</a>
@@ -1178,6 +1095,7 @@ body.modal-open { overflow: hidden; }
             </div>
           </div>
         </div>
+        <!-- المحاصيل الحقلية والموالح لا تزال موجودة في كاردات الأقسام لكنها غير موجودة في القائمة العلوية -->
         <div class="cat-card" onclick="showCatPage('fieldcrops')">
           <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=900&q=80')"></div>
           <div class="cat-card-veil"></div>
@@ -1484,10 +1402,6 @@ const firebaseConfig = {
   appId: "1:568685866343:web:7f938e92b562a6c862d3c2",
   measurementId: "G-50TNNDM704"
 };
-
-// ملاحظة: لضمان عمل تسجيل الدخول عبر Google عند استضافة الموقع على nabtex.netlify.app،
-// يجب إضافة النطاق "nabtex.netlify.app" إلى قائمة النطاقات المسموحة في Firebase Console:
-// Authentication → Settings → Authorized domains
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -3323,7 +3237,16 @@ async function hLogin(event) {
   const form = event.target;
   const email = form.querySelector('input[type="email"]').value;
   const password = form.querySelector('input[type="password"]').value;
-  await signInWithEmail(email, password);
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جاري التسجيل...';
+  try {
+    await signInWithEmail(email, password);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
 }
 
 async function hReg(event) {
@@ -3335,7 +3258,16 @@ async function hReg(event) {
   const confirm = form.querySelectorAll('input[type="password"]')[1].value;
   const roleSelect = form.querySelector('select');
   const role = roleSelect.options[roleSelect.selectedIndex].text;
-  await signUpWithEmail(name, email, password, role, confirm);
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جاري إنشاء الحساب...';
+  try {
+    await signUpWithEmail(name, email, password, role, confirm);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
 }
 </script>
 </body>
