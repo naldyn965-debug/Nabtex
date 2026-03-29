@@ -19,7 +19,7 @@
 
 <style>
 /* ═══════════════════════════════════════════
-   DESIGN TOKENS — PREMIUM DAY MODE
+   DESIGN TOKENS — PREMIUM DAY & NIGHT MODES (محسّنة)
 ═══════════════════════════════════════════ */
 :root{
   --brand:#1B6B3A;--brand-d:#0f552e;--brand-l:#2d9a58;
@@ -47,15 +47,16 @@
   --ease-smooth:cubic-bezier(.65,0,.35,1);
 }
 [data-dark]{
-  --bg:#0b160d;--bg2:#111d14;--bg3:#172219;
-  --card:#162019;--glass:rgba(11,22,13,.92);
-  --ink:#e2f0e6;--ink2:#c0d9c6;--slate:#8ab89a;--muted:#5a8068;
-  --line:rgba(27,107,58,.15);--line2:rgba(27,107,58,.25);
-  --s1:0 1px 4px rgba(0,0,0,.3);
-  --s2:0 4px 12px rgba(0,0,0,.4);
-  --s3:0 8px 28px rgba(0,0,0,.5);
-  --s4:0 16px 48px rgba(0,0,0,.6);
-  --s5:0 24px 64px rgba(0,0,0,.7);
+  --bg:#0c120f;--bg2:#111a14;--bg3:#162218;
+  --card:#1b2620;--glass:rgba(12,18,15,.92);
+  --ink:#e6f0ea;--ink2:#cfdfd5;
+  --slate:#9ab89e;--muted:#7f9a83;
+  --line:rgba(75,184,112,.2);--line2:rgba(75,184,112,.3);
+  --s1:0 1px 4px rgba(0,0,0,.4);
+  --s2:0 4px 12px rgba(0,0,0,.5);
+  --s3:0 8px 28px rgba(0,0,0,.6);
+  --s4:0 16px 48px rgba(0,0,0,.7);
+  --s5:0 24px 64px rgba(0,0,0,.8);
 }
 
 /* ═══════════════════════════════════════════
@@ -100,26 +101,26 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV (مع رابط الأمراض) — تم إزالة بحث، محاصيل حقلية، موالح
+   NAV (محسّن للتابلت والأجهزة الكبيرة)
 ═══════════════════════════════════════════ */
 .nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
 .nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
 .nav.up .nav-bg{backdrop-filter:blur(28px);background:var(--glass);box-shadow:var(--s3);}
-.nav-inner{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:10px}
-.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
+.nav-inner{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,var(--brand-l),var(--brand-d));display:grid;place-items:center;box-shadow:var(--s2);transition:transform .3s var(--ease-spring)}
 .logo-mark svg{width:20px;height:20px}
 .logo:hover .logo-mark{transform:rotate(-8deg) scale(1.1)}
-.logo-name{font-family:var(--f-display);font-size:22px;color:var(--ink);letter-spacing:.01em}
+.logo-name{font-family:var(--f-display);font-size:22px;color:var(--ink);letter-spacing:.01em;white-space:nowrap;}
 .logo-name span{color:var(--brand)}
-.nav-links{display:flex;gap:2px;margin-right:32px;flex-wrap:wrap}
-.nl{padding:6px 14px;border-radius:var(--rpill);font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;letter-spacing:.01em}
+.nav-links{display:flex;gap:2px;flex-wrap:wrap;margin:0;order:1;}
+.nl{padding:6px 14px;border-radius:var(--rpill);font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;letter-spacing:.01em;white-space:nowrap;}
 .nl:hover{color:var(--brand);background:var(--brand-pale)}
 .nl.active{color:var(--brand);font-weight:700}
-.nav-actions{display:flex;align-items:center;gap:8px;margin-right:auto}
+.nav-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0;}
 .nav-icon-btn{width:38px;height:38px;border-radius:var(--rpill);display:grid;place-items:center;border:1px solid var(--line);color:var(--slate);font-size:17px;transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);background:var(--card)}
 .nav-icon-btn:hover{transform:scale(1.08);border-color:var(--brand);color:var(--brand)}
-.btn-nav-o{padding:8px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);}
+.btn-nav-o{padding:8px 18px;border-radius:var(--rpill);font-size:13px;font-weight:700;transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);white-space:nowrap;}
 #loginBtn.btn-nav-o{
   border:1.5px solid var(--line2);
   color:var(--brand);
@@ -146,21 +147,27 @@ img{display:block;max-width:100%}
   background:var(--brand-pale);
   transform:translateY(-1px);
 }
-.ham{display:none;flex-direction:column;gap:5px;padding:8px;border-radius:var(--r2)}
+.ham{display:none;flex-direction:column;gap:5px;padding:8px;border-radius:var(--r2);margin-left:auto;}
 .ham span{display:block;width:20px;height:1.5px;background:var(--ink);border-radius:1px;transition:all .2s var(--ease-smooth)}
 .ham.x span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
 .ham.x span:nth-child(2){opacity:0;transform:scaleX(0)}
 .ham.x span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
 .mob-menu{display:none;flex-direction:column;padding:12px 24px 20px;border-top:1px solid var(--line);background:var(--glass);backdrop-filter:blur(20px)}
 .mob-menu .nl{display:block;padding:10px 14px;border-radius:var(--r2)}
+@media(max-width:1024px){
+  .nav-links{order:3;width:100%;justify-content:center;margin-top:8px;margin-bottom:4px;}
+  .nav-inner{height:auto;padding:12px 24px;flex-wrap:wrap;}
+  .nav-actions{margin-left:0;margin-right:0;}
+}
 @media(max-width:768px){
   .nav-links,.nav-actions .btn-nav-o{display:none}
   .ham{display:flex}
   .btn-nav-o{padding:6px 12px !important;font-size:11px !important;}
   .nav-actions{gap:4px;}
+  .nav-inner{height:64px;flex-wrap:nowrap;}
+  .nav-links{display:none;}
 }
 
-/* باقي التنسيقات (كما هي بدون تغيير) */
 /* ═══════════════════════════════════════════
    PAGES SYSTEM — CINEMATIC TRANSITIONS
 ═══════════════════════════════════════════ */
@@ -914,7 +921,7 @@ body.modal-open { overflow: hidden; }
   <div class="l-line"></div>
 </div>
 
-<!-- NAV (تم إزالة: بحث، محاصيل حقلية، موالح) -->
+<!-- NAV (تم إزالة: بحث، محاصيل حقلية، موالح من القائمة العلوية) -->
 <nav class="nav" id="nav">
   <div class="nav-bg"></div>
   <div class="nav-inner">
@@ -1095,7 +1102,7 @@ body.modal-open { overflow: hidden; }
             </div>
           </div>
         </div>
-        <!-- المحاصيل الحقلية والموالح لا تزال موجودة في كاردات الأقسام لكنها غير موجودة في القائمة العلوية -->
+        <!-- المحاصيل الحقلية والموالح لا تزال موجودة في كاردات الأقسام -->
         <div class="cat-card" onclick="showCatPage('fieldcrops')">
           <div class="cat-card-bg" style="background-image:url('https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=900&q=80')"></div>
           <div class="cat-card-veil"></div>
@@ -2555,7 +2562,7 @@ async function signInWithEmail(email, password) {
 async function signUpWithEmail(name, email, password, role, confirmPassword) {
   if (password !== confirmPassword) {
     showToast('❌ كلمتا المرور غير متطابقتين', 'err');
-    return;
+    throw new Error('Password mismatch');
   }
   try {
     const userCred = await auth.createUserWithEmailAndPassword(email, password);
@@ -2575,6 +2582,7 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
     else if (error.code === 'auth/weak-password') msg += 'كلمة المرور ضعيفة';
     else msg += error.message;
     showToast(msg, 'err');
+    throw error;
   }
 }
 
@@ -3240,7 +3248,7 @@ async function hLogin(event) {
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
-  submitBtn.textContent = 'جاري التسجيل...';
+  submitBtn.textContent = 'جاري تسجيل الدخول...';
   try {
     await signInWithEmail(email, password);
   } finally {
@@ -3272,8 +3280,6 @@ async function hReg(event) {
 </script>
 </body>
 </html>
-  
-  
   
   
   
