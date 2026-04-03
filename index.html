@@ -100,7 +100,7 @@ img{display:block;max-width:100%}
 @media(max-width:600px){.W{padding:0 16px}}
 
 /* ═══════════════════════════════════════════
-   NAV (مع رابط الأمراض) — تم إزالة: بحث، محاصيل حقلية، موالح
+   NAV (تم إزالة خضروات، فاكهة، زينة، طبية، أمراض وأضيف "أهداف المنصة")
 ═══════════════════════════════════════════ */
 .nav{position:sticky;top:0;z-index:500;padding-top:env(safe-area-inset-top,0);transition:backdrop-filter 0.3s ease, background 0.3s ease;}
 .nav-bg{position:absolute;inset:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);transition:backdrop-filter 0.3s, box-shadow 0.3s;}
@@ -284,7 +284,7 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sc-stat-l{font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px;letter-spacing:.04em}
 
 /* ═══════════════════════════════════════════
-   HOME — CATEGORIES STRIP (7 أقسام)
+   HOME — CATEGORIES STRIP (7 أقسام) — تم الاحتفاظ بها كما هي
 ═══════════════════════════════════════════ */
 .cats-section{padding:80px 0}
 .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:44px}
@@ -438,8 +438,37 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 .sp-ri-score{flex-shrink:0;font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);padding:4px 10px;border-radius:var(--rpill)}
 
 /* ═══════════════════════════════════════════
-   MODAL (للمحاصيل)
+   GOALS PAGE (أهداف المنصة والمطورين)
 ═══════════════════════════════════════════ */
+.goals-hero{background:linear-gradient(135deg,var(--brand-d) 0%,var(--brand) 100%);padding:80px 0;text-align:center;color:white;position:relative;overflow:hidden}
+.goals-hero h1{font-family:var(--f-display);font-size:3.5rem;margin-bottom:16px}
+.goals-hero p{font-size:1.2rem;opacity:0.9;max-width:700px;margin:0 auto}
+.goals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;margin:60px 0}
+.goal-card{background:var(--card);border-radius:28px;padding:32px 24px;text-align:center;box-shadow:var(--s3);transition:all 0.3s var(--ease-spring);border:1px solid var(--line);cursor:default}
+.goal-card:hover{transform:translateY(-8px);box-shadow:var(--s5);border-color:var(--brand-l)}
+.goal-icon{font-size:64px;margin-bottom:20px;display:inline-block}
+.goal-card h3{font-family:var(--f-display);font-size:1.8rem;color:var(--ink);margin-bottom:12px}
+.goal-card p{color:var(--slate);line-height:1.7}
+.team-section{margin:80px 0;background:var(--bg2);border-radius:48px;padding:60px 40px}
+.team-section h2{font-family:var(--f-display);font-size:2.5rem;text-align:center;margin-bottom:48px;color:var(--ink)}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px}
+.team-card{background:var(--card);border-radius:32px;overflow:hidden;box-shadow:var(--s3);transition:transform 0.3s;text-align:center}
+.team-card:hover{transform:translateY(-6px)}
+.team-img{height:180px;background:var(--brand-mist);display:flex;align-items:center;justify-content:center;font-size:72px}
+.team-info{padding:24px}
+.team-info h3{font-size:1.5rem;color:var(--ink);margin-bottom:6px}
+.team-info .role{color:var(--brand);font-weight:600;margin-bottom:12px;font-size:0.9rem}
+.team-info .desc{color:var(--slate);font-size:0.85rem;line-height:1.6}
+.dev-highlight{background:var(--gold-pale);border-radius:32px;padding:40px;margin:40px 0;border:1px solid var(--gold-l);text-align:center}
+.dev-highlight h3{font-family:var(--f-display);font-size:2rem;color:var(--gold);margin-bottom:16px}
+.dev-highlight p{font-size:1.05rem;color:var(--ink2);max-width:800px;margin:0 auto}
+.dev-highlight .badge{display:inline-block;background:var(--gold);color:white;padding:6px 20px;border-radius:40px;margin-top:20px;font-weight:700}
+.cta-buttons{display:flex;gap:20px;justify-content:center;margin:50px 0 30px}
+.btn-goal{background:var(--brand);color:white;padding:14px 34px;border-radius:50px;font-weight:700;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-goal-outline{background:transparent;border:2px solid var(--brand);color:var(--brand);padding:12px 30px;border-radius:50px;font-weight:700;transition:all 0.2s}
+.btn-goal:hover,.btn-goal-outline:hover{transform:translateY(-3px);box-shadow:var(--s3)}
+
+/* MODAL (للمحاصيل) */
 body.modal-open { overflow: hidden; }
 .modal-bg{position:fixed;inset:0;z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.on{display:flex;animation:bgIn .28s ease forwards}
@@ -927,11 +956,8 @@ body.modal-open { overflow: hidden; }
     </a>
     <div class="nav-links">
       <a href="#" class="nl active" id="nl-home" onclick="showPage('home');return false">الرئيسية</a>
-      <a href="#" class="nl" id="nl-veg" onclick="showCatPage('vegetables');return false">خضروات</a>
-      <a href="#" class="nl" id="nl-fr" onclick="showCatPage('fruits');return false">فاكهة</a>
-      <a href="#" class="nl" id="nl-or" onclick="showCatPage('ornamental');return false">زينة</a>
-      <a href="#" class="nl" id="nl-med" onclick="showCatPage('medicinal');return false">طبية وعطرية</a>
-      <a href="#" class="nl" id="nl-diseases" onclick="showDiseasesPage();return false">أمراض النبات</a>
+      <!-- تم إزالة خضروات، فاكهة، زينة، طبية، أمراض، وأضيف أهداف المنصة -->
+      <a href="#" class="nl" id="nl-goals" onclick="showPage('goals');return false">🎯 أهداف المنصة</a>
     </div>
     <div class="nav-actions" id="nav-actions">
       <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر">🌙</button>
@@ -955,11 +981,7 @@ body.modal-open { overflow: hidden; }
   </div>
   <div class="mob-menu" id="mob-menu">
     <a href="#" class="nl" onclick="showPage('home');closeMob()">الرئيسية</a>
-    <a href="#" class="nl" onclick="showCatPage('vegetables');closeMob()">خضروات</a>
-    <a href="#" class="nl" onclick="showCatPage('fruits');closeMob()">فاكهة</a>
-    <a href="#" class="nl" onclick="showCatPage('ornamental');closeMob()">زينة</a>
-    <a href="#" class="nl" onclick="showCatPage('medicinal');closeMob()">طبية وعطرية</a>
-    <a href="#" class="nl" onclick="showDiseasesPage();closeMob()">أمراض النبات</a>
+    <a href="#" class="nl" onclick="showPage('goals');closeMob()">🎯 أهداف المنصة</a>
     <a href="#" class="nl" id="mobLogin" onclick="openAuth('login');closeMob()">تسجيل الدخول</a>
     <a href="#" class="nl" id="mobRegister" onclick="openAuth('reg');closeMob()">إنشاء حساب</a>
     <a href="#" class="nl" id="mobLogout" style="display:none;" onclick="logoutUser();closeMob()">تسجيل الخروج</a>
@@ -995,7 +1017,7 @@ body.modal-open { overflow: hidden; }
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           ابحث الآن
         </button>
-        <button class="btn-hero-s" onclick="showCatPage('vegetables')">🥦 تصفح الخضروات</button>
+        <button class="btn-hero-s" onclick="showPage('goals')">🎯 أهداف المنصة</button>
         <button class="btn-hero-diseases" onclick="showDiseasesPage()">🦠 تصفح أمراض النبات</button>
       </div>
       <div class="hero-pills">
@@ -1323,6 +1345,73 @@ body.modal-open { overflow: hidden; }
   </section>
 </div>
 
+<!-- ══════════ PAGE: GOALS (أهداف المنصة والمطورين) ══════════ -->
+<div class="page" id="pg-goals">
+  <div class="goals-hero">
+    <div class="W">
+      <h1>🎯 أهداف منصة نبتيكس</h1>
+      <p>نحو زراعة أكثر إنتاجية واستدامة للمزارع المصري والعربي</p>
+    </div>
+  </div>
+  <div class="W">
+    <div class="goals-grid">
+      <div class="goal-card">
+        <div class="goal-icon">📘</div>
+        <h3>موسوعة زراعية شاملة</h3>
+        <p>توفير قاعدة بيانات ضخمة تضم أكثر من 150 نباتاً، تشمل طرق التسميد، الري، مكافحة الأمراض، والحصاد، مع تحديثات مستمرة.</p>
+      </div>
+      <div class="goal-card">
+        <div class="goal-icon">📊</div>
+        <h3>دعم اتخاذ القرار</h3>
+        <p>تقديم بيانات اقتصادية وتحليلات للربحية، لمساعدة المزارعين والشركات على اختيار المحصول الأنسب وتحقيق أعلى عائد.</p>
+      </div>
+      <div class="goal-card">
+        <div class="goal-icon">🧠</div>
+        <h3>تمكين المزارع المصري</h3>
+        <p>نشر المعرفة الحديثة باللغة العربية بأسلوب مبسط، مع نصائح الخبراء والمصادر الموثوقة (FAO، وزارة الزراعة).</p>
+      </div>
+      <div class="goal-card">
+        <div class="goal-icon">🤝</div>
+        <h3>مجتمع زراعي تفاعلي</h3>
+        <p>ربط المزارعين والمهندسين الزراعيين والباحثين لتبادل الخبرات، والوصول إلى أحدث الأبحاث والتقنيات.</p>
+      </div>
+    </div>
+
+    <div class="team-section">
+      <h2>👥 مؤسسو المنصة</h2>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-img">👨‍💻</div>
+          <div class="team-info">
+            <h3>البشمهندس نور الهادي</h3>
+            <div class="role">مؤسس ورئيس التطوير التقني</div>
+            <div class="desc">مهندس برمجيات ومطور ويب بخبرة تزيد عن 4 سنوات في تطوير الأنظمة المتكاملة. صمم وأشرف على البنية التقنية للمنصة لضمان تجربة مستخدم فائقة.</div>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-img">👩‍🌾</div>
+          <div class="team-info">
+            <h3>البشمهندسة ماهيتاب احمد</h3>
+            <div class="role">مؤسسة ومستشار زراعي أول</div>
+            <div class="desc">مهندسة زراعية متخصصة في الإنتاج النباتي، عملت على جمع وتوثيق البيانات الزراعية من أحدث المراجع لتكون المنصة مرجعاً موثوقاً للمزارعين.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dev-highlight">
+      <h3>🚀 لمحة عن المطور التقني</h3>
+      <p>تم بناء هذه المنصة المتكاملة بواسطة <strong>البشمهندس نور الهادي</strong>، مطور فروند إند محترف (Frontend Developer) بخبرة تزيد عن <strong>أربع سنوات</strong> في تطوير وإنشاء مواقع الويب التفاعلية عالية الأداء. استخدم أحدث تقنيات الويب (HTML5، CSS3، JavaScript، Firebase) لتحقيق تجربة سلسة وسريعة وجذابة. يتميز بقدرته على تحويل الأفكار إلى تطبيقات ويب متكاملة تركز على المستخدم وسهولة الاستخدام.</p>
+      <span class="badge">✨ خبرة 4+ سنوات في تطوير الويب</span>
+    </div>
+
+    <div class="cta-buttons">
+      <button class="btn-goal" onclick="showPage('search')">🔍 استكشف الموسوعة الآن</button>
+      <button class="btn-goal-outline" onclick="showPage('home')">🏠 العودة للرئيسية</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ PLANT MODAL ══════════ -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-veil" onclick="closeModal()"></div>
@@ -1411,7 +1500,6 @@ let userJoinDate = null;
 let userProvider = 'email';
 let profileEditMode = false;
 let tempAvatarFile = null;
-
 // ======================== DATABASE ========================
 const DB = [
   // ========== الخضروات ==========
@@ -1716,7 +1804,7 @@ const DB = [
    econ:{costs:"4000–6000 جنيه/فدان",rev:"12,000–30,000 جنيه",profit:"8,000–24,000 جنيه",best:"مايو–يونيو",markets:["شركات الأدوية","أسواق التوابل"]},
    vars:[{name:"بلدي",co:"محلي",y:"1–1.2 طن",for:"عطري"},{name:"فرنسي",co:"فرنسي",y:"1.5–2 طن",for:"زيت"}],
    tips:["لا تفرط في الري","التجفيف في الظل يحافظ على الزيوت","التقليم الخفيف بعد الحشة يسرع النمو"]},
-  // ========== المحاصيل الحقلية (صور محسنة) ==========
+  // ========== المحاصيل الحقلية ==========
   {id:"c1",name:"قمح",nameEn:"Wheat",nameSci:"Triticum aestivum",cat:"fieldcrops",sub:"حبوب",
    img:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d7a4b?w=600&q=80",
    tags:["شتوي","استراتيجي","غذاء رئيسي"],diff:2,pop:99,featured:true,export:false,
@@ -2563,9 +2651,7 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
     }, { merge: true });
     showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
     closeAuth();
-    // تأكيد الانتقال إلى الملف الشخصي بعد إنشاء الحساب
     showPage('profile');
-    // تحديث الملف الشخصي فوراً
     setTimeout(() => loadUserProfile(), 500);
   } catch (error) {
     let msg = 'فشل التسجيل: ';
@@ -2815,7 +2901,6 @@ let currentPage='home';
 let _pgTimer=null;
 
 function showPage(pg,opts={}){
-  // إغلاق القائمة المنسدلة للمستخدم عند تغيير الصفحة
   const dropdown = document.getElementById('userDropdown');
   if (dropdown) dropdown.style.display = 'none';
   
@@ -2828,6 +2913,7 @@ function showPage(pg,opts={}){
   if(pg==='home')document.getElementById('nl-home')?.classList.add('active');
   if(pg==='search')document.getElementById('nl-srch')?.classList.add('active');
   if(pg==='diseases')document.getElementById('nl-diseases')?.classList.add('active');
+  if(pg==='goals')document.getElementById('nl-goals')?.classList.add('active');
   window.scrollTo(0,0);
   document.documentElement.scrollTop=0;
   if(prev&&prev!==next){
@@ -3113,7 +3199,6 @@ function setupMobileMenuOutsideClick() {
 }
 setupMobileMenuOutsideClick();
 
-// قائمة المستخدم المنبثقة
 document.getElementById('userAvatarBtn').addEventListener('click', function(e) {
   e.stopPropagation();
   const dropdown = document.getElementById('userDropdown');
@@ -3222,14 +3307,12 @@ App.buildCatPage=function(catId){
   setTimeout(_observeReveals,120);
 };
 
-// ======================== PREVENT DOUBLE-SCROLL on iOS ========================
 document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.modal-scroll,.sc-dd,.mtabs,.disease-modal-scroll').forEach(el=>{
     el.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
   });
 });
 
-// ======================== دوال تسجيل الدخول المفقودة ========================
 async function hLogin(event) {
   event.preventDefault();
   const form = event.target;
@@ -3270,7 +3353,3 @@ async function hReg(event) {
 </script>
 </body>
 </html>
-  
-  
-  
-  
