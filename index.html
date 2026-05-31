@@ -4763,6 +4763,160 @@ body.modal-open { overflow: hidden; }
 }
 .mkt-btn-order svg { width: 19px; height: 19px; }
 
+/* ── Share button (detail panel) ── */
+.mkt-btn-share {
+  height: 50px; border-radius: 16px; background: var(--card);
+  border: 1.5px solid rgba(59,130,246,.35); color: #3b82f6;
+  font-size: 14px; font-weight: 800; font-family: var(--f-ui);
+  cursor: pointer; transition: all .25s var(--mkt-spring);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  text-decoration: none; box-shadow: 0 2px 10px rgba(59,130,246,.06);
+}
+.mkt-btn-share:hover { border-color: #3b82f6; background: rgba(59,130,246,.07); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(59,130,246,.2); }
+.mkt-btn-share svg { width: 19px; height: 19px; }
+
+/* ── Social share panel (desktop fallback) ── */
+/* ── Share Modal (global, replaces inline share panel for cards) ── */
+.mkt-share-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+  align-items: flex-end; justify-content: center;
+}
+.mkt-share-modal-overlay.open { display: flex; }
+.mkt-share-modal {
+  width: 100%; max-width: 480px; background: var(--card);
+  border-radius: 24px 24px 0 0; padding: 20px 20px 32px;
+  animation: toastIn .25s cubic-bezier(.16,1,.3,1);
+  border: 1.5px solid var(--line); border-bottom: none;
+}
+.mkt-share-modal-handle {
+  width: 40px; height: 4px; background: var(--line2);
+  border-radius: 2px; margin: 0 auto 18px;
+}
+.mkt-share-modal-title {
+  font-size: 15px; font-weight: 900; color: var(--ink);
+  text-align: center; margin-bottom: 16px; font-family: var(--f-ui);
+}
+.mkt-share-modal-platforms {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+}
+.mkt-share-modal-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; border-radius: 14px; border: 1.5px solid var(--line2);
+  background: var(--bg2); font-size: 14px; font-weight: 800;
+  font-family: var(--f-ui); cursor: pointer;
+  transition: all .18s var(--mkt-spring); color: var(--ink);
+}
+.mkt-share-modal-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.mkt-share-modal-btn.sp-wa  { border-color: rgba(37,211,102,.4); color: #1a9e50; }
+.mkt-share-modal-btn.sp-fb  { border-color: rgba(24,119,242,.4); color: #1877f2; }
+.mkt-share-modal-btn.sp-tw  { border-color: rgba(0,0,0,.2);      color: #111; }
+.mkt-share-modal-btn.sp-cp  { border-color: rgba(99,102,241,.4); color: #6366f1; }
+.mkt-share-modal-url-row {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: 12px; padding: 9px 13px; margin-bottom: 12px;
+}
+.mkt-share-modal-url-txt {
+  flex: 1; font-size: 11px; color: var(--slate); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; font-family: monospace; direction: ltr;
+}
+.mkt-share-modal-url-copy {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 9px;
+  background: var(--mkt-g); color: #fff; font-size: 12px; font-weight: 800;
+  border: none; cursor: pointer; font-family: var(--f-ui); transition: background .2s;
+}
+.mkt-share-modal-url-copy:hover { background: var(--mkt-gl); }
+.mkt-share-modal-cancel {
+  width: 100%; height: 44px; border-radius: 12px;
+  border: 1.5px solid var(--line2); background: none;
+  color: var(--slate); font-size: 14px; font-weight: 700;
+  font-family: var(--f-ui); cursor: pointer; transition: background .15s;
+}
+.mkt-share-modal-cancel:hover { background: var(--bg2); }
+
+.mkt-share-panel {
+  display: none; flex-direction: column; gap: 11px;
+  background: var(--bg2); border: 1.5px solid var(--line);
+  border-radius: 16px; padding: 16px; margin-bottom: 4px;
+  animation: toastIn .22s cubic-bezier(.16,1,.3,1);
+}
+.mkt-share-panel.open { display: flex; }
+.mkt-share-panel-title { font-size: 11px; font-weight: 900; color: var(--slate); text-align: center; letter-spacing: .05em; text-transform: uppercase; }
+.mkt-share-platforms { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.mkt-share-plat-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  height: 42px; border-radius: 12px; border: 1.5px solid var(--line2);
+  background: var(--card); font-size: 13px; font-weight: 800; font-family: var(--f-ui);
+  cursor: pointer; transition: all .2s var(--mkt-spring); text-decoration: none; color: var(--ink);
+}
+.mkt-share-plat-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+.mkt-share-plat-btn.sp-wa  { border-color: rgba(37,211,102,.4); color: #1a9e50; }
+.mkt-share-plat-btn.sp-fb  { border-color: rgba(24,119,242,.4); color: #1877f2; }
+.mkt-share-plat-btn.sp-tw  { border-color: rgba(0,0,0,.2);     color: #111; }
+.mkt-share-plat-btn.sp-cp  { border-color: rgba(99,102,241,.4); color: #6366f1; }
+.mkt-share-copy-row {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px;
+}
+.mkt-share-url-txt {
+  flex: 1; font-size: 11px; color: var(--slate); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; font-family: monospace; direction: ltr;
+}
+.mkt-share-url-copy {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 8px;
+  background: var(--mkt-g); color: #fff; font-size: 11px; font-weight: 800;
+  border: none; cursor: pointer; font-family: var(--f-ui); transition: background .2s;
+}
+.mkt-share-url-copy:hover { background: var(--mkt-gl); }
+
+/* ── Share icon on product card (appears on hover) ── */
+.mkt-pcard-share {
+  position: absolute; bottom: 9px; left: 9px;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; opacity: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12); z-index: 3;
+}
+.mkt-pcard:hover .mkt-pcard-share { opacity: 1; }
+.mkt-pcard-share:hover { background: #3b82f6; border-color: #3b82f6; }
+.mkt-pcard-share:hover svg { color: #fff !important; }
+.mkt-pcard-share svg { width: 15px; height: 15px; color: #3b82f6; transition: color .2s; }
+
+/* ── Share button in seller "my products" panel ── */
+.mkt-action-btn-share { background: none; border: 1.5px solid rgba(59,130,246,.3); color: #3b82f6; }
+.mkt-action-btn-share:hover { border-color: #3b82f6; background: rgba(59,130,246,.07); transform: scale(1.04); }
+
+/* ── Seller product strip (in detail panel) ── */
+.mkt-seller-strip { margin-top: 28px; padding-top: 24px; border-top: 1.5px solid var(--line); }
+.mkt-seller-strip-title {
+  font-size: 15px; font-weight: 900; color: var(--ink);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.mkt-seller-strip-title svg { width: 17px; height: 17px; color: var(--mkt-g); }
+.mkt-seller-strip-scroll {
+  display: flex; gap: 13px; overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: thin; scrollbar-color: var(--line2) transparent;
+}
+.mkt-seller-strip-scroll::-webkit-scrollbar { height: 4px; }
+.mkt-seller-strip-scroll::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; }
+.mkt-seller-strip-card {
+  flex-shrink: 0; width: 138px; background: var(--card); border: 1.5px solid var(--line);
+  border-radius: 14px; overflow: hidden; cursor: pointer;
+  transition: all .22s var(--mkt-spring); box-shadow: 0 2px 10px rgba(0,0,0,.05);
+}
+.mkt-seller-strip-card:hover { transform: translateY(-4px); border-color: rgba(27,107,58,.3); box-shadow: 0 6px 20px rgba(27,107,58,.12); }
+.mkt-seller-strip-img {
+  width: 100%; height: 94px; overflow: hidden;
+  background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+.mkt-seller-strip-img img { width: 100%; height: 100%; object-fit: cover; }
+.mkt-seller-strip-body { padding: 8px 10px 10px; }
+.mkt-seller-strip-name { font-size: 12px; font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.mkt-seller-strip-price { font-size: 13px; font-weight: 900; color: var(--mkt-g); font-family: var(--f-display); }
+
 /* Seller card */
 .mkt-seller-card {
   padding: 16px 18px; background: var(--bg2); border-radius: 16px;
@@ -4938,11 +5092,13 @@ body.modal-open { overflow: hidden; }
   display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
 }
 .mkt-action-btn {
-  padding: 7px 16px; border-radius: 40px;
+  padding: 8px 14px; border-radius: 40px;
   font-size: 12px; font-weight: 800; font-family: var(--f-ui);
   cursor: pointer; transition: all .2s var(--mkt-spring);
   white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
 }
+.mkt-action-btn svg { width: 12px; height: 12px; flex-shrink: 0; display: block; }
 .mkt-action-btn-edit {
   background: none; border: 1.5px solid var(--line2); color: var(--slate);
 }
@@ -5043,7 +5199,8 @@ body.modal-open { overflow: hidden; }
   .mkt-detail-grid    { grid-template-columns: 1fr; }
   .mkt-seller-stats   { grid-template-columns: repeat(2,1fr); }
   .mkt-my-product-card{ flex-wrap: wrap; }
-  .mkt-my-product-actions { width: 100%; flex-direction: row; }
+  .mkt-my-product-actions { width: 100%; flex-direction: row; flex-wrap: wrap; gap: 7px; }
+  .mkt-my-product-actions .mkt-action-btn { flex: 1 1 calc(50% - 4px); min-width: calc(50% - 4px); }
   .mkt-order-card     { flex-wrap: wrap; }
   .mkt-form-card      { padding: 18px 16px; }
   .mkt-notif-panel    { width: calc(100vw - 24px); left: 12px; }
@@ -7195,8 +7352,38 @@ body.modal-open { overflow: hidden; }
 
 <!-- MARKETPLACE GLOBAL ELEMENTS -->
 
-<!-- Notifications panel (floating) -->
-<!-- notif-panel removed — now uses mkt-panel-notif tab -->
+<!-- Share Modal (bottom-sheet, works on all browsers) -->
+<div class="mkt-share-modal-overlay" id="mkt-share-modal-overlay" onclick="if(event.target===this)_mktCloseShareModal()">
+  <div class="mkt-share-modal" dir="rtl">
+    <div class="mkt-share-modal-handle"></div>
+    <div class="mkt-share-modal-title">مشاركة المنتج</div>
+    <div class="mkt-share-modal-platforms">
+      <button class="mkt-share-modal-btn sp-wa" onclick="_mktShareWA(window._mktShareModalId,window._mktShareModalTitle)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.855L0 24l6.335-1.513A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.88 9.88 0 0 1-5.031-1.375l-.36-.214-3.757.897.916-3.653-.235-.374A9.862 9.862 0 0 1 2.106 12C2.106 6.53 6.53 2.106 12 2.106c5.468 0 9.893 4.424 9.893 9.894 0 5.468-4.425 9.894-9.893 9.894z"/></svg>
+        واتساب
+      </button>
+      <button class="mkt-share-modal-btn sp-fb" onclick="_mktShareFB(window._mktShareModalId)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        فيسبوك
+      </button>
+      <button class="mkt-share-modal-btn sp-tw" onclick="_mktShareTW(window._mktShareModalId,window._mktShareModalTitle)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        تويتر
+      </button>
+      <button class="mkt-share-modal-btn sp-cp" onclick="_mktCopyLink(window._mktShareModalId);_mktCloseShareModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:18px;height:18px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        نسخ الرابط
+      </button>
+    </div>
+    <div class="mkt-share-modal-url-row">
+      <div class="mkt-share-modal-url-txt" id="mkt-share-modal-url-txt"></div>
+      <button class="mkt-share-modal-url-copy" onclick="_mktCopyLink(window._mktShareModalId);_mktCloseShareModal()">نسخ</button>
+    </div>
+    <button class="mkt-share-modal-cancel" onclick="_mktCloseShareModal()">إلغاء</button>
+  </div>
+</div>
+
+
 
 <!-- Order Request Modal -->
 <div class="mkt-order-modal-overlay" id="mkt-order-modal-overlay" onclick="if(event.target===this)MKT.closeOrderModal()">
@@ -18837,6 +19024,10 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
     var plantMatch = h.match(/^pg:([^:]+):plant:(.+)$/);
     if(plantMatch) return {page:plantMatch[1], catId:null, plant:plantMatch[2]};
 
+    // صيغة: #pg:market:product:PRODUCT_ID  ← مشاركة منتج السوق
+    var mktProductMatch = h.match(/^pg:market:product:([^:]+)$/);
+    if(mktProductMatch) return {page:'market', catId:null, plant:null, productId:mktProductMatch[1]};
+
     // صيغة: #pg:farm
     var pageMatch = h.match(/^pg:(.+)$/);
     if(pageMatch) return {page:pageMatch[1], catId:null, plant:null};
@@ -18871,9 +19062,17 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
         }
       }, 700);
     }
-  }
 
-  // ── عند الريفريش: نفذ بعد App.init ──
+    // لو رابط مشاركة منتج سوق — افتح صفحة تفاصيله مباشرة
+    if(state.productId && pg === 'market'){
+      setTimeout(function(){
+        if(typeof MKT !== 'undefined'){
+          MKT.showPanel('detail');
+          _renderDetailPanel(state.productId);
+        }
+      }, 900);
+    }
+  } // ── نفذ بعد App.init ──
   var _initHash = location.hash;
   if(_initHash && _initHash !== '#'){
     // setTimeout لأن App.init + _buildHome بيشتغلوا async
@@ -18917,6 +19116,16 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
         openModal(state.plant);
         history.replaceState({page:pg, catId:state.catId, plant:state.plant}, '', hash);
       }, 450);
+    }
+
+    // لو رابط تفاصيل منتج سوق
+    if(state.productId && pg === 'market'){
+      setTimeout(function(){
+        if(typeof MKT !== 'undefined'){
+          MKT.showPanel('detail');
+          _renderDetailPanel(state.productId);
+        }
+      }, 550);
     }
   });
 })();
@@ -19057,6 +19266,123 @@ let mktState = {
 /* ───────────────────────────────────────────────
    PUBLIC API  (window.MKT)
 ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   SOCIAL SHARE HELPERS  — مشاركة منتجات السوق
+═══════════════════════════════════════════════════ */
+function _mktShareUrl(productId) {
+  return location.origin + location.pathname + '#pg:market:product:' + productId;
+}
+
+function _mktCopyLink(productId) {
+  const url = _mktShareUrl(productId);
+  const _ok = () => _toast('تم نسخ رابط المنتج 🔗', 'success');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(_ok).catch(() => _mktCopyFallback(url));
+  } else {
+    _mktCopyFallback(url);
+  }
+}
+
+function _mktCopyFallback(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); _toast('تم نسخ رابط المنتج 🔗', 'success'); }
+  catch(e) { _toast('انسخ الرابط يدوياً', 'info'); }
+  document.body.removeChild(ta);
+}
+
+function _mktOpenShareModal(productId, title) {
+  window._mktShareModalId    = productId;
+  window._mktShareModalTitle = title || 'منتج زراعي';
+  const urlEl = document.getElementById('mkt-share-modal-url-txt');
+  if (urlEl) urlEl.textContent = _mktShareUrl(productId);
+  document.getElementById('mkt-share-modal-overlay').classList.add('open');
+}
+
+function _mktCloseShareModal() {
+  document.getElementById('mkt-share-modal-overlay').classList.remove('open');
+}
+
+function _mktToggleSharePanel(productId, title) {
+  // For detail view: try Web Share API on mobile, else open modal
+  if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    navigator.share({
+      title: 'نبتكس — ' + (title || 'منتج زراعي'),
+      text: '🌱 شاهد هذا المنتج الزراعي على نبتكس',
+      url: _mktShareUrl(productId)
+    }).catch(() => { _mktOpenShareModal(productId, title); });
+    return;
+  }
+  // Toggle inline panel in detail view if present, else open modal
+  const panel = document.getElementById('mkt-share-panel-' + productId);
+  if (panel) { panel.classList.toggle('open'); } else { _mktOpenShareModal(productId, title); }
+}
+
+/* مشاركة من بطاقة "منتجاتي" — تفتح modal دائماً */
+function _mktShareFromCard(productId, title) {
+  if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    navigator.share({
+      title: 'نبتكس — ' + (title || 'منتج زراعي'),
+      text: '🌱 شاهد هذا المنتج الزراعي على نبتكس',
+      url: _mktShareUrl(productId)
+    }).catch(() => { _mktOpenShareModal(productId, title); });
+    return;
+  }
+  _mktOpenShareModal(productId, title);
+}
+
+function _mktShareWA(productId, title) {
+  const txt = encodeURIComponent('🌱 ' + (title || 'منتج زراعي') + ' — نبتكس\n' + _mktShareUrl(productId));
+  window.open('https://wa.me/?text=' + txt, '_blank', 'noopener');
+}
+
+function _mktShareFB(productId) {
+  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(_mktShareUrl(productId)), '_blank', 'noopener,width=620,height=400');
+}
+
+function _mktShareTW(productId, title) {
+  const txt = encodeURIComponent('🌱 ' + (title || 'منتج زراعي') + ' — نبتكس\n' + _mktShareUrl(productId));
+  window.open('https://twitter.com/intent/tweet?text=' + txt, '_blank', 'noopener,width=620,height=400');
+}
+
+function _mktSharePanelHtml(productId, title) {
+  const url = _mktShareUrl(productId);
+  const t = _esc(title || '');
+  return `
+    <button class="mkt-btn-share" onclick="_mktToggleSharePanel('${productId}','${t}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      مشاركة المنتج
+    </button>
+    <div class="mkt-share-panel" id="mkt-share-panel-${productId}">
+      <div class="mkt-share-panel-title">شارك المنتج على</div>
+      <div class="mkt-share-platforms">
+        <button class="mkt-share-plat-btn sp-wa" onclick="_mktShareWA('${productId}','${t}')">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.855L0 24l6.335-1.513A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.88 9.88 0 0 1-5.031-1.375l-.36-.214-3.757.897.916-3.653-.235-.374A9.862 9.862 0 0 1 2.106 12C2.106 6.53 6.53 2.106 12 2.106c5.468 0 9.893 4.424 9.893 9.894 0 5.468-4.425 9.894-9.893 9.894z"/></svg>
+          واتساب
+        </button>
+        <button class="mkt-share-plat-btn sp-fb" onclick="_mktShareFB('${productId}')">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          فيسبوك
+        </button>
+        <button class="mkt-share-plat-btn sp-tw" onclick="_mktShareTW('${productId}','${t}')">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          تويتر
+        </button>
+        <button class="mkt-share-plat-btn sp-cp" onclick="_mktCopyLink('${productId}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:17px;height:17px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          نسخ الرابط
+        </button>
+      </div>
+      <div class="mkt-share-copy-row">
+        <div class="mkt-share-url-txt">${url}</div>
+        <button class="mkt-share-url-copy" onclick="_mktCopyLink('${productId}')">نسخ</button>
+      </div>
+    </div>`;
+}
+
 window.MKT = {
 
   onPageEnter() {
@@ -19151,7 +19477,12 @@ window.MKT = {
     mktState.currentProductId = productId;
     MKT.showPanel('detail');
     _renderDetailPanel(productId);
+    // Update URL hash for deep-linking
+    const _h = '#pg:market:product:' + productId;
+    if(location.hash !== _h) history.pushState({page:'market', productId:productId}, '', _h);
   },
+
+  _toggleSharePanel(productId, title) { _mktToggleSharePanel(productId, title); },
 
   openOrderModal(productId, sellerId, productName) {
     if (!_requireAuth()) return;
@@ -19698,6 +20029,9 @@ function _productCardHtml(p) {
       <div class="mkt-pcard-fav" onclick="event.stopPropagation()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </div>
+      <div class="mkt-pcard-share" onclick="event.stopPropagation();_mktToggleSharePanel('${p.id}','${_esc(p.title)}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
     </div>
     <div class="mkt-pcard-body">
       <div class="mkt-pcard-cat">
@@ -19989,6 +20323,7 @@ async function _renderDetailPanel(productId) {
     const _telNum = _formatPhone(p.phone||'');
     const callBtn = _telNum ? `<a class="mkt-btn-call" href="tel:${_telNum}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.21 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> اتصل الآن</a>` : '';
     const orderBtn = p.status==='active' && p.ownerId !== (auth.currentUser?.uid||'') ? `<button class="mkt-btn-order" onclick="MKT.openOrderModal('${productId}','${p.ownerId}','${_esc(p.title)}')">📦 طلب شراء</button>` : '';
+    const shareHtml = _mktSharePanelHtml(productId, p.title);
     const sellerInitials = (p.sellerName||'م').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     // Reviews — simple query, no compound index needed
     const reviewsSnap = await db.collection('marketplace_reviews').where('productId','==',productId).get();
@@ -20074,10 +20409,51 @@ async function _renderDetailPanel(productId) {
               ${whatsappBtn}
               ${callBtn}
               ${orderBtn}
+              ${shareHtml}
             </div>
           </div>
         </div>
-      </div>`;
+      </div>
+      <div id="mkt-seller-strip-${productId}"></div>`;
+
+    // ── منتجات أخرى لنفس البائع — async في الخلفية ──
+    if (p.ownerId) {
+      db.collection('marketplace_products')
+        .where('ownerId', '==', p.ownerId)
+        .where('status', '==', 'active')
+        .get()
+        .then(snap => {
+          const strip = document.getElementById('mkt-seller-strip-' + productId);
+          if (!strip) return;
+          const others = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(x => x.id !== productId)
+            .slice(0, 10);
+          if (others.length === 0) return;
+          strip.innerHTML = `
+            <div class="mkt-seller-strip">
+              <div class="mkt-seller-strip-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h3l1.5 9h11l1.5-9H22"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg>
+                منتجات أخرى من نفس البائع
+              </div>
+              <div class="mkt-seller-strip-scroll">
+                ${others.map(op => `
+                  <div class="mkt-seller-strip-card" onclick="MKT.openDetail('${op.id}')">
+                    <div class="mkt-seller-strip-img">
+                      ${op.images && op.images.length
+                        ? `<img src="${op.images[0]}" alt="${_esc(op.title||'')}" loading="lazy">`
+                        : (CAT_EMOJIS[op.category] || '📦')}
+                    </div>
+                    <div class="mkt-seller-strip-body">
+                      <div class="mkt-seller-strip-name">${_esc(op.title||'')}</div>
+                      <div class="mkt-seller-strip-price">${_formatPrice(op.price)}</div>
+                    </div>
+                  </div>`).join('')}
+              </div>
+            </div>`;
+        }).catch(() => {});
+    }
+
   } catch(e) {
     console.error('[MKT] Detail error:', e);
     container.innerHTML = '<div class="mkt-empty"><div class="mkt-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:52px;height:52px;color:#f59e0b;opacity:.7"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="mkt-empty-title">حدث خطأ في تحميل المنتج</div></div>';
@@ -20182,7 +20558,7 @@ async function _renderSellerPanel() {
           <button class="mkt-auth-btn" onclick="MKT.showPanel('add')">➕ إضافة منتج</button>
         </div>` :
         products.map(p => `
-        <div class="mkt-my-product-card">
+        <div class="mkt-my-product-card" onclick="MKT.openDetail('${p.id}')">
           <div class="mkt-my-product-img">
             ${p.images&&p.images.length ? `<img src="${p.images[0]}" alt="${_esc(p.title)}" onerror="this.parentElement.innerHTML='${CAT_EMOJIS[p.category]||'📦'}'">` : (CAT_EMOJIS[p.category]||'📦')}
           </div>
@@ -20195,13 +20571,17 @@ async function _renderSellerPanel() {
             <div class="mkt-my-product-price">${_formatPrice(p.price)} / ${_esc(p.unit||'وحدة')}</div>
           </div>
           <div class="mkt-my-product-actions">
-            <button class="mkt-action-btn mkt-action-btn-edit" data-action="edit" data-id="${p.id}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline;vertical-align:middle;margin-left:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <button class="mkt-action-btn mkt-action-btn-edit" data-action="edit" data-id="${p.id}" onclick="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               تعديل
             </button>
-            ${p.status!=='sold' ? `<button class="mkt-action-btn mkt-action-btn-edit" style="color:var(--mkt-g);border-color:rgba(27,107,58,.3)" data-action="marksold" data-id="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline;vertical-align:middle;margin-left:4px"><polyline points="20 6 9 17 4 12"/></svg>مباع</button>` : ''}
-            <button class="mkt-action-btn mkt-action-btn-del" data-action="delete" data-id="${p.id}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline;vertical-align:middle;margin-left:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            ${p.status!=='sold' ? `<button class="mkt-action-btn mkt-action-btn-edit" style="color:var(--mkt-g);border-color:rgba(27,107,58,.3)" data-action="marksold" data-id="${p.id}" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> مباع</button>` : ''}
+            <button class="mkt-action-btn mkt-action-btn-share" onclick="event.stopPropagation();_mktShareFromCard('${p.id}','${_esc(p.title)}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              مشاركة
+            </button>
+            <button class="mkt-action-btn mkt-action-btn-del" data-action="delete" data-id="${p.id}" onclick="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
               حذف
             </button>
           </div>
