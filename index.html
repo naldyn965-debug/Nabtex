@@ -3692,6 +3692,10 @@ body.modal-open { overflow: hidden; }
   background: var(--bg);
   overflow-x: hidden;
 }
+/* لما يكون الـ detail panel مفتوح، الـ min-height مش محتاجة — بتعمل فراغ أبيض زيادة */
+#pg-market.mkt-in-detail {
+  min-height: auto;
+}
 /* Ensure panel-home hero fills top immediately on load */
 #mkt-panel-home {
   min-height: 50svh;
@@ -4354,26 +4358,6 @@ body.modal-open { overflow: hidden; }
 .mkt-badge-inactive { background: rgba(60,60,60,.85);   color: #fff; }
 
 /* Wishlist button */
-.mkt-pcard-fav {
-  position: absolute;
-  top: 12px; left: 12px;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.95);
-  backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  z-index: 3;
-  transition: transform .28s var(--mkt-spring), background .2s, box-shadow .2s;
-  box-shadow: 0 2px 12px rgba(0,0,0,.18);
-}
-.mkt-pcard-fav:hover {
-  transform: scale(1.22);
-  background: #fff;
-  box-shadow: 0 4px 18px rgba(0,0,0,.22);
-}
-.mkt-pcard-fav svg { width: 17px; height: 17px; }
-
 /* Card body */
 .mkt-pcard-body { padding: 16px 18px 18px; position: relative; z-index: 1; }
 .mkt-pcard-cat {
@@ -4776,64 +4760,42 @@ body.modal-open { overflow: hidden; }
 .mkt-btn-share svg { width: 19px; height: 19px; }
 
 /* ── Social share panel (desktop fallback) ── */
-/* ── Share Modal (global, replaces inline share panel for cards) ── */
-.mkt-share-modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
-  align-items: flex-end; justify-content: center;
+/* ── Share Modal ── */
+.mkt-share-modal-ov {
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  align-items:flex-end;justify-content:center;
 }
-.mkt-share-modal-overlay.open { display: flex; }
-.mkt-share-modal {
-  width: 100%; max-width: 480px; background: var(--card);
-  border-radius: 24px 24px 0 0; padding: 20px 20px 32px;
-  animation: toastIn .25s cubic-bezier(.16,1,.3,1);
-  border: 1.5px solid var(--line); border-bottom: none;
+.mkt-share-modal-ov.open{display:flex;}
+.mkt-share-modal-box{
+  width:100%;max-width:500px;background:var(--card);
+  border-radius:22px 22px 0 0;padding:18px 18px 36px;
+  border:1.5px solid var(--line);border-bottom:none;
+  animation:toastIn .25s cubic-bezier(.16,1,.3,1);
 }
-.mkt-share-modal-handle {
-  width: 40px; height: 4px; background: var(--line2);
-  border-radius: 2px; margin: 0 auto 18px;
+.mkt-smo-handle{width:38px;height:4px;background:var(--line2);border-radius:2px;margin:0 auto 16px;}
+.mkt-smo-title{font-size:15px;font-weight:900;color:var(--ink);text-align:center;margin-bottom:15px;font-family:var(--f-ui);}
+.mkt-smo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
+.mkt-smo-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  height:48px;border-radius:14px;border:1.5px solid var(--line2);
+  background:var(--bg2);font-size:14px;font-weight:800;
+  font-family:var(--f-ui);cursor:pointer;color:var(--ink);
+  transition:all .18s ease;
 }
-.mkt-share-modal-title {
-  font-size: 15px; font-weight: 900; color: var(--ink);
-  text-align: center; margin-bottom: 16px; font-family: var(--f-ui);
+.mkt-smo-btn:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.12);}
+.mkt-smo-btn.sp-wa{border-color:rgba(37,211,102,.4);color:#1a9e50;}
+.mkt-smo-btn.sp-fb{border-color:rgba(24,119,242,.4);color:#1877f2;}
+.mkt-smo-btn.sp-tw{border-color:rgba(0,0,0,.2);color:#111;}
+.mkt-smo-btn.sp-cp{border-color:rgba(99,102,241,.4);color:#6366f1;}
+.mkt-smo-url{
+  display:flex;gap:8px;align-items:center;
+  background:var(--bg);border:1px solid var(--line);
+  border-radius:12px;padding:9px 12px;margin-bottom:11px;
 }
-.mkt-share-modal-platforms {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
-}
-.mkt-share-modal-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  height: 48px; border-radius: 14px; border: 1.5px solid var(--line2);
-  background: var(--bg2); font-size: 14px; font-weight: 800;
-  font-family: var(--f-ui); cursor: pointer;
-  transition: all .18s var(--mkt-spring); color: var(--ink);
-}
-.mkt-share-modal-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
-.mkt-share-modal-btn.sp-wa  { border-color: rgba(37,211,102,.4); color: #1a9e50; }
-.mkt-share-modal-btn.sp-fb  { border-color: rgba(24,119,242,.4); color: #1877f2; }
-.mkt-share-modal-btn.sp-tw  { border-color: rgba(0,0,0,.2);      color: #111; }
-.mkt-share-modal-btn.sp-cp  { border-color: rgba(99,102,241,.4); color: #6366f1; }
-.mkt-share-modal-url-row {
-  display: flex; gap: 8px; align-items: center;
-  background: var(--bg); border: 1px solid var(--line);
-  border-radius: 12px; padding: 9px 13px; margin-bottom: 12px;
-}
-.mkt-share-modal-url-txt {
-  flex: 1; font-size: 11px; color: var(--slate); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; font-family: monospace; direction: ltr;
-}
-.mkt-share-modal-url-copy {
-  flex-shrink: 0; padding: 6px 14px; border-radius: 9px;
-  background: var(--mkt-g); color: #fff; font-size: 12px; font-weight: 800;
-  border: none; cursor: pointer; font-family: var(--f-ui); transition: background .2s;
-}
-.mkt-share-modal-url-copy:hover { background: var(--mkt-gl); }
-.mkt-share-modal-cancel {
-  width: 100%; height: 44px; border-radius: 12px;
-  border: 1.5px solid var(--line2); background: none;
-  color: var(--slate); font-size: 14px; font-weight: 700;
-  font-family: var(--f-ui); cursor: pointer; transition: background .15s;
-}
-.mkt-share-modal-cancel:hover { background: var(--bg2); }
+.mkt-smo-url-txt{flex:1;font-size:11px;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:monospace;direction:ltr;}
+.mkt-smo-url-copy{flex-shrink:0;padding:6px 14px;border-radius:9px;background:var(--mkt-g);color:#fff;font-size:12px;font-weight:800;border:none;cursor:pointer;font-family:var(--f-ui);}
+.mkt-smo-cancel{width:100%;height:44px;border-radius:12px;border:1.5px solid var(--line2);background:none;color:var(--slate);font-size:14px;font-weight:700;font-family:var(--f-ui);cursor:pointer;}
 
 .mkt-share-panel {
   display: none; flex-direction: column; gap: 11px;
@@ -7352,38 +7314,36 @@ body.modal-open { overflow: hidden; }
 
 <!-- MARKETPLACE GLOBAL ELEMENTS -->
 
-<!-- Share Modal (bottom-sheet, works on all browsers) -->
-<div class="mkt-share-modal-overlay" id="mkt-share-modal-overlay" onclick="if(event.target===this)_mktCloseShareModal()">
-  <div class="mkt-share-modal" dir="rtl">
-    <div class="mkt-share-modal-handle"></div>
-    <div class="mkt-share-modal-title">مشاركة المنتج</div>
-    <div class="mkt-share-modal-platforms">
-      <button class="mkt-share-modal-btn sp-wa" onclick="_mktShareWA(window._mktShareModalId,window._mktShareModalTitle)">
+<!-- Share Modal -->
+<div class="mkt-share-modal-ov" id="mkt-share-modal-overlay" data-action="smo-overlay">
+  <div class="mkt-share-modal-box" dir="rtl">
+    <div class="mkt-smo-handle"></div>
+    <div class="mkt-smo-title">مشاركة المنتج</div>
+    <div class="mkt-smo-grid">
+      <button class="mkt-smo-btn sp-wa" data-action="smo-wa">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.855L0 24l6.335-1.513A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.88 9.88 0 0 1-5.031-1.375l-.36-.214-3.757.897.916-3.653-.235-.374A9.862 9.862 0 0 1 2.106 12C2.106 6.53 6.53 2.106 12 2.106c5.468 0 9.893 4.424 9.893 9.894 0 5.468-4.425 9.894-9.893 9.894z"/></svg>
         واتساب
       </button>
-      <button class="mkt-share-modal-btn sp-fb" onclick="_mktShareFB(window._mktShareModalId)">
+      <button class="mkt-smo-btn sp-fb" data-action="smo-fb">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         فيسبوك
       </button>
-      <button class="mkt-share-modal-btn sp-tw" onclick="_mktShareTW(window._mktShareModalId,window._mktShareModalTitle)">
+      <button class="mkt-smo-btn sp-tw" data-action="smo-tw">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         تويتر
       </button>
-      <button class="mkt-share-modal-btn sp-cp" onclick="_mktCopyLink(window._mktShareModalId);_mktCloseShareModal()">
+      <button class="mkt-smo-btn sp-cp" data-action="smo-cp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:18px;height:18px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         نسخ الرابط
       </button>
     </div>
-    <div class="mkt-share-modal-url-row">
-      <div class="mkt-share-modal-url-txt" id="mkt-share-modal-url-txt"></div>
-      <button class="mkt-share-modal-url-copy" onclick="_mktCopyLink(window._mktShareModalId);_mktCloseShareModal()">نسخ</button>
+    <div class="mkt-smo-url">
+      <div class="mkt-smo-url-txt" id="mkt-share-modal-url-txt"></div>
+      <button class="mkt-smo-url-copy" data-action="smo-cp">نسخ</button>
     </div>
-    <button class="mkt-share-modal-cancel" onclick="_mktCloseShareModal()">إلغاء</button>
+    <button class="mkt-smo-cancel" data-action="smo-cancel">إلغاء</button>
   </div>
 </div>
-
-
 
 <!-- Order Request Modal -->
 <div class="mkt-order-modal-overlay" id="mkt-order-modal-overlay" onclick="if(event.target===this)MKT.closeOrderModal()">
@@ -19043,6 +19003,11 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
     // تحقق أن الصفحة موجودة
     if(!document.getElementById('pg-'+pg)) pg = 'home';
 
+    // لو رابط مشاركة منتج سوق — نضع الـ ID في window عشان onPageEnter يلتقطه
+    if(state.productId && pg === 'market'){
+      window._mktDeepLink = state.productId;
+    }
+
     if(pg !== 'home'){
       if(pg === 'cat' && state.catId && _CAT_IDS.indexOf(state.catId) !== -1){
         // صفحة فئة: لازم نستدعي showCatPage عشان تبني المحتوى
@@ -19063,15 +19028,6 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
       }, 700);
     }
 
-    // لو رابط مشاركة منتج سوق — افتح صفحة تفاصيله مباشرة
-    if(state.productId && pg === 'market'){
-      setTimeout(function(){
-        if(typeof MKT !== 'undefined'){
-          MKT.showPanel('detail');
-          _renderDetailPanel(state.productId);
-        }
-      }, 900);
-    }
   } // ── نفذ بعد App.init ──
   var _initHash = location.hash;
   if(_initHash && _initHash !== '#'){
@@ -19120,12 +19076,14 @@ document.addEventListener('DOMContentLoaded',()=>App.init());
 
     // لو رابط تفاصيل منتج سوق
     if(state.productId && pg === 'market'){
-      setTimeout(function(){
-        if(typeof MKT !== 'undefined'){
-          MKT.showPanel('detail');
-          _renderDetailPanel(state.productId);
-        }
-      }, 550);
+      window._mktDeepLink = state.productId;
+      if(typeof MKT !== 'undefined'){
+        setTimeout(function(){
+          mktState._transitioning = false;
+          MKT.openDetail(window._mktDeepLink || state.productId);
+          window._mktDeepLink = null;
+        }, 400);
+      }
     }
   });
 })();
@@ -19297,7 +19255,7 @@ function _mktCopyFallback(text) {
 function _mktOpenShareModal(productId, title) {
   window._mktShareModalId    = productId;
   window._mktShareModalTitle = title || 'منتج زراعي';
-  const urlEl = document.getElementById('mkt-share-modal-url-txt');
+  var urlEl = document.getElementById('mkt-share-modal-url-txt');
   if (urlEl) urlEl.textContent = _mktShareUrl(productId);
   document.getElementById('mkt-share-modal-overlay').classList.add('open');
 }
@@ -19307,30 +19265,6 @@ function _mktCloseShareModal() {
 }
 
 function _mktToggleSharePanel(productId, title) {
-  // For detail view: try Web Share API on mobile, else open modal
-  if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-    navigator.share({
-      title: 'نبتكس — ' + (title || 'منتج زراعي'),
-      text: '🌱 شاهد هذا المنتج الزراعي على نبتكس',
-      url: _mktShareUrl(productId)
-    }).catch(() => { _mktOpenShareModal(productId, title); });
-    return;
-  }
-  // Toggle inline panel in detail view if present, else open modal
-  const panel = document.getElementById('mkt-share-panel-' + productId);
-  if (panel) { panel.classList.toggle('open'); } else { _mktOpenShareModal(productId, title); }
-}
-
-/* مشاركة من بطاقة "منتجاتي" — تفتح modal دائماً */
-function _mktShareFromCard(productId, title) {
-  if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-    navigator.share({
-      title: 'نبتكس — ' + (title || 'منتج زراعي'),
-      text: '🌱 شاهد هذا المنتج الزراعي على نبتكس',
-      url: _mktShareUrl(productId)
-    }).catch(() => { _mktOpenShareModal(productId, title); });
-    return;
-  }
   _mktOpenShareModal(productId, title);
 }
 
@@ -19340,7 +19274,34 @@ function _mktShareWA(productId, title) {
 }
 
 function _mktShareFB(productId) {
-  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(_mktShareUrl(productId)), '_blank', 'noopener,width=620,height=400');
+  var shareUrl   = _mktShareUrl(productId);
+  var shareTitle = '🌱 ' + (window._mktShareModalTitle || 'منتج زراعي');
+
+  /* ── iOS (iPhone / iPad) ──────────────────────────────────────────────────
+     على iOS، أي رابط facebook.com يُعامَل كـ Universal Link ويفتح تطبيق
+     فيسبوك مباشرةً بدل شاشة المشاركة. الحل الوحيد: Web Share API (native
+     iOS share sheet) — الـ user يختار فيسبوك من القائمة الطبيعية. ─────── */
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && navigator.share) {
+    _mktCloseShareModal();
+    navigator.share({ url: shareUrl, title: shareTitle }).catch(function() {});
+    return;
+  }
+
+  var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl);
+
+  /* ── Android ─────────────────────────────────────────────────────────── */
+  if (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 900) {
+    var mw = window.open(fbUrl, '_blank');
+    if (!mw) { location.href = fbUrl; }
+    return;
+  }
+
+  /* ── Desktop: popup ─────────────────────────────────────────────────── */
+  var left = Math.max(0, Math.round((screen.width  - 620) / 2));
+  var top  = Math.max(0, Math.round((screen.height - 400) / 2));
+  var dw = window.open(fbUrl, 'fbShareDialog',
+    'width=620,height=400,left=' + left + ',top=' + top + ',toolbar=0,menubar=0,location=0,scrollbars=0,status=0');
+  if (dw) { dw.focus(); } else { location.href = fbUrl; }
 }
 
 function _mktShareTW(productId, title) {
@@ -19349,38 +19310,13 @@ function _mktShareTW(productId, title) {
 }
 
 function _mktSharePanelHtml(productId, title) {
-  const url = _mktShareUrl(productId);
   const t = _esc(title || '');
   return `
-    <button class="mkt-btn-share" onclick="_mktToggleSharePanel('${productId}','${t}')">
+    <button class="mkt-btn-share" data-action="share" data-id="${productId}" data-title="${t}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       مشاركة المنتج
     </button>
-    <div class="mkt-share-panel" id="mkt-share-panel-${productId}">
-      <div class="mkt-share-panel-title">شارك المنتج على</div>
-      <div class="mkt-share-platforms">
-        <button class="mkt-share-plat-btn sp-wa" onclick="_mktShareWA('${productId}','${t}')">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.855L0 24l6.335-1.513A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.88 9.88 0 0 1-5.031-1.375l-.36-.214-3.757.897.916-3.653-.235-.374A9.862 9.862 0 0 1 2.106 12C2.106 6.53 6.53 2.106 12 2.106c5.468 0 9.893 4.424 9.893 9.894 0 5.468-4.425 9.894-9.893 9.894z"/></svg>
-          واتساب
-        </button>
-        <button class="mkt-share-plat-btn sp-fb" onclick="_mktShareFB('${productId}')">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          فيسبوك
-        </button>
-        <button class="mkt-share-plat-btn sp-tw" onclick="_mktShareTW('${productId}','${t}')">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          تويتر
-        </button>
-        <button class="mkt-share-plat-btn sp-cp" onclick="_mktCopyLink('${productId}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:17px;height:17px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          نسخ الرابط
-        </button>
-      </div>
-      <div class="mkt-share-copy-row">
-        <div class="mkt-share-url-txt">${url}</div>
-        <button class="mkt-share-url-copy" onclick="_mktCopyLink('${productId}')">نسخ</button>
-      </div>
-    </div>`;
+  `;
 }
 
 window.MKT = {
@@ -19390,6 +19326,20 @@ window.MKT = {
       mktState.initialized = true;
       _setupNotifListener();
     }
+    // لو في deep link لمنتج معين — افتحه مباشرة بدل تحميل الـ grid
+    if (window._mktDeepLink) {
+      const pid = window._mktDeepLink;
+      window._mktDeepLink = null;
+      mktState._transitioning = false;
+      // نحمل الـ products في الخلفية بدون انتظار
+      _loadProducts(true);
+      // نفتح الـ detail مباشرة
+      setTimeout(function() {
+        mktState._transitioning = false;
+        MKT.openDetail(pid);
+      }, 350);
+      return;
+    }
     _loadProducts(true);
   },
 
@@ -19398,6 +19348,10 @@ window.MKT = {
     const currentPanel = document.querySelector('.mkt-panel.active');
     const nextPanel    = document.getElementById('mkt-panel-' + name);
     if (!nextPanel || currentPanel === nextPanel) return;
+
+    // ← إضافة/إزالة class على #pg-market عشان تلغي min-height في الـ detail panel
+    const mktPage = document.getElementById('pg-market');
+    if (mktPage) mktPage.classList.toggle('mkt-in-detail', name === 'detail');
 
     // Update tabs immediately
     document.querySelectorAll('.mkt-tab').forEach(t => t.classList.remove('active'));
@@ -20026,10 +19980,8 @@ function _productCardHtml(p) {
       ${imgHtml}
       <div class="mkt-pcard-img-overlay"></div>
       ${statusBadge}
-      <div class="mkt-pcard-fav" onclick="event.stopPropagation()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </div>
-      <div class="mkt-pcard-share" onclick="event.stopPropagation();_mktToggleSharePanel('${p.id}','${_esc(p.title)}')">
+
+      <div class="mkt-pcard-share" data-action="share" data-id="${p.id}" data-title="${_esc(p.title)}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </div>
     </div>
@@ -20576,7 +20528,7 @@ async function _renderSellerPanel() {
               تعديل
             </button>
             ${p.status!=='sold' ? `<button class="mkt-action-btn mkt-action-btn-edit" style="color:var(--mkt-g);border-color:rgba(27,107,58,.3)" data-action="marksold" data-id="${p.id}" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> مباع</button>` : ''}
-            <button class="mkt-action-btn mkt-action-btn-share" onclick="event.stopPropagation();_mktShareFromCard('${p.id}','${_esc(p.title)}')">
+            <button class="mkt-action-btn mkt-action-btn-share" data-action="share" data-id="${p.id}" data-title="${_esc(p.title)}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               مشاركة
             </button>
@@ -20611,8 +20563,14 @@ document.addEventListener('click', function(e) {
   const action = btn.dataset.action;
   const id     = btn.dataset.id;
   const phone  = btn.dataset.phone;
-  // stopPropagation فقط — بدون preventDefault عشان iOS ما يبلوك الـ click
   e.stopPropagation();
+  // Share modal actions
+  if (action === 'smo-overlay') { if (e.target === btn) _mktCloseShareModal(); return; }
+  if (action === 'smo-wa')      { _mktShareWA(window._mktShareModalId, window._mktShareModalTitle); return; }
+  if (action === 'smo-fb')      { _mktShareFB(window._mktShareModalId); return; }
+  if (action === 'smo-tw')      { _mktShareTW(window._mktShareModalId, window._mktShareModalTitle); return; }
+  if (action === 'smo-cp')      { _mktCopyLink(window._mktShareModalId); _mktCloseShareModal(); return; }
+  if (action === 'smo-cancel')  { _mktCloseShareModal(); return; }
   // Contact actions
   if (action === 'call')      { e.preventDefault(); _openCall(phone); return; }
   if (action === 'whatsapp')  { e.preventDefault(); _openWA(phone);   return; }
@@ -20620,6 +20578,7 @@ document.addEventListener('click', function(e) {
   if (action === 'edit')      { MKT.openEditModal(id);   return; }
   if (action === 'marksold')  { MKT.markSold(id);        return; }
   if (action === 'delete')    { MKT.deleteProduct(id);   return; }
+  if (action === 'share')     { _mktOpenShareModal(id, btn.dataset.title || ''); return; }
   // Order actions
   if (action === 'accept')    { MKT.updateOrderStatus(id, 'accepted'); return; }
   if (action === 'reject')    { MKT.updateOrderStatus(id, 'rejected'); return; }
