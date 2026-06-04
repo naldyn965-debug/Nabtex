@@ -3,8 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="description" content="نبتيكس Nabtex — موسوعة زراعية احترافية">
-<title>نبتيكس · Nabtex</title>
+<meta name="description" content="نبتيكس Nabtex — موسوعة زراعية احترافية متكاملة للنباتات الاقتصادية. تسميد، ري، أمراض النبات، حصاد، وسوق زراعي. بيانات مستندة إلى FAO ووزارة الزراعة المصرية.">
+<title>نبتيكس · Nabtex — موسوعة زراعية احترافية</title>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEO — INDEXING & CANONICAL
+═══════════════════════════════════════════════════════ -->
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="https://nabtex.netlify.app/">
+<meta name="keywords" content="موسوعة زراعية, نباتات اقتصادية, تسميد, ري, أمراض النبات, زراعة مصر, سوق زراعي, احتياجات تسميد الموالح, نبتيكس, Nabtex, agricultural encyclopedia, Egypt farming">
+<meta name="author" content="Nabtex">
+<meta name="language" content="ar">
+<meta name="geo.region" content="EG">
+<meta name="geo.placename" content="Egypt">
+
+<!-- ═══════════════════════════════════════════════════════
+     SEO — OPEN GRAPH (Facebook / LinkedIn / WhatsApp)
+═══════════════════════════════════════════════════════ -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nabtex.netlify.app/">
+<meta property="og:title" content="نبتيكس · Nabtex — موسوعة زراعية احترافية">
+<meta property="og:description" content="موسوعة زراعية متكاملة للنباتات الاقتصادية — تسميد، ري، أمراض النبات، حصاد، واقتصاديات. سوق زراعي مباشر. بيانات من FAO ووزارة الزراعة المصرية.">
+<meta property="og:locale" content="ar_EG">
+<meta property="og:site_name" content="نبتيكس · Nabtex">
+<meta property="og:image" content="https://nabtex.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="نبتيكس — موسوعة زراعية احترافية">
+
+<!-- ═══════════════════════════════════════════════════════
+     SEO — TWITTER CARD
+═══════════════════════════════════════════════════════ -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="نبتيكس · Nabtex — موسوعة زراعية احترافية">
+<meta name="twitter:description" content="موسوعة زراعية متكاملة — تسميد، ري، أمراض النبات، سوق زراعي. بيانات FAO ووزارة الزراعة المصرية.">
+<meta name="twitter:image" content="https://nabtex.netlify.app/og-image.png">
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — MANIFEST (external file: manifest.json)
@@ -3559,6 +3592,58 @@ body.modal-open { overflow: hidden; }
   .citrus-page-back { margin-bottom: 16px; align-self: flex-start; }
 }
 </style>
+<!-- ═══════════════════════════════════════════════════════
+     SEO — STRUCTURED DATA (JSON-LD)
+═══════════════════════════════════════════════════════ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://nabtex.netlify.app/#website",
+      "url": "https://nabtex.netlify.app/",
+      "name": "نبتيكس · Nabtex",
+      "description": "موسوعة زراعية احترافية متكاملة للنباتات الاقتصادية",
+      "inLanguage": "ar",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://nabtex.netlify.app/#search={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://nabtex.netlify.app/#organization",
+      "name": "Nabtex نبتيكس",
+      "url": "https://nabtex.netlify.app/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://nabtex.netlify.app/og-image.png"
+      },
+      "description": "منصة زراعية احترافية توفر موسوعة شاملة للنباتات الاقتصادية مع بيانات التسميد والري والأمراض والسوق الزراعي",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Egypt"
+      },
+      "knowsAbout": ["الزراعة", "النباتات الاقتصادية", "تسميد النباتات", "أمراض النبات", "الري الزراعي", "السوق الزراعي"]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://nabtex.netlify.app/#webpage",
+      "url": "https://nabtex.netlify.app/",
+      "name": "نبتيكس · Nabtex — موسوعة زراعية احترافية",
+      "isPartOf": { "@id": "https://nabtex.netlify.app/#website" },
+      "about": { "@id": "https://nabtex.netlify.app/#organization" },
+      "description": "موسوعة زراعية متكاملة للنباتات الاقتصادية — تسميد، ري، أمراض النبات، حصاد، واقتصاديات. سوق زراعي مباشر. بيانات من FAO ووزارة الزراعة المصرية.",
+      "inLanguage": "ar"
+    }
+  ]
+}
+</script>
 </head>
 <body>
   <!-- PWA STANDALONE HEIGHT FIX
