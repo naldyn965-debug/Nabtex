@@ -84,10 +84,12 @@
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — FAVICON & BROWSER ICON (PNG)
+     ملاحظة: favicon.png يجب أن يكون في root الموقع
+     Google لا تدعم data URIs كـ favicon في نتائج البحث
 ═══════════════════════════════════════════════════════ -->
-<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAADkklEQVRYhcXWS2hcVRzH8e85c9OkSUurUWLRFkJ8gKmitBIrgdIuVBJBkbqYNrXWrS8qguCiuChWrBWhC8EpqYPYCmpBXaQqFRGrLkyJxFISmvootaiTTDKPZGbuzPm5yMztxCTTZGwzd3Hv5c+f8zmP/zn3Gsqujki4xZj6PTh1SWpDNCKQBBSfEhIgQfAsxpyKOWW5ACIhuSEDR1OXpt45d6gvWzJN6WVT764wBfuucCumG4Krg/8n7jRsCD3+895PzgQd2NS7K4wzH0gy1xQP2mAs57sHhvZ9NmQ6IuEWS8O5az7yyzg4gXRm0CbuscbU71lqvBhqb88v322RupcaD3Ko2+nJqZVa4AKnwt0W0VQLXBIGVtla4TAdt06uZricw3POYY2tiO+4t4v1a27FYBiJXeDLs6c4P3pxRsOtzTfz8J2dtDbfghCDF4aJfv/pvDgSzjnMXW8/oQZv2bx4k9fA188cJmRDpUMTJ8eH/X0cPBkFwYtbnyR8X9f0QIpXwRXo3N9DMpOeE5dENpfDy+Vz1BkPa8yc057KThKOvoxnQ8g5NqxrZ/f9j7F9Yzcr65uwxtC9fjOx1Di9p47z06+DGGPJ+X5FXE5k/Czm9gOPKoShqW45BGtaec2bm1ZzpGcfa6+7CYA/xi7x1HuvEEvEK655eTydmcT3fSwSBedIZScpuMKCCi6WjPP6F4eD6X6tL7JgXE4BLoFXSizIkcxMssx4eDZEyNhgSeaq9h/ODwQd+HFk4IrV7pzDz+fJ+FlUcEG+N2PrOJFVjuysLTV7RjrbNgQdG0tNVNiOsz7HZXHwKq75PHj7mtvY2fEIOT/HlJ+tGkfCLha/o6WV57Zs559knEw+V3aILR5Hwi4Gb7txHS9s7SGenuDAiV5KR3i1uAR2ofgNK67n+S07SE2leeNEL/H0RFCE1eLTM7AAPGQ9nt0cxjMh3voqymgyfnn0VI9rugYq4xI0evU01tUT+fZj/oz/HeQUb1XjzNgFFSo5MZnkpY/enJXjghqoDpeEdyV83k+qxMG+I8XDpjocCdO696FxSasWi/+faS9rI2ElDdQIx0gjVuL9WuDF8+dz+7uXixqnwRrgE76zhyyvfpP30Tak0SXEJczTyWP9MQtwcf/JYWsKnRJnl2LkwmwbP3r6OEDwozf+3W+xtQ9ujGQz6b9AqyVWIjVcJTwlp18MiuRlexLHTveX3H8ByErUADlj0yUAAAAASUVORK5CYII=">
-<link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,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">
-<link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAAFgUlEQVRogdXabYxUVx3H8e85c2d3mRV2gaaxVaSQ2DVZYbEgUqmAEGxTG5di1semTY22xlRNG0nU2GiIUTE0JrK2wcS+MN1aISq0QEKKPCy2JAKFUh4CWrbLQ2kL7vPO7sy99/x8MXuH2SfcHXYq97w6M+ecez7nnP/5T2Z2DSOU2k0NZdXdqYbQmXqkeYIPGSklDXQQKP9ioK5cgwQUvEaM2KaCtqt15boikOlS6M7LaH/CeH888uPNB0aymqFvLH724S87x68kd1v0LDQw+fuGL5gjP7/ZAf5jx558qWXEBTRsakhc6Kp8Cvj+8MH/b3y+rUPW1r/xk782RwYbVWKAR6JaYbhzzs9XLxl0Armw0Qs3OD7f5uTeKTPMP/KzF9+2tZsaypzTL+OCl4SR+WDWaT2AWfyHh74eOp6LC75gDmcx8zznWBVDPEg2lB60QvNiiAeBNdxtJXNLHPEAoXMzrZEq44iXhMFMsXHFRx1tnPES2DjjkbBOLrZ4OeHJCWPNuPAWw12z72DmtFuZnqqio6+bc+2XePXs66Qz6WviU2UpFs+uY8bUW6hOTeFKTztvXXmbfWcOIqcx4xE4ObzABSRNclw7/8inG/jmotUMLdnAZ8fJ/TQ2P89/ejoG4W+qrOK7yx7gntrPUO4lh43duG8TjbubxowXIgxDbDbwxx02IwEAyrwkq+YuZ8u3fsunbpubx985q44t326kvm75qGPLveS48Aj8IMTUrF+lSclyPOuNOebLEklW3n4n/UGGy93tTJ00mfkfqeW+2iVUTZqcO43Q5/HN6zDAbxp+SDLhAdDR1822Y3s52HKctt5Obv7ANMqTZew8/goZPzNmvJyjs68HU7O+XgZDZbICg/2f+Gtd2KqKyTx5z6OsqFmUw6a7wBiqBxb18slXWbv9GTrTPeO+sEPn782k8YMAK4FzjnQ2g+SuK9t0pLtY87en2HPmnwBUp6bk8btOHWDNX9ZPCL7fz+AHAUjYqEPgAnqz/QMPKD5VOudYu/1p+vz+fHyns/2s3fYMzmlC8P3ZDFE6toUdwjCkJ9NLNgyKwkdtbb1dHG49kV/AodbjdKS7rwsv5+jNpAfhQXiFQBChg3SmjwSWpOeRMAls9N1/DPjowRXJivwCkjZZ1IeUkyMMQ/wgJBtmh82BwBst5gNCgmw4fOcLBo+GL0+UMb2yOr+AtnQHnenu0fHjuXMF8xOFUDGDR8MbDN9YfD/9QSa/gObTh0qCF8JONP6BhfexYObH88iolAKPyKXRicAj+Oon72VZzUIQvHn53FU8V+eYSPygNHq9+C9+YiUrPrYIBIdaT/DKv14bvP0lwA9Lo8Xi6+uWc++cJSA4cv4UG/f+GZfPLJQMD8JeL37pRxfwhbrPguDYxTM8vecFAhcMvQIlwROdQLH4WTd9mK8t/DwITr/bQuPfmwhC/yowfwClwSt3B4rDp5IVfGfpV/CsR1tvJ7/b/Sf8QnzhEZQIDxSG0Njxkrh5yjSmparIhj6Nu5vo7u8ZGZ8PoYnHo/wn8fjwAC2XL7JhdxOd6W5arlwYnucLV1EivCS8YvBR/bXWk8NCI7fbua97UQlcUBI8Aq9Y/EhxHeERNJ8+yNnL53P1U4dKggdhZv30bk00fmhbqfBSLo12xhWP1GUlvRVTPIhLFszOmOIxcNBawueQXNzwA+9sTbQ3n32v6q7Zt2OYGyu83Nl23/9e7ud1k1iDuBQfvBA8weYTWQvQ+oudl+T4EtAXBzzSrzueP7oVCv5Sf27drn9g7EpJbTc6vr3m6I8i97B/9rj1ic/NSCT8DRL1Nxj+30I/iHZ+1AVEZcbjyxbImAdBSyTNRFS/z/gexAVjOCxpS1ul3crvD/tDnf8F5mmV7ljkUHcAAAAASUVORK5CYII=">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="shortcut icon" type="image/png" href="/favicon.png">
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — MICROSOFT (Edge / Windows)
@@ -212,30 +214,11 @@ img{display:block;max-width:100%}
 .logo:hover .logo-mark{transform:rotate(-8deg) scale(1.1)}
 .logo-name{font-family:var(--f-display);font-size:22px;color:var(--ink);letter-spacing:.01em}
 .logo-name span{color:var(--brand)}
-.nav-links{display:flex;gap:2px;margin-right:32px;flex-wrap:wrap}
+.nav-links{display:flex;gap:2px;margin-right:20px;flex-wrap:nowrap;align-items:center}
 .nl{padding:6px 14px;border-radius:var(--rpill);font-size:14px;font-weight:600;color:var(--slate);transition:all .15s;letter-spacing:.01em}
 .nl:hover{color:var(--brand);background:var(--brand-pale)}
 .nl.active{color:var(--brand);font-weight:700}
-/* Farm nav link — distinct badge style */
-.nl-farm {
-  background: linear-gradient(135deg, rgba(27,107,58,.12), rgba(201,135,26,.1));
-  border: 1px solid rgba(27,107,58,.2);
-  border-radius: var(--rpill);
-  padding: 6px 14px !important;
-  color: var(--brand) !important;
-  font-weight: 700 !important;
-  transition: all .25s var(--ease-spring) !important;
-}
-.nl-farm:hover {
-  background: var(--brand) !important;
-  color: #fff !important;
-  border-color: var(--brand) !important;
-  transform: translateY(-1px);
-}
-.nl-farm.active {
-  background: var(--brand) !important;
-  color: #fff !important;
-}
+/* Farm nav link — same as base .nl for visual consistency */
 .nav-actions{display:flex;align-items:center;gap:8px;margin-right:auto}
 .nav-icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--slate);font-size:17px;transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);background:var(--card);position:relative;overflow:hidden;cursor:pointer;}
 .nav-icon-btn::before{content:'';position:absolute;inset:0;background:var(--brand);opacity:0;transition:opacity .2s;border-radius:50%;}
@@ -314,6 +297,12 @@ img{display:block;max-width:100%}
   .ham{display:flex}
   .btn-nav-o{padding:6px 12px !important;font-size:11px !important;}
   .nav-actions{gap:4px;}
+}
+@media(min-width:769px) and (max-width:1100px){
+  .nav-links{gap:0;margin-right:10px}
+  .nl{padding:5px 9px;font-size:13px}
+  .btn-nav-o{padding:6px 14px !important;font-size:12px !important}
+  .nav-inner{gap:6px;padding:0 16px}
 }
 
 /* ═══════════════════════════════════════════
@@ -6155,8 +6144,8 @@ body.modal-open { overflow: hidden; }
       <a href="#" class="nl active" id="nl-home" onclick="showPage('home');return false">الرئيسية</a>
       <!-- تم إزالة خضروات، فاكهة، زينة، طبية، أمراض، وأضيف أهداف المنصة -->
       <a href="#" class="nl" id="nl-goals" onclick="showPage('goals');return false">🎯 أهداف المنصة</a>
-      <a href="#" class="nl nl-farm" id="nl-farm" onclick="showPage('farm');return false">🌾 مزرعتي</a>
-      <a href="#" class="nl nl-market" id="nl-market" onclick="showPage('market');return false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-left:5px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> السوق الزراعي</a>
+      <a href="#" class="nl" id="nl-farm" onclick="showPage('farm');return false">🌾 مزرعتي</a>
+      <a href="#" class="nl" id="nl-market" onclick="showPage('market');return false">🛒 السوق الزراعي</a>
     </div>
     <div class="nav-actions" id="nav-actions">
       <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر" aria-label="تبديل المظهر">
