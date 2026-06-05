@@ -43,7 +43,10 @@
      PWA — MANIFEST (external file: manifest.json)
 ═══════════════════════════════════════════════════════ -->
 <link rel="manifest" href="manifest.json">
-<link rel="preload" href="manifest.json" as="fetch" crossorigin="anonymous">
+<!-- Preload LCP hero image so browser fetches it immediately -->
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1800&q=85" fetchpriority="high">
+<!-- fonts.googleapis.com needs preconnect for CSS fetch -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — THEME & STATUS BAR
@@ -105,19 +108,12 @@
 <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<!-- Firebase SDKs moved to body — see just before Firebase initialization -->
 
-<!-- Google Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet"></noscript>
+<!-- fonts preconnects already defined above -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"></noscript>
 
 <style>
 /* ═══════════════════════════════════════════
@@ -603,33 +599,116 @@ mark.hl{background:rgba(212,160,23,.28);border-radius:2px;padding:0 2px;color:in
 /* ═══════════════════════════════════════════
    GOALS PAGE (أهداف المنصة والمطورين) - تم تعديل الألقاب والنصوص
 ═══════════════════════════════════════════ */
-.goals-hero{background:linear-gradient(135deg,var(--brand-d) 0%,var(--brand) 100%);padding:80px 0;text-align:center;color:white;position:relative;overflow:hidden}
-.goals-hero h1{font-family:var(--f-display);font-size:3.5rem;margin-bottom:16px}
-.goals-hero p{font-size:1.2rem;opacity:0.9;max-width:700px;margin:0 auto}
-.goals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;margin:60px 0}
-.goal-card{background:var(--card);border-radius:28px;padding:32px 24px;text-align:center;box-shadow:var(--s3);transition:all 0.3s var(--ease-spring);border:1px solid var(--line);cursor:default}
-.goal-card:hover{transform:translateY(-8px);box-shadow:var(--s5);border-color:var(--brand-l)}
-.goal-icon{font-size:64px;margin-bottom:20px;display:inline-block}
-.goal-card h3{font-family:var(--f-display);font-size:1.8rem;color:var(--ink);margin-bottom:12px}
-.goal-card p{color:var(--slate);line-height:1.7}
-.team-section{margin:80px 0;background:var(--bg2);border-radius:48px;padding:60px 40px}
-.team-section h2{font-family:var(--f-display);font-size:2.5rem;text-align:center;margin-bottom:48px;color:var(--ink)}
-.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px}
-.team-card{background:var(--card);border-radius:32px;overflow:hidden;box-shadow:var(--s3);transition:transform 0.3s;text-align:center}
-.team-card:hover{transform:translateY(-6px)}
-.team-img{height:180px;background:var(--brand-mist);display:flex;align-items:center;justify-content:center;font-size:72px}
-.team-info{padding:24px}
-.team-info h3{font-size:1.5rem;color:var(--ink);margin-bottom:6px}
-.team-info .role{color:var(--brand);font-weight:600;margin-bottom:12px;font-size:0.9rem}
-.team-info .desc{color:var(--slate);font-size:0.85rem;line-height:1.6}
-.dev-highlight{background:var(--gold-pale);border-radius:32px;padding:40px;margin:40px 0;border:1px solid var(--gold-l);text-align:center}
+/* ── GOALS PAGE ─────────────────────────────────── */
+.goals-hero{position:relative;background:linear-gradient(155deg,var(--brand-d) 0%,#0a4a26 40%,#1a6b4a 100%);padding:100px 0 80px;text-align:center;color:white;overflow:hidden;min-height:420px;display:flex;align-items:center}
+.goals-hero-noise{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:.5;pointer-events:none}
+.goals-hero-orb{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
+.goals-orb-1{width:440px;height:440px;background:radial-gradient(circle,rgba(93,207,120,.45),transparent 70%);top:-120px;right:-80px;animation:goalsOrb1 9s ease-in-out infinite;opacity:.4}
+.goals-orb-2{width:340px;height:340px;background:radial-gradient(circle,rgba(27,107,58,.5),transparent 70%);bottom:-100px;left:-60px;animation:goalsOrb2 11s ease-in-out infinite;opacity:.45}
+.goals-orb-3{width:220px;height:220px;background:radial-gradient(circle,rgba(201,135,26,.3),transparent 70%);top:45%;left:52%;transform:translateX(-50%);animation:goalsOrb3 7s ease-in-out infinite;opacity:.35}
+@keyframes goalsOrb1{0%,100%{transform:translate(0,0)}50%{transform:translate(-28px,22px)}}
+@keyframes goalsOrb2{0%,100%{transform:translate(0,0)}50%{transform:translate(22px,-18px)}}
+@keyframes goalsOrb3{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.18)}}
+.goals-hero-inner{position:relative;z-index:1;width:100%}
+.goals-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);border-radius:var(--rpill);padding:6px 22px;font-size:13px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.9);margin-bottom:28px}
+.goals-hero-title{font-family:var(--f-display);font-size:clamp(2.8rem,8vw,5.5rem);color:#fff;margin-bottom:20px;line-height:1.1;text-shadow:0 2px 30px rgba(0,0,0,.2)}
+.goals-hero-sub{font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(255,255,255,.72);max-width:620px;margin:0 auto 36px;line-height:1.75}
+.goals-hero-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.ghb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:var(--rpill);padding:6px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);backdrop-filter:blur(8px)}
+/* Stats row */
+.goals-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--line);border-radius:24px;overflow:hidden;margin:56px 0 72px;box-shadow:var(--s3)}
+.gstat{background:var(--card);padding:28px 20px;text-align:center;transition:background .2s}
+.gstat:hover{background:var(--brand-pale)}
+.gstat-num{font-family:var(--f-display);font-size:2.8rem;color:var(--brand);font-weight:600;line-height:1;margin-bottom:8px}
+.gstat-lbl{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+/* Section headers */
+.goals-sec-head{text-align:center;margin-bottom:48px}
+.goals-sec-label{display:inline-block;background:var(--brand-pale);color:var(--brand);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 18px;border-radius:var(--rpill);margin-bottom:14px;border:1px solid rgba(27,107,58,.12)}
+.goals-sec-title{font-family:var(--f-display);font-size:clamp(2rem,5vw,3rem);color:var(--ink);line-height:1.2}
+/* Goal cards */
+.goals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:80px}
+.goal-card{background:var(--card);border-radius:28px;padding:36px 28px 32px;box-shadow:var(--s2);transition:all 0.38s var(--ease-spring);border:1px solid var(--line);cursor:default;position:relative;overflow:hidden}
+.goal-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(27,107,58,.04),transparent);opacity:0;transition:opacity .3s;border-radius:inherit;pointer-events:none}
+.goal-card:hover{transform:translateY(-10px);box-shadow:var(--s5);border-color:rgba(27,107,58,.25)}
+.goal-card:hover::after{opacity:1}
+.goal-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.goal-icon-circle{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--brand-mist),var(--brand-pale));border:1.5px solid rgba(27,107,58,.15);display:flex;align-items:center;justify-content:center;color:var(--brand);transition:all .35s var(--ease-spring);flex-shrink:0}
+.goal-card:hover .goal-icon-circle{background:linear-gradient(135deg,var(--brand),var(--brand-l));color:#fff;box-shadow:0 8px 24px rgba(27,107,58,.35);transform:scale(1.08) rotate(-5deg)}
+.goal-num-badge{font-family:var(--f-display);font-size:3.6rem;color:var(--line2);font-weight:600;line-height:1;transition:color .3s;user-select:none}
+.goal-card:hover .goal-num-badge{color:rgba(27,107,58,.1)}
+.goal-card h3{font-family:var(--f-display);font-size:1.55rem;color:var(--ink);margin-bottom:12px;line-height:1.3}
+.goal-card p{color:var(--slate);line-height:1.8;font-size:.95rem}
+.goal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--brand-pale);color:var(--brand);font-size:11px;font-weight:700;letter-spacing:.04em;padding:5px 14px;border-radius:var(--rpill);margin-top:18px;border:1px solid rgba(27,107,58,.1)}
+/* Steps */
+.goals-steps-section{margin-bottom:80px}
+.goals-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;margin-top:48px}
+.goals-steps::before{content:'';position:absolute;top:35px;right:calc(16.67% + 28px);left:calc(16.67% + 28px);height:2px;background:linear-gradient(90deg,var(--brand-l),var(--gold-l),var(--brand-l));border-radius:2px;z-index:0;opacity:.5}
+.gstep{text-align:center;padding:0 24px;position:relative;z-index:1}
+.gstep-icon-wrap{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--brand-d),var(--brand-l));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#fff;box-shadow:0 8px 28px rgba(27,107,58,.3);position:relative;transition:transform .3s var(--ease-spring)}
+.gstep:hover .gstep-icon-wrap{transform:scale(1.08)}
+.gstep-icon-wrap::before{content:attr(data-num);position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:var(--gold);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--f-ui)}
+.gstep h3{font-family:var(--f-display);font-size:1.4rem;color:var(--ink);margin-bottom:10px}
+.gstep p{font-size:.9rem;color:var(--slate);line-height:1.7}
+/* Features */
+.goals-features{background:var(--bg2);border-radius:32px;padding:48px 40px;margin-bottom:64px;border:1px solid var(--line)}
+.goals-features-title{font-family:var(--f-display);font-size:2rem;color:var(--ink);text-align:center;margin-bottom:32px}
+.gfeat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.gfeat{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid var(--line);transition:all .28s var(--ease-spring);cursor:default}
+.gfeat:hover{border-color:rgba(27,107,58,.3);transform:translateX(-4px);box-shadow:var(--s2)}
+.gfeat-icon{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--brand-mist),var(--brand-pale));display:flex;align-items:center;justify-content:center;color:var(--brand);flex-shrink:0;transition:all .28s var(--ease-spring)}
+.gfeat:hover .gfeat-icon{background:linear-gradient(135deg,var(--brand),var(--brand-l));color:#fff}
+.gfeat-text{font-size:.9rem;font-weight:600;color:var(--ink2)}
+/* Team */
+.team-section{margin:0 0 64px;background:var(--bg2);border-radius:36px;padding:52px 40px;border:1px solid var(--line)}
+.team-section h2{font-family:var(--f-display);font-size:2.4rem;text-align:center;margin-bottom:44px;color:var(--ink)}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.team-card{background:var(--card);border-radius:28px;overflow:hidden;box-shadow:var(--s2);transition:all .38s var(--ease-spring);border:1px solid var(--line)}
+.team-card:hover{transform:translateY(-8px);box-shadow:var(--s4);border-color:rgba(27,107,58,.2)}
+.team-img{height:160px;background:linear-gradient(135deg,var(--brand-d),var(--brand-l));display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden}
+.team-img::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 120%,rgba(255,255,255,.12),transparent 60%);pointer-events:none}
+.team-info{padding:28px 24px}
+.team-info h3{font-family:var(--f-display);font-size:1.45rem;color:var(--ink);margin-bottom:8px}
+.team-info .role{display:inline-block;background:var(--brand-pale);color:var(--brand);font-size:12px;font-weight:700;padding:4px 14px;border-radius:var(--rpill);margin-bottom:14px;border:1px solid rgba(27,107,58,.12)}
+.team-info .desc{color:var(--slate);font-size:.88rem;line-height:1.75}
+/* Dev highlight */
+.dev-highlight{background:linear-gradient(135deg,var(--gold-pale) 0%,var(--bg2) 100%);border-radius:32px;padding:48px 40px;margin-bottom:64px;border:1px solid rgba(201,135,26,.15);position:relative;overflow:hidden}
+.dev-highlight::before{content:'';position:absolute;top:-40px;left:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,135,26,.1),transparent 70%);border-radius:50%;pointer-events:none}
+.dev-highlight::after{content:'';position:absolute;bottom:-30px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(27,107,58,.06),transparent 70%);border-radius:50%;pointer-events:none}
+.dev-highlight-center{text-align:center;position:relative;z-index:1}
 .dev-highlight h3{font-family:var(--f-display);font-size:2rem;color:var(--gold);margin-bottom:16px}
-.dev-highlight p{font-size:1.05rem;color:var(--ink2);max-width:800px;margin:0 auto}
-.dev-highlight .badge{display:inline-block;background:var(--gold);color:white;padding:6px 20px;border-radius:40px;margin-top:20px;font-weight:700}
-.cta-buttons{display:flex;gap:20px;justify-content:center;margin:50px 0 30px}
-.btn-goal{background:var(--brand);color:white;padding:14px 34px;border-radius:50px;font-weight:700;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
-.btn-goal-outline{background:transparent;border:2px solid var(--brand);color:var(--brand);padding:12px 30px;border-radius:50px;font-weight:700;transition:all 0.2s}
-.btn-goal:hover,.btn-goal-outline:hover{transform:translateY(-3px);box-shadow:var(--s3)}
+.dev-highlight p{font-size:1.02rem;color:var(--ink2);max-width:800px;margin:0 auto 24px;line-height:1.85}
+.dev-highlight .badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:white;padding:8px 24px;border-radius:var(--rpill);font-weight:700;font-size:13px;box-shadow:0 4px 16px rgba(201,135,26,.3)}
+[data-dark] .dev-highlight{background:linear-gradient(135deg,rgba(201,135,26,.08) 0%,rgba(27,107,58,.06) 100%);border-color:rgba(201,135,26,.2)}
+[data-dark] .dev-highlight::before{background:radial-gradient(circle,rgba(201,135,26,.15),transparent 70%)}
+[data-dark] .dev-highlight::after{background:radial-gradient(circle,rgba(93,207,120,.08),transparent 70%)}
+[data-dark] .dev-highlight p{color:var(--slate)}
+/* CTA */
+.cta-buttons{display:flex;gap:16px;justify-content:center;margin:0 0 80px;flex-wrap:wrap}
+.btn-goal{background:linear-gradient(135deg,var(--brand),var(--brand-l));color:white;padding:15px 38px;border-radius:var(--rpill);font-weight:700;font-size:15px;transition:all .28s var(--ease-spring);display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(27,107,58,.3)}
+.btn-goal:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(27,107,58,.4);background:linear-gradient(135deg,var(--brand-d),var(--brand))}
+.btn-goal-outline{background:transparent;border:2px solid var(--brand);color:var(--brand);padding:13px 32px;border-radius:var(--rpill);font-weight:700;font-size:15px;transition:all .28s var(--ease-spring);display:inline-flex;align-items:center;gap:8px}
+.btn-goal-outline:hover{background:var(--brand-pale);transform:translateY(-3px);box-shadow:var(--s2)}
+@media(max-width:768px){.goals-hero{padding:72px 0 60px;min-height:unset}.goals-stats{grid-template-columns:repeat(2,1fr)}.goals-steps{grid-template-columns:1fr}.goals-steps::before{display:none}.gstep{padding:0;margin-bottom:32px}.team-section,.goals-features{padding:32px 20px}.dev-highlight{padding:36px 24px}.gfeat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.gfeat-grid{grid-template-columns:1fr}.goals-stats{grid-template-columns:repeat(2,1fr)}.cta-buttons{flex-direction:column;align-items:stretch;padding:0 20px}}
+
+
+/* ── Universal Page Back Button ───────────────── */
+.page-back-btn{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--rpill);padding:8px 16px 8px 10px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;transition:all .22s var(--ease-spring);font-family:var(--f-ui);box-shadow:var(--s1)}
+.page-back-btn:hover{background:var(--brand-pale);border-color:rgba(27,107,58,.25);color:var(--brand);transform:translateX(4px);box-shadow:var(--s2)}
+.page-back-btn svg{flex-shrink:0;transition:transform .22s var(--ease-spring)}
+.page-back-btn:hover svg{transform:translateX(3px)}
+.page-back-btn--light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:#fff;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.page-back-btn--light:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.45);color:#fff;transform:translateX(4px)}
+.page-back-bar{padding:16px 0 0}
+[data-dark] .page-back-btn{background:var(--card);border-color:var(--line)}
+/* Farm back bar — above topbar, standalone */
+.farm-home-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 9px;border-radius:var(--rpill);background:var(--brand-pale);border:1.5px solid rgba(27,107,58,.2);color:var(--brand);font-size:12px;font-weight:700;cursor:pointer;transition:all .22s var(--ease-spring);font-family:var(--f-ui);flex-shrink:0;white-space:nowrap}
+.farm-home-btn:hover{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 4px 12px rgba(27,107,58,.3)}
+[data-dark] .farm-home-btn{background:rgba(27,107,58,.1);border-color:rgba(27,107,58,.25);color:var(--brand-xl,#5fc97e)}
+[data-dark] .farm-home-btn:hover{background:var(--brand);color:#fff}
+/* Market back button in subnav */
+.mkt-tab-back{border-left:1.5px solid var(--line)!important;margin-left:6px!important;padding-left:18px!important;color:var(--muted)!important}
+.mkt-tab-back:hover{color:var(--brand)!important}
 
 /* MODAL (للمحاصيل) */
 body.modal-open { overflow: hidden; }
@@ -758,6 +837,8 @@ body.modal-open { overflow: hidden; }
 .toast.inf{background:linear-gradient(135deg,rgba(27,54,36,.96),rgba(14,38,22,.97));color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.12)}
 .toast.inf .toast-icon-wrap{background:rgba(255,255,255,.15)}
 @keyframes tIn{from{transform:translateY(-18px) scale(.88);opacity:0}to{transform:none;opacity:1}}
+@keyframes bgIn{from{opacity:0}to{opacity:1}}
+@keyframes mboxUp{from{opacity:0;transform:scale(.93) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .auth-bg{position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
 .auth-bg.on{display:flex;animation:bgIn .25s ease}
 .auth-veil{position:absolute;inset:0;background:rgba(8,18,11,.82);backdrop-filter:blur(14px)}
@@ -919,14 +1000,15 @@ body.modal-open { overflow: hidden; }
 /* تحسينات نافذة المصادقة على الهواتف */
 @media (max-width: 520px) {
   .auth-bg {
-    align-items: flex-end;
-    padding: 0;
+    align-items: center;
+    padding: 16px;
   }
   .auth-box {
-    border-radius: 24px 24px 0 0;
-    max-height: 90vh;
+    border-radius: var(--r4);
+    max-height: 92vh;
     overflow-y: auto;
     margin: 0;
+    width: 100%;
   }
   .auth-body {
     padding: 20px;
@@ -6129,13 +6211,13 @@ body.modal-open { overflow: hidden; }
     </div>
   </div>
   <div class="mob-menu" id="mob-menu">
-    <a href="#" class="nl" onclick="showPage('home');closeMob()">الرئيسية</a>
-    <a href="#" class="nl" onclick="showPage('goals');closeMob()">🎯 أهداف المنصة</a>
-    <a href="#" class="nl" onclick="showPage('farm');closeMob()">🌾 مزرعتي</a>
-    <a href="#" class="nl" onclick="showPage('market');closeMob()">🛒 السوق الزراعي</a>
-    <a href="#" class="nl" id="mobLogin" onclick="openAuth('login');closeMob()">تسجيل الدخول</a>
-    <a href="#" class="nl" id="mobRegister" onclick="openAuth('reg');closeMob()">إنشاء حساب</a>
-    <a href="#" class="nl" id="mobLogout" style="display:none;" onclick="logoutUser();closeMob()">تسجيل الخروج</a>
+    <a href="#" class="nl" onclick="showPage('home');closeMob();return false">الرئيسية</a>
+    <a href="#" class="nl" onclick="showPage('goals');closeMob();return false">🎯 أهداف المنصة</a>
+    <a href="#" class="nl" onclick="showPage('farm');closeMob();return false">🌾 مزرعتي</a>
+    <a href="#" class="nl" onclick="showPage('market');closeMob();return false">🛒 السوق الزراعي</a>
+    <a href="#" class="nl" id="mobLogin" onclick="openAuth('login');closeMob();return false">تسجيل الدخول</a>
+    <a href="#" class="nl" id="mobRegister" onclick="openAuth('reg');closeMob();return false">إنشاء حساب</a>
+    <a href="#" class="nl" id="mobLogout" style="display:none;" onclick="logoutUser();closeMob();return false">تسجيل الخروج</a>
   </div>
 </nav>
 <!-- ══════════ PAGE: HOME ══════════ -->
@@ -6534,6 +6616,7 @@ body.modal-open { overflow: hidden; }
 
 <!-- ══════════ PAGE: SEARCH ══════════ -->
 <div class="page" id="pg-search">
+  <div class="page-back-bar"><div class="W"><button class="page-back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button></div></div>
   <section class="search-page">
     <div class="W">
       <div class="sp-bar-wrap">
@@ -6607,6 +6690,7 @@ body.modal-open { overflow: hidden; }
     .prf-arch-loading{color:var(--muted);font-size:13px;text-align:center;grid-column:1/-1;padding:28px 0}
     @media(max-width:600px){.prf-arch-hdr{padding:14px 16px}.prf-arch-grid{padding:14px 16px}.prf-arch-icon{width:36px;height:36px;border-radius:10px}.prf-arch-main{font-size:1rem}}
   </style>
+  <div class="page-back-bar"><div class="W"><button class="page-back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button></div></div>
   <section class="profile-page" style="padding: 80px 0; min-height: 80vh;">
     <div class="W">
       <div class="prf-card">
@@ -6718,68 +6802,203 @@ body.modal-open { overflow: hidden; }
 
 <!-- ══════════ PAGE: GOALS (أهداف المنصة والمطورين) - تم تعديل الألقاب والنصوص ══════════ -->
 <div class="page" id="pg-goals">
+  <div style="background:var(--brand-d);padding:14px 0 0"><div class="W"><button class="page-back-btn page-back-btn--light" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button></div></div>
+  <!-- ── Hero ── -->
   <div class="goals-hero">
-    <div class="W">
-      <h1>🎯 أهداف منصة نبتيكس</h1>
-      <p>نحو زراعة أكثر إنتاجية واستدامة للمزارع المصري والعربي</p>
+    <div class="goals-hero-orb goals-orb-1"></div>
+    <div class="goals-hero-orb goals-orb-2"></div>
+    <div class="goals-hero-orb goals-orb-3"></div>
+    <div class="goals-hero-noise"></div>
+    <div class="W goals-hero-inner">
+      <div class="goals-eyebrow">🌿 مرحباً بكم في نبتيكس</div>
+      <h1 class="goals-hero-title">أهداف المنصة</h1>
+      <p class="goals-hero-sub">نحو زراعة أكثر إنتاجية واستدامة للمزارع المصري والعربي — منصة متكاملة تجمع المعرفة والتقنية في خدمة الأرض</p>
+      <div class="goals-hero-badges">
+        <span class="ghb">🌱 مجاني 100%</span>
+        <span class="ghb">📱 يعمل على كل الأجهزة</span>
+        <span class="ghb">🔒 بيانات موثوقة</span>
+        <span class="ghb">🌍 عربي بالكامل</span>
+      </div>
     </div>
   </div>
+
   <div class="W">
-    <div class="goals-grid">
-      <div class="goal-card">
-        <div class="goal-icon">📘</div>
-        <h3>موسوعة زراعية شاملة</h3>
-        <p>توفير قاعدة بيانات ضخمة تضم مجموعة متنوعة من النباتات الاقتصادية، تشمل طرق التسميد، الري، مكافحة الأمراض، والحصاد، مع تحديثات مستمرة.</p>
+    <!-- ── Stats ── -->
+    <div class="goals-stats reveal">
+      <div class="gstat">
+        <div class="gstat-num">444<span style="font-size:1.8rem">+</span></div>
+        <div class="gstat-lbl">نبات موثق</div>
       </div>
-      <div class="goal-card">
-        <div class="goal-icon">📊</div>
-        <h3>دعم اتخاذ القرار</h3>
-        <p>تقديم بيانات اقتصادية وتحليلات للربحية، لمساعدة المزارعين والشركات على اختيار المحصول الأنسب وتحقيق أعلى عائد.</p>
+      <div class="gstat">
+        <div class="gstat-num">525<span style="font-size:1.8rem">+</span></div>
+        <div class="gstat-lbl">مرض زراعي</div>
       </div>
-      <div class="goal-card">
-        <div class="goal-icon">🧠</div>
-        <h3>تمكين المزارع المصري</h3>
-        <p>نشر المعرفة الحديثة باللغة العربية بأسلوب مبسط، مع نصائح الخبراء والمصادر الموثوقة (FAO، وزارة الزراعة).</p>
+      <div class="gstat">
+        <div class="gstat-num">8</div>
+        <div class="gstat-lbl">فئات نباتية</div>
       </div>
-      <div class="goal-card">
-        <div class="goal-icon">🤝</div>
-        <h3>مجتمع زراعي تفاعلي</h3>
-        <p>ربط المزارعين والمهندسين الزراعيين والباحثين لتبادل الخبرات، والوصول إلى أحدث الأبحاث والتقنيات.</p>
+      <div class="gstat">
+        <div class="gstat-num">🌱</div>
+        <div class="gstat-lbl">مجاني</div>
       </div>
     </div>
 
-    <div class="team-section">
+    <!-- ── Goals Grid ── -->
+    <div class="goals-sec-head reveal">
+      <div class="goals-sec-label">رسالتنا</div>
+      <h2 class="goals-sec-title">أهدافنا الأربعة</h2>
+    </div>
+    <div class="goals-grid">
+      <div class="goal-card reveal">
+        <div class="goal-card-header">
+          <div class="goal-icon-circle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="13" y2="11"/></svg>
+          </div>
+          <div class="goal-num-badge">01</div>
+        </div>
+        <h3>موسوعة زراعية شاملة</h3>
+        <p>قاعدة بيانات ضخمة تضم النباتات الاقتصادية بكل تفاصيلها — التسميد، الري، مكافحة الأمراض، الحصاد — مع تحديثات مستمرة من مصادر FAO ووزارة الزراعة.</p>
+        <div class="goal-tag">📚 444+ نبات موثق</div>
+      </div>
+      <div class="goal-card reveal">
+        <div class="goal-card-header">
+          <div class="goal-icon-circle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="3 20 21 20"/></svg>
+          </div>
+          <div class="goal-num-badge">02</div>
+        </div>
+        <h3>دعم اتخاذ القرار</h3>
+        <p>تحليلات اقتصادية وبيانات ربحية تساعد المزارعين والشركات على اختيار المحصول الأنسب وتحقيق أعلى عائد — قرارات مبنية على أرقام حقيقية.</p>
+        <div class="goal-tag">📊 بيانات اقتصادية</div>
+      </div>
+      <div class="goal-card reveal">
+        <div class="goal-card-header">
+          <div class="goal-icon-circle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div class="goal-num-badge">03</div>
+        </div>
+        <h3>تمكين المزارع العربي</h3>
+        <p>نشر المعرفة الزراعية الحديثة باللغة العربية بأسلوب مبسط — نصائح الخبراء، المصادر الموثوقة، وتقنيات الزراعة الحديثة في متناول يدك.</p>
+        <div class="goal-tag">🌍 عربي 100%</div>
+      </div>
+      <div class="goal-card reveal">
+        <div class="goal-card-header">
+          <div class="goal-icon-circle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="goal-num-badge">04</div>
+        </div>
+        <h3>مجتمع زراعي تفاعلي</h3>
+        <p>منصة لتواصل المزارعين والمهندسين الزراعيين والباحثين — تبادل خبرات، مناقشة تحديات، وأحدث أبحاث الزراعة في مكان واحد.</p>
+        <div class="goal-tag">🤝 مجتمع نشط</div>
+      </div>
+    </div>
+
+    <!-- ── How it works ── -->
+    <div class="goals-steps-section reveal">
+      <div class="goals-sec-head">
+        <div class="goals-sec-label">كيف تعمل المنصة؟</div>
+        <h2 class="goals-sec-title">ثلاث خطوات بسيطة</h2>
+      </div>
+      <div class="goals-steps">
+        <div class="gstep">
+          <div class="gstep-icon-wrap" data-num="1">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3>ابحث عن نباتك</h3>
+          <p>اكتب اسم النبات أو المرض في خانة البحث — محرك البحث الذكي يجد ما تحتاجه فوراً من بين مئات الإدخالات</p>
+        </div>
+        <div class="gstep">
+          <div class="gstep-icon-wrap" data-num="2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3>اقرأ التفاصيل الكاملة</h3>
+          <p>استعرض المعلومات المنظمة — جداول التسميد، أعراض الأمراض، صور موثوقة، وتوصيات الخبراء</p>
+        </div>
+        <div class="gstep">
+          <div class="gstep-icon-wrap" data-num="3">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3>طبّق في مزرعتك</h3>
+          <p>استخدم الأدوات المتكاملة — حاسبة التسميد، إدارة المزرعة، السوق الزراعي — لتحقيق أفضل النتائج</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Features ── -->
+    <div class="goals-features reveal">
+      <div class="goals-features-title">ما تجده في نبتيكس</div>
+      <div class="gfeat-grid">
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <span class="gfeat-text">موسوعة نباتية شاملة</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <span class="gfeat-text">تشخيص الأمراض الزراعية</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <span class="gfeat-text">إدارة المزرعة الذكية</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+          <span class="gfeat-text">السوق الزراعي الإلكتروني</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <span class="gfeat-text">حاسبة تسميد الموالح</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <span class="gfeat-text">مجتمع وتبادل خبرات</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+          <span class="gfeat-text">وضع ليلي مريح للعين</span>
+        </div>
+        <div class="gfeat">
+          <div class="gfeat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <span class="gfeat-text">محتوى مُحدَّث باستمرار</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Team ── -->
+    <div class="team-section reveal">
       <h2>👥 مؤسسو المنصة</h2>
       <div class="team-grid">
         <div class="team-card">
           <div class="team-img">👨‍💻</div>
           <div class="team-info">
             <h3>البشمهندس نور الهادي</h3>
-            <!-- تم التعديل: مهندس زراعي ومبرمج -->
-            <div class="role">مهندس زراعي ومبرمج</div>
-            <div class="desc">مهندس زراعي ومطور ويب محترف، يجمع بين المعرفة الزراعية والتقنية لتطوير منصة متكاملة تخدم القطاع الزراعي. صمم وأشرف على البنية التقنية للمنصة لضمان تجربة مستخدم فائقة.</div>
+            <div class="role">مهندس زراعي ومطور ويب</div>
+            <div class="desc">يجمع بين المعرفة الزراعية العميقة والتطوير التقني لبناء منصة متكاملة تخدم المزارع العربي. صمم وأشرف على كامل البنية التقنية بخبرة تزيد عن 4 سنوات في تطوير الويب.</div>
           </div>
         </div>
         <div class="team-card">
           <div class="team-img">👩‍🌾</div>
           <div class="team-info">
-            <h3>البشمهندسة ماهيتاب احمد</h3>
-            <!-- تم التعديل: مهندسة زراعية -->
-            <div class="role">مهندسة زراعية</div>
-            <div class="desc">مهندسة زراعية متخصصة في الإنتاج النباتي، عملت على جمع وتوثيق البيانات الزراعية من أحدث المراجع لتكون المنصة مرجعاً موثوقاً للمزارعين.</div>
+            <h3>البشمهندسة ماهيتاب أحمد</h3>
+            <div class="role">مهندسة زراعية متخصصة</div>
+            <div class="desc">متخصصة في الإنتاج النباتي، أشرفت على جمع وتوثيق آلاف البيانات الزراعية من مصادر FAO ووزارة الزراعة ومراجع CABI وEPPO الموثوقة.</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="dev-highlight">
-      <h3>🚀 لمحة عن المطور التقني</h3>
-      <!-- تم تعديل النص: فرونت ايند وتحسين للوضع الليلي -->
-      <p>تم بناء هذه المنصة المتكاملة بواسطة <strong>البشمهندس نور الهادي</strong>، مطور <strong>فرونت ايند</strong> محترف (Frontend Developer) بخبرة تزيد عن <strong>أربع سنوات</strong> في تطوير وإنشاء مواقع الويب التفاعلية عالية الأداء. استخدم أحدث تقنيات الويب (HTML5، CSS3، JavaScript، Firebase) لتحقيق تجربة سلسة وسريعة وجذابة. تم تصميم الواجهات بعناية فائقة لتناسب جميع الأجهزة وأحجام الشاشات، كما تم الاهتمام بتحسين الأداء وسرعة التحميل. يتميز بقدرته على تحويل الأفكار إلى تطبيقات ويب متكاملة تركز على المستخدم وسهولة الاستخدام، مع مراعاة تجربة المستخدم حتى في الوضع الليلي لضمان راحة العين.</p>
-      <span class="badge">✨ خبرة 4+ سنوات في تطوير الواجهات الأمامية (Frontend)</span>
+    <!-- ── Dev Highlight ── -->
+    <div class="dev-highlight reveal">
+      <div class="dev-highlight-center">
+        <h3>🚀 لمحة عن المطور التقني</h3>
+        <p>تم بناء هذه المنصة المتكاملة بواسطة <strong>البشمهندس نور الهادي</strong>، مطور <strong>Frontend</strong> محترف بخبرة تزيد عن <strong>أربع سنوات</strong> في بناء تطبيقات الويب عالية الأداء. استخدم أحدث تقنيات الويب (HTML5، CSS3، JavaScript، Firebase) لتقديم تجربة سلسة وسريعة تعمل على جميع الأجهزة — مع اهتمام خاص بتجربة المستخدم والوضع الليلي وسرعة التحميل.</p>
+        <span class="badge">✨ خبرة 4+ سنوات في تطوير الواجهات الأمامية (Frontend)</span>
+      </div>
     </div>
 
-    <div class="cta-buttons">
+    <!-- ── CTA ── -->
+    <div class="cta-buttons reveal">
       <button class="btn-goal" onclick="showPage('search')">🔍 استكشف الموسوعة الآن</button>
       <button class="btn-goal-outline" onclick="showPage('home')">🏠 العودة للرئيسية</button>
     </div>
@@ -7078,6 +7297,10 @@ body.modal-open { overflow: hidden; }
   <!-- MARKETPLACE SUB-NAV — PREMIUM SVG ICONS v4 -->
   <div class="mkt-subnav">
     <div class="mkt-subnav-inner">
+      <button class="mkt-tab mkt-tab-back" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        رجوع
+      </button>
       <button class="mkt-tab active" id="mkt-tab-home" onclick="MKT.showPanel('home')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><path d="M9 21V12h6v9"/></svg>
         الرئيسية
@@ -7582,6 +7805,12 @@ body.modal-open { overflow: hidden; }
 
 <div id="tw"></div>
 <button id="stk" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- Firebase SDKs — loaded here so browser renders loader screen first -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 // ======================== FIREBASE CONFIG ========================
@@ -18243,6 +18472,7 @@ function showPage(pg,opts={}){
     },220);
   }
   next.classList.add('active');
+  window.scrollTo(0,0);
   next.style.opacity='0';
   next.style.transform='translateY(18px)';
   next.style.transition='none';
@@ -18913,6 +19143,13 @@ document.getElementById('ham').addEventListener('click', function(e) {
 function closeMob() {
   document.getElementById('ham').classList.remove('x');
   document.getElementById('mob-menu').classList.remove('open');
+}
+function goBack() {
+  if (window.history.length > 1) {
+    history.back();
+  } else {
+    showPage('home');
+  }
 }
 function setupMobileMenuOutsideClick() {
   const ham = document.getElementById('ham');
@@ -21951,15 +22188,8 @@ document.addEventListener('click', e => {
       return '<div class="farm-shell">' +
         /* ══ PREMIUM TOPBAR ══ */
         '<div class="farm-topbar">' +
-          '<div class="farm-topbar-start">' +
-            '<div class="farm-name-badge">' +
-              '<div class="farm-name-badge-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2C6.48 2 2 6.48 2 12"/><path d="M12 22V12"/><path d="M12 12C8 8 4 9 2 12"/><path d="M12 12c4-4 8-3 10 0"/><circle cx="12" cy="12" r="2"/></svg></div>' +
-              '<div class="farm-name-badge-text">' +
-                '<span class="farm-name-badge-label">مزرعتي</span>' +
-                '<span class="farm-name-badge-value">' + farmName + '</span>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
+          '<button class="farm-home-btn" onclick="goBack()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button>' +
+          '<div class="farm-topbar-divider"></div>' +
           '<nav class="farm-top-nav">' + navHtml + '</nav>' +
         '</div>' +
         /* ══ CONTENT ══ */
@@ -24656,6 +24886,10 @@ document.addEventListener('click', e => {
     background: var(--bg);
   }
 
+  /* ── Farm Topbar Divider ─────────────────────────── */
+  .farm-topbar-divider{width:1px;height:22px;background:var(--line2);flex-shrink:0;margin:0 4px}
+  [data-dark] .farm-topbar-divider{background:rgba(255,255,255,.1)}
+
   /* ── Premium Topbar ─────────────────────────────── */
   .farm-topbar {
     display: flex;
@@ -26928,6 +27162,15 @@ document.addEventListener('DOMContentLoaded',function(){
 
           /* Ask SW for cache status */
           reg.active?.postMessage({ type: 'CACHE_STATUS' });
+
+          /* Register Background Sync on install — must be inside .then(reg) scope */
+          reg.ready.then(function() {
+            if ('sync' in reg) {
+              reg.sync.register('nabtex-farm-sync')
+                .then(function() { LOG('✅ Background Sync registered'); })
+                .catch(function(e) { LOG('ℹ️ Background Sync not available:', e.message); });
+            }
+          }).catch(function(){});
         })
         .catch(function (err) {
           LOG('⚠️ SW registration failed (site still works online):', err.message);
@@ -26950,15 +27193,6 @@ document.addEventListener('DOMContentLoaded',function(){
           }
         }
       });
-
-      /* Register Background Sync on install */
-      reg.ready.then(function() {
-        if ('sync' in reg) {
-          reg.sync.register('nabtex-farm-sync')
-            .then(function() { LOG('✅ Background Sync registered'); })
-            .catch(function(e) { LOG('ℹ️ Background Sync not available:', e.message); });
-        }
-      }).catch(function(){});
 
       /* Reload when new SW takes over — delayed to avoid interruption */
       navigator.serviceWorker.addEventListener('controllerchange', function () {
@@ -27146,6 +27380,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <!-- SOCIAL MODULE -->
-<script src="social.js"></script>
+<script defer src="social.js"></script>
 </body>
 </html>
