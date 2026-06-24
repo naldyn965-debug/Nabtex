@@ -8622,7 +8622,10 @@ if(legacy){raw=legacy;try{localStorage.setItem(key,legacy);localStorage.removeIt
 return JSON.parse(raw||'{}')
 }catch(e){return{}}
 }
-function acSave(p){try{localStorage.setItem(acProgKey(),JSON.stringify(p))}catch(e){}}
+function acSave(p){
+try{localStorage.setItem(acProgKey(),JSON.stringify(p))}catch(e){}
+acCloudSaveDebounced(AC_CID,p);
+}
 /* Clears a specific user's local academy progress (called on logout / account switch) */
 function acClearLocalProgress(targetUid){
 ['pest','mol-bio'].forEach(function(cid){
@@ -8631,6 +8634,70 @@ var key=targetUid?(pf+'__'+targetUid):(pf+'__guest');
 try{localStorage.removeItem(key)}catch(e){}});
 }
 window._acClearLocalProgress=acClearLocalProgress;
+
+/* ── Cloud sync (Firestore): keeps academy progress available across devices ──
+   Local cache (above) stays the source of truth for instant UI reads; this
+   layer mirrors it to Firestore (per user, per course) and pulls it back down
+   on login so progress made on one device shows up on another. */
+var _acCloudTimers={};
+function acCloudSaveDebounced(cid,p){
+if(typeof db==='undefined'||!currentUser||!currentUser.uid)return;
+var uid=currentUser.uid;
+clearTimeout(_acCloudTimers[cid]);
+_acCloudTimers[cid]=setTimeout(function(){
+try{
+db.collection('academy_progress').doc(uid+'_'+cid).set({
+uid:uid,courseId:cid,data:p,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+},{merge:true}).catch(function(e){console.warn('[Nabtex Academy] cloud save failed:',e)});
+}catch(e){console.warn('[Nabtex Academy] cloud save error:',e)}
+},800);
+}
+/* Merge helper: combines a local and remote progress record, keeping the
+   union of completed lessons and the better final-exam score, so neither
+   device's progress is lost. */
+function _acMergeProg(local,remote){
+local=local||{};remote=remote||{};
+var d=Array.from(new Set((local.d||[]).concat(remote.d||[])));
+var dt=Object.assign({},remote.dt||{},local.dt||{});
+var merged={d:d,dt:dt};
+var lfe=local.fe,rfe=remote.fe;
+if(lfe===undefined&&rfe===undefined){/* no exam score yet */}
+else merged.fe=Math.max(lfe===undefined?-1:lfe,rfe===undefined?-1:rfe);
+return merged;
+}
+/* Pulls each course's progress from Firestore, merges with whatever is
+   already cached locally on this device, writes the merged result back to
+   both localStorage and Firestore. Called once after login. */
+async function acSyncFromCloud(){
+if(typeof db==='undefined'||!currentUser||!currentUser.uid)return;
+var uid=currentUser.uid;
+var courseIds=['pest','mol-bio'];
+for(var i=0;i<courseIds.length;i++){
+var cid=courseIds[i];
+try{
+var pf='nb-'+cid+'-p';
+var localKey=pf+'__'+uid;
+var localRaw=null;
+try{localRaw=localStorage.getItem(localKey)}catch(e){}
+var localProg=localRaw?JSON.parse(localRaw):{};
+var docSnap=await db.collection('academy_progress').doc(uid+'_'+cid).get();
+var remoteProg=(docSnap.exists&&docSnap.data().data)?docSnap.data().data:{};
+var merged=_acMergeProg(localProg,remoteProg);
+try{localStorage.setItem(localKey,JSON.stringify(merged))}catch(e){}
+db.collection('academy_progress').doc(uid+'_'+cid).set({
+uid:uid,courseId:cid,data:merged,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+},{merge:true}).catch(function(e){console.warn('[Nabtex Academy] cloud resync failed:',e)});
+}catch(e){console.warn('[Nabtex Academy] cloud sync error for',cid,e)}
+}
+/* If the academy screen is already open, refresh it so the merged progress shows immediately */
+try{
+var acPg=document.getElementById('pg-academy');
+if(acPg&&acPg.classList.contains('active')&&typeof acR==='function')acR();
+}catch(e){}
+}
+window._acSyncFromCloud=acSyncFromCloud;
 function acDone(id){return(acProg().d||[]).includes(id)}
 function acMark(id){var p=acProg();p.d=p.d||[];if(!p.d.includes(id))p.d.push(id);p.dt=p.dt||{};p.dt[id]=Date.now();acSave(p)}
 function acPct(){
@@ -21907,6 +21974,7 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     await loadUserFavorites();
     await loadUserProfile();
+    if (typeof acSyncFromCloud === 'function') acSyncFromCloud();
   } else {
     userFavorites.clear();
     const localFavs = JSON.parse(localStorage.getItem('nb-favs') || '[]');

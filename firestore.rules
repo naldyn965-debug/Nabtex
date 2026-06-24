@@ -30,6 +30,12 @@ service cloud.firestore {
       allow read, write: if isAuth();
     }
 
+    // ── ACADEMY PROGRESS (per-user course progress, synced across devices) ──
+    match /academy_progress/{docId} {
+      allow read, write: if isAuth() && request.auth.uid == resource.data.uid;
+      allow create: if isAuth() && request.auth.uid == request.resource.data.uid;
+    }
+
     // ── MARKETPLACE ────────────────────────────────────────
     match /marketplace_products/{productId} {
       allow read: if true;
