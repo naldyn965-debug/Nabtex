@@ -7949,11 +7949,11 @@ body.modal-open { overflow: hidden; }
 .acad-tip h3,.acad-err h3,.acad-case h3{font-size:.95rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .acad-tip h3{color:var(--brand)}
 .acad-tip ul,.acad-err ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px}
-.acad-tip li,.acad-err li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--slate);line-height:1.6}
-.acad-tip li::before{content:"✓";color:var(--brand);font-weight:900;flex-shrink:0;margin-top:1px}
+.acad-tip li,.acad-err li{position:relative;padding-right:22px;font-size:13.5px;color:var(--slate);line-height:1.6}
+.acad-tip li::before{content:"✓";color:var(--brand);font-weight:900;position:absolute;right:0;top:1px}
 .acad-err{background:rgba(192,57,43,.04);border:1.5px solid rgba(192,57,43,.2);border-right:4px solid var(--red);border-radius:18px;padding:22px 24px;margin:28px 0}
 .acad-err h3{color:var(--red)}
-.acad-err li::before{content:"✗";color:var(--red);font-weight:900;flex-shrink:0}
+.acad-err li::before{content:"✗";color:var(--red);font-weight:900;position:absolute;right:0;top:1px}
 .acad-case{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:24px;margin:28px 0}
 .acad-case h3{color:var(--ink)}
 .acad-case-row{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
