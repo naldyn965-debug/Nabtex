@@ -8622,7 +8622,7 @@ if(legacy){raw=legacy;try{localStorage.setItem(key,legacy);localStorage.removeIt
 return JSON.parse(raw||'{}')
 }catch(e){return{}}
 }
-function acSave(p){try{localStorage.setItem(acProgKey(),JSON.stringify(p))}catch(e){}}
+function acSave(p){try{localStorage.setItem(acProgKey(),JSON.stringify(p))}catch(e){}acPushCloud(AC_CID,p);}
 /* Clears a specific user's local academy progress (called on logout / account switch) */
 function acClearLocalProgress(targetUid){
 ['pest','mol-bio'].forEach(function(cid){
@@ -8631,6 +8631,68 @@ var key=targetUid?(pf+'__'+targetUid):(pf+'__guest');
 try{localStorage.removeItem(key)}catch(e){}});
 }
 window._acClearLocalProgress=acClearLocalProgress;
+
+/* ── Cloud Sync (Firestore) ───────────────────────────────────
+   Keeps course progress in sync across devices for the same account.
+   The local copy stays the source of truth for instant UI; Firestore is
+   only used to carry progress between devices. Fails silently if offline —
+   local progress is never lost or blocked by a network issue. */
+var _acPushTimers={};
+function acPushCloud(cid,p){
+try{
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
+if(!u||typeof db==='undefined'||!db)return;
+clearTimeout(_acPushTimers[cid]);
+_acPushTimers[cid]=setTimeout(function(){
+db.collection('academy_progress').doc(u+'_'+cid).set({
+uid:u,courseId:cid,d:p.d||[],dt:p.dt||{},fe:(p.fe!==undefined?p.fe:-1),updatedAt:Date.now()
+},{merge:true}).catch(function(e){console.warn('[Academy] cloud sync (up) failed',e)});
+},700);
+}catch(e){}}
+/* Pulls cloud progress for every course and merges it with the local copy —
+   union of completed lessons, earliest completion time (keeps the 24h unit
+   gate fair), highest final-exam score. Runs once on login so progress made
+   on another phone shows up here too. No-op for guests / when Firestore
+   isn't ready. */
+function acPullCloud(){
+return new Promise(function(resolve){
+try{
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
+if(!u||typeof db==='undefined'||!db){resolve();return;}
+var cids=['pest','mol-bio'],pending=cids.length;
+function step(){pending--;if(pending<=0)resolve();}
+cids.forEach(function(cid){
+var key='nb-'+cid+'-p__'+u;
+db.collection('academy_progress').doc(u+'_'+cid).get().then(function(snap){
+var local={};try{local=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){local={}}
+var cloud=snap.exists?(snap.data()||{}):{};
+var cloudD=cloud.d||[],localD=local.d||[];
+var mergedD=Array.from(new Set(localD.concat(cloudD)));
+var mergedDt={};
+Object.keys(Object.assign({},cloud.dt||{},local.dt||{})).forEach(function(lid){
+var cv=(cloud.dt||{})[lid],lv=(local.dt||{})[lid];
+mergedDt[lid]=(cv&&lv)?Math.min(cv,lv):(cv||lv);
+});
+var cloudFe=cloud.fe!==undefined?cloud.fe:-1,localFe=local.fe!==undefined?local.fe:-1;
+var mergedFe=Math.max(cloudFe,localFe);
+try{localStorage.setItem(key,JSON.stringify({d:mergedD,dt:mergedDt,fe:mergedFe}))}catch(e){}
+if(mergedD.length!==cloudD.length||mergedFe!==cloudFe){
+db.collection('academy_progress').doc(u+'_'+cid).set({
+uid:u,courseId:cid,d:mergedD,dt:mergedDt,fe:mergedFe,updatedAt:Date.now()
+},{merge:true}).catch(function(e){console.warn('[Academy] cloud sync (up) failed',e)});
+}
+step();
+}).catch(function(e){console.warn('[Academy] cloud sync (down) failed',e);step()});
+});
+}catch(e){resolve()}
+});
+}
+window._acSyncCloudProgress=function(){
+return acPullCloud().then(function(){
+var r=document.getElementById('acad-root');
+if(r&&r.firstChild&&typeof acR==='function'){try{acR()}catch(e){}}
+});
+};
 function acDone(id){return(acProg().d||[]).includes(id)}
 function acMark(id){var p=acProg();p.d=p.d||[];if(!p.d.includes(id))p.d.push(id);p.dt=p.dt||{};p.dt[id]=Date.now();acSave(p)}
 function acPct(){
@@ -22114,6 +22176,9 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     await loadUserFavorites();
     await loadUserProfile();
+    if (typeof window._acSyncCloudProgress === 'function') {
+      await window._acSyncCloudProgress();
+    }
   } else {
     userFavorites.clear();
     const localFavs = JSON.parse(localStorage.getItem('nb-favs') || '[]');
