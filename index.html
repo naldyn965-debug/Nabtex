@@ -11222,38 +11222,6 @@ ms.forEach(function(m){
 <div id="tw"></div>
 <button id="stk" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
-<script>
-/* ── DEBUG ERROR OVERLAY — REMOVE AFTER FIXING ── */
-(function(){
-  var _errs = [];
-  function _show(msg){
-    var d = document.getElementById("_nb_dbg");
-    if(!d){
-      d = document.createElement("div");
-      d.id = "_nb_dbg";
-      d.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);color:#f87171;font:13px/1.6 monospace;padding:20px;overflow:auto;white-space:pre-wrap;direction:ltr";
-      document.body && document.body.appendChild(d);
-    }
-    _errs.push(msg);
-    d.textContent = "NABTEX DEBUG ERRORS:\n\n" + _errs.join("\n\n");
-  }
-  window.onerror = function(msg,src,line,col,err){
-    _show("ERR: " + msg + "\n   at " + src + ":" + line + ":" + col);
-    return false;
-  };
-  window.addEventListener("unhandledrejection", function(e){
-    _show("PROMISE ERR: " + (e.reason && (e.reason.message||e.reason)));
-  });
-  window.addEventListener("load", function(){
-    if(typeof firebase === "undefined") _show("FATAL: Firebase CDN scripts FAILED to load");
-    if(_errs.length === 0) {
-      var d = document.getElementById("_nb_dbg");
-      if(d) d.remove();
-    }
-  });
-})();
-</script>
-
 <!-- Firebase SDKs — loaded here so browser renders loader screen first -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
