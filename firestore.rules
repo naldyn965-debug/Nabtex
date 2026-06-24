@@ -10,22 +10,30 @@ service cloud.firestore {
                           request.auth.uid == res.data.sellerId);
     }
 
-    // ── USERS ──────────────────────────────────────────────
     match /users/{uid} {
       allow read:  if true;
       allow write: if isSelf(uid);
     }
 
-    // ── FARMS ──────────────────────────────────────────────
     match /farms/{docId} {
       allow read, write: if isAuth();
     }
 
-    // ── PLANTS / DISEASES ──────────────────────────────────
+    match /fields/{docId} {
+      allow read, write: if isAuth();
+    }
+
+    match /crops/{docId} {
+      allow read, write: if isAuth();
+    }
+
+    match /operations/{docId} {
+      allow read, write: if isAuth();
+    }
+
     match /plants/{docId}   { allow read: if true; allow write: if false; }
     match /diseases/{docId} { allow read: if true; allow write: if false; }
 
-    // ── GOALS ──────────────────────────────────────────────
     match /goals/{docId} {
       allow read, write: if isAuth();
     }
@@ -36,7 +44,6 @@ service cloud.firestore {
       allow create: if isAuth() && request.auth.uid == request.resource.data.uid;
     }
 
-    // ── MARKETPLACE ────────────────────────────────────────
     match /marketplace_products/{productId} {
       allow read: if true;
       allow create: if isAuth()
@@ -47,26 +54,27 @@ service cloud.firestore {
       allow update: if owns(resource) || isAuth();
       allow delete: if owns(resource);
     }
+
     match /marketplace_orders/{orderId} {
       allow read:   if ownsOrder(resource);
       allow create: if isAuth() && request.resource.data.buyerId == request.auth.uid;
       allow update: if isAuth() && request.auth.uid == resource.data.sellerId;
       allow delete: if false;
     }
+
     match /marketplace_reviews/{reviewId} {
       allow read: if true;
       allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
+
     match /marketplace_notifications/{notifId} {
       allow read, update, delete: if isAuth() && resource.data.userId == request.auth.uid;
       allow create: if isAuth();
     }
 
-    // ── SOCIAL: PROFILES ───────────────────────────────────
     match /social_profiles/{uid} {
       allow read: if true;
-      // Owner writes anything; any auth user can update follow counters only
       allow create: if isSelf(uid);
       allow update: if isSelf(uid) || (
         isAuth() &&
@@ -76,22 +84,16 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
-    // ── SOCIAL: POSTS ──────────────────────────────────────
     match /social_posts/{postId} {
       allow read: if true;
-
       allow create: if isAuth()
         && request.resource.data.authorUid == request.auth.uid;
-
-      // Owner: update/delete anything
-      // Any auth user: update only interaction fields (like, save, share, comments)
       allow update: if isAuth() && (
         resource.data.authorUid == request.auth.uid
         ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['likesCount','likedBy','savedBy','sharesCount','commentsCount'])
       );
-
       allow delete: if isAuth()
         && resource.data.authorUid == request.auth.uid;
 
@@ -103,7 +105,6 @@ service cloud.firestore {
       }
     }
 
-    // ── SOCIAL: FOLLOWS ────────────────────────────────────
     match /social_follows/{followId} {
       allow read: if isAuth();
       allow create: if isAuth()
@@ -112,14 +113,20 @@ service cloud.firestore {
         && resource.data.followerUid == request.auth.uid;
     }
 
-    // ── SOCIAL: NOTIFICATIONS ──────────────────────────────
     match /social_notifications/{notifId} {
       allow read, update, delete: if isAuth()
         && resource.data.toUid == request.auth.uid;
       allow create: if isAuth();
     }
 
-    // ── DENY ALL ELSE ──────────────────────────────────────
+    match /favorites/{uid} {
+      allow read, write: if isSelf(uid);
+    }
+
+    match /users/{uid}/{subcollection}/{docId} {
+      allow read, write: if isSelf(uid);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
