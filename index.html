@@ -8896,6 +8896,7 @@ var molBioCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(
 '<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>')+
 '</div></div>';
 return '<div class="acad-hero"><div class="acad-hero-inner">'+
+'<div class="acad-hero-back" role="button" onclick="showPage(\'home\')">‹ الرئيسية</div>'+
 '<div class="acad-hero-badge"><i></i> نبتيكس أكاديمي</div>'+
 '<div class="acad-hero-title">دوراتنا التعليمية</div>'+
 '<div class="acad-hero-sub">محتوى علمي موثّق باللغة العربية من فريق نبتيكس. اختر دورة لتبدأ رحلة التعلّم.</div>'+
@@ -10511,7 +10512,7 @@ var y=contentTop+10;
 ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#33453f';
 ctx.font="600 92px 'Cormorant Garamond', serif";
 y+=80;ctx.fillText('CERTIFICATE OF',textLeft,y);
-y+=100;ctx.fillText('ACHIEVEMENT',textLeft,y);
+y+=100;ctx.fillText('Integrated Pest Management',textLeft,y);
 y+=100;ctx.fillText('NABTEX PLATFORM',textLeft,y);
 y+=70;ctx.font="400 36px 'Cairo', sans-serif";ctx.fillStyle='#5e6f69';
 ctx.fillText('This certificate is proudly presented to',textLeft,y);
@@ -10628,7 +10629,7 @@ bannerHTML+
 '<div class="acad-cert-row">'+
 '<div class="acad-cert-ribbon">'+ACAD_CERT_RIBBON_SVG+'</div>'+
 '<div class="acad-cert-main">'+
-'<div class="acad-cert-titles"><div>CERTIFICATE OF</div><div>ACHIEVEMENT</div><div>NABTEX PLATFORM</div></div>'+
+'<div class="acad-cert-titles"><div>CERTIFICATE OF</div><div>Integrated Pest Management</div><div>NABTEX PLATFORM</div></div>'+
 '<div class="acad-cert-presented">This certificate is proudly presented to</div>'+
 '<div class="acad-cert-name" id="acad-cert-name" contenteditable="true" spellcheck="false" data-placeholder="Your Name" oninput="NAcademy.refreshCertQR()" onpaste="event.preventDefault();document.execCommand(\'insertText\',false,(event.clipboardData||window.clipboardData).getData(\'text\'))" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}" onblur="if(!this.textContent.trim())this.innerHTML=\'\'">'+(userName?acEsc(userName):'')+'</div>'+
 '<div class="acad-cert-completed">has successfully completed the Integrated Pest Management (IPM) Course offered by Nabtex Platform.</div>'+
