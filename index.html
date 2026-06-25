@@ -7831,6 +7831,10 @@ body.modal-open { overflow: hidden; }
 .acad-cat-card-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
 .acad-cat-card-meta{display:flex;flex-wrap:wrap;gap:8px}
 .acad-cat-card-cta{margin-top:16px;font-size:13px;font-weight:800;color:var(--brand)}
+.acad-price-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.acad-price-old{font-size:13px;color:var(--muted);text-decoration:line-through}
+.acad-price-new{font-size:21px;font-weight:800;color:#dc2626}
+.acad-price-tag{font-size:11px;font-weight:700;color:#dc2626;background:rgba(220,38,38,.09);padding:3px 10px;border-radius:30px}
 .acad-soon-badge{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);color:var(--ink);font-size:10px;font-weight:800;padding:4px 10px;border-radius:40px;letter-spacing:.04em}
 .acad-cat-card.soon{cursor:pointer;opacity:.72}
 .acad-cat-card.soon:hover{opacity:.92;transform:translateY(-2px)}
@@ -8877,7 +8881,7 @@ var liveCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'
 '<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>')+
 '</div></div>';
 var molBioCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'mol-bio\')" role="button" style="border-color:rgba(59,130,246,.25)">'+
-'<div class="acad-cat-card-top" style="background:#0a1c33 url(\'https://images.unsplash.com/photo-1681911046064-e663d5192921?auto=format&fit=crop&w=900&q=70\') center/cover no-repeat"><span class="acad-pop-badge" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">'+STAR_ICO+'Free</span></div>'+
+'<div class="acad-cat-card-top" style="background:#0a1c33 url(\'https://images.unsplash.com/photo-1681911046064-e663d5192921?auto=format&fit=crop&w=900&q=70\') center/cover no-repeat"><span class="acad-pop-badge" style="background:linear-gradient(135deg,#dc2626,#f97316)">🔥 خصم 90%</span></div>'+
 '<div class="acad-cat-card-body">'+
 '<div class="acad-cat-card-kicker" style="color:#2563eb">'+MB_COURSE.kicker+'</div>'+
 '<div class="acad-cat-card-title">'+MB_COURSE.title+'</div>'+
@@ -8887,6 +8891,7 @@ var molBioCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(
 '<span class="acad-chip-pro">'+BARS_ICO+MB_COURSE.level+'</span>'+
 '<span class="acad-chip-pro gold">'+CERT_ICO+'شهادة إتمام</span>'+
 '</div>'+
+'<div class="acad-price-row"><span class="acad-price-old">250 جنيه</span><span class="acad-price-new">25 جنيه</span><span class="acad-price-tag">⏳ لفترة محدودة</span></div>'+
 (molDone>0?'<div class="acad-progress-wrap" style="margin-top:16px"><div class="acad-prog-label"><span>التقدم في الدورة</span><span>'+molPct+'%</span></div><div class="acad-prog-track"><div class="acad-prog-fill" style="width:'+molPct+'%"></div></div></div>':
 '<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>')+
 '</div></div>';
