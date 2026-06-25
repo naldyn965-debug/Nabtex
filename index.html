@@ -7961,9 +7961,9 @@ body.modal-open { overflow: hidden; }
 .acad-case-val{font-size:13.5px;color:var(--ink);line-height:1.6}
 .acad-refs{margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}
 .acad-refs h3{font-size:.85rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
-.acad-ref{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--slate);line-height:1.55}
+.acad-ref{position:relative;padding:9px 30px 9px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--slate);line-height:1.55}
 .acad-ref:last-child{border-bottom:none}
-.acad-ref-n{font-size:10px;font-weight:800;color:var(--brand);background:var(--brand-pale);border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.acad-ref-n{position:absolute;right:0;top:9px;font-size:10px;font-weight:800;color:var(--brand);background:var(--brand-pale);border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center}
 
 /* lesson nav */
 .acad-lnav{display:flex;gap:12px;justify-content:space-between;margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}
@@ -8054,6 +8054,8 @@ body.modal-open { overflow: hidden; }
 .acad-igrid{grid-template-columns:1fr 1fr}
 .acad-lnav{flex-direction:column}
 .acad-card-body{padding:20px}
+.acad-case-row{flex-direction:column;gap:4px}
+.acad-case-lbl{min-width:0}
 }
 </style>
 
@@ -9682,7 +9684,7 @@ c['mb1']='<div class="acad-body">'+
 '<li>اذكر تطبيقاً واحداً للبيولوجيا الجزيئية في الزراعة وآخر في الطب، موضحاً التقنية الجزيئية المُستخدَمة في كل منهما.</li>'+
 '</ul>'+
 
-'<div class="acad-refs">'+
+'<div class="acad-refs"><h3>المراجع العلمية</h3>'+
 '<div class="acad-ref"><span class="acad-ref-n">1</span>Watson, J.D. & Crick, F.H.C. (1953). A Structure for Deoxyribose Nucleic Acid. <em>Nature</em>, 171, 737-738.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">2</span>Crick, F. (1970). Central Dogma of Molecular Biology. <em>Nature</em>, 227, 561-563.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">3</span>Alberts, B. et al. (2022). <em>Molecular Biology of the Cell</em>, 7th ed. W.W. Norton.</div>'+
@@ -9915,7 +9917,7 @@ c['mb2']='<div class="acad-body">'+
 '<li>كيف يُفسّر نقص في MMR (Mismatch Repair) ارتفاعَ خطر الإصابة بسرطان القولون في متلازمة Lynch؟</li>'+
 '</ul>'+
 
-'<div class="acad-refs">'+
+'<div class="acad-refs"><h3>المراجع العلمية</h3>'+
 '<div class="acad-ref"><span class="acad-ref-n">1</span>Watson, J.D. & Crick, F.H.C. (1953). Molecular Structure of Nucleic Acids. <em>Nature</em>, 171, 737-738.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">2</span>Meselson, M. & Stahl, F.W. (1958). The Replication of DNA in E. coli. <em>PNAS</em>, 44(7), 671-682.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">3</span>Alberts, B. et al. (2022). <em>Molecular Biology of the Cell</em>, 7th ed. Chapter 5: DNA Replication, Repair, and Recombination. W.W. Norton.</div>'+
@@ -10139,7 +10141,7 @@ c['mb3']='<div class=\"acad-body\">'+
 '<li>كيف يُفسّر فهم NMD (Nonsense-Mediated Decay) ظاهرة أن بعض الطفرات التي تُحدث كودون إيقاف مبكر تُسبب مرضاً أخف وطأة من الطفرات المُلغِية للإطار في نفس الجين؟</li>'+
 '</ul>'+
 
-'<div class=\"acad-refs\">'+
+'<div class=\"acad-refs\"><h3>المراجع العلمية</h3>'+
 '<div class=\"acad-ref\"><span class=\"acad-ref-n\">1</span>Alberts, B. et al. (2022). <em>Molecular Biology of the Cell</em>, 7th ed. Chapter 6: How Cells Read the Genome: From DNA to Protein. W.W. Norton.</div>'+
 '<div class=\"acad-ref\"><span class=\"acad-ref-n\">2</span>Lodish, H. et al. (2021). <em>Molecular Cell Biology</em>, 9th ed. Chapter 10: Post-transcriptional Gene Control. Macmillan.</div>'+
 '<div class=\"acad-ref\"><span class=\"acad-ref-n\">3</span>Bartel, D.P. (2018). Metazoan MicroRNAs. <em>Cell</em>, 173(1), 20-51.</div>'+
@@ -10338,7 +10340,7 @@ c['mb4']='<div class="acad-body">'+
 '<li>بروتين p53 يرتفع مستواه في الخلايا المُعرَّضة للإشعاع لكن ليس بسبب زيادة نسخه. ما التعديل ما بعد الترجمة (PTM) المحتمل والمسار الجزيئي المرتبط به؟</li>'+
 '</ul>'+
 
-'<div class="acad-refs">'+
+'<div class="acad-refs"><h3>المراجع العلمية</h3>'+
 '<div class="acad-ref"><span class="acad-ref-n">1</span>Alberts, B. et al. (2022). <em>Molecular Biology of the Cell</em>, 7th ed. Chapters 7 &amp; 8: Control of Gene Expression. W.W. Norton.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">2</span>Lodish, H. et al. (2021). <em>Molecular Cell Biology</em>, 9th ed. Chapter 9: Transcriptional Control of Gene Expression. Macmillan.</div>'+
 '<div class="acad-ref"><span class="acad-ref-n">3</span>Jacob, F. &amp; Monod, J. (1961). Genetic regulatory mechanisms in the synthesis of proteins. <em>J Mol Biol</em>, 3(3), 318-356. [نوبل الطب 1965]</div>'+
