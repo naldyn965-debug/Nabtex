@@ -7871,6 +7871,7 @@ body.modal-open { overflow: hidden; }
 
 .acad-card{background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--s3)}
 .acad-card-top{height:180px;background:#0c3a23 url('https://images.unsplash.com/photo-1711900177627-1182b446bc8f?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat;position:relative;overflow:hidden}
+.acad-card-top.mb{background:#0a1c33 url('https://images.unsplash.com/photo-1681911046064-e663d5192921?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-share-btn{position:absolute;top:14px;left:14px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(10,30,20,.4);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,transform .15s;padding:0;appearance:none;-webkit-appearance:none;font:inherit;outline:none}
 .acad-share-btn:hover{background:rgba(10,30,20,.6);transform:translateY(-1px)}
 .acad-share-btn:active{transform:scale(.94)}
@@ -8970,7 +8971,7 @@ return '<div class="acad-hero"><div class="acad-hero-inner">'+
 '</div></div></div>'+
 '<div class="acad-course-section"><div class="acad-wrap">'+
 '<div class="acad-card">'+
-'<div class="acad-card-top"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
+'<div class="acad-card-top'+(AC_CID==='mol-bio'?' mb':'')+'"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
 '<div class="acad-card-body">'+
 '<div class="acad-card-kicker">'+AC_COURSE.kicker+'</div>'+
 '<div class="acad-card-title">'+AC_COURSE.title+'</div>'+
