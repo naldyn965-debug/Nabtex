@@ -11627,7 +11627,7 @@ window.NAcademy={
 render:acR,
 goHome:function(){acGo('home',null)},
 goCatalog:function(){acGo('catalog',null)},
-openCourse:function(id){if(id==='pest'||id==='mol-bio'){acSwitchCourse(id);acGo('home',null);}},
+openCourse:function(id){if(id==='pest'){acSwitchCourse(id);acGo('home',null);}else if(id==='mol-bio'){NAcademy.comingSoon();}},
 comingSoon:function(){if(typeof showToast==='function')showToast('🔜 هذه الدورة قيد الإعداد — تابعونا قريبًا','inf')},
 openFirst:function(){
 var firstReady=null;
