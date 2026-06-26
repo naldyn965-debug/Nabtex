@@ -220,8 +220,6 @@
         }
       ]
     },
-    // ── SOCIAL INDEXES ────────────────────────────────────────
-
     {
       "collectionGroup": "social_posts",
       "queryScope": "COLLECTION",
@@ -236,8 +234,6 @@
         }
       ]
     },
-    // ── SOCIAL INDEXES ────────────────────────────────────────
-
     {
       "collectionGroup": "social_posts",
       "queryScope": "COLLECTION",
