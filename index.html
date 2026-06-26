@@ -7866,6 +7866,47 @@ body.modal-open { overflow: hidden; }
 .acad-cat-card.premium:hover .acad-cat-card-cta{gap:10px}
 .acad-cat-card.premium:hover .acad-cat-card-cta svg{transform:translateX(-3px)}
 @media(pointer:fine){.acad-cat-card.premium{overflow:hidden}.acad-cat-card.premium::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.05) 50%,transparent 60%);transform:translateX(-120%);transition:transform .7s ease;z-index:2;pointer-events:none}.acad-cat-card.premium:hover::after{transform:translateX(120%)}}
+/* ── Vodafone Cash Payment Modal ─────────────────────────────────────── */
+.vcash-overlay{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,12,8,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.vcash-overlay.on{display:flex;animation:bgIn .28s ease forwards}
+.vcash-box{position:relative;background:var(--bg);width:100%;max-width:480px;max-height:90vh;border-radius:28px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.32);display:flex;flex-direction:column;animation:mboxUp .4s var(--ease-spring)}
+.vcash-head{padding:28px 28px 20px;background:linear-gradient(160deg,#0a1c33,#1a3a6e);text-align:center;position:relative}
+.vcash-head-logo{font-size:40px;margin-bottom:12px}
+.vcash-head-title{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:6px}
+.vcash-head-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
+.vcash-body{padding:24px 28px;overflow-y:auto;flex:1;direction:rtl}
+.vcash-close-btn{position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s}
+.vcash-close-btn:hover{background:rgba(255,255,255,.28)}
+.vcash-steps{display:none}
+.vcash-steps.on{display:block}
+.vcash-info-card{background:linear-gradient(135deg,#e53030,#c9251f);border-radius:18px;padding:20px 22px;margin-bottom:20px;color:#fff}
+.vcash-info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.vcash-info-lbl{font-size:12px;opacity:.8}
+.vcash-info-val{font-size:20px;font-weight:800;letter-spacing:.05em;direction:ltr}
+.vcash-info-divider{height:1px;background:rgba(255,255,255,.2);margin:12px 0}
+.vcash-num-wrap{text-align:center;padding:4px 0}
+.vcash-num-lbl{font-size:11px;opacity:.75;margin-bottom:4px}
+.vcash-num{font-size:22px;font-weight:900;letter-spacing:.08em;direction:ltr}
+.vcash-copy-btn{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:30px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s}
+.vcash-copy-btn:hover{background:rgba(255,255,255,.32)}
+.vcash-steps-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.vcash-step-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--card);border-radius:14px;border:1px solid var(--line)}
+.vcash-step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#e53030,#c9251f);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.vcash-step-txt{font-size:13px;color:var(--ink);line-height:1.55}
+.vcash-step-txt strong{display:block;font-weight:800;margin-bottom:2px}
+.vcash-field-lbl{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:7px}
+.vcash-field{width:100%;padding:12px 16px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font-size:14px;font-family:inherit;direction:rtl;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:16px}
+.vcash-field:focus{border-color:var(--brand)}
+.vcash-btn-primary{width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,#1B6B3A,#2eaa5c);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .2s;font-family:inherit}
+.vcash-btn-primary:hover{opacity:.88}
+.vcash-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.vcash-note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6}
+.vcash-pending-state{text-align:center;padding:20px 0}
+.vcash-pending-ico{font-size:56px;margin-bottom:16px}
+.vcash-pending-title{font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:10px}
+.vcash-pending-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px}
+.vcash-pending-ref{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--muted);margin-bottom:16px;direction:ltr;text-align:center;word-break:break-all}
+.vcash-card-pending{display:flex;align-items:center;gap:8px;margin-top:16px;padding:10px 14px;background:rgba(217,119,6,.1);border-radius:12px;border:1px solid rgba(217,119,6,.25);font-size:12.5px;color:#92400e;font-weight:700}
 
 /* ── Course Card ── */
 .acad-course-section{padding:52px 0 72px}
@@ -8865,7 +8906,7 @@ var BARS_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 var STAR_ICO='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2H22l-6.1 4.4 2.3 7.2-6.2-4.5-6.2 4.5 2.3-7.2L2 9.2h7.6z"/></svg>';
 var ARROW_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
 var pestPct=_acPctFor('pest',PEST_COURSE);var pestDone=_acDoneFor('pest');
-var molPct=_acPctFor('mol-bio',MB_COURSE);var molDone=_acDoneFor('mol-bio');
+var molPct=_acPctFor('mol-bio',MB_COURSE);var molDone=_acDoneFor('mol-bio');var mbStatus=acMbStatus();
 var liveCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'pest\')" role="button">'+
 '<div class="acad-cat-card-top"><span class="acad-pop-badge">'+STAR_ICO+'Free</span></div>'+
 '<div class="acad-cat-card-body">'+
@@ -8880,8 +8921,10 @@ var liveCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'
 (pestDone>0?'<div class="acad-progress-wrap" style="margin-top:16px"><div class="acad-prog-label"><span>التقدم في الدورة</span><span>'+pestPct+'%</span></div><div class="acad-prog-track"><div class="acad-prog-fill" style="width:'+pestPct+'%"></div></div></div>':
 '<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>')+
 '</div></div>';
+var mbBadge=mbStatus==='paid'?'<span class="acad-pop-badge" style="background:linear-gradient(135deg,#16a34a,#2eaa5c)">✅ مُفعَّل</span>':mbStatus==='pending'?'<span class="acad-pop-badge" style="background:linear-gradient(135deg,#d97706,#f59e0b)">⏳ قيد المراجعة</span>':'<span class="acad-pop-badge" style="background:linear-gradient(135deg,#dc2626,#f97316)">🔥 خصم 90%</span>';
+var mbBottom=mbStatus==='paid'?(molDone>0?'<div class="acad-progress-wrap" style="margin-top:16px"><div class="acad-prog-label"><span>التقدم في الدورة</span><span>'+molPct+'%</span></div><div class="acad-prog-track"><div class="acad-prog-fill" style="width:'+molPct+'%"></div></div></div>':'<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>'):mbStatus==='pending'?'<div class="vcash-card-pending"><span>⏳</span> جارٍ مراجعة طلب الدفع — يُفعَّل خلال 24 ساعة</div>':'<div class="acad-price-row"><span class="acad-price-old">250 جنيه</span><span class="acad-price-new">25 جنيه</span><span class="acad-price-tag">⏳ لفترة محدودة</span></div><div class="acad-cat-card-cta">اشترك الآن '+ARROW_ICO+'</div>';
 var molBioCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'mol-bio\')" role="button" style="border-color:rgba(59,130,246,.25)">'+
-'<div class="acad-cat-card-top" style="background:#0a1c33 url(\'https://images.unsplash.com/photo-1681911046064-e663d5192921?auto=format&fit=crop&w=900&q=70\') center/cover no-repeat"><span class="acad-pop-badge" style="background:linear-gradient(135deg,#dc2626,#f97316)">🔥 خصم 90%</span></div>'+
+'<div class="acad-cat-card-top" style="background:#0a1c33 url(\'https://images.unsplash.com/photo-1681911046064-e663d5192921?auto=format&fit=crop&w=900&q=70\') center/cover no-repeat">'+mbBadge+'</div>'+
 '<div class="acad-cat-card-body">'+
 '<div class="acad-cat-card-kicker" style="color:#2563eb">'+MB_COURSE.kicker+'</div>'+
 '<div class="acad-cat-card-title">'+MB_COURSE.title+'</div>'+
@@ -8891,9 +8934,7 @@ var molBioCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(
 '<span class="acad-chip-pro">'+BARS_ICO+MB_COURSE.level+'</span>'+
 '<span class="acad-chip-pro gold">'+CERT_ICO+'شهادة إتمام</span>'+
 '</div>'+
-'<div class="acad-price-row"><span class="acad-price-old">250 جنيه</span><span class="acad-price-new">25 جنيه</span><span class="acad-price-tag">⏳ لفترة محدودة</span></div>'+
-(molDone>0?'<div class="acad-progress-wrap" style="margin-top:16px"><div class="acad-prog-label"><span>التقدم في الدورة</span><span>'+molPct+'%</span></div><div class="acad-prog-track"><div class="acad-prog-fill" style="width:'+molPct+'%"></div></div></div>':
-'<div class="acad-cat-card-cta">ابدأ الدورة '+ARROW_ICO+'</div>')+
+mbBottom+
 '</div></div>';
 return '<div class="acad-hero"><div class="acad-hero-inner">'+
 '<div class="acad-hero-back" role="button" onclick="showPage(\'home\')">‹ الرئيسية</div>'+
@@ -9465,6 +9506,140 @@ var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUs
 var pf='nb-'+cid+'-p';var key=u?(pf+'__'+u):(pf+'__guest');
 return((JSON.parse(localStorage.getItem(key)||'{}').d)||[]).length;
 }catch(e){return 0}}
+
+/* ── Vodafone Cash Payment — Mol-Bio Course ─────────────────────
+   رقم فودافون كاش: غيّر القيمة أدناه برقمك الفعلي                */
+
+var _MB_VCASH_NUM='01XXXXXXXXXX'; /* ← غيّر هنا برقم فودافون كاش */
+var _MB_COURSE_PRICE=25;          /* ← السعر بالجنيه              */
+
+/* Returns locally-cached status: 'paid' | 'pending' | 'none' */
+function acMbStatus(){
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
+if(!u)return 'none';
+try{
+if(localStorage.getItem('nb-mol-bio-access__'+u)==='paid')return 'paid';
+if(localStorage.getItem('nb-mol-bio-pending__'+u)==='true')return 'pending';
+}catch(e){}
+return 'none';
+}
+
+/* Async check against Firestore, updates local cache */
+function acCheckMbAccess(cb){
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
+if(!u){cb('none');return;}
+var cacheKey='nb-mol-bio-access__'+u;
+try{if(localStorage.getItem(cacheKey)==='paid'){cb('paid');return;}}catch(e){}
+/* Check users/{uid}.paidCourses first */
+db.collection('users').doc(u).get().then(function(snap){
+var data=snap.exists?snap.data():{};
+if(data.paidCourses&&data.paidCourses.indexOf('mol-bio')>-1){
+try{localStorage.setItem(cacheKey,'paid');}catch(e){}
+cb('paid');return;
+}
+/* Check course_payments for pending/approved */
+db.collection('course_payments').where('uid','==',u).get().then(function(qs){
+if(qs.empty){cb('none');return;}
+var docs=qs.docs.filter(function(d){return d.data().courseId==='mol-bio';});
+if(!docs.length){cb('none');return;}
+var st=docs[0].data().status;
+if(st==='approved'){
+try{localStorage.setItem(cacheKey,'paid');}catch(e){}
+cb('paid');
+}else{
+try{localStorage.setItem('nb-mol-bio-pending__'+u,'true');}catch(e){}
+cb('pending');
+}
+}).catch(function(){cb('none');});
+}).catch(function(){cb('none');});
+}
+
+function acShowMbPayModal(mode){
+var el=document.getElementById('vcash-overlay');if(!el)return;
+var stepPay=document.getElementById('vcash-step-pay');
+var stepPend=document.getElementById('vcash-step-pending');
+document.getElementById('vcash-number').textContent=_MB_VCASH_NUM;
+document.getElementById('vcash-price-display').textContent=_MB_COURSE_PRICE+' جنيه';
+if(mode==='pending'){
+stepPay.classList.remove('on');stepPend.classList.add('on');
+}else{
+stepPay.classList.add('on');stepPend.classList.remove('on');
+var ph=document.getElementById('vcash-phone');var rf=document.getElementById('vcash-ref');
+if(ph)ph.value='';if(rf)rf.value='';
+var btn=document.getElementById('vcash-submit-btn');
+if(btn){btn.disabled=false;btn.textContent='أرسل طلب التفعيل';}
+}
+el.classList.add('on');
+document.body.classList.add('modal-open');
+}
+
+function acCloseMbPayModal(){
+var el=document.getElementById('vcash-overlay');
+if(el)el.classList.remove('on');
+document.body.classList.remove('modal-open');
+}
+
+function acCopyVcashNum(){
+var num=document.getElementById('vcash-number');if(!num)return;
+var val=num.textContent;
+if(navigator.clipboard){
+navigator.clipboard.writeText(val).then(function(){
+if(typeof showToast==='function')showToast('تم نسخ رقم فودافون كاش','ok');
+}).catch(function(){});
+}else{
+try{
+var ta=document.createElement('textarea');ta.value=val;
+document.body.appendChild(ta);ta.select();
+document.execCommand('copy');document.body.removeChild(ta);
+if(typeof showToast==='function')showToast('تم نسخ الرقم','ok');
+}catch(e){}
+}
+}
+
+function acSubmitMbPayment(){
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
+if(!u){if(typeof showToast==='function')showToast('سجّل الدخول أولاً','err');return;}
+var phone=(document.getElementById('vcash-phone').value||'').trim();
+var ref=(document.getElementById('vcash-ref').value||'').trim();
+if(!phone||phone.length<10){
+if(typeof showToast==='function')showToast('برجاء إدخال رقم الهاتف المُرسِل','err');return;
+}
+if(!ref||ref.length<3){
+if(typeof showToast==='function')showToast('برجاء إدخال الرقم المرجعي للمعاملة','err');return;
+}
+var btn=document.getElementById('vcash-submit-btn');
+if(btn){btn.disabled=true;btn.textContent='جاري الإرسال...';}
+db.collection('course_payments').add({
+uid:u,
+email:(currentUser&&currentUser.email)||'',
+phone:phone,
+transactionRef:ref,
+courseId:'mol-bio',
+amount:_MB_COURSE_PRICE,
+currency:'EGP',
+status:'pending',
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+}).then(function(docRef){
+try{localStorage.setItem('nb-mol-bio-pending__'+u,'true');}catch(e){}
+var stepPay=document.getElementById('vcash-step-pay');
+var stepPend=document.getElementById('vcash-step-pending');
+var refDisp=document.getElementById('vcash-pending-ref-display');
+if(refDisp)refDisp.textContent='رقم الطلب: '+docRef.id.substring(0,14)+'…  |  مرجع التحويل: '+ref;
+if(stepPay)stepPay.classList.remove('on');
+if(stepPend)stepPend.classList.add('on');
+if(typeof showToast==='function')showToast('تم إرسال طلبك — سيُفعَّل الكورس خلال 24 ساعة','ok');
+/* Re-render catalog card if visible */
+if(typeof acR==='function'&&typeof AC!=='undefined'&&AC.view==='catalog')acR();
+}).catch(function(e){
+console.error('[VCash]',e);
+if(btn){btn.disabled=false;btn.textContent='أرسل طلب التفعيل';}
+if(typeof showToast==='function')showToast('خطأ في الاتصال — تحقق وأعد المحاولة','err');
+});
+}
+
+window.acCloseMbPayModal=acCloseMbPayModal;
+window.acCopyVcashNum=acCopyVcashNum;
+window.acSubmitMbPayment=acSubmitMbPayment;
 
 /* ── Molecular Biology Lesson Content ─────────────────────────── */
 function mbGetContent(id){
@@ -11633,7 +11808,19 @@ window.NAcademy={
 render:acR,
 goHome:function(){acGo('home',null)},
 goCatalog:function(){acGo('catalog',null)},
-openCourse:function(id){if(id==='pest'){acSwitchCourse(id);acGo('home',null);}else if(id==='mol-bio'){NAcademy.comingSoon();}},
+openCourse:function(id){
+if(id==='pest'){acSwitchCourse(id);acGo('home',null);}
+else if(id==='mol-bio'){
+if(!(typeof currentUser!=='undefined'&&currentUser)){
+if(typeof showToast==='function')showToast('سجّل الدخول أولاً للاشتراك في الدورة','inf');
+if(typeof openAuth==='function')openAuth('login');
+return;
+}
+acCheckMbAccess(function(st){
+if(st==='paid'){acSwitchCourse('mol-bio');acGo('home',null);}
+else{acShowMbPayModal(st);}
+});
+}},
 comingSoon:function(){if(typeof showToast==='function')showToast('🔜 هذه الدورة قيد الإعداد — تابعونا قريبًا','inf')},
 openFirst:function(){
 var firstReady=null;
@@ -31328,6 +31515,65 @@ document.addEventListener('DOMContentLoaded',function(){
 })();
 </script>
 
+
+<!-- ── Vodafone Cash Payment Modal ─────────────────────────────────── -->
+<div class="vcash-overlay" id="vcash-overlay" onclick="if(event.target===this)acCloseMbPayModal()">
+  <div class="vcash-box">
+    <div class="vcash-head">
+      <button class="vcash-close-btn" onclick="acCloseMbPayModal()" aria-label="إغلاق">✕</button>
+      <div class="vcash-head-logo">🧬</div>
+      <div class="vcash-head-title">تقنيات البيولوجيا الجزيئية</div>
+      <div class="vcash-head-sub">الدورة الأشمل عربياً — اشترك الآن وابدأ التعلم فوراً</div>
+    </div>
+    <div class="vcash-body">
+      <!-- ── خطوة الدفع ── -->
+      <div class="vcash-steps on" id="vcash-step-pay">
+        <div class="vcash-info-card">
+          <div class="vcash-info-row">
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash-price-display">25 جنيه</span></div>
+          </div>
+          <div class="vcash-info-divider"></div>
+          <div class="vcash-num-wrap">
+            <div class="vcash-num-lbl">أرسل على محفظة فودافون كاش</div>
+            <div class="vcash-num" id="vcash-number">01XXXXXXXXXX</div>
+            <button class="vcash-copy-btn" onclick="acCopyVcashNum()">📋 نسخ الرقم</button>
+          </div>
+        </div>
+        <div class="vcash-steps-list">
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">1</div>
+            <div class="vcash-step-txt"><strong>افتح تطبيق فودافون كاش</strong>اختار «تحويل لمحفظة» وأدخل الرقم أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">2</div>
+            <div class="vcash-step-txt"><strong>أرسل المبلغ واحتفظ بالرقم المرجعي</strong>رسالة SMS التأكيد تحتوي على رقم المعاملة</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">3</div>
+            <div class="vcash-step-txt"><strong>أدخل التفاصيل هنا</strong>وسيُفعَّل الكورس خلال 24 ساعة بعد التحقق</div>
+          </div>
+        </div>
+        <div class="vcash-field-lbl">رقم هاتفك المُرسِل (فودافون كاش)</div>
+        <input class="vcash-field" id="vcash-phone" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <div class="vcash-field-lbl">الرقم المرجعي للمعاملة</div>
+        <input class="vcash-field" id="vcash-ref" type="text" placeholder="الرقم الذي وصلك في رسالة التأكيد">
+        <button class="vcash-btn-primary" id="vcash-submit-btn" onclick="acSubmitMbPayment()">أرسل طلب التفعيل</button>
+        <div class="vcash-note">سيتم مراجعة طلبك خلال 24 ساعة وتفعيل الكورس تلقائياً</div>
+      </div>
+      <!-- ── خطوة الانتظار ── -->
+      <div class="vcash-steps" id="vcash-step-pending">
+        <div class="vcash-pending-state">
+          <div class="vcash-pending-ico">⏳</div>
+          <div class="vcash-pending-title">طلبك قيد المراجعة</div>
+          <div class="vcash-pending-desc">تلقينا طلبك بنجاح وسيتم مراجعة التحويل وتفعيل الكورس خلال 24 ساعة. ستُفتح الدورة تلقائياً بعد التفعيل.</div>
+          <div class="vcash-pending-ref" id="vcash-pending-ref-display"></div>
+          <div class="vcash-note">إذا مرّت 24 ساعة ولم يتم التفعيل، تواصل معنا عبر واتساب.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- SOCIAL MODULE -->
 <script defer src="social.js"></script>
 </body>

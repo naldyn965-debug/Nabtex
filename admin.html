@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم نبتيكس أكاديمي</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#1B6B3A;--brand-light:#2eaa5c;--brand-dark:#0d4a28;
+  --bg:#f0f4f0;--card:#fff;--border:#e2e8e4;
+  --ink:#0f1f14;--muted:#5a7566;--subtle:#8fa898;
+  --pending:#d97706;--pending-bg:rgba(217,119,6,.08);--pending-border:rgba(217,119,6,.2);
+  --approved:#16a34a;--approved-bg:rgba(22,163,74,.08);--approved-border:rgba(22,163,74,.2);
+  --rejected:#dc2626;--rejected-bg:rgba(220,38,38,.08);--rejected-border:rgba(220,38,38,.2);
+  --red:#e53030;
+  --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.08);
+}
+html,body{height:100%;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+
+/* ── Auth Screen ── */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.auth-card{background:var(--card);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo-ico{font-size:48px;display:block;margin-bottom:10px}
+.auth-logo-title{font-size:1.4rem;font-weight:900;color:var(--brand)}
+.auth-logo-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.auth-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
+.auth-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;direction:rtl;outline:none;transition:border-color .2s;background:var(--bg);margin-bottom:14px}
+.auth-input:focus{border-color:var(--brand)}
+.auth-btn{width:100%;padding:13px;border-radius:12px;background:var(--brand);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:opacity .2s;margin-top:4px}
+.auth-btn:hover{opacity:.88}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-err{font-size:12.5px;color:var(--rejected);text-align:center;margin-top:12px;min-height:18px}
+
+/* ── App Layout ── */
+#app-screen{display:none;min-height:100vh}
+.app-layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--brand-dark);color:#fff;display:flex;flex-direction:column;padding:0}
+.sidebar-head{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo-ico{font-size:32px;margin-bottom:8px}
+.sidebar-logo-name{font-size:1rem;font-weight:900;line-height:1.2}
+.sidebar-logo-sub{font-size:11px;opacity:.6;margin-top:2px}
+.sidebar-stats{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+.stat-card{background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px}
+.stat-val{font-size:1.8rem;font-weight:900;line-height:1}
+.stat-lbl{font-size:11px;opacity:.65;margin-top:4px}
+.stat-card.pending .stat-val{color:#fbbf24}
+.stat-card.approved .stat-val{color:#4ade80}
+.stat-card.rejected .stat-val{color:#f87171}
+.sidebar-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-user{font-size:12px;opacity:.65;margin-bottom:10px;word-break:break-all}
+.logout-btn{width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.logout-btn:hover{background:rgba(255,255,255,.2)}
+
+/* ── Main Content ── */
+.main-content{padding:28px 32px;overflow-y:auto}
+.main-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.main-title{font-size:1.3rem;font-weight:900;color:var(--ink)}
+.main-subtitle{font-size:12.5px;color:var(--muted);margin-top:3px}
+.refresh-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;box-shadow:var(--shadow)}
+.refresh-btn:hover{background:var(--bg)}
+
+/* ── Filter Tabs + Search ── */
+.controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:5px;box-shadow:var(--shadow)}
+.tab-btn{padding:7px 16px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.tab-btn.active{background:var(--brand);color:#fff}
+.search-wrap{flex:1;min-width:200px}
+.search-input{width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;direction:rtl;outline:none;transition:border-color .2s;background:var(--card)}
+.search-input:focus{border-color:var(--brand)}
+
+/* ── Payment Cards ── */
+.payments-list{display:flex;flex-direction:column;gap:12px}
+.pay-card{background:var(--card);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border-right:4px solid transparent;transition:box-shadow .2s}
+.pay-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.12)}
+.pay-card.pending{border-right-color:var(--pending)}
+.pay-card.approved{border-right-color:var(--approved)}
+.pay-card.rejected{border-right-color:var(--rejected)}
+.pay-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pay-card-info{}
+.pay-email{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.pay-date{font-size:11.5px;color:var(--subtle)}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:30px;font-size:12px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.status-badge.pending{background:var(--pending-bg);color:var(--pending);border:1px solid var(--pending-border)}
+.status-badge.approved{background:var(--approved-bg);color:var(--approved);border:1px solid var(--approved-border)}
+.status-badge.rejected{background:var(--rejected-bg);color:var(--rejected);border:1px solid var(--rejected-border)}
+.pay-card-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.detail-item{background:var(--bg);border-radius:10px;padding:10px 12px}
+.detail-lbl{font-size:10.5px;color:var(--subtle);font-weight:700;margin-bottom:3px}
+.detail-val{font-size:13px;font-weight:800;color:var(--ink);word-break:break-all}
+.detail-val.phone-val{direction:ltr;text-align:right}
+.pay-card-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.action-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+.action-btn.approve{background:var(--approved);color:#fff}
+.action-btn.approve:hover{background:#15803d}
+.action-btn.reject{background:var(--rejected-bg);color:var(--rejected);border:1px solid var(--rejected-border)}
+.action-btn.reject:hover{background:var(--rejected);color:#fff}
+.action-btn.wa{background:#25d366;color:#fff}
+.action-btn.wa:hover{opacity:.88}
+.action-btn:disabled{opacity:.45;cursor:not-allowed}
+.action-done{font-size:12.5px;color:var(--muted);padding:9px 0}
+
+/* ── Empty State ── */
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-ico{font-size:48px;margin-bottom:16px}
+.empty-title{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:8px}
+.empty-desc{font-size:13px;line-height:1.6}
+
+/* ── Loading ── */
+.loading-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Toast ── */
+.toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#1a1a1a;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;white-space:nowrap;animation:toastIn .3s ease;pointer-events:auto}
+.toast.ok{background:var(--brand)}
+.toast.err{background:var(--rejected)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Confirm Dialog ── */
+.confirm-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.on{display:flex}
+.confirm-box{background:var(--card);border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center}
+.confirm-ico{font-size:40px;margin-bottom:14px}
+.confirm-title{font-size:1rem;font-weight:900;margin-bottom:8px}
+.confirm-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.confirm-actions{display:flex;gap:8px;justify-content:center}
+.confirm-btn{padding:10px 24px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.confirm-btn.ok{background:var(--rejected);color:#fff}
+.confirm-btn.cancel{background:var(--bg);color:var(--ink);border:1px solid var(--border)}
+.confirm-note{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;direction:rtl;outline:none;resize:none;margin-bottom:12px;background:var(--bg)}
+.confirm-note:focus{border-color:var(--rejected)}
+
+@media(max-width:768px){
+  .app-layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main-content{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Auth Screen ───────────────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="auth-logo-ico">🌿</span>
+      <div class="auth-logo-title">نبتيكس أكاديمي</div>
+      <div class="auth-logo-sub">لوحة تحكم المدفوعات</div>
+    </div>
+    <label class="auth-label">البريد الإلكتروني</label>
+    <input class="auth-input" id="login-email" type="email" placeholder="admin@nabtex.com" dir="ltr">
+    <label class="auth-label">كلمة المرور</label>
+    <input class="auth-input" id="login-pass" type="password" placeholder="••••••••" dir="ltr">
+    <button class="auth-btn" id="login-btn" onclick="doLogin()">دخول</button>
+    <div class="auth-err" id="auth-err"></div>
+  </div>
+</div>
+
+<!-- ── App Screen ────────────────────────────────────────── -->
+<div id="app-screen">
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-logo-ico">🌿</div>
+        <div class="sidebar-logo-name">نبتيكس أكاديمي</div>
+        <div class="sidebar-logo-sub">لوحة تحكم المدفوعات</div>
+      </div>
+      <div class="sidebar-stats">
+        <div class="stat-card pending">
+          <div class="stat-val" id="stat-pending">—</div>
+          <div class="stat-lbl">⏳ قيد المراجعة</div>
+        </div>
+        <div class="stat-card approved">
+          <div class="stat-val" id="stat-approved">—</div>
+          <div class="stat-lbl">✅ مقبول</div>
+        </div>
+        <div class="stat-card rejected">
+          <div class="stat-val" id="stat-rejected">—</div>
+          <div class="stat-lbl">❌ مرفوض</div>
+        </div>
+        <div class="stat-card" style="background:rgba(255,255,255,.06)">
+          <div class="stat-val" id="stat-revenue" style="color:#86efac">—</div>
+          <div class="stat-lbl">💰 إجمالي الإيرادات (جنيه)</div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user-email"></div>
+        <button class="logout-btn" onclick="doLogout()">🚪 تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="main-header">
+        <div>
+          <div class="main-title">طلبات الدفع</div>
+          <div class="main-subtitle" id="last-refresh">—</div>
+        </div>
+        <button class="refresh-btn" onclick="loadPayments()">🔄 تحديث</button>
+      </div>
+
+      <div class="controls-row">
+        <div class="tabs">
+          <button class="tab-btn active" data-filter="pending"  onclick="setFilter('pending')">⏳ قيد المراجعة</button>
+          <button class="tab-btn"        data-filter="all"      onclick="setFilter('all')">📋 الكل</button>
+          <button class="tab-btn"        data-filter="approved" onclick="setFilter('approved')">✅ مقبول</button>
+          <button class="tab-btn"        data-filter="rejected" onclick="setFilter('rejected')">❌ مرفوض</button>
+        </div>
+        <div class="search-wrap">
+          <input class="search-input" id="search-input" type="text" placeholder="🔍 ابحث بالإيميل أو الهاتف أو المرجع..." oninput="renderList()">
+        </div>
+      </div>
+
+      <div id="payments-container">
+        <div class="loading-state"><div class="spinner"></div><div>جاري التحميل...</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ── Confirm Dialog ── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-ico" id="confirm-ico">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <textarea class="confirm-note" id="confirm-note" rows="2" placeholder="سبب الرفض (اختياري)..." style="display:none"></textarea>
+    <div class="confirm-actions">
+      <button class="confirm-btn cancel" onclick="closeConfirm()">إلغاء</button>
+      <button class="confirm-btn ok" id="confirm-ok-btn" onclick="confirmAction()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+'use strict';
+
+/* ── Firebase Init ─────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM",
+  authDomain:        "nabtex-b8475.firebaseapp.com",
+  projectId:         "nabtex-b8475",
+  storageBucket:     "nabtex-b8475.firebasestorage.app",
+  messagingSenderId: "568685866343",
+  appId:             "1:568685866343:web:7f938e92b562a6c862d3c2"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* ── State ──────────────────────────────────────── */
+let allPayments = [];
+let currentFilter = 'pending';
+let pendingAction = null; // {type:'approve'|'reject', docId, uid, courseId}
+
+/* ── Auth ───────────────────────────────────────── */
+auth.onAuthStateChanged(async function(user) {
+  if (!user) { showAuth(); return; }
+  // Verify admin
+  try {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    if (!adminDoc.exists) {
+      showToast('ليس لديك صلاحية الوصول لهذه الصفحة', 'err');
+      await auth.signOut();
+      showAuth();
+      return;
+    }
+    document.getElementById('sidebar-user-email').textContent = user.email;
+    showApp();
+    loadPayments();
+  } catch(e) {
+    showToast('خطأ في التحقق من الصلاحية: ' + e.message, 'err');
+    await auth.signOut();
+    showAuth();
+  }
+});
+
+function showAuth() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('auth-err');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'أدخل الإيميل وكلمة المرور'; return; }
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found': 'لا يوجد حساب بهذا الإيميل',
+      'auth/wrong-password': 'كلمة المرور غلط',
+      'auth/invalid-credential': 'بيانات الدخول غير صحيحة',
+      'auth/too-many-requests': 'محاولات كثيرة — انتظر قليلاً'
+    };
+    err.textContent = msgs[e.code] || e.message;
+    btn.disabled = false; btn.textContent = 'دخول';
+  }
+}
+
+async function doLogout() {
+  await auth.signOut();
+  allPayments = [];
+  showAuth();
+}
+
+/* ── Load Payments ──────────────────────────────── */
+async function loadPayments() {
+  document.getElementById('payments-container').innerHTML =
+    '<div class="loading-state"><div class="spinner"></div><div>جاري التحميل...</div></div>';
+  try {
+    const snap = await db.collection('course_payments')
+      .orderBy('createdAt', 'desc')
+      .get();
+    allPayments = snap.docs.map(function(d) {
+      return Object.assign({ _id: d.id }, d.data());
+    });
+    updateStats();
+    renderList();
+    const now = new Date();
+    document.getElementById('last-refresh').textContent =
+      'آخر تحديث: ' + now.toLocaleTimeString('ar-EG');
+  } catch(e) {
+    document.getElementById('payments-container').innerHTML =
+      '<div class="empty-state"><div class="empty-ico">⚠️</div>' +
+      '<div class="empty-title">خطأ في التحميل</div>' +
+      '<div class="empty-desc">' + e.message + '</div></div>';
+  }
+}
+
+/* ── Stats ──────────────────────────────────────── */
+function updateStats() {
+  const pending  = allPayments.filter(function(p){ return p.status === 'pending'; }).length;
+  const approved = allPayments.filter(function(p){ return p.status === 'approved'; }).length;
+  const rejected = allPayments.filter(function(p){ return p.status === 'rejected'; }).length;
+  const revenue  = allPayments
+    .filter(function(p){ return p.status === 'approved'; })
+    .reduce(function(s, p){ return s + (p.amount || 0); }, 0);
+  document.getElementById('stat-pending').textContent  = pending;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-rejected').textContent = rejected;
+  document.getElementById('stat-revenue').textContent  = revenue + ' ج';
+}
+
+/* ── Filter & Render ────────────────────────────── */
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  renderList();
+}
+
+function renderList() {
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  let list = allPayments;
+
+  if (currentFilter !== 'all') {
+    list = list.filter(function(p){ return p.status === currentFilter; });
+  }
+  if (q) {
+    list = list.filter(function(p) {
+      return (p.email||'').toLowerCase().includes(q) ||
+             (p.phone||'').includes(q) ||
+             (p.transactionRef||'').toLowerCase().includes(q) ||
+             (p._id||'').toLowerCase().includes(q);
+    });
+  }
+
+  const container = document.getElementById('payments-container');
+  if (!list.length) {
+    container.innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-ico">' + (currentFilter==='pending'?'🎉':'📭') + '</div>' +
+      '<div class="empty-title">' + (currentFilter==='pending' ? 'لا يوجد طلبات معلّقة' : 'لا توجد نتائج') + '</div>' +
+      '<div class="empty-desc">' + (currentFilter==='pending' ? 'كل الطلبات تمت معالجتها!' : 'جرّب فلتر أو بحث مختلف') + '</div></div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="payments-list">' +
+    list.map(function(p){ return buildCard(p); }).join('') +
+  '</div>';
+}
+
+function buildCard(p) {
+  const date = p.createdAt ? new Date(p.createdAt.toDate ? p.createdAt.toDate() : p.createdAt).toLocaleString('ar-EG') : '—';
+  const courseLabel = {'mol-bio':'تقنيات البيولوجيا الجزيئية','pest':'إدارة الآفات الزراعية'}[p.courseId] || p.courseId || '—';
+  const statusLabel = {pending:'⏳ قيد المراجعة', approved:'✅ مقبول', rejected:'❌ مرفوض'}[p.status] || p.status;
+  const waLink = p.phone ? 'https://wa.me/2' + p.phone.replace(/^0/, '') : null;
+
+  const actions = p.status === 'pending' ?
+    '<button class="action-btn approve" onclick="askApprove(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">✅ قبول وتفعيل</button>' +
+    '<button class="action-btn reject"  onclick="askReject(\''  + p._id + '\',\'' + (p.uid||'') + '\')">❌ رفض</button>' +
+    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">💬 واتساب</a>' : '')
+    :
+    '<span class="action-done">' + statusLabel + (p.rejectionNote ? ' — ' + p.rejectionNote : '') + '</span>' +
+    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">💬 واتساب</a>' : '');
+
+  return '<div class="pay-card ' + (p.status||'') + '">' +
+    '<div class="pay-card-top">' +
+      '<div class="pay-card-info">' +
+        '<div class="pay-email">' + (p.email || 'لا يوجد إيميل') + '</div>' +
+        '<div class="pay-date">📅 ' + date + '</div>' +
+      '</div>' +
+      '<span class="status-badge ' + (p.status||'') + '">' + statusLabel + '</span>' +
+    '</div>' +
+    '<div class="pay-card-details">' +
+      '<div class="detail-item"><div class="detail-lbl">الهاتف</div><div class="detail-val phone-val">' + (p.phone||'—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-lbl">الرقم المرجعي</div><div class="detail-val">' + (p.transactionRef||'—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-lbl">الدورة</div><div class="detail-val">' + courseLabel + '</div></div>' +
+      '<div class="detail-item"><div class="detail-lbl">المبلغ</div><div class="detail-val">' + (p.amount||'—') + ' جنيه</div></div>' +
+      '<div class="detail-item" style="word-break:break-all"><div class="detail-lbl">رقم الطلب</div><div class="detail-val" style="font-size:11px">' + p._id + '</div></div>' +
+    '</div>' +
+    '<div class="pay-card-actions">' + actions + '</div>' +
+  '</div>';
+}
+
+/* ── Actions ────────────────────────────────────── */
+function askApprove(docId, uid, courseId) {
+  pendingAction = { type: 'approve', docId, uid, courseId };
+  document.getElementById('confirm-ico').textContent   = '✅';
+  document.getElementById('confirm-title').textContent = 'تأكيد القبول والتفعيل';
+  document.getElementById('confirm-msg').textContent   = 'سيتم تفعيل الدورة لهذا المستخدم فوراً. هل تأكدت من التحقق من التحويل في تطبيق فودافون كاش؟';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '✅ قبول وتفعيل';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--approved)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+function askReject(docId, uid) {
+  pendingAction = { type: 'reject', docId, uid };
+  document.getElementById('confirm-ico').textContent   = '❌';
+  document.getElementById('confirm-title').textContent = 'رفض الطلب';
+  document.getElementById('confirm-msg').textContent   = 'هل تريد رفض هذا الطلب؟ سيتم إشعار المستخدم بالرفض.';
+  document.getElementById('confirm-note').style.display = 'block';
+  document.getElementById('confirm-note').value = '';
+  document.getElementById('confirm-ok-btn').textContent = '❌ رفض الطلب';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('on');
+  pendingAction = null;
+}
+
+async function confirmAction() {
+  if (!pendingAction) return;
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.disabled = true; btn.textContent = 'جاري التنفيذ...';
+
+  try {
+    if (pendingAction.type === 'approve') {
+      await doApprove(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
+    } else {
+      const note = (document.getElementById('confirm-note').value || '').trim();
+      await doReject(pendingAction.docId, note);
+    }
+    closeConfirm();
+  } catch(e) {
+    showToast('خطأ: ' + e.message, 'err');
+    btn.disabled = false;
+    btn.textContent = pendingAction.type === 'approve' ? '✅ قبول وتفعيل' : '❌ رفض الطلب';
+  }
+}
+
+async function doApprove(docId, uid, courseId) {
+  const batch = db.batch();
+
+  // 1. Update payment doc status
+  batch.update(db.collection('course_payments').doc(docId), {
+    status:     'approved',
+    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    approvedBy: auth.currentUser ? auth.currentUser.uid : 'admin'
+  });
+
+  // 2. Add course to user's paidCourses
+  if (uid && courseId) {
+    batch.set(
+      db.collection('users').doc(uid),
+      { paidCourses: firebase.firestore.FieldValue.arrayUnion(courseId) },
+      { merge: true }
+    );
+  }
+
+  await batch.commit();
+
+  // Update local state
+  const idx = allPayments.findIndex(function(p){ return p._id === docId; });
+  if (idx > -1) { allPayments[idx].status = 'approved'; }
+  updateStats(); renderList();
+  showToast('✅ تم التفعيل بنجاح — الكورس أصبح متاحاً للمستخدم', 'ok');
+}
+
+async function doReject(docId, note) {
+  await db.collection('course_payments').doc(docId).update({
+    status:       'rejected',
+    rejectedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    rejectedBy:   auth.currentUser ? auth.currentUser.uid : 'admin',
+    rejectionNote: note || ''
+  });
+
+  const idx = allPayments.findIndex(function(p){ return p._id === docId; });
+  if (idx > -1) {
+    allPayments[idx].status = 'rejected';
+    allPayments[idx].rejectionNote = note || '';
+  }
+  updateStats(); renderList();
+  showToast('❌ تم رفض الطلب', 'ok');
+}
+
+/* ── Toast ──────────────────────────────────────── */
+function showToast(msg, type) {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || '');
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3500);
+}
+
+/* ── Enter Key on Login ─────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const authScreen = document.getElementById('auth-screen');
+    if (authScreen.style.display !== 'none') doLogin();
+  }
+});
+</script>
+</body>
+</html>

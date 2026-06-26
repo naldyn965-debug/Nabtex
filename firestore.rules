@@ -9,10 +9,19 @@ service cloud.firestore {
       return isAuth() && (request.auth.uid == res.data.buyerId ||
                           request.auth.uid == res.data.sellerId);
     }
+    // Admin: add admins/{uid} doc once via Firebase Console to grant access
+    function isAdmin() {
+      return isAuth() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
 
     match /users/{uid} {
       allow read:  if true;
-      allow write: if isSelf(uid);
+      allow write: if isSelf(uid) || isAdmin();
+    }
+
+    match /admins/{uid} {
+      allow read:  if isSelf(uid);
+      allow write: if false;
     }
 
     match /farms/{docId} {
@@ -42,6 +51,19 @@ service cloud.firestore {
     match /academy_progress/{docId} {
       allow read, write: if isAuth() && request.auth.uid == resource.data.uid;
       allow create: if isAuth() && request.auth.uid == request.resource.data.uid;
+    }
+
+    // ── COURSE PAYMENTS (Vodafone Cash payment requests) ──
+    // Users: create own + read own. Admin: read all + update status.
+    match /course_payments/{docId} {
+      allow read:   if (isAuth() && resource.data.uid == request.auth.uid) || isAdmin();
+      allow create: if isAuth()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.courseId is string
+                    && request.resource.data.phone is string
+                    && request.resource.data.transactionRef is string;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /marketplace_products/{productId} {
