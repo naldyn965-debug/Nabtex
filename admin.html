@@ -273,22 +273,17 @@ let pendingAction = null; // {type:'approve'|'reject', docId, uid, courseId}
 auth.onAuthStateChanged(async function(user) {
   if (!user) { showAuth(); return; }
   // Verify admin
-  try {
-    const adminDoc = await db.collection('admins').doc(user.uid).get();
-    if (!adminDoc.exists) {
-      showToast('ليس لديك صلاحية الوصول لهذه الصفحة', 'err');
-      await auth.signOut();
-      showAuth();
-      return;
-    }
-    document.getElementById('sidebar-user-email').textContent = user.email;
-    showApp();
-    loadPayments();
-  } catch(e) {
-    showToast('خطأ في التحقق من الصلاحية: ' + e.message, 'err');
+  // ─ Admin UIDs — أضف UID بتاعك هنا ─
+  const ADMIN_UIDS = ['A5nXSIE1tchI13KemZT6grAnxWN2'];
+  if (!ADMIN_UIDS.includes(user.uid)) {
+    showToast('ليس لديك صلاحية الوصول لهذه الصفحة', 'err');
     await auth.signOut();
     showAuth();
+    return;
   }
+  document.getElementById('sidebar-user-email').textContent = user.email;
+  showApp();
+  loadPayments();
 });
 
 function showAuth() {
