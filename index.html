@@ -35171,17 +35171,6 @@ document.addEventListener('click', e => {
           تثبيت التطبيق الآن
         </button>
       </div>
-      <!-- Android fallback instructions (shown when Chrome hasn't (re)fired the native install prompt) -->
-      <div id="pwa-android-fallback-section" style="display:none;">
-        <div style="background:rgba(27,107,58,.07);border:1px solid rgba(27,107,58,.15);border-radius:14px;padding:16px;">
-          <div style="font-size:13px;font-weight:800;color:var(--ink,#1e2a24);margin-bottom:12px;text-align:center;">تثبيت على Android</div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;align-items:center;gap:12px;"><div style="width:30px;height:30px;border-radius:50%;background:#1B6B3A;color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;">1</div><div style="font-size:13px;color:var(--ink,#1e2a24);">اضغط على <strong>⋮</strong> (قائمة المتصفح) أعلى الشاشة</div></div>
-            <div style="display:flex;align-items:center;gap:12px;"><div style="width:30px;height:30px;border-radius:50%;background:#1B6B3A;color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;">2</div><div style="font-size:13px;color:var(--ink,#1e2a24);">اختر <strong>«تثبيت التطبيق»</strong> أو <strong>«إضافة إلى الشاشة الرئيسية»</strong></div></div>
-            <div style="display:flex;align-items:center;gap:12px;"><div style="width:30px;height:30px;border-radius:50%;background:#1B6B3A;color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;">3</div><div style="font-size:13px;color:var(--ink,#1e2a24);">أكّد الإضافة 🎉</div></div>
-          </div>
-        </div>
-      </div>
       <!-- iOS instructions -->
       <div id="pwa-ios-section" style="display:none;">
         <div style="background:rgba(27,107,58,.07);border:1px solid rgba(27,107,58,.15);border-radius:14px;padding:16px;">
@@ -35226,7 +35215,6 @@ function openPwaModal(){
   var isInstalled=window.matchMedia('(display-mode:standalone)').matches||(navigator.standalone===true);
   if(isInstalled){closePwaModal();return;}
   document.getElementById('pwa-android-section').style.display=hasPrompt?'block':'none';
-  document.getElementById('pwa-android-fallback-section').style.display=(isAndroid&&!hasPrompt)?'block':'none';
   document.getElementById('pwa-ios-section').style.display=(isIos&&!hasPrompt)?'block':'none';
   document.getElementById('pwa-desktop-section').style.display=(!isIos&&!isAndroid&&!hasPrompt)?'block':'none';
 }
@@ -35466,16 +35454,10 @@ document.addEventListener('DOMContentLoaded',function(){
     const dismissBtn = document.getElementById('pwa-install-dismiss');
     const banner     = document.getElementById('pwa-install-banner');
 
-    /* Show install FAB by default for any non-installed visitor.
-       We don't rely solely on 'beforeinstallprompt' to reveal it, because
-       Chrome on Android does not guarantee firing that event on every
-       visit (e.g. after a previous dismissal) — if we only show the FAB
-       inside that event handler, the install icon can vanish entirely on
-       later visits with no way for the user to install the app again. */
+    /* Show nav button on iOS (no beforeinstallprompt on Safari) */
     var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
     var isStandalone = ('standalone' in navigator) && navigator.standalone;
-    var isStandaloneDisplay = window.matchMedia('(display-mode: standalone)').matches;
-    if (!isStandalone && !isStandaloneDisplay) {
+    if (isIos && !isStandalone) {
       var nb = document.getElementById('pwa-fab');
       if (nb) nb.style.display = 'flex';
     }
