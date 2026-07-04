@@ -459,6 +459,7 @@ function askReject(docId, uid) {
 function closeConfirm() {
   document.getElementById('confirm-overlay').classList.remove('on');
   pendingAction = null;
+  document.getElementById('confirm-ok-btn').disabled = false;
 }
 
 async function confirmAction() {
