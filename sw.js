@@ -7,7 +7,7 @@
  *  Firebase / Auth → Network Only  (NEVER cached)
  */
 
-const SW_VERSION   = 'nabtex-v2.3.0';
+const SW_VERSION   = 'nabtex-v2.4.0';
 const SHELL_CACHE  = SW_VERSION + '-shell';
 const STATIC_CACHE = SW_VERSION + '-static';
 const FONT_CACHE   = SW_VERSION + '-fonts';
@@ -57,6 +57,15 @@ function isStatic(url) {
   try {
     const p = new URL(url).pathname;
     return STATIC_EXTS.some(e => p.endsWith(e));
+  } catch (_) { return false; }
+}
+
+/* Same-origin app scripts (social.js, etc.) — must always try network first
+   so a deploy is visible on the very next load, not one load later */
+function isAppScript(url) {
+  try {
+    const u = new URL(url);
+    return u.origin === self.location.origin && u.pathname.endsWith('.js');
   } catch (_) { return false; }
 }
 
@@ -156,6 +165,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  /* Same-origin app scripts → Network First (avoid serving stale code after a deploy) */
+  if (isAppScript(url)) {
+    event.respondWith(stratNetworkFirst(request, STATIC_CACHE));
+    return;
+  }
+
   /* gstatic / CDN scripts / other same-origin → Stale-While-Revalidate */
   event.respondWith(stratStaleWhileRevalidate(request, STATIC_CACHE));
 });
@@ -198,6 +213,18 @@ async function stratNetworkFirstOffline(request) {
     return cached || new Response(OFFLINE_HTML, {
       headers: { 'Content-Type': 'text/html;charset=utf-8' }
     });
+  }
+}
+
+async function stratNetworkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const resp = await fetch(request);
+    if (resp && resp.ok && resp.type !== 'opaque') cache.put(request, resp.clone());
+    return resp;
+  } catch (_) {
+    const cached = await cache.match(request);
+    return cached || new Response('', { status: 503, statusText: 'Offline' });
   }
 }
 
