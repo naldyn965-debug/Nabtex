@@ -7,141 +7,293 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --brand:#1B6B3A;--brand-light:#2eaa5c;--brand-dark:#0d4a28;
-  --bg:#f0f4f0;--card:#fff;--border:#e2e8e4;
-  --ink:#0f1f14;--muted:#5a7566;--subtle:#8fa898;
-  --pending:#d97706;--pending-bg:rgba(217,119,6,.08);--pending-border:rgba(217,119,6,.2);
-  --approved:#16a34a;--approved-bg:rgba(22,163,74,.08);--approved-border:rgba(22,163,74,.2);
-  --rejected:#dc2626;--rejected-bg:rgba(220,38,38,.08);--rejected-border:rgba(220,38,38,.2);
-  --red:#e53030;
-  --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.08);
-}
-html,body{height:100%;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
-
-/* ── Auth Screen ── */
-#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.auth-card{background:var(--card);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12)}
-.auth-logo{text-align:center;margin-bottom:28px}
-.auth-logo-ico{font-size:48px;display:block;margin-bottom:10px}
-.auth-logo-title{font-size:1.4rem;font-weight:900;color:var(--brand)}
-.auth-logo-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
-.auth-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
-.auth-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;direction:rtl;outline:none;transition:border-color .2s;background:var(--bg);margin-bottom:14px}
-.auth-input:focus{border-color:var(--brand)}
-.auth-btn{width:100%;padding:13px;border-radius:12px;background:var(--brand);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:opacity .2s;margin-top:4px}
-.auth-btn:hover{opacity:.88}
-.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+  --bg:#070e09;--surface:#0c1510;--card:#111d14;--card-hov:#162219;
+  --border:rgba(34,197,94,.09);--border-md:rgba(34,197,94,.2);
+  --emerald:#22c55e;--glow:rgba(34,197,94,.18);
+  --pending:#f59e0b;--pending-bg:rgba(245,158,11,.08);
+  --approved:#22c55e;--approved-bg:rgba(34,197,94,.08);
+  --rejected:#ef4444;--rejected-bg:rgba(239,68,68,.08);
+  --text:#dbeade;--muted:#5a8068;--subtle:#2c4235;
+  --r:16px;--t:.22s cubic-bezier(.4,0,.2,1);}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;
+  background-image:radial-gradient(rgba(34,197,94,.035) 1px,transparent 1px);
+  background-size:30px 30px;pointer-events:none;z-index:0}
+#auth-screen{display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;position:relative;z-index:1}
+#auth-screen::after{content:'';position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);width:700px;height:700px;
+  background:radial-gradient(circle,rgba(34,197,94,.055) 0%,transparent 65%);pointer-events:none}
+.auth-card{background:var(--card);border:1px solid var(--border-md);border-radius:24px;
+  padding:44px 40px;width:100%;max-width:420px;position:relative;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
+  animation:fadeUp .5s var(--t) both}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(34,197,94,.45),transparent)}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo-ico{display:flex;justify-content:center;margin-bottom:14px}
+.auth-logo-ico svg{filter:drop-shadow(0 0 14px rgba(34,197,94,.4))}
+.auth-logo-title{font-size:1.45rem;font-weight:900;letter-spacing:-.02em}
+.auth-logo-sub{font-size:12.5px;color:var(--muted);margin-top:5px}
+.auth-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;
+  display:block;letter-spacing:.05em;text-transform:uppercase}
+.auth-input{width:100%;padding:13px 16px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border-md);border-radius:12px;font-size:14px;
+  font-family:inherit;direction:rtl;outline:none;color:var(--text);
+  transition:border-color var(--t),box-shadow var(--t);margin-bottom:14px}
+.auth-input:focus{border-color:var(--emerald);box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+.auth-btn{width:100%;padding:14px;border-radius:12px;background:var(--emerald);
+  border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
+  transition:all var(--t);box-shadow:0 4px 20px rgba(34,197,94,.3);margin-top:4px}
+.auth-btn:hover{background:#16a34a;box-shadow:0 6px 28px rgba(34,197,94,.45);transform:translateY(-1px)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .auth-err{font-size:12.5px;color:var(--rejected);text-align:center;margin-top:12px;min-height:18px}
-
-/* ── App Layout ── */
-#app-screen{display:none;min-height:100vh}
-.app-layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-
-/* ── Sidebar ── */
-.sidebar{background:var(--brand-dark);color:#fff;display:flex;flex-direction:column;padding:0}
-.sidebar-head{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar-logo-ico{font-size:32px;margin-bottom:8px}
-.sidebar-logo-name{font-size:1rem;font-weight:900;line-height:1.2}
-.sidebar-logo-sub{font-size:11px;opacity:.6;margin-top:2px}
-.sidebar-stats{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
-.stat-card{background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px}
-.stat-val{font-size:1.8rem;font-weight:900;line-height:1}
-.stat-lbl{font-size:11px;opacity:.65;margin-top:4px}
-.stat-card.pending .stat-val{color:#fbbf24}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border-md);color:var(--text);
+  font-size:14px;font-weight:700;padding:13px;border-radius:12px;cursor:pointer;
+  font-family:inherit;transition:all var(--t);width:100%;margin-top:4px}
+.google-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+#app-screen{display:none;min-height:100vh;position:relative;z-index:1}
+.app-layout{display:grid;grid-template-columns:282px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(170deg,#091409 0%,#060f08 55%,#050c06 100%);
+  border-left:1px solid var(--border);color:var(--text);
+  display:flex;flex-direction:column;position:relative;overflow:hidden}
+.sidebar::before{content:'';position:absolute;top:-80px;right:-80px;width:340px;height:340px;
+  background:radial-gradient(circle,rgba(34,197,94,.07) 0%,transparent 65%);
+  pointer-events:none;animation:ambientShift 9s ease-in-out infinite alternate}
+@keyframes ambientShift{0%{transform:translate(0,0)}100%{transform:translate(16px,18px) scale(1.08)}}
+.sidebar-head{padding:26px 22px 22px;border-bottom:1px solid var(--border);position:relative}
+.sidebar-logo-icon{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.sidebar-logo-svg{filter:drop-shadow(0 0 8px rgba(34,197,94,.35))}
+.sidebar-logo-name{font-size:1rem;font-weight:900;letter-spacing:-.01em}
+.sidebar-logo-sub{font-size:11px;color:var(--muted);margin-top:3px;margin-right:36px}
+.sidebar-section-label{font-size:10px;font-weight:800;color:var(--subtle);
+  text-transform:uppercase;letter-spacing:.1em;padding:18px 22px 8px}
+.sidebar-stats{padding:0 14px 4px;display:flex;flex-direction:column;gap:7px}
+.stat-card{border-radius:13px;padding:13px 14px;display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.025);border:1px solid var(--border);transition:all var(--t)}
+.stat-card:hover{border-color:var(--border-md);background:rgba(255,255,255,.045)}
+.stat-icon{width:36px;height:36px;border-radius:9px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0}
+.stat-card.pending  .stat-icon{background:rgba(245,158,11,.12);color:#f59e0b}
+.stat-card.approved .stat-icon{background:rgba(34,197,94,.12); color:#22c55e}
+.stat-card.rejected .stat-icon{background:rgba(239,68,68,.12); color:#ef4444}
+.stat-card.revenue  .stat-icon{background:rgba(168,85,247,.12);color:#a855f7}
+.stat-info{flex:1;min-width:0}
+.stat-val{font-size:1.45rem;font-weight:900;line-height:1;letter-spacing:-.02em}
+.stat-card.pending  .stat-val{color:#fbbf24}
 .stat-card.approved .stat-val{color:#4ade80}
 .stat-card.rejected .stat-val{color:#f87171}
-.sidebar-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.1)}
-.sidebar-user{font-size:12px;opacity:.65;margin-bottom:10px;word-break:break-all}
-.logout-btn{width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
-.logout-btn:hover{background:rgba(255,255,255,.2)}
-
-/* ── Main Content ── */
-.main-content{padding:28px 32px;overflow-y:auto}
+.stat-card.revenue  .stat-val{color:#c084fc}
+.stat-lbl{font-size:10.5px;color:var(--muted);margin-top:3px}
+.sidebar-courses{padding:0 14px 12px}
+.courses-heading{font-size:10px;font-weight:800;color:var(--subtle);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding:16px 8px 8px}
+.course-enroll-row{background:rgba(255,255,255,.022);border:1px solid var(--border);
+  border-radius:11px;padding:11px 12px;margin-bottom:6px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;transition:all var(--t)}
+.course-enroll-row:hover{background:rgba(255,255,255,.05);border-color:var(--border-md)}
+.course-enroll-row.paused-course{border-color:rgba(239,68,68,.18);background:rgba(239,68,68,.025)}
+.course-enroll-name{font-size:11px;opacity:.85;line-height:1.4}
+.course-enroll-pending{font-size:10px;color:var(--muted);margin-top:2px}
+.course-enroll-count{font-size:1.3rem;font-weight:900;color:#4ade80;
+  flex-shrink:0;min-width:26px;text-align:center;letter-spacing:-.02em}
+.course-toggle-btn{font-size:10px;padding:4px 8px;border-radius:6px;border:none;
+  cursor:pointer;font-family:inherit;font-weight:700;margin-top:4px;width:100%;
+  transition:all var(--t);display:flex;align-items:center;justify-content:center;gap:4px}
+.course-toggle-btn svg{width:9px;height:9px;flex-shrink:0}
+.course-toggle-btn.active{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.course-toggle-btn.active:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25)}
+.course-toggle-btn.paused{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.course-toggle-btn.paused:hover{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.25)}
+.live-dot{display:inline-block;width:6px;height:6px;background:#4ade80;border-radius:50%;
+  margin-left:5px;vertical-align:middle;animation:livePulse 1.6s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+.sidebar-footer{margin-top:auto;padding:14px 14px 18px;border-top:1px solid var(--border)}
+.sidebar-user-badge{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;background:rgba(255,255,255,.025);border:1px solid var(--border);margin-bottom:9px}
+.sidebar-user-avatar{width:30px;height:30px;border-radius:50%;
+  background:rgba(34,197,94,.1);border:1px solid var(--border-md);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--emerald)}
+.sidebar-user-avatar svg{width:15px;height:15px}
+.sidebar-user{font-size:11px;color:var(--muted);word-break:break-all;flex:1}
+.logout-btn{width:100%;padding:10px 14px;border-radius:10px;
+  background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.14);color:#f87171;
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all var(--t);display:flex;align-items:center;justify-content:center;gap:7px}
+.logout-btn:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.28)}
+.logout-btn svg{width:15px;height:15px}
+.main-content{padding:28px 30px;overflow-y:auto}
 .main-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.main-title{font-size:1.3rem;font-weight:900;color:var(--ink)}
-.main-subtitle{font-size:12.5px;color:var(--muted);margin-top:3px}
-.refresh-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;box-shadow:var(--shadow)}
-.refresh-btn:hover{background:var(--bg)}
-
-/* ── Filter Tabs + Search ── */
+.main-title{font-size:1.3rem;font-weight:900;letter-spacing:-.02em}
+.main-subtitle{font-size:12px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:5px}
+.refresh-btn{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all var(--t);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.refresh-btn:hover{background:var(--card-hov);border-color:var(--border-md)}
+.refresh-btn:hover .ricon{transform:rotate(-40deg)}
+.ricon{transition:transform .4s var(--t);display:flex;align-items:center}
+.refresh-btn svg,.logout-btn svg{display:block}
 .controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-.tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:5px;box-shadow:var(--shadow)}
-.tab-btn{padding:7px 16px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
-.tab-btn.active{background:var(--brand);color:#fff}
+.tabs{display:flex;gap:4px;background:var(--card);border-radius:12px;
+  padding:5px;border:1px solid var(--border)}
+.tab-btn{padding:7px 16px;border-radius:8px;border:none;background:transparent;
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;
+  transition:all var(--t);white-space:nowrap}
+.tab-btn.active{background:var(--emerald);color:#fff;box-shadow:0 2px 10px rgba(34,197,94,.35)}
 .search-wrap{flex:1;min-width:200px}
-.search-input{width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;direction:rtl;outline:none;transition:border-color .2s;background:var(--card)}
-.search-input:focus{border-color:var(--brand)}
-
-/* ── Payment Cards ── */
-.payments-list{display:flex;flex-direction:column;gap:12px}
-.pay-card{background:var(--card);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border-right:4px solid transparent;transition:box-shadow .2s}
-.pay-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.12)}
-.pay-card.pending{border-right-color:var(--pending)}
+.search-input{width:100%;padding:10px 14px;background:var(--card);
+  border:1px solid var(--border);border-radius:10px;font-size:13px;
+  font-family:inherit;direction:rtl;outline:none;color:var(--text);transition:all var(--t)}
+.search-input:focus{border-color:var(--emerald);box-shadow:0 0 0 3px rgba(34,197,94,.1)}
+.search-input::placeholder{color:var(--subtle)}
+.payments-list{display:flex;flex-direction:column;gap:10px}
+.pay-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px 22px;border-right:3px solid transparent;
+  transition:all var(--t);animation:cardIn .32s var(--t) both;position:relative;overflow:hidden}
+.pay-card:hover{background:var(--card-hov);border-color:var(--border-md);
+  transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.pay-card.pending {border-right-color:var(--pending)}
 .pay-card.approved{border-right-color:var(--approved)}
 .pay-card.rejected{border-right-color:var(--rejected)}
+.pay-card:nth-child(1){animation-delay:.03s}
+.pay-card:nth-child(2){animation-delay:.07s}
+.pay-card:nth-child(3){animation-delay:.11s}
+.pay-card:nth-child(4){animation-delay:.15s}
+.pay-card:nth-child(n+5){animation-delay:.19s}
 .pay-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
-.pay-card-info{}
-.pay-email{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.pay-email{font-size:14px;font-weight:800;margin-bottom:3px}
 .pay-date{font-size:11.5px;color:var(--subtle)}
-.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:30px;font-size:12px;font-weight:800;white-space:nowrap;flex-shrink:0}
-.status-badge.pending{background:var(--pending-bg);color:var(--pending);border:1px solid var(--pending-border)}
-.status-badge.approved{background:var(--approved-bg);color:var(--approved);border:1px solid var(--approved-border)}
-.status-badge.rejected{background:var(--rejected-bg);color:var(--rejected);border:1px solid var(--rejected-border)}
-.pay-card-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
-.detail-item{background:var(--bg);border-radius:10px;padding:10px 12px}
-.detail-lbl{font-size:10.5px;color:var(--subtle);font-weight:700;margin-bottom:3px}
-.detail-val{font-size:13px;font-weight:800;color:var(--ink);word-break:break-all}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
+  border-radius:30px;font-size:11.5px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.status-badge.pending {background:var(--pending-bg); color:var(--pending); border:1px solid rgba(245,158,11,.2)}
+.status-badge.approved{background:var(--approved-bg);color:var(--approved);border:1px solid rgba(34,197,94,.2)}
+.status-badge.rejected{background:var(--rejected-bg);color:var(--rejected);border:1px solid rgba(239,68,68,.2)}
+.pay-card-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;margin-bottom:16px}
+.detail-item{background:rgba(255,255,255,.02);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;transition:border-color var(--t)}
+.detail-item:hover{border-color:var(--border-md)}
+.detail-lbl{font-size:10px;color:var(--subtle);font-weight:700;margin-bottom:4px;
+  text-transform:uppercase;letter-spacing:.04em}
+.detail-val{font-size:13px;font-weight:800;word-break:break-all}
 .detail-val.phone-val{direction:ltr;text-align:right}
-.pay-card-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.action-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
-.action-btn.approve{background:var(--approved);color:#fff}
-.action-btn.approve:hover{background:#15803d}
-.action-btn.reject{background:var(--rejected-bg);color:var(--rejected);border:1px solid var(--rejected-border)}
-.action-btn.reject:hover{background:var(--rejected);color:#fff}
-.action-btn.wa{background:#25d366;color:#fff}
-.action-btn.wa:hover{opacity:.88}
-.action-btn:disabled{opacity:.45;cursor:not-allowed}
-.action-done{font-size:12.5px;color:var(--muted);padding:9px 0}
-
-/* ── Empty State ── */
+.pay-card-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.action-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
+  border-radius:9px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all var(--t);white-space:nowrap;text-decoration:none}
+.btn-icon{width:13px;height:13px;flex-shrink:0;display:block}
+.action-btn.approve  {background:rgba(34,197,94,.14);color:#4ade80;border:1px solid rgba(34,197,94,.24)}
+.action-btn.approve:hover{background:var(--emerald);color:#fff;box-shadow:0 4px 16px rgba(34,197,94,.35);transform:translateY(-1px)}
+.action-btn.reject   {background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.action-btn.reject:hover {background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4)}
+.action-btn.wa       {background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)}
+.action-btn.wa:hover {background:#25d366;color:#fff}
+.action-btn.delete   {background:rgba(239,68,68,.06);color:#f87171;border:1px solid rgba(239,68,68,.15)}
+.action-btn.delete:hover  {background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.35)}
+.action-btn.suspend  {background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.18)}
+.action-btn.suspend:hover {background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.35)}
+.action-btn.unsuspend{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.18)}
+.action-btn.unsuspend:hover{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35)}
+.action-btn:disabled {opacity:.4;cursor:not-allowed;transform:none!important}
+.action-done{font-size:12px;color:var(--muted);padding:8px 0}
 .empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
-.empty-ico{font-size:48px;margin-bottom:16px}
-.empty-title{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:8px}
-.empty-desc{font-size:13px;line-height:1.6}
-
-/* ── Loading ── */
+.empty-ico{margin:0 auto 16px;opacity:.3}
+.empty-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:8px}
+.empty-desc{font-size:13px;line-height:1.7}
 .loading-state{text-align:center;padding:60px 24px;color:var(--muted)}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+.spinner{width:34px;height:34px;border:2px solid var(--border);border-top-color:var(--emerald);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── Toast ── */
-.toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:#1a1a1a;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;white-space:nowrap;animation:toastIn .3s ease;pointer-events:auto}
-.toast.ok{background:var(--brand)}
-.toast.err{background:var(--rejected)}
-@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── Confirm Dialog ── */
-.confirm-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
-.confirm-overlay.on{display:flex}
-.confirm-box{background:var(--card);border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center}
-.confirm-ico{font-size:40px;margin-bottom:14px}
-.confirm-title{font-size:1rem;font-weight:900;margin-bottom:8px}
-.confirm-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 22px;border-radius:12px;font-size:13px;font-weight:700;white-space:nowrap;
+  animation:toastIn .28s var(--t);pointer-events:auto;backdrop-filter:blur(12px);
+  box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.toast.ok {background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.toast.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.confirm-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.on{display:flex;animation:fadeIn .2s ease}
+.confirm-box{background:var(--card);border:1px solid var(--border-md);border-radius:22px;
+  padding:32px 28px;max-width:380px;width:100%;text-align:center;
+  box-shadow:0 32px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.04);
+  animation:confirmIn .28s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.confirm-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(34,197,94,.25),transparent)}
+.confirm-ico{font-size:42px;margin-bottom:14px;display:block}
+.confirm-title{font-size:1.05rem;font-weight:900;margin-bottom:10px;letter-spacing:-.01em}
+.confirm-msg{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:22px}
 .confirm-actions{display:flex;gap:8px;justify-content:center}
-.confirm-btn{padding:10px 24px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
-.confirm-btn.ok{background:var(--rejected);color:#fff}
-.confirm-btn.cancel{background:var(--bg);color:var(--ink);border:1px solid var(--border)}
-.confirm-note{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;direction:rtl;outline:none;resize:none;margin-bottom:12px;background:var(--bg)}
-.confirm-note:focus{border-color:var(--rejected)}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:4px;background:#fff;color:#1f1f1f;border:1.5px solid #dadce0;font-size:15px;font-weight:700;padding:13px;border-radius:12px;cursor:pointer;transition:box-shadow .2s;width:100%;margin-top:4px;font-family:inherit}
-.google-btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.confirm-btn{padding:11px 26px;border-radius:11px;border:none;font-size:14px;font-weight:800;
+  cursor:pointer;font-family:inherit;transition:all var(--t)}
+.confirm-btn.ok{background:var(--rejected);color:#fff;box-shadow:0 3px 12px rgba(239,68,68,.3)}
+.confirm-btn.ok:hover{box-shadow:0 6px 20px rgba(239,68,68,.45);transform:translateY(-1px)}
+.confirm-btn.cancel{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border-md)}
+.confirm-btn.cancel:hover{background:rgba(255,255,255,.09)}
+.confirm-note{width:100%;padding:10px 13px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border-md);border-radius:10px;font-size:13px;font-family:inherit;
+  direction:rtl;outline:none;color:var(--text);resize:none;margin-bottom:14px;
+  transition:border-color var(--t)}
+.confirm-note:focus{border-color:var(--emerald)}
+@keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes cardIn  {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes confirmIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 
-@media(max-width:768px){
-  .app-layout{grid-template-columns:1fr}
-  .sidebar{display:none}
-  .main-content{padding:16px}
-}
+/* ── Daily Summary Panel ──────────────── */
+.day-summary-card{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);
+  border-radius:14px;padding:16px 18px;margin-bottom:14px;animation:fadeUp .25s var(--t)}
+.day-summary-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;direction:rtl}
+.day-summary-header svg{color:#4ade80;flex-shrink:0;width:16px;height:16px}
+.day-summary-title-txt{font-size:14px;font-weight:900;color:var(--text)}
+.day-summary-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px}
+.day-stat{background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:10px;padding:11px 10px;text-align:center}
+.day-stat-val{font-size:1.3rem;font-weight:900;letter-spacing:-.02em;color:var(--text);line-height:1}
+.day-stat-lbl{font-size:10px;color:var(--muted);margin-top:5px}
+.day-stat.approved-s .day-stat-val{color:#4ade80}
+.day-stat.pending-s  .day-stat-val{color:#fbbf24}
+.day-stat.rejected-s .day-stat-val{color:#f87171}
+.day-stat.revenue-s{border-color:rgba(168,85,247,.2);background:rgba(168,85,247,.04)}
+.day-stat.revenue-s  .day-stat-val{color:#c084fc}
+@media(max-width:768px){.app-layout{grid-template-columns:1fr}.sidebar{display:none}.main-content{padding:16px}}
+/* ── Date Navigator ─────────────────────────────── */
+.date-nav-wrap{overflow-x:auto;margin-bottom:10px;padding:2px 0 6px;
+  scrollbar-width:none;-ms-overflow-style:none;
+  direction:ltr;                   /* force LTR so today is on right */
+  -webkit-overflow-scrolling:touch; /* smooth momentum on iOS */
+  touch-action:pan-x}             /* only horizontal pan — no accidental vertical scroll */
+.date-nav-wrap::-webkit-scrollbar{display:none}
+.date-nav{display:flex;gap:6px;min-width:max-content;direction:ltr}
+.day-btn{touch-action:manipulation} /* suppress 300ms tap delay */
+.day-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 10px;border-radius:11px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-family:inherit;color:var(--text);
+  min-width:52px;transition:all var(--t);position:relative}
+.day-btn:hover{border-color:var(--border-md);background:var(--card-hov);transform:translateY(-1px)}
+.day-btn.today{border-color:rgba(34,197,94,.25)}
+.day-btn.today::after{content:'';position:absolute;top:5px;right:5px;
+  width:5px;height:5px;border-radius:50%;background:var(--emerald)}
+.day-btn.selected{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.4);
+  box-shadow:0 0 14px rgba(34,197,94,.12)}
+.day-btn.selected .day-num{color:#4ade80}
+.day-btn.selected .day-month{color:rgba(74,222,128,.7)}
+.day-num{font-size:17px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.day-month{font-size:9px;color:var(--muted);letter-spacing:.03em;text-transform:uppercase}
+.day-count{font-size:10px;font-weight:800;background:rgba(34,197,94,.18);
+  color:#4ade80;border-radius:4px;padding:1px 6px;line-height:1.5;min-width:20px;text-align:center}
+.day-dot{width:4px;height:4px;border-radius:50%;background:var(--subtle)}
+.date-active-label{display:none;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);
+  border-radius:10px;color:#4ade80;font-size:13px;font-weight:700;margin-bottom:12px}
+.date-active-label.on{display:flex}
+.date-clear-btn{background:none;border:none;cursor:pointer;color:#4ade80;
+  opacity:.7;padding:2px;display:flex;transition:opacity var(--t)}
+.date-clear-btn:hover{opacity:1}
+.date-clear-btn svg{width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -150,7 +302,7 @@ html,body{height:100%;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;backgro
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <span class="auth-logo-ico">🌿</span>
+      <div class="auth-logo-ico"><svg width="52" height="52" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="26" fill="rgba(34,197,94,0.08)"/><path d="M26 42C26 42 14 34 14 22C14 14.82 19.82 9 27 9C34.18 9 40 14.82 40 22C40 34 26 42 26 42Z" fill="rgba(34,197,94,0.12)" stroke="#22c55e" stroke-width="1.5"/><line x1="26" y1="42" x2="26" y2="18" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M26 28C26 28 20 23 20 18" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M26 35C26 35 32 30 32 25" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       <div class="auth-logo-title">نبتيكس أكاديمي</div>
       <div class="auth-logo-sub">لوحة تحكم المدفوعات</div>
     </div>
@@ -169,31 +321,43 @@ html,body{height:100%;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;backgro
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-head">
-        <div class="sidebar-logo-ico">🌿</div>
-        <div class="sidebar-logo-name">نبتيكس أكاديمي</div>
+        <div class="sidebar-logo-icon">
+          <svg class="sidebar-logo-svg" width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(34,197,94,0.1)"/><path d="M14 23C14 23 7 18.5 7 12C7 8.13 10.13 5 14 5C17.87 5 21 8.13 21 12C21 18.5 14 23 14 23Z" fill="rgba(34,197,94,0.18)" stroke="#22c55e" stroke-width="1.2"/><line x1="14" y1="23" x2="14" y2="10" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/><path d="M14 16C14 16 10.5 13 10.5 10" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/><path d="M14 19.5C14 19.5 17.5 16.5 17.5 13.5" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <div class="sidebar-logo-name">نبتيكس أكاديمي</div>
+        </div>
         <div class="sidebar-logo-sub">لوحة تحكم المدفوعات</div>
       </div>
+      <div class="sidebar-section-label">الإحصائيات</div>
       <div class="sidebar-stats">
         <div class="stat-card pending">
-          <div class="stat-val" id="stat-pending">—</div>
-          <div class="stat-lbl">⏳ قيد المراجعة</div>
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-info"><div class="stat-val" id="stat-pending">—</div><div class="stat-lbl">قيد المراجعة</div></div>
         </div>
         <div class="stat-card approved">
-          <div class="stat-val" id="stat-approved">—</div>
-          <div class="stat-lbl">✅ مقبول</div>
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="stat-info"><div class="stat-val" id="stat-approved">—</div><div class="stat-lbl">مقبول</div></div>
         </div>
         <div class="stat-card rejected">
-          <div class="stat-val" id="stat-rejected">—</div>
-          <div class="stat-lbl">❌ مرفوض</div>
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          <div class="stat-info"><div class="stat-val" id="stat-rejected">—</div><div class="stat-lbl">مرفوض</div></div>
         </div>
-        <div class="stat-card" style="background:rgba(255,255,255,.06)">
-          <div class="stat-val" id="stat-revenue" style="color:#86efac">—</div>
-          <div class="stat-lbl">💰 إجمالي الإيرادات (جنيه)</div>
+        <div class="stat-card revenue">
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="stat-info"><div class="stat-val" id="stat-revenue">—</div><div class="stat-lbl">الإيرادات (جنيه)</div></div>
+        </div>
+      </div>
+      <div class="sidebar-courses">
+        <div class="courses-heading">👥 الطلاب المسجّلون لكل دورة</div>
+        <div id="course-enrollments">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
       </div>
       <div class="sidebar-footer">
-        <div class="sidebar-user" id="sidebar-user-email"></div>
-        <button class="logout-btn" onclick="doLogout()">🚪 تسجيل الخروج</button>
+        <div class="sidebar-user-badge">
+          <div class="sidebar-user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="sidebar-user" id="sidebar-user-email"></div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج</button>
       </div>
     </aside>
 
@@ -204,21 +368,32 @@ html,body{height:100%;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;backgro
           <div class="main-title">طلبات الدفع</div>
           <div class="main-subtitle" id="last-refresh">—</div>
         </div>
-        <button class="refresh-btn" onclick="loadPayments()">🔄 تحديث</button>
+        <button class="refresh-btn" onclick="loadPayments()"><span class="ricon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>تحديث</button>
       </div>
 
       <div class="controls-row">
         <div class="tabs">
-          <button class="tab-btn active" data-filter="pending"  onclick="setFilter('pending')">⏳ قيد المراجعة</button>
-          <button class="tab-btn"        data-filter="all"      onclick="setFilter('all')">📋 الكل</button>
-          <button class="tab-btn"        data-filter="approved" onclick="setFilter('approved')">✅ مقبول</button>
-          <button class="tab-btn"        data-filter="rejected" onclick="setFilter('rejected')">❌ مرفوض</button>
+          <button class="tab-btn active" data-filter="pending"  onclick="setFilter('pending')">قيد المراجعة</button>
+          <button class="tab-btn"        data-filter="all"      onclick="setFilter('all')">الكل</button>
+          <button class="tab-btn"        data-filter="approved" onclick="setFilter('approved')">مقبول</button>
+          <button class="tab-btn"        data-filter="rejected" onclick="setFilter('rejected')">مرفوض</button>
         </div>
         <div class="search-wrap">
-          <input class="search-input" id="search-input" type="text" placeholder="🔍 ابحث بالإيميل أو الهاتف أو المرجع..." oninput="renderList()">
+          <input class="search-input" id="search-input" type="text" placeholder="ابحث بالإيميل أو الهاتف أو المرجع..." oninput="renderList()">
         </div>
       </div>
 
+      <!-- Date Navigator -->
+      <div class="date-nav-wrap">
+        <div class="date-nav" id="date-nav"></div>
+      </div>
+      <div class="date-active-label" id="date-active-label">
+        <span id="date-label-text"></span>
+        <button class="date-clear-btn" onclick="clearDateFilter()" title="إلغاء فلتر التاريخ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="day-summary" style="display:none"></div>
       <div id="payments-container">
         <div class="loading-state"><div class="spinner"></div><div>جاري التحميل...</div></div>
       </div>
@@ -264,10 +439,37 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+const IC = {
+  check:  '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8 14 16 6"/></svg>',
+  x:      '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>',
+  trash:  '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 5 16 5"/><path d="M15 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5m2-2h6"/></svg>',
+  pause:  '<svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor"><rect x="5" y="4" width="3.5" height="12" rx="1"/><rect x="11.5" y="4" width="3.5" height="12" rx="1"/></svg>',
+  unlock: '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="14" height="9" rx="2"/><path d="M7 9V6a3 3 0 0 1 5.83-1"/></svg>',
+  wa:     '<svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 11.9c-.23-.11-1.35-.67-1.56-.74-.21-.08-.36-.11-.51.11-.15.23-.58.74-.72.89-.13.15-.27.17-.5.06s-.96-.35-1.83-1.13c-.68-.6-1.14-1.35-1.27-1.58-.13-.23-.01-.35.1-.46.1-.1.23-.27.34-.4.11-.13.15-.23.23-.38.08-.15.04-.29-.02-.4-.06-.11-.51-1.24-.7-1.69-.19-.45-.38-.39-.52-.4l-.44-.01c-.15 0-.39.06-.6.28s-.78.77-.78 1.87.8 2.17.91 2.32c.11.15 1.57 2.4 3.8 3.37.53.23.95.37 1.27.47.54.17 1.02.14 1.41.09.43-.06 1.33-.54 1.52-1.07.19-.52.19-.97.13-1.06-.06-.1-.21-.15-.44-.26zM10 17h-.01a8 8 0 0 1-4.08-1.12l-.29-.17-3.02.79.81-2.96-.19-.3A8 8 0 0 1 2 10c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8z"/></svg>',
+  circ_g: '<svg class="btn-icon" viewBox="0 0 20 20" fill="#4ade80"><circle cx="10" cy="10" r="8"/></svg>',
+  circ_r: '<svg class="btn-icon" viewBox="0 0 20 20" fill="#f87171"><circle cx="10" cy="10" r="8"/></svg>',
+};
 /* ── State ──────────────────────────────────────── */
 let allPayments = [];
 let currentFilter = 'pending';
 let pendingAction = null; // {type:'approve'|'reject', docId, uid, courseId}
+let paymentsUnsubscribe  = null; // real-time listener teardown
+let studyingUnsubscribe  = null; // academy_progress listener teardown
+let studyingCounts       = {};   // { courseId: { uid: true } } — from academy_progress
+let paidCounts           = {};   // { courseId: { uid: true } } — from users.paidCourses
+let usersUnsubscribe     = null; // users collection listener teardown
+let courseConfig         = {};   // { courseId: { active: bool } }
+let currentDateFilter    = null;  // Date | null — set by day navigator
+let courseConfigUnsubscribe = null;
+
+const COURSE_LABELS = {
+  'pest':             'مكافحة الآفات الزراعية',
+  'mol-bio':          'تقنيات البيولوجيا الجزيئية',
+  'food-quality':     'جودة وسلامة الغذاء',
+  'ag-english':       'الإنجليزية الزراعية',
+  'food-safety':      'سلامة الغذاء',
+  'land-reclamation': 'استصلاح الأراضي'
+};
 
 /* ── Auth ───────────────────────────────────────── */
 auth.onAuthStateChanged(async function(user) {
@@ -284,6 +486,9 @@ auth.onAuthStateChanged(async function(user) {
   document.getElementById('sidebar-user-email').textContent = user.email;
   showApp();
   loadPayments();
+  startStudyingListener();
+  startPaidCoursesListener();
+  startCourseConfigListener();
 });
 
 function showAuth() {
@@ -316,33 +521,43 @@ async function doLogin() {
 }
 
 async function doLogout() {
+  if (paymentsUnsubscribe) { paymentsUnsubscribe(); paymentsUnsubscribe = null; }
+  if (studyingUnsubscribe) { studyingUnsubscribe(); studyingUnsubscribe = null; }
+  if (usersUnsubscribe)       { usersUnsubscribe();       usersUnsubscribe       = null; }
+  if (courseConfigUnsubscribe){ courseConfigUnsubscribe(); courseConfigUnsubscribe = null; }
   await auth.signOut();
-  allPayments = [];
+  allPayments    = [];
+  studyingCounts = {};
+  paidCounts     = {};
   showAuth();
 }
 
-/* ── Load Payments ──────────────────────────────── */
-async function loadPayments() {
+/* ── Load Payments (real-time listener) ─────────── */
+function loadPayments() {
+  // Tear down any previous listener first
+  if (paymentsUnsubscribe) { paymentsUnsubscribe(); paymentsUnsubscribe = null; }
+
   document.getElementById('payments-container').innerHTML =
-    '<div class="loading-state"><div class="spinner"></div><div>جاري التحميل...</div></div>';
-  try {
-    const snap = await db.collection('course_payments')
-      .orderBy('createdAt', 'desc')
-      .get();
-    allPayments = snap.docs.map(function(d) {
-      return Object.assign({ _id: d.id }, d.data());
+    '<div class="loading-state"><div class="spinner"></div><div>جاري الاتصال...</div></div>';
+
+  paymentsUnsubscribe = db.collection('course_payments')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(function(snap) {
+      allPayments = snap.docs.map(function(d) {
+        return Object.assign({ _id: d.id }, d.data());
+      });
+      updateStats();
+      buildDateNav(true);
+      renderList();
+      const now = new Date();
+      document.getElementById('last-refresh').innerHTML =
+        '<span class="live-dot"></span>مباشر — ' + now.toLocaleTimeString('ar-EG');
+    }, function(e) {
+      document.getElementById('payments-container').innerHTML =
+        '<div class="empty-state"><div class="empty-ico">⚠️</div>' +
+        '<div class="empty-title">خطأ في التحميل</div>' +
+        '<div class="empty-desc">' + e.message + '</div></div>';
     });
-    updateStats();
-    renderList();
-    const now = new Date();
-    document.getElementById('last-refresh').textContent =
-      'آخر تحديث: ' + now.toLocaleTimeString('ar-EG');
-  } catch(e) {
-    document.getElementById('payments-container').innerHTML =
-      '<div class="empty-state"><div class="empty-ico">⚠️</div>' +
-      '<div class="empty-title">خطأ في التحميل</div>' +
-      '<div class="empty-desc">' + e.message + '</div></div>';
-  }
 }
 
 /* ── Stats ──────────────────────────────────────── */
@@ -357,9 +572,202 @@ function updateStats() {
   document.getElementById('stat-approved').textContent = approved;
   document.getElementById('stat-rejected').textContent = rejected;
   document.getElementById('stat-revenue').textContent  = revenue + ' ج';
+  updateEnrollments();
+}
+
+/* ── Studying Listener (academy_progress) ────────── */
+function startStudyingListener() {
+  if (studyingUnsubscribe) { studyingUnsubscribe(); studyingUnsubscribe = null; }
+  studyingUnsubscribe = db.collection('academy_progress')
+    .onSnapshot(function(snap) {
+      studyingCounts = {};
+      snap.docs.forEach(function(doc) {
+        var data = doc.data();
+        if (!data.courseId || !data.uid) return;
+        var active = (data.d && data.d.length > 0) ||
+                     (typeof data.fe === 'number' && data.fe >= 0);
+        if (active) {
+          if (!studyingCounts[data.courseId]) studyingCounts[data.courseId] = {};
+          studyingCounts[data.courseId][data.uid] = true;
+        }
+      });
+      updateEnrollments();
+    }, function(e) { console.warn('academy_progress listener:', e.message); });
+}
+
+/* ── Paid Courses Listener (users.paidCourses) ────── */
+function startPaidCoursesListener() {
+  if (usersUnsubscribe) { usersUnsubscribe(); usersUnsubscribe = null; }
+  usersUnsubscribe = db.collection('users')
+    .onSnapshot(function(snap) {
+      paidCounts = {};
+      snap.docs.forEach(function(doc) {
+        var data = doc.data();
+        var uid  = doc.id;
+        if (!data.paidCourses || !Array.isArray(data.paidCourses)) return;
+        data.paidCourses.forEach(function(cid) {
+          if (!paidCounts[cid]) paidCounts[cid] = {};
+          paidCounts[cid][uid] = true;
+        });
+      });
+      updateEnrollments();
+    }, function(e) { console.warn('users listener:', e.message); });
+}
+
+/* ── Enrollments per Course (real-time) ─────────── */
+function updateEnrollments() {
+  var el = document.getElementById('course-enrollments');
+  if (!el) return;
+
+  // pending count from payments
+  var pendingCount = {};
+  allPayments.forEach(function(p) {
+    if (p.courseId && p.status === 'pending')
+      pendingCount[p.courseId] = (pendingCount[p.courseId] || 0) + 1;
+  });
+
+  el.innerHTML = Object.keys(COURSE_LABELS).map(function(cid) {
+    var label    = COURSE_LABELS[cid];
+    var isActive = !courseConfig[cid] || courseConfig[cid].active !== false;
+
+    // UNION: paidCourses (users) + academy_progress (studying)
+    var allUids = {};
+    if (paidCounts[cid])    Object.keys(paidCounts[cid]).forEach(function(u)    { allUids[u] = true; });
+    if (studyingCounts[cid]) Object.keys(studyingCounts[cid]).forEach(function(u) { allUids[u] = true; });
+
+    var total = Object.keys(allUids).length;
+    var paid  = paidCounts[cid] ? Object.keys(paidCounts[cid]).length : 0;
+    var pend  = pendingCount[cid] || 0;
+
+    var sub = [];
+    if (paid) sub.push('✅ ' + paid + ' مشترك');
+    if (pend) sub.push('⏳ ' + pend + ' معلّق');
+
+    var toggleClick = isActive
+      ? 'askPauseCourse(\'' + cid + '\')'
+      : 'toggleCourse(\'' + cid + '\', true)';
+    var toggleIcon  = (isActive ? IC.circ_g : IC.circ_r) + ' ' + (isActive ? 'نشط' : 'موقوف');
+
+    return '<div class="course-enroll-row' + (isActive ? '' : ' paused-course') + '">' +
+      '<div>' +
+        '<div class="course-enroll-name">' + label + '</div>' +
+        (sub.length ? '<div class="course-enroll-pending">' + sub.join(' · ') + '</div>' : '') +
+      '</div>' +
+      '<div style="flex-shrink:0;text-align:center">' +
+        '<div class="course-enroll-count">' + total + '</div>' +
+        '<button class="course-toggle-btn ' + (isActive ? 'active' : 'paused') + '" onclick="' + toggleClick + '">' + toggleIcon + '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 /* ── Filter & Render ────────────────────────────── */
+/* ── Date Navigator ───────────────────────── */
+var MONTHS_AR = ['ينا','فبر','مار','أبر','ماي','يون','يول','أغس','سبت','أكت','نوف','ديس'];
+var MONTHS_AR_FULL = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+/* scroll-vs-click guard for date nav */
+var _navScrolling = false;
+var _navScrollTimer = null;
+
+function getPayDate(p) {
+  if (!p.createdAt) return null;
+  try {
+    if (typeof p.createdAt.toDate === 'function') return p.createdAt.toDate();
+    if (p.createdAt.seconds)  return new Date(p.createdAt.seconds * 1000);
+    if (typeof p.createdAt === 'number') return new Date(p.createdAt);
+    return new Date(p.createdAt);
+  } catch(e) { return null; }
+}
+
+function buildDateNav(scrollToToday) {
+  var el   = document.getElementById('date-nav');
+  var wrap = el && el.parentElement;
+  if (!el) return;
+
+  // Attach scroll-detection listener once
+  if (!wrap._navListenerAdded) {
+    wrap._navListenerAdded = true;
+    wrap.addEventListener('scroll', function() {
+      _navScrolling = true;
+      clearTimeout(_navScrollTimer);
+      _navScrollTimer = setTimeout(function() { _navScrolling = false; }, 200);
+    }, { passive: true });
+  }
+
+  var today = new Date();
+  var html  = '';
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    var isToday    = (i === 0);
+    var isSelected = currentDateFilter &&
+      d.getFullYear() === currentDateFilter.getFullYear() &&
+      d.getMonth()    === currentDateFilter.getMonth() &&
+      d.getDate()     === currentDateFilter.getDate();
+    var count = allPayments.filter(function(p) {
+      var pd = getPayDate(p); if (!pd) return false;
+      return pd.getFullYear() === d.getFullYear() &&
+             pd.getMonth()    === d.getMonth() &&
+             pd.getDate()     === d.getDate();
+    }).length;
+    var y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+    html += '<button class="day-btn' +
+      (isSelected ? ' selected' : '') + (isToday ? ' today' : '') +
+      '" onclick="selectDate(' + y + ',' + m + ',' + day + ')" title="' + day + ' ' + MONTHS_AR_FULL[m] + ' ' + y + '">' +
+      '<span class="day-num">' + day + '</span>' +
+      '<span class="day-month">' + MONTHS_AR[m] + '</span>' +
+      (count > 0
+        ? '<span class="day-count">' + count + '</span>'
+        : '<span class="day-dot"></span>') +
+      '</button>';
+  }
+  el.innerHTML = html;
+  // Scroll to today only on initial load (not on every rebuild)
+  if (scrollToToday !== false) {
+    setTimeout(function() { wrap.scrollLeft = wrap.scrollWidth; }, 30);
+  }
+}
+
+function selectDate(y, m, d) {
+  // Ignore if user was just scrolling the date strip
+  if (_navScrolling) return;
+
+  var clicked = new Date(y, m, d);
+  if (currentDateFilter &&
+      currentDateFilter.getFullYear() === y &&
+      currentDateFilter.getMonth()    === m &&
+      currentDateFilter.getDate()     === d) {
+    currentDateFilter = null;
+  } else {
+    currentDateFilter = clicked;
+  }
+  buildDateNav(false); // false = don't jump scroll back to today
+  updateDateLabel();
+  renderList();
+}
+
+function clearDateFilter() {
+  currentDateFilter = null;
+  buildDateNav();
+  updateDateLabel();
+  renderList();
+}
+
+function updateDateLabel() {
+  var el  = document.getElementById('date-active-label');
+  var txt = document.getElementById('date-label-text');
+  if (!el || !txt) return;
+  if (!currentDateFilter) {
+    el.classList.remove('on');
+    return;
+  }
+  el.classList.add('on');
+  txt.textContent = 'معاملات ' +
+    currentDateFilter.getDate() + ' ' +
+    MONTHS_AR_FULL[currentDateFilter.getMonth()] + ' ' +
+    currentDateFilter.getFullYear();
+}
+
 function setFilter(f) {
   currentFilter = f;
   document.querySelectorAll('.tab-btn').forEach(function(b) {
@@ -368,12 +776,77 @@ function setFilter(f) {
   renderList();
 }
 
+/* ── Daily Summary ─────────────────────────────── */
+function renderDaySummary(dayList, date) {
+  var el = document.getElementById('day-summary');
+  if (!el) return;
+  if (!date || !dayList.length) { el.style.display = 'none'; return; }
+
+  var approved = dayList.filter(function(p){ return p.status === 'approved'; });
+  var pending  = dayList.filter(function(p){ return p.status === 'pending';  });
+  var rejected = dayList.filter(function(p){ return p.status === 'rejected'; });
+  var revenue  = approved.reduce(function(sum,p){ return sum+(parseFloat(p.amount)||0); }, 0);
+  var dayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var calSvg = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg>';
+
+  el.style.display = 'block';
+  el.innerHTML =
+    '<div class="day-summary-card">' +
+      '<div class="day-summary-header">' +
+        calSvg +
+        '<div class="day-summary-title-txt">' +
+          dayNames[date.getDay()] + '، ' + date.getDate() + ' ' +
+          MONTHS_AR_FULL[date.getMonth()] + ' ' + date.getFullYear() +
+        '</div>' +
+      '</div>' +
+      '<div class="day-summary-stats">' +
+        '<div class="day-stat">' +
+          '<div class="day-stat-val">' + dayList.length + '</div>' +
+          '<div class="day-stat-lbl">إجمالي المعاملات</div>' +
+        '</div>' +
+        '<div class="day-stat approved-s">' +
+          '<div class="day-stat-val">' + approved.length + '</div>' +
+          '<div class="day-stat-lbl">مقبول</div>' +
+        '</div>' +
+        '<div class="day-stat pending-s">' +
+          '<div class="day-stat-val">' + pending.length + '</div>' +
+          '<div class="day-stat-lbl">معلّق</div>' +
+        '</div>' +
+        '<div class="day-stat rejected-s">' +
+          '<div class="day-stat-val">' + rejected.length + '</div>' +
+          '<div class="day-stat-lbl">مرفوض</div>' +
+        '</div>' +
+        '<div class="day-stat revenue-s">' +
+          '<div class="day-stat-val">' + revenue.toFixed(0) + ' ج</div>' +
+          '<div class="day-stat-lbl">إيرادات اليوم</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
 function renderList() {
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
-  let list = allPayments;
 
+  // Compute day list first (all statuses) for the summary panel
+  var dayList = currentDateFilter ? allPayments.filter(function(p) {
+    var pd = getPayDate(p); if (!pd) return false;
+    return pd.getFullYear() === currentDateFilter.getFullYear() &&
+           pd.getMonth()    === currentDateFilter.getMonth() &&
+           pd.getDate()     === currentDateFilter.getDate();
+  }) : [];
+  renderDaySummary(dayList, currentDateFilter);
+
+  let list = allPayments;
   if (currentFilter !== 'all') {
     list = list.filter(function(p){ return p.status === currentFilter; });
+  }
+  if (currentDateFilter) {
+    list = list.filter(function(p) {
+      var pd = getPayDate(p); if (!pd) return false;
+      return pd.getFullYear() === currentDateFilter.getFullYear() &&
+             pd.getMonth()    === currentDateFilter.getMonth() &&
+             pd.getDate()     === currentDateFilter.getDate();
+    });
   }
   if (q) {
     list = list.filter(function(p) {
@@ -401,17 +874,23 @@ function renderList() {
 
 function buildCard(p) {
   const date = p.createdAt ? new Date(p.createdAt.toDate ? p.createdAt.toDate() : p.createdAt).toLocaleString('ar-EG') : '—';
-  const courseLabel = {'mol-bio':'تقنيات البيولوجيا الجزيئية','pest':'إدارة الآفات الزراعية'}[p.courseId] || p.courseId || '—';
-  const statusLabel = {pending:'⏳ قيد المراجعة', approved:'✅ مقبول', rejected:'❌ مرفوض'}[p.status] || p.status;
+  const courseLabel = COURSE_LABELS[p.courseId] || p.courseId || '—';
+  const statusLabel = {pending:'⏳ قيد المراجعة', approved: p.suspended ? '⏸️ موقوف' : '✅ مفعّل', rejected:'❌ مرفوض'}[p.status] || p.status;
   const waLink = p.phone ? 'https://wa.me/2' + p.phone.replace(/^0/, '') : null;
 
   const actions = p.status === 'pending' ?
-    '<button class="action-btn approve" onclick="askApprove(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">✅ قبول وتفعيل</button>' +
-    '<button class="action-btn reject"  onclick="askReject(\''  + p._id + '\',\'' + (p.uid||'') + '\')">❌ رفض</button>' +
-    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">💬 واتساب</a>' : '')
+    '<button class="action-btn approve" onclick="askApprove(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.check + ' قبول وتفعيل</button>' +
+    '<button class="action-btn reject"  onclick="askReject(\''  + p._id + '\',\'' + (p.uid||'') + '\')">' + IC.x + ' رفض</button>' +
+    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">' + IC.wa + ' واتساب</a>' : '')
     :
     '<span class="action-done">' + statusLabel + (p.rejectionNote ? ' — ' + p.rejectionNote : '') + '</span>' +
-    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">💬 واتساب</a>' : '');
+    (p.status === 'approved' ?
+      (p.suspended
+        ? '<button class="action-btn unsuspend" onclick="doUnsuspend(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.unlock + ' رفع الإيقاف</button>'
+        : '<button class="action-btn suspend"   onclick="askSuspend(\''   + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.pause + ' إيقاف</button>'
+      ) : '') +
+    (p.status === 'approved' ? '<button class="action-btn delete" onclick="askDelete(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.trash + ' حذف</button>' : '') +
+    (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">' + IC.wa + ' واتساب</a>' : '');
 
   return '<div class="pay-card ' + (p.status||'') + '">' +
     '<div class="pay-card-top">' +
@@ -470,6 +949,12 @@ async function confirmAction() {
   try {
     if (pendingAction.type === 'approve') {
       await doApprove(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
+    } else if (pendingAction.type === 'delete') {
+      await doDelete(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
+    } else if (pendingAction.type === 'suspend') {
+      await doSuspend(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
+    } else if (pendingAction.type === 'pause-course') {
+      await toggleCourse(pendingAction.cid, false);
     } else {
       const note = (document.getElementById('confirm-note').value || '').trim();
       await doReject(pendingAction.docId, note);
@@ -478,7 +963,8 @@ async function confirmAction() {
   } catch(e) {
     showToast('خطأ: ' + e.message, 'err');
     btn.disabled = false;
-    btn.textContent = pendingAction.type === 'approve' ? '✅ قبول وتفعيل' : '❌ رفض الطلب';
+    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً' };
+    btn.textContent = labels[pendingAction.type] || 'تأكيد';
   }
 }
 
@@ -525,6 +1011,107 @@ async function doReject(docId, note) {
   }
   updateStats(); renderList();
   showToast('❌ تم رفض الطلب', 'ok');
+}
+
+/* ── Per-Student Suspension ─────────────────────── */
+function askSuspend(docId, uid, courseId) {
+  pendingAction = { type: 'suspend', docId, uid, courseId };
+  document.getElementById('confirm-ico').textContent   = String.fromCodePoint(0x23F8, 0xFE0F);
+  document.getElementById('confirm-title').textContent = 'إيقاف الطالب من الدورة';
+  document.getElementById('confirm-msg').textContent   =
+    'سيتم إيقاف وصول هذا الطالب إلى دورة "' + (COURSE_LABELS[courseId] || courseId) +
+    '" فوراً. يمكنك رفع الإيقاف في أي وقت.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = String.fromCodePoint(0x23F8, 0xFE0F) + ' إيقاف الطالب';
+  document.getElementById('confirm-ok-btn').style.background = '#92400e';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doSuspend(docId, uid, courseId) {
+  const batch = db.batch();
+  batch.update(db.collection('course_payments').doc(docId), { suspended: true });
+  if (uid && courseId) {
+    batch.update(db.collection('users').doc(uid),
+      { suspendedCourses: firebase.firestore.FieldValue.arrayUnion(courseId) });
+  }
+  await batch.commit();
+  const idx = allPayments.findIndex(function(p) { return p._id === docId; });
+  if (idx > -1) allPayments[idx].suspended = true;
+  updateStats(); renderList();
+  showToast(String.fromCodePoint(0x23F8, 0xFE0F) + ' تم إيقاف الطالب من الدورة', 'ok');
+}
+
+async function doUnsuspend(docId, uid, courseId) {
+  const batch = db.batch();
+  batch.update(db.collection('course_payments').doc(docId), { suspended: false });
+  if (uid && courseId) {
+    batch.update(db.collection('users').doc(uid),
+      { suspendedCourses: firebase.firestore.FieldValue.arrayRemove(courseId) });
+  }
+  await batch.commit();
+  const idx = allPayments.findIndex(function(p) { return p._id === docId; });
+  if (idx > -1) allPayments[idx].suspended = false;
+  updateStats(); renderList();
+  showToast(String.fromCodePoint(0x1F513) + ' تم رفع الإيقاف عن الطالب', 'ok');
+}
+
+/* ── Course Config Listener ─────────────────────── */
+function startCourseConfigListener() {
+  if (courseConfigUnsubscribe) { courseConfigUnsubscribe(); courseConfigUnsubscribe = null; }
+  courseConfigUnsubscribe = db.collection('course_config')
+    .onSnapshot(function(snap) {
+      courseConfig = {};
+      snap.docs.forEach(function(doc) { courseConfig[doc.id] = doc.data(); });
+      updateEnrollments();
+    }, function(e) { console.warn('course_config listener:', e.message); });
+}
+
+function askPauseCourse(cid) {
+  pendingAction = { type: 'pause-course', cid: cid };
+  var lockIcon = String.fromCodePoint(0x1F512);
+  document.getElementById('confirm-ico').textContent   = lockIcon;
+  document.getElementById('confirm-title').textContent = 'إيقاف الدورة مؤقتاً';
+  document.getElementById('confirm-msg').textContent   =
+    'سيتم إيقاف الوصول إلى دورة "' + (COURSE_LABELS[cid] || cid) +
+    '" فوراً لجميع الطلاب. يمكنك إعادة تفعيلها في أي وقت.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = lockIcon + ' إيقاف الدورة';
+  document.getElementById('confirm-ok-btn').style.background = '#b45309';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function toggleCourse(cid, makeActive) {
+  try {
+    await db.collection('course_config').doc(cid).set({ active: makeActive }, { merge: true });
+    var icon = String.fromCodePoint(makeActive ? 0x1F513 : 0x1F512);
+    showToast(icon + ' ' + (makeActive ? 'تم تفعيل الدورة' : 'تم إيقاف الدورة مؤقتاً'), 'ok');
+  } catch(e) {
+    showToast('خطأ: ' + e.message, 'err');
+  }
+}
+
+/* ── Delete Approved Payment ────────────────────── */
+function askDelete(docId, uid, courseId) {
+  pendingAction = { type: 'delete', docId, uid, courseId };
+  document.getElementById('confirm-ico').textContent   = '🗑️';
+  document.getElementById('confirm-title').textContent = 'حذف سجل الدفعة';
+  document.getElementById('confirm-msg').textContent   =
+    'سيتم حذف سجل الدفع من الإيرادات نهائياً. اشتراك المستخدم في الدورة سيبقى كما هو.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '🗑️ حذف نهائياً';
+  document.getElementById('confirm-ok-btn').style.background = '#991b1b';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doDelete(docId, uid, courseId) {
+  // Delete payment document only — course access remains intact
+  await db.collection('course_payments').doc(docId).delete();
+
+  // Remove from local state immediately
+  allPayments = allPayments.filter(function(p) { return p._id !== docId; });
+  updateStats();
+  renderList();
+  showToast('🗑️ تم حذف سجل الدفعة', 'ok');
 }
 
 /* ── Toast ──────────────────────────────────────── */
