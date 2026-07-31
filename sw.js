@@ -7,7 +7,7 @@
  *  Firebase / Auth → Network Only  (NEVER cached)
  */
 
-const SW_VERSION   = 'nabtex-v2.4.0';
+const SW_VERSION   = 'nabtex-v2.5.0'; // bumped: academy push-notifications added
 const SHELL_CACHE  = SW_VERSION + '-shell';
 const STATIC_CACHE = SW_VERSION + '-static';
 const FONT_CACHE   = SW_VERSION + '-fonts';
@@ -281,3 +281,68 @@ self.addEventListener('message', event => {
     })();
   }
 });
+
+/* ══════════════════════════════════════════════════════════════
+   ACADEMY PUSH NOTIFICATIONS (Firebase Cloud Messaging)
+   Added for the Academy engagement-notification system. Purely
+   additive: only registers NEW event types ('push' via the FCM
+   compat SW helper, 'notificationclick') that don't exist above —
+   does not redefine 'fetch'/'install'/'activate'/'sync'/'message',
+   so the offline-cache behaviour above is unaffected.
+   fcm.googleapis.com is already in BYPASS_HOSTS above; no CSP
+   header is set in vercel.json, so importScripts() from gstatic.com
+   is not blocked.
+   ══════════════════════════════════════════════════════════════ */
+try {
+  importScripts(
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js'
+  );
+
+  firebase.initializeApp({
+    apiKey: "AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM",
+    authDomain: "nabtex-b8475.firebaseapp.com",
+    projectId: "nabtex-b8475",
+    storageBucket: "nabtex-b8475.firebasestorage.app",
+    messagingSenderId: "568685866343",
+    appId: "1:568685866343:web:7f938e92b562a6c862d3c2"
+  });
+
+  const messaging = firebase.messaging();
+
+  // The Supabase Edge Function and admin.html's manual Firebase Console send
+  // both use a data-only payload (no top-level "notification" key) so this
+  // handler has full control over the icon and click behaviour below.
+  messaging.onBackgroundMessage((payload) => {
+    const data  = payload.data || {};
+    const title = data.title || 'نبتيكس أكاديمي';
+    self.registration.showNotification(title, {
+      body: data.body || '',
+      icon: './favicon.png',
+      badge: './favicon.png',
+      dir: 'rtl',
+      data: { courseId: data.courseId || null }
+    });
+  });
+
+  self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const courseId  = event.notification.data && event.notification.data.courseId;
+    const targetUrl = self.registration.scope + (courseId ? '#pg:academy:course:' + courseId : '');
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.indexOf(self.registration.scope) === 0 && 'focus' in client) {
+            client.postMessage({ type: 'ACADEMY_NOTIF_CLICK', courseId: courseId || null });
+            return client.focus();
+          }
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      })
+    );
+  });
+} catch (e) {
+  // Older browsers without Messaging support (or offline first install)
+  // simply won't get push — offline caching above still works normally.
+  LOG('⚠️ Academy push notifications unavailable:', e && e.message);
+}

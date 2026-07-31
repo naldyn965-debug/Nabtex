@@ -152,6 +152,35 @@ service cloud.firestore {
       allow read, write: if isSelf(uid);
     }
 
+    // ── ACADEMY NOTIFICATIONS (bell: broadcasts + per-user, e.g. inactivity) ──
+    // scope:'broadcast' → readable by any signed-in student (admin.html + the
+    //   Supabase inactivity job write these; students never write them).
+    // scope:'user'      → readable only by the target student (readable /
+    //   mark-as-read); admin.html fan-outs and the Supabase job write these.
+    match /academy_notifications/{notifId} {
+      allow read: if isAuth() && (
+        resource.data.scope == 'broadcast' ||
+        (resource.data.scope == 'user' && resource.data.userId == request.auth.uid)
+      ) || isAdmin();
+      allow update: if isAuth() && resource.data.scope == 'user'
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow update: if isAuth() && resource.data.scope == 'broadcast'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+                    && request.resource.data.readBy.hasAll(resource.data.readBy)
+                    && request.resource.data.readBy.hasOnly(resource.data.readBy.concat([request.auth.uid]));
+      allow create, delete: if isAdmin();
+      // Note: the Supabase Edge Function and any Cloud Function use the
+      // Admin SDK / service-account token, which bypasses these rules
+      // entirely — isAdmin() above only gates admin.html's own client writes.
+    }
+
+    // ── ACADEMY BROADCAST LOG (admin.html "last 10 sent" list — admin-only) ──
+    match /academy_broadcast_log/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
     match /users/{uid}/{subcollection}/{docId} {
       allow read, write: if isSelf(uid);
     }

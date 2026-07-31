@@ -243,6 +243,47 @@ body::before{content:'';position:fixed;inset:0;
 @keyframes cardIn  {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes confirmIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 
+/* ── Broadcast Composer (academy notifications) ─────────── */
+.broadcast-open-btn{width:100%;padding:10px 14px;border-radius:10px;
+  background:rgba(34,197,94,.1);border:1px solid var(--border-md);color:#4ade80;
+  font-size:12.5px;font-weight:800;cursor:pointer;transition:all var(--t);
+  display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px}
+.broadcast-open-btn:hover{background:rgba(34,197,94,.18)}
+.broadcast-overlay{position:fixed;inset:0;z-index:850;background:rgba(0,0,0,.72);
+  display:none;align-items:center;justify-content:center;padding:20px}
+.broadcast-overlay.on{display:flex;animation:fadeIn .2s ease}
+.broadcast-box{background:var(--card);border:1px solid var(--border-md);border-radius:22px;
+  padding:26px 26px 20px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;
+  position:relative;animation:confirmIn .25s var(--t)}
+.broadcast-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
+.broadcast-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.broadcast-title{font-size:1.05rem;font-weight:900;letter-spacing:-.01em}
+.broadcast-close{background:rgba(255,255,255,.05);border:1px solid var(--border-md);color:var(--muted);
+  width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
+.broadcast-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;display:block}
+.broadcast-textarea{width:100%;padding:11px 13px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border-md);border-radius:10px;font-size:13.5px;font-family:inherit;
+  direction:rtl;outline:none;color:var(--text);resize:vertical;margin-bottom:6px;
+  transition:border-color var(--t)}
+.broadcast-textarea:focus{border-color:var(--emerald)}
+.broadcast-select{width:100%;padding:10px 13px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border-md);border-radius:10px;font-size:13px;font-family:inherit;
+  direction:rtl;outline:none;color:var(--text);margin-bottom:14px;cursor:pointer}
+.broadcast-hint{font-size:11px;color:var(--muted);margin:-2px 0 14px;text-align:left}
+.broadcast-send-btn{width:100%;padding:13px;border-radius:12px;background:var(--emerald);
+  color:#04170a;font-weight:900;font-size:14px;border:none;cursor:pointer;
+  transition:all var(--t);box-shadow:0 4px 20px rgba(34,197,94,.3);margin-top:2px}
+.broadcast-send-btn:hover{box-shadow:0 6px 24px rgba(34,197,94,.4);transform:translateY(-1px)}
+.broadcast-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.broadcast-log-wrap{margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
+.broadcast-log-title{font-size:11px;font-weight:800;color:var(--subtle);letter-spacing:.06em;
+  text-transform:uppercase;margin-bottom:10px}
+.broadcast-log-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.broadcast-log-item:last-child{border-bottom:none}
+.broadcast-log-msg{color:var(--text);line-height:1.5;margin-bottom:4px}
+.broadcast-log-meta{font-size:10.5px;color:var(--muted);display:flex;gap:8px}
+
 /* ── Daily Summary Panel ──────────────── */
 .day-summary-card{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);
   border-radius:14px;padding:16px 18px;margin-bottom:14px;animation:fadeUp .25s var(--t)}
@@ -351,6 +392,7 @@ body::before{content:'';position:fixed;inset:0;
         <div id="course-enrollments">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
+        <button class="broadcast-open-btn" onclick="openBroadcastModal()">📢 إرسال إشعار</button>
       </div>
       <div class="sidebar-footer">
         <div class="sidebar-user-badge">
@@ -415,6 +457,42 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 </div>
 
+<!-- ── Broadcast Composer (academy notifications) ── -->
+<div class="broadcast-overlay" id="broadcast-overlay">
+  <div class="broadcast-box">
+    <div class="broadcast-head">
+      <div class="broadcast-title">📢 إرسال إشعار للطلاب</div>
+      <button class="broadcast-close" onclick="closeBroadcastModal()">✕</button>
+    </div>
+
+    <label class="broadcast-label">الرسالة</label>
+    <textarea class="broadcast-textarea" id="broadcast-message" rows="3" maxlength="500"
+      placeholder="مثال: 📚 دورة جديدة سخنة: تحليل جودة الأغذية — يلا كن من أول اللي يبدأها"
+      oninput="onBroadcastMsgInput()"></textarea>
+    <div class="broadcast-hint" id="broadcast-charcount">0 / 500</div>
+
+    <label class="broadcast-label">الجمهور</label>
+    <select class="broadcast-select" id="broadcast-target" onchange="onBroadcastTargetChange()">
+      <option value="all">🌍 كل الطلاب</option>
+    </select>
+    <div class="broadcast-hint" id="broadcast-recipient-count"></div>
+
+    <label class="broadcast-label">فتح دورة عند الضغط (اختياري — للدورات الجديدة مثلاً)</label>
+    <select class="broadcast-select" id="broadcast-deeplink">
+      <option value="">بدون رابط</option>
+    </select>
+
+    <button class="broadcast-send-btn" id="broadcast-send-btn" onclick="askSendBroadcast()" disabled>📤 مراجعة وإرسال</button>
+
+    <div class="broadcast-log-wrap">
+      <div class="broadcast-log-title">آخر الإشعارات المُرسلة</div>
+      <div id="broadcast-log-list">
+        <div style="text-align:center;opacity:.35;font-size:12px;padding:10px 0">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Toast Container ── -->
 <div class="toast-wrap" id="toast-wrap"></div>
 
@@ -468,7 +546,8 @@ const COURSE_LABELS = {
   'food-quality':     'جودة وسلامة الغذاء',
   'ag-english':       'الإنجليزية الزراعية',
   'food-safety':      'سلامة الغذاء',
-  'land-reclamation': 'استصلاح الأراضي'
+  'land-reclamation': 'استصلاح الأراضي',
+  'tissue-culture':   'زراعة الأنسجة النباتية وتطبيقاتها الحديثة'
 };
 
 /* ── Auth ───────────────────────────────────────── */
@@ -489,6 +568,7 @@ auth.onAuthStateChanged(async function(user) {
   startStudyingListener();
   startPaidCoursesListener();
   startCourseConfigListener();
+  startBroadcastLogListener();
 });
 
 function showAuth() {
@@ -906,6 +986,8 @@ function buildCard(p) {
       '<div class="detail-item"><div class="detail-lbl">الدورة</div><div class="detail-val">' + courseLabel + '</div></div>' +
       '<div class="detail-item"><div class="detail-lbl">المبلغ</div><div class="detail-val">' + (p.amount||'—') + ' جنيه</div></div>' +
       '<div class="detail-item" style="word-break:break-all"><div class="detail-lbl">رقم الطلب</div><div class="detail-val" style="font-size:11px">' + p._id + '</div></div>' +
+      (p.paymentMethod ? '<div class="detail-item"><div class="detail-lbl">طريقة الدفع</div><div class="detail-val">' + (p.paymentMethod==='instapay' ? '🔷 InstaPay' : (p.paymentMethod==='vodafone_cash' ? '🔴 فودافون كاش' : p.paymentMethod)) + '</div></div>' : '') +
+      (p.receiptUrl ? '<div class="detail-item"><div class="detail-lbl">إيصال التحويل</div><div class="detail-val"><a href="' + p.receiptUrl + '" target="_blank" rel="noopener"><img src="' + p.receiptUrl + '" alt="إيصال الدفع" style="width:100%;max-width:110px;border-radius:8px;display:block;margin-top:2px"></a></div></div>' : '') +
     '</div>' +
     '<div class="pay-card-actions">' + actions + '</div>' +
   '</div>';
@@ -955,6 +1037,8 @@ async function confirmAction() {
       await doSuspend(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
     } else if (pendingAction.type === 'pause-course') {
       await toggleCourse(pendingAction.cid, false);
+    } else if (pendingAction.type === 'send-notif') {
+      await doSendBroadcast(pendingAction);
     } else {
       const note = (document.getElementById('confirm-note').value || '').trim();
       await doReject(pendingAction.docId, note);
@@ -963,7 +1047,7 @@ async function confirmAction() {
   } catch(e) {
     showToast('خطأ: ' + e.message, 'err');
     btn.disabled = false;
-    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً' };
+    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً', 'send-notif': '📤 تأكيد الإرسال' };
     btn.textContent = labels[pendingAction.type] || 'تأكيد';
   }
 }
@@ -1112,6 +1196,193 @@ async function doDelete(docId, uid, courseId) {
   updateStats();
   renderList();
   showToast('🗑️ تم حذف سجل الدفعة', 'ok');
+}
+
+/* ── Broadcast Composer (academy notifications) ──────────
+   Writes to `academy_notifications` (student-facing, read by the AcNotif
+   bell in index.html) and `academy_broadcast_log` (admin-facing history
+   list only — kept separate so "last 10 sent" stays a simple query
+   regardless of whether a send was one broadcast doc or a fan-out). ── */
+// Edge Function that actually pushes to closed/backgrounded devices — the
+// Firestore writes above only reach students who have a tab open (AcNotif's
+// realtime listener). Deploy steps: ACADEMY NOTIFICATIONS SETUP.md, Part E.
+const ACADEMY_BROADCAST_PUSH_URL = 'https://uexnkbspbhgelfmmvgqq.supabase.co/functions/v1/academy-broadcast-push';
+let broadcastLogUnsubscribe = null;
+
+function openBroadcastModal() {
+  const courseOpts = Object.keys(COURSE_LABELS).map(function(cid) {
+    return '<option value="' + cid + '">' + COURSE_LABELS[cid] + '</option>';
+  }).join('');
+  document.getElementById('broadcast-target').innerHTML   = '<option value="all">🌍 كل الطلاب</option>' + courseOpts;
+  document.getElementById('broadcast-deeplink').innerHTML = '<option value="">بدون رابط</option>' + courseOpts;
+  document.getElementById('broadcast-message').value = '';
+  document.getElementById('broadcast-charcount').textContent = '0 / 500';
+  document.getElementById('broadcast-send-btn').disabled = true;
+  onBroadcastTargetChange();
+  document.getElementById('broadcast-overlay').classList.add('on');
+}
+
+function closeBroadcastModal() {
+  document.getElementById('broadcast-overlay').classList.remove('on');
+}
+
+function onBroadcastMsgInput() {
+  const msg = document.getElementById('broadcast-message').value;
+  document.getElementById('broadcast-charcount').textContent = msg.length + ' / 500';
+  document.getElementById('broadcast-send-btn').disabled = msg.trim().length === 0;
+}
+
+// Same union (paidCourses ∪ academy_progress) already computed for #course-enrollments
+function _broadcastAudienceUids(cid) {
+  const all = {};
+  if (paidCounts[cid])     Object.keys(paidCounts[cid]).forEach(function(u)     { all[u] = true; });
+  if (studyingCounts[cid]) Object.keys(studyingCounts[cid]).forEach(function(u) { all[u] = true; });
+  return Object.keys(all);
+}
+
+function onBroadcastTargetChange() {
+  const cid  = document.getElementById('broadcast-target').value;
+  const hint = document.getElementById('broadcast-recipient-count');
+  if (cid === 'all') {
+    hint.textContent = '📡 هيوصل لكل الطلاب (إشعار بث واحد)';
+  } else {
+    const n = _broadcastAudienceUids(cid).length;
+    hint.textContent = n ? ('👥 هيوصل لـ ' + n + ' طالب مسجّل في هذه الدورة')
+                         : '⚠️ لا يوجد طلاب مسجّلون في هذه الدورة بعد';
+  }
+}
+
+function askSendBroadcast() {
+  const message = document.getElementById('broadcast-message').value.trim();
+  if (!message) return;
+  const targetCid = document.getElementById('broadcast-target').value;
+  const linkCid   = document.getElementById('broadcast-deeplink').value || null;
+  const isAll     = targetCid === 'all';
+  const uids      = isAll ? [] : _broadcastAudienceUids(targetCid);
+
+  if (!isAll && !uids.length) {
+    showToast('⚠️ لا يوجد طلاب مسجّلون في هذه الدورة لإرسال إشعار لهم', 'err');
+    return;
+  }
+
+  pendingAction = {
+    type: 'send-notif',
+    message: message,
+    targetCid: isAll ? null : targetCid,
+    linkCid: linkCid,
+    uids: uids
+  };
+
+  const esc = function(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  const audienceLabel = isAll ? 'كل الطلاب' : (uids.length + ' طالب في دورة "' + (COURSE_LABELS[targetCid]||targetCid) + '"');
+  document.getElementById('confirm-ico').textContent   = '📢';
+  document.getElementById('confirm-title').textContent = 'تأكيد إرسال الإشعار';
+  document.getElementById('confirm-msg').innerHTML =
+    'سيصل هذا الإشعار إلى <b>' + esc(audienceLabel) + '</b>:<br><br>«' + esc(message) + '»';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '📤 تأكيد الإرسال';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--emerald)';
+  closeBroadcastModal();
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doSendBroadcast(action) {
+  const now  = firebase.firestore.FieldValue.serverTimestamp();
+  const type = (action.linkCid && !action.targetCid) ? 'new_course' : 'admin_broadcast';
+
+  if (!action.targetCid) {
+    // All students → one broadcast doc; every student's AcNotif listener picks it up.
+    await db.collection('academy_notifications').add({
+      scope: 'broadcast', type: type, message: action.message,
+      courseId: action.linkCid || null, readBy: [], createdAt: now, source: 'admin'
+    });
+  } else {
+    // One course's enrollees → fan out individual user-scoped docs, chunked at
+    // 450/batch to stay safely under Firestore's 500-operation batch limit.
+    const uids = action.uids;
+    for (let i = 0; i < uids.length; i += 450) {
+      const batch = db.batch();
+      uids.slice(i, i + 450).forEach(function(uid) {
+        const ref = db.collection('academy_notifications').doc();
+        batch.set(ref, {
+          scope: 'user', userId: uid, type: type, message: action.message,
+          courseId: action.linkCid || action.targetCid, read: false, createdAt: now, source: 'admin'
+        });
+      });
+      await batch.commit();
+    }
+  }
+
+  // Admin-facing history entry only (separate from the delivery doc(s) above)
+  await db.collection('academy_broadcast_log').add({
+    message: action.message,
+    audience: action.targetCid ? (COURSE_LABELS[action.targetCid] || action.targetCid) : 'كل الطلاب',
+    recipientCount: action.targetCid ? action.uids.length : null,
+    type: type,
+    createdAt: now
+  });
+
+  showToast('📢 تم إرسال الإشعار بنجاح', 'ok');
+
+  // Actual push to closed/backgrounded devices. Best-effort and fully
+  // isolated: the broadcast above (Firestore + in-app bell + success
+  // toast) has already completed either way, so a missing deploy or a
+  // network hiccup here can't undo or block it.
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const pushRes = await fetch(ACADEMY_BROADCAST_PUSH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idToken: idToken,
+        message: action.message,
+        courseId: action.linkCid || action.targetCid || null,
+        uids: action.targetCid ? action.uids : null
+      })
+    });
+    const pushStats = await pushRes.json().catch(function(){ return null; });
+    console.log('[broadcast push]', pushRes.status, pushStats);
+    // Surface push failures in the UI, not just the console — otherwise a
+    // dead/misconfigured Edge Function (e.g. Supabase's own gateway JWT
+    // check still on, rejecting this call before it even reaches the
+    // function) looks identical to success, since the toast above already
+    // fired for the Firestore/bell write, which is a separate, always-
+    // succeeds-independently path from this push call.
+    if (!pushRes.ok || !pushStats || pushStats.pushSent === 0) {
+      const reason = (pushStats && pushStats.errors && pushStats.errors[0]) || ('HTTP ' + pushRes.status);
+      showToast('⚠️ الإشعار وصل لأصحاب التاب المفتوح بس push للأجهزة المقفولة فشل: ' + reason, 'err');
+    }
+  } catch (e) {
+    console.warn('[broadcast push] send skipped/failed:', e && e.message);
+    showToast('⚠️ push للأجهزة المقفولة فشل (الإشعار جوه الموقع لسه وصل): ' + (e && e.message || 'خطأ شبكة'), 'err');
+  }
+}
+
+function startBroadcastLogListener() {
+  if (broadcastLogUnsubscribe) { broadcastLogUnsubscribe(); broadcastLogUnsubscribe = null; }
+  function render(docs) {
+    const el = document.getElementById('broadcast-log-list');
+    if (!el) return;
+    if (!docs.length) {
+      el.innerHTML = '<div style="text-align:center;opacity:.4;font-size:12px;padding:10px 0">لسه مفيش إشعارات مُرسلة</div>';
+      return;
+    }
+    const esc = function(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    el.innerHTML = docs.map(function(d) {
+      const ts = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : null;
+      const when = ts ? (ts.toLocaleDateString('ar-EG') + ' ' + ts.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})) : '—';
+      return '<div class="broadcast-log-item">' +
+        '<div class="broadcast-log-msg">' + esc(d.message||'') + '</div>' +
+        '<div class="broadcast-log-meta"><span>' + esc(d.audience||'') + (d.recipientCount!=null ? ' ('+d.recipientCount+')' : '') + '</span><span>' + when + '</span></div>' +
+      '</div>';
+    }).join('');
+  }
+  // Single orderBy + limit, no where-clause — no composite index required.
+  broadcastLogUnsubscribe = db.collection('academy_broadcast_log')
+    .orderBy('createdAt', 'desc')
+    .limit(10)
+    .onSnapshot(function(snap) { render(snap.docs.map(function(d) { return d.data(); })); },
+                function(e) { console.warn('broadcast log listener:', e.message); });
 }
 
 /* ── Toast ──────────────────────────────────────── */

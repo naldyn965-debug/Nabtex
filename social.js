@@ -64,6 +64,15 @@
 }
 .soc-ft:not(.active):hover{color:var(--brand);background:var(--brand-pale)}
 
+/* زر الرجوع للرئيسية — أول شريط عنوان المجتمع */
+.soc-back-home-btn{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:var(--bg2);border:1px solid var(--line);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .2s,transform .18s;
+}
+.soc-back-home-btn:hover{background:var(--brand-pale);color:var(--brand);transform:scale(1.05)}
+
 /* ── Create-post card ───────────────────────────────────────── */
 .soc-create-card{
   margin:12px 13px 0;
@@ -456,6 +465,18 @@
 .soc-cover-edit-btn:hover{background:rgba(0,0,0,.78);transform:scale(1.03)}
 .soc-cover-edit-btn.uploading,.soc-avatar-edit-btn.uploading{opacity:.55;pointer-events:none}
 
+/* زر الرجوع — أعلى يمين الكوفر، بنفس طراز زر الرجوع في صفحة الدورات
+   (نص + سهم بدون خلفية)، مع ظل خفيف يضمن وضوحه فوق أي صورة غلاف */
+.soc-cover-back-btn{
+  position:absolute;top:14px;right:16px;z-index:4;
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--f-ui);font-size:12.5px;font-weight:700;
+  color:rgba(255,255,255,.85);cursor:pointer;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
+  transition:color .15s;
+}
+.soc-cover-back-btn:hover{color:#fff}
+
 /* الأفاتار — على اليمين، نصه داخل الكوفر ونصه في الكارد */
 .soc-profile-avatar-container{
   position:absolute;
@@ -838,12 +859,15 @@ const S = {
   feedTab: 'following',
   feedLast: null,
   feedLoading: false,
+  feedFollowUids: null, // كاش لقائمة اللي بتتابعهم — يمنع تغيّر الفلتر بين صفحات نفس الجلسة
+  feedSeenIds: new Set(), // معرّفات المنشورات المعروضة بالفعل — يمنع التكرار عند التمرير
   profileUid: null,
   imgs: [],
   initialized: false,
   authReady: false,
   _authListeners: [],
   followingSet: new Set(), // الحسابات اللي بتتابعها
+  navStack: [], // سجل التنقّل داخل قسم المجتمع/صفحتي — لزر الرجوع الذكي
 };
 
 // Returns a promise that resolves once Firebase auth state is known
@@ -1090,40 +1114,46 @@ async function loadFeed(reset) {
   const db = getDB();
   const cont = document.getElementById('soc-posts');
   if (!cont || !db) { S.feedLoading=false; return; }
-  if (reset) { cont.innerHTML=skel(); S.feedLast=null; }
+  if (reset) { cont.innerHTML=skel(); S.feedLast=null; S.feedSeenIds=new Set(); }
   try {
     let q;
     if (S.feedTab==='following' && S.uid) {
-      const fs = await db.collection('social_follows').where('followerUid','==',S.uid).get();
-      const uids = fs.docs.map(d=>d.data().targetUid);
-      uids.push(S.uid);
-      // Firestore 'in' requires at least 1 element and max 10
-      const safeUids = uids.slice(0,10);
-      // No orderBy on 'in' query — avoids composite index; sort client-side
-      q = db.collection('social_posts').where('authorUid','in',safeUids).limit(20);
+      if (reset || !S.feedFollowUids) {
+        const fs = await db.collection('social_follows').where('followerUid','==',S.uid).get();
+        const uids = fs.docs.map(d=>d.data().targetUid);
+        uids.push(S.uid);
+        // Firestore 'in' requires at least 1 element and max 10
+        S.feedFollowUids = uids.slice(0,10);
+      }
+      const safeUids = S.feedFollowUids;
+      // مرتّب من السيرفر (index: authorUid ASC, createdAt DESC — موجود في firestore.indexes)
+      // ده اللي بيخلي startAfter() يشتغل صح ويمنع تكرار/تعليق الصفحات
+      q = db.collection('social_posts').where('authorUid','in',safeUids).orderBy('createdAt','desc').limit(20);
     } else {
-      // Explore: fetch posts, sort client-side
-      q = db.collection('social_posts').limit(20);
+      q = db.collection('social_posts').orderBy('createdAt','desc').limit(20);
     }
     if (S.feedLast && !reset) q = q.startAfter(S.feedLast);
     const snap = await q.get();
-    // Sort client-side by createdAt descending (avoids composite index)
+    // فرز إضافي للتأكيد (السيرفر مرتّب أصلاً الآن بفضل orderBy)
     const sortedDocs = snap.docs.slice().sort((a,b)=>{
       const ta=a.data().createdAt; const tb=b.data().createdAt;
       const sa=ta&&ta.seconds?ta.seconds:0; const sb=tb&&tb.seconds?tb.seconds:0;
       return sb-sa;
     });
     S.feedLast = sortedDocs[sortedDocs.length-1]||null;
-    const uids2 = [...new Set(sortedDocs.map(d=>d.data().authorUid))];
+    // استبعاد أي منشور اتعرض قبل كده في نفس الجلسة (يمنع التكرار عند تداخل الصفحات)
+    const newDocs = sortedDocs.filter(d=>!S.feedSeenIds.has(d.id));
+    newDocs.forEach(d=>S.feedSeenIds.add(d.id));
+    const uids2 = [...new Set(newDocs.map(d=>d.data().authorUid))];
     const pm = {}; await Promise.all(uids2.map(async u=>{pm[u]=await getProfile(u);}));
-    if (sortedDocs.length === 0 && reset) {
+    if (newDocs.length === 0 && reset) {
       // If following tab is empty, suggest switching to explore
       const emptyMsg = S.feedTab==='following'
         ? `<div class="soc-profile-empty" style="margin:24px 13px;background:var(--card);border-radius:var(--r3);border:1px solid var(--line)"><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="soc-profile-empty-title">لا توجد منشورات من المتابَعين بعد</div><button onclick="SOCIAL.ftab('explore')" style="margin-top:9px;padding:7px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--rpill);font-size:12.5px;font-weight:800;font-family:var(--f-ui);cursor:pointer">استكشاف عام</button></div>`
         : `<div class="soc-profile-empty" style="margin:24px 13px;background:var(--card);border-radius:var(--r3);border:1px solid var(--line)"><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="soc-profile-empty-title">لا توجد منشورات بعد</div></div>`;
       cont.innerHTML = emptyMsg;
     } else {
-      const html = sortedDocs.map((d,i)=>postCard(d.id,d.data(),pm[d.data().authorUid],i)).join('');
+      const html = newDocs.map((d,i)=>postCard(d.id,d.data(),pm[d.data().authorUid],i)).join('');
       if (reset) cont.innerHTML = html; else cont.insertAdjacentHTML('beforeend',html);
     }
     const lm = document.getElementById('soc-lm');
@@ -1183,6 +1213,9 @@ async function renderFeed() {
   root.innerHTML = `
 <div class="soc-feed-header">
   <div class="soc-feed-title">
+    <button class="soc-back-home-btn" onclick="showPage('home')" aria-label="الرئيسية" title="الرئيسية">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <div class="soc-feed-title-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -1297,6 +1330,11 @@ async function renderProfile(uid, isSelf) {
 <div class="soc-profile-cover-wrap">
   <div class="soc-profile-cover" style="${cov}">
     <div class="soc-profile-cover-overlay"></div>
+
+    <button class="soc-cover-back-btn" onclick="SOCIAL.navBack()" aria-label="رجوع">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      رجوع
+    </button>
 
     ${isSelf ? `
     <button class="soc-cover-edit-btn" onclick="document.getElementById('soc-cover-input').click()">
@@ -1681,6 +1719,32 @@ function switchPanel(name) {
   }
 }
 
+/* ── Nav History (لزر الرجوع الذكي) ─────────────────────────────
+   يسجّل اللوحة اللي كنا واقفين عندها قبل الانتقال لبروفايل/متابعين/
+   يتابع/إشعارات، عشان زر الرجوع يرجّع المستخدم لمكانه بالظبط بدل
+   ما يودّيه للرئيسية دايمًا. */
+function navPush() {
+  const el = document.querySelector('.mkt-panel.active');
+  if (!el) return;
+  const name = el.id.replace('mkt-panel-', '');
+  const entry = { panel: name };
+  if (name === 'profile-me') entry.uid = S.profileUid;
+  const top = S.navStack[S.navStack.length - 1];
+  if (top && top.panel === entry.panel && top.uid === entry.uid) return; // تجنّب تكرار نفس اللوحة
+  S.navStack.push(entry);
+}
+function navBack() {
+  const entry = S.navStack.pop();
+  if (!entry) { if (window.showPage) showPage('home'); return; }
+  if (entry.panel === 'profile-me') {
+    S.profileUid = entry.uid;
+    switchPanel('profile-me');
+    renderProfile(entry.uid, entry.uid === S.uid);
+  } else {
+    switchPanel(entry.panel);
+  }
+}
+
 /* ─── PUBLIC API ─────────────────────────────────────────────── */
 window.SOCIAL = {
   async init() {
@@ -1731,6 +1795,7 @@ window.SOCIAL = {
   },
 
   async show(name) {
+    S.navStack = [];
     switchPanel(name);
     await waitForAuth();
     if (name==='feed') renderFeed();
@@ -1743,8 +1808,9 @@ window.SOCIAL = {
     }
   },
 
-  async profile(uid) {
+  async profile(uid, _skipNavPush) {
     if (!uid) return;
+    if (!_skipNavPush) navPush();
     S.profileUid = uid;
     switchPanel('profile-me');
     await waitForAuth();
@@ -2283,11 +2349,12 @@ window.SOCIAL = {
     }
   },
 
-  followers(uid) { switchPanel('followers'); waitForAuth().then(()=>renderFollowers(uid)); },
-  following(uid) { switchPanel('following'); waitForAuth().then(()=>renderFollowing(uid)); },
-  backProfile() { this.profile(S.profileUid); },
+  followers(uid) { navPush(); switchPanel('followers'); waitForAuth().then(()=>renderFollowers(uid)); },
+  following(uid) { navPush(); switchPanel('following'); waitForAuth().then(()=>renderFollowing(uid)); },
+  backProfile() { this.profile(S.profileUid, true); },
+  navBack() { navBack(); },
 
-  notifications() { switchPanel('notifications'); waitForAuth().then(()=>renderNotifications()); },
+  notifications() { navPush(); switchPanel('notifications'); waitForAuth().then(()=>renderNotifications()); },
 
   // aliases for onclick handlers in HTML
   showPanel(n) { this.show(n); },
