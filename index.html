@@ -112,7 +112,7 @@
      downloading it in parallel while parsing <head>, instead of only discovering
      it once the parser reaches the <script src="academy-data.js"> tag mid-document.
      Does not change execution order/timing — same script tag, same position. -->
-<link rel="preload" as="script" href="academy-data.js?v=1">
+<link rel="preload" as="script" href="academy-data.js?v=2">
 
 <!-- Firebase SDKs moved to body — see just before Firebase initialization -->
 
@@ -5389,6 +5389,7 @@ body.modal-open { overflow: hidden; }
 .acad-card-top.lr{background:#241202 url('https://assets.science.nasa.gov/dynamicimage/assets/science/esd/eo/images/imagerecords/89000/89820/egypt_oli_2017057_detail.jpg?w=1200&h=500&fit=crop') center/cover no-repeat}
 .acad-card-top.tc{background:#081e1a url('https://images.unsplash.com/photo-1622210445956-ca3320a5e7c5?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-card-top.pt{background:#1a0c02 url('https://images.unsplash.com/photo-1715360378677-d6375ac03dbf?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
+.acad-card-top.fd{background:#1a1002 url('https://images.unsplash.com/photo-1752219346775-fe086c57081b?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-share-btn{position:absolute;top:14px;left:14px;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(10,30,20,.4);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,transform .15s;padding:0;appearance:none;-webkit-appearance:none;font:inherit;outline:none}
 .acad-share-btn:hover{background:rgba(10,30,20,.6);transform:translateY(-1px)}
 .acad-share-btn:active{transform:scale(.94)}
@@ -7607,6 +7608,13 @@ body.modal-open { overflow: hidden; }
   background-size:100% 100%, cover !important;
   background-position:center, center !important;
 }
+.acad-hero--feed-mgmt{
+  background-image:
+    linear-gradient(165deg,rgba(26,16,2,.90) 0%,rgba(26,16,2,.72) 35%,rgba(26,16,2,.62) 62%,rgba(26,16,2,.88) 100%),
+    url("https://images.unsplash.com/photo-1752219346775-fe086c57081b?auto=format&fit=crop&w=1400&q=75") !important;
+  background-size:100% 100%, cover !important;
+  background-position:center, center !important;
+}
 
 /* ══════════════════════════════════════════════════════════
    J. DARK MODE
@@ -8232,7 +8240,7 @@ body.modal-open { overflow: hidden; }
 
 </div>
 
-<script src="academy-data.js?v=1"></script>
+<script src="academy-data.js?v=2"></script>
 
 
 <div id="tw"></div>
@@ -8713,6 +8721,7 @@ const App = {
     if(cid==='mol-bio')        return (typeof acMbStatus==='function') ? acMbStatus() : 'none';
     if(cid==='food-safety')    return (typeof acFsStatus==='function') ? acFsStatus() : 'none';
     if(cid==='tissue-culture') return (typeof acTcStatus==='function') ? acTcStatus() : 'none';
+    if(cid==='feed-mgmt')      return (typeof acFdStatus==='function') ? acFdStatus() : 'none';
     return 'none';
   },
 
@@ -8727,6 +8736,7 @@ const App = {
     if(typeof TC_COURSE!=='undefined') reg.push({cid:'tissue-culture',  course:TC_COURSE, icon:'🧫', grad:'linear-gradient(135deg,#0d9488,#0f766e)', paid:true, price:100, oldPrice:150, img:'https://images.unsplash.com/photo-1622210445956-ca3320a5e7c5?auto=format&fit=crop&w=900&q=70'});
     if(typeof LR_COURSE!=='undefined') reg.push({cid:'land-reclamation',course:LR_COURSE, icon:'🏜️', grad:'linear-gradient(135deg,#b45309,#78350f)', paid:false, img:'https://assets.science.nasa.gov/dynamicimage/assets/science/esd/eo/images/imagerecords/89000/89820/egypt_oli_2017057_detail.jpg?w=1200&h=500&fit=crop'});
     if(typeof PT_COURSE!=='undefined') reg.push({cid:'pesticide-tech',   course:PT_COURSE, icon:'🧪', grad:'linear-gradient(135deg,#c2410c,#7c2d12)', paid:false, img:'https://images.unsplash.com/photo-1715360378677-d6375ac03dbf?auto=format&fit=crop&w=900&q=70'});
+    if(typeof FEED_COURSE!=='undefined') reg.push({cid:'feed-mgmt',      course:FEED_COURSE, icon:'🐄', grad:'linear-gradient(135deg,#92400e,#451a03)', paid:false, img:'https://images.unsplash.com/photo-1752219346775-fe086c57081b?auto=format&fit=crop&w=900&q=70'});
     return reg;
   },
 
@@ -17999,8 +18009,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="vcash-steps on" id="vcash6-step-method">
         <div class="vcash-info-card">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 72%</span>
-            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-method-price-display">70 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-method-price-display">25 جنيه</span></div>
           </div>
         </div>
         <div class="vcash-trust-line">🔒 دفع آمن — تفعيل خلال لحظات</div>
@@ -18026,8 +18036,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="vcash-back-link" onclick="acVcashSetStep('vcash6','method')">→ رجوع لاختيار وسيلة الدفع</button>
         <div class="vcash-info-card">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 72%</span>
-            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-price-display">70 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-price-display">25 جنيه</span></div>
           </div>
           <div class="vcash-info-divider"></div>
           <div class="vcash-num-wrap">
@@ -18062,8 +18072,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="vcash-back-link" onclick="acVcashSetStep('vcash6','method')">→ رجوع لاختيار وسيلة الدفع</button>
         <div class="vcash-info-card instapay">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 72%</span>
-            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-ip-price-display">70 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash6-ip-price-display">25 جنيه</span></div>
           </div>
           <div class="vcash-info-divider"></div>
           <div class="vcash-num-wrap" id="vcash6-ip-identifiers"></div>
@@ -18096,6 +18106,65 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="vcash-pending-title">طلبك قيد المراجعة</div>
           <div class="vcash-pending-desc">تلقينا طلبك بنجاح وسيتم مراجعة التحويل وتفعيل الكورس خلال لحظات. ستُفتح الدورة تلقائياً بعد التفعيل.</div>
           <div class="vcash-pending-ref" id="vcash6-pending-ref-display"></div>
+          <div class="vcash-note">لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcash-overlay" id="vcash7-overlay" onclick="if(event.target===this)acCloseFdPayModal()">
+  <div class="vcash-box">
+    <div class="vcash-head">
+      <button class="vcash-close-btn" onclick="acCloseFdPayModal()" aria-label="إغلاق">✕</button>
+      <div class="vcash-head-logo">🐄</div>
+      <div class="vcash-head-title">إدارة الأعلاف وبرامج التغذية في الإنتاج الحيواني</div>
+      <div class="vcash-head-sub">الدورة الأشمل عربياً في إدارة الأعلاف وبرامج التغذية — اشترك الآن وابدأ التعلم فوراً</div>
+    </div>
+    <div class="vcash-body">
+      <!-- ── خطوة الدفع (فودافون كاش) ── -->
+      <div class="vcash-steps on" id="vcash7-step-pay">
+        <div class="vcash-info-card">
+          <div class="vcash-info-row">
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash7-price-display">25 جنيه</span></div>
+          </div>
+          <div class="vcash-info-divider"></div>
+          <div class="vcash-num-wrap">
+            <div class="vcash-num-lbl">أرسل على محفظة فودافون كاش</div>
+            <div class="vcash-num" id="vcash7-number">01095282573</div>
+            <button class="vcash-copy-btn" onclick="acCopyVcash7Num()">📋 نسخ الرقم</button>
+          </div>
+        </div>
+        <div class="vcash-trust-line">🔒 دفع آمن — تفعيل خلال لحظات</div>
+        <div class="vcash-steps-list">
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">1</div>
+            <div class="vcash-step-txt"><strong>افتح تطبيق فودافون كاش</strong>اختار «تحويل لمحفظة» وأدخل الرقم أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">2</div>
+            <div class="vcash-step-txt"><strong>أرسل المبلغ من رقم هاتفك</strong>تأكد من إرسال المبلغ بالكامل على الرقم أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">3</div>
+            <div class="vcash-step-txt"><strong>أدخل التفاصيل هنا</strong>وسيُفعَّل الكورس خلال لحظات بعد التحقق</div>
+          </div>
+        </div>
+        <div class="vcash-field-lbl">رقم هاتفك المُرسِل (فودافون كاش)</div>
+        <input class="vcash-field" id="vcash7-phone" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <div class="vcash-field-lbl">رقم هاتفك الشخصي</div>
+        <input class="vcash-field" id="vcash7-ref" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <button class="vcash-btn-primary" id="vcash7-submit-btn" onclick="acSubmitFdPayment()">أرسل طلب التفعيل</button>
+        <div class="vcash-note">سيتم مراجعة طلبك خلال لحظات وتفعيل الكورس تلقائياً</div>
+      </div>
+      <!-- ── خطوة الانتظار ── -->
+      <div class="vcash-steps" id="vcash7-step-pending">
+        <div class="vcash-pending-state">
+          <div class="vcash-pending-ico">⏳</div>
+          <div class="vcash-pending-title">طلبك قيد المراجعة</div>
+          <div class="vcash-pending-desc">تلقينا طلبك بنجاح وسيتم مراجعة التحويل وتفعيل الكورس خلال لحظات. ستُفتح الدورة تلقائياً بعد التفعيل.</div>
+          <div class="vcash-pending-ref" id="vcash7-pending-ref-display"></div>
           <div class="vcash-note">لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</div>
         </div>
       </div>
