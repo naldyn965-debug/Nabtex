@@ -181,6 +181,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── ADMIN CONFIG (payment-push FCM device tokens — admin.html only) ──
+    // Client side only needs write access (admin.html registers its own
+    // token here). The payment-request-push Edge Function reads this via
+    // the Firebase Admin SDK / service-account credentials, which bypass
+    // these rules entirely — same model as academy_notifications above.
+    match /admin_config/{docId} {
+      allow read, write: if isAdmin();
+    }
+
     match /users/{uid}/{subcollection}/{docId} {
       allow read, write: if isSelf(uid);
     }
