@@ -138,6 +138,7 @@ body::before{content:'';position:fixed;inset:0;
   transition:all var(--t);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .refresh-btn:hover{background:var(--card-hov);border-color:var(--border-md)}
 .refresh-btn:hover .ricon{transform:rotate(-40deg)}
+#admin-push-btn{padding:7px 14px;font-size:12px;gap:5px}
 .ricon{transition:transform .4s var(--t);display:flex;align-items:center}
 .refresh-btn svg,.logout-btn svg{display:block}
 .controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
@@ -1031,7 +1032,7 @@ function buildCard(p) {
         ? '<button class="action-btn unsuspend" onclick="doUnsuspend(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.unlock + ' رفع الإيقاف</button>'
         : '<button class="action-btn suspend"   onclick="askSuspend(\''   + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.pause + ' إيقاف</button>'
       ) : '') +
-    (p.status === 'approved' ? '<button class="action-btn delete" onclick="askDelete(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.trash + ' حذف</button>' : '') +
+    (p.status === 'approved' || p.status === 'rejected' ? '<button class="action-btn delete" onclick="askDelete(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\',\'' + p.status + '\')">' + IC.trash + ' حذف</button>' : '') +
     (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">' + IC.wa + ' واتساب</a>' : '');
 
   return '<div class="pay-card ' + (p.status||'') + '">' +
@@ -1237,12 +1238,13 @@ async function toggleCourse(cid, makeActive) {
 }
 
 /* ── Delete Approved Payment ────────────────────── */
-function askDelete(docId, uid, courseId) {
+function askDelete(docId, uid, courseId, status) {
   pendingAction = { type: 'delete', docId, uid, courseId };
   document.getElementById('confirm-ico').textContent   = '🗑️';
   document.getElementById('confirm-title').textContent = 'حذف سجل الدفعة';
-  document.getElementById('confirm-msg').textContent   =
-    'سيتم حذف سجل الدفع من الإيرادات نهائياً. اشتراك المستخدم في الدورة سيبقى كما هو.';
+  document.getElementById('confirm-msg').textContent   = status === 'rejected'
+    ? 'سيتم حذف الطلب المرفوض نهائياً وإزالته من الإحصائيات.'
+    : 'سيتم حذف سجل الدفع من الإيرادات نهائياً. اشتراك المستخدم في الدورة سيبقى كما هو.';
   document.getElementById('confirm-note').style.display = 'none';
   document.getElementById('confirm-ok-btn').textContent = '🗑️ حذف نهائياً';
   document.getElementById('confirm-ok-btn').style.background = '#991b1b';
