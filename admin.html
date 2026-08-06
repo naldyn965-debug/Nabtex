@@ -410,6 +410,7 @@ body::before{content:'';position:fixed;inset:0;
           <div class="main-title">طلبات الدفع</div>
           <div class="main-subtitle" id="last-refresh">—</div>
         </div>
+        <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل">🔔 إشعارات الدفع</button>
         <button class="refresh-btn" onclick="loadPayments()"><span class="ricon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>تحديث</button>
       </div>
 
@@ -500,6 +501,7 @@ body::before{content:'';position:fixed;inset:0;
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
 'use strict';
@@ -546,6 +548,7 @@ const COURSE_LABELS = {
   'food-quality':     'جودة وسلامة الغذاء',
   'ag-english':       'الإنجليزية الزراعية',
   'food-safety':      'سلامة الغذاء',
+  'glp':              'ممارسات المعامل الجيدة والسلامة الحيوية',
   'land-reclamation': 'استصلاح الأراضي',
   'tissue-culture':   'زراعة الأنسجة النباتية وتطبيقاتها الحديثة',
   'pesticide-tech':   'تكنولوجيا المبيدات والاستخدام الآمن',
@@ -581,6 +584,12 @@ function showAuth() {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
+  try {
+    if (localStorage.getItem('nb-admin-push-enabled') === 'true') {
+      const btn = document.getElementById('admin-push-btn');
+      if (btn) btn.textContent = '🔔 مفعّلة على الجهاز ده';
+    }
+  } catch (e) {}
 }
 
 async function doLogin() {
@@ -612,6 +621,53 @@ async function doLogout() {
   studyingCounts = {};
   paidCounts     = {};
   showAuth();
+}
+
+/* ── Payment push notifications (FCM) ─────────────
+   Registers this browser's device token in admin_config/notifications
+   so the payment-request-push Edge Function can reach it — a real
+   push notification (via sw.js), not the in-app bell, so it lands
+   even with the site fully closed. Reuses the same VAPID key + sw.js
+   as the student-facing academy notification system in index.html,
+   but stores tokens in a separate document so this channel never
+   mixes with student broadcast pushes. */
+const ACADEMY_VAPID_KEY = 'BAochWY8UrFyQb1Tcrly8ntpxaGUd2nyFtNMVyfP-FjlrDh-vffKrbK9SkCUawJLoXV_VGg5aDvyj9fBDjyRKSE';
+
+async function enableAdminPaymentPush() {
+  const btn = document.getElementById('admin-push-btn');
+  const restoreBtn = () => { if (btn) { btn.textContent = '🔔 إشعارات الدفع'; btn.disabled = false; } };
+  if (btn) { btn.textContent = '...جاري التفعيل'; btn.disabled = true; }
+  try {
+    if (typeof firebase === 'undefined' || !firebase.messaging) {
+      restoreBtn(); showToast('⚠️ Firebase Messaging مش متاحة في المتصفح ده', 'err'); return;
+    }
+    if (!('serviceWorker' in navigator)) {
+      restoreBtn(); showToast('⚠️ المتصفح ده مش بيدعم Service Workers', 'err'); return;
+    }
+    const supported = firebase.messaging.isSupported ? await firebase.messaging.isSupported() : true;
+    if (!supported) {
+      restoreBtn(); showToast('⚠️ المتصفح ده مش بيدعم إشعارات الويب', 'err'); return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      restoreBtn(); showToast(perm === 'denied' ? '❌ الإذن اتمنع من إعدادات المتصفح' : 'ℹ️ محتاجين إذنك عشان نقدر نبعتلك إشعارات', perm === 'denied' ? 'err' : 'inf');
+      return;
+    }
+    const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    await navigator.serviceWorker.ready;
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({ vapidKey: ACADEMY_VAPID_KEY, serviceWorkerRegistration: registration });
+    restoreBtn();
+    if (!token) { showToast('⚠️ متقدرناش نجيب توكن الإشعارات، جرب تاني', 'err'); return; }
+    await db.collection('admin_config').doc('notifications').set({
+      tokens: firebase.firestore.FieldValue.arrayUnion(token)
+    }, { merge: true });
+    try { localStorage.setItem('nb-admin-push-enabled', 'true'); } catch (e) {}
+    showToast('🔔 تفعّلت إشعارات الدفع على الجهاز ده', 'ok');
+  } catch (e) {
+    restoreBtn();
+    showToast('⚠️ فشل التفعيل: ' + (e && (e.code || e.message) || 'خطأ غير معروف'), 'err');
+  }
 }
 
 /* ── Load Payments (real-time listener) ─────────── */

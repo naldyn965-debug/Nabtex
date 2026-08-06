@@ -112,7 +112,7 @@
      downloading it in parallel while parsing <head>, instead of only discovering
      it once the parser reaches the <script src="academy-data.js"> tag mid-document.
      Does not change execution order/timing — same script tag, same position. -->
-<link rel="preload" as="script" href="academy-data.js?v=2">
+<link rel="preload" as="script" href="academy-data.js?v=3">
 
 <!-- Firebase SDKs moved to body — see just before Firebase initialization -->
 
@@ -5386,6 +5386,7 @@ body.modal-open { overflow: hidden; }
 .acad-card-top.fq{background:#1a0f00 url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-card-top.ag{background:#061408 url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-card-top.fs{background:#1a0e04 url('https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
+.acad-card-top.glp{background:#08152a url('https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-card-top.lr{background:#241202 url('https://assets.science.nasa.gov/dynamicimage/assets/science/esd/eo/images/imagerecords/89000/89820/egypt_oli_2017057_detail.jpg?w=1200&h=500&fit=crop') center/cover no-repeat}
 .acad-card-top.tc{background:#081e1a url('https://images.unsplash.com/photo-1622210445956-ca3320a5e7c5?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
 .acad-card-top.pt{background:#1a0c02 url('https://images.unsplash.com/photo-1715360378677-d6375ac03dbf?auto=format&fit=crop&w=1200&q=72') center/cover no-repeat}
@@ -6502,6 +6503,14 @@ body.modal-open { overflow: hidden; }
 }
 .tc-player:focus-visible{outline:2px solid var(--brand-xl);outline-offset:2px}
 
+/* fix: على اللابتوب/الشاشات العريضة padding-bottom:56.25% بيطلع فيديو طويل جداً
+   بياخد ارتفاع الشاشة كله ومايسيبش مساحة للطالب يقرأ المحتوى تحته.
+   الحل: تحديد أقصى ارتفاع نسبةً لارتفاع الشاشة (فقط للشاشات الأعرض من الموبايل) —
+   ما بيلمسش الموبايل ولا أي عنصر تاني، واليوتيوب بيعرض الفيديو letterboxed تلقائي. */
+@media(min-width:601px){
+.tc-player:not(:fullscreen):not(.tc-fake-fs){max-height:min(32vh,300px)}
+}
+
 /* ══════════════════════════════════════════════════════════
    G. QUIZ — premium feel
    ══════════════════════════════════════════════════════════ */
@@ -7594,6 +7603,13 @@ body.modal-open { overflow: hidden; }
   background-size:100% 100%, cover !important;
   background-position:center, center !important;
 }
+.acad-hero--glp{
+  background-image:
+    linear-gradient(165deg,rgba(4,12,26,.90) 0%,rgba(4,12,26,.72) 35%,rgba(4,12,26,.62) 62%,rgba(4,12,26,.88) 100%),
+    url("https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=1400&q=75") !important;
+  background-size:100% 100%, cover !important;
+  background-position:center, center !important;
+}
 .acad-hero--land-reclamation{
   background-image:
     linear-gradient(165deg,rgba(20,10,2,.90) 0%,rgba(20,10,2,.72) 35%,rgba(20,10,2,.62) 62%,rgba(20,10,2,.88) 100%),
@@ -8240,7 +8256,7 @@ body.modal-open { overflow: hidden; }
 
 </div>
 
-<script src="academy-data.js?v=2"></script>
+<script src="academy-data.js?v=3"></script>
 
 
 <div id="tw"></div>
@@ -8733,6 +8749,7 @@ const App = {
     if(typeof FQ_COURSE!=='undefined') reg.push({cid:'food-quality',    course:FQ_COURSE, icon:'🥗', grad:'linear-gradient(135deg,#d97706,#92400e)', paid:false, img:'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=70'});
     if(typeof AG_COURSE!=='undefined') reg.push({cid:'ag-english',      course:AG_COURSE, icon:'🌾', grad:'linear-gradient(135deg,#059669,#065f46)', paid:false, img:'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=900&q=70'});
     if(typeof FS_COURSE!=='undefined') reg.push({cid:'food-safety',     course:FS_COURSE, icon:'🍽️', grad:'linear-gradient(135deg,#ea580c,#9a3412)', paid:true, price:50, oldPrice:250, img:'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?auto=format&fit=crop&w=900&q=70'});
+    if(typeof GLP_COURSE!=='undefined') reg.push({cid:'glp',            course:GLP_COURSE, icon:'🧪', grad:'linear-gradient(135deg,#0f55aa,#0b3d7a)', paid:false, img:'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=900&q=70'});
     if(typeof TC_COURSE!=='undefined') reg.push({cid:'tissue-culture',  course:TC_COURSE, icon:'🧫', grad:'linear-gradient(135deg,#0d9488,#0f766e)', paid:true, price:50, oldPrice:150, img:'https://images.unsplash.com/photo-1622210445956-ca3320a5e7c5?auto=format&fit=crop&w=900&q=70'});
     if(typeof LR_COURSE!=='undefined') reg.push({cid:'land-reclamation',course:LR_COURSE, icon:'🏜️', grad:'linear-gradient(135deg,#b45309,#78350f)', paid:false, img:'https://assets.science.nasa.gov/dynamicimage/assets/science/esd/eo/images/imagerecords/89000/89820/egypt_oli_2017057_detail.jpg?w=1200&h=500&fit=crop'});
     if(typeof PT_COURSE!=='undefined') reg.push({cid:'pesticide-tech',   course:PT_COURSE, icon:'🧪', grad:'linear-gradient(135deg,#c2410c,#7c2d12)', paid:false, img:'https://images.unsplash.com/photo-1715360378677-d6375ac03dbf?auto=format&fit=crop&w=900&q=70'});
@@ -18106,6 +18123,124 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="vcash-pending-title">طلبك قيد المراجعة</div>
           <div class="vcash-pending-desc">تلقينا طلبك بنجاح وسيتم مراجعة التحويل وتفعيل الكورس خلال لحظات. ستُفتح الدورة تلقائياً بعد التفعيل.</div>
           <div class="vcash-pending-ref" id="vcash6-pending-ref-display"></div>
+          <div class="vcash-note">لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcash-overlay" id="vcash8-overlay" onclick="if(event.target===this)acCloseGlpPayModal()">
+  <div class="vcash-box">
+    <div class="vcash-head">
+      <button class="vcash-close-btn" onclick="acCloseGlpPayModal()" aria-label="إغلاق">✕</button>
+      <div class="vcash-head-logo">🧪</div>
+      <div class="vcash-head-title">ممارسات المعامل الجيدة والسلامة الحيوية التطبيقية</div>
+      <div class="vcash-head-sub">GLP والسلامة الحيوية التطبيقية — اشترك الآن وابدأ التعلم فوراً</div>
+    </div>
+    <div class="vcash-body">
+      <!-- ── خطوة الدفع ── -->
+      <!-- ── خطوة اختيار وسيلة الدفع ── -->
+      <div class="vcash-steps on" id="vcash8-step-method">
+        <div class="vcash-info-card">
+          <div class="vcash-info-row">
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash8-method-price-display">25 جنيه</span></div>
+          </div>
+        </div>
+        <div class="vcash-trust-line">🔒 دفع آمن — تفعيل خلال لحظات</div>
+        <div class="vcash-method-card vodafone" onclick="acVcashSetStep('vcash8','pay')" role="button" tabindex="0">
+          <div class="vcash-method-ico" style="background:#fff"><img decoding="async" src="data:image/png;base64,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" width="26" height="32" alt="فودافون كاش" style="display:block"></div>
+          <div class="vcash-method-txt">
+            <div class="vcash-method-name">فودافون كاش</div>
+            <div class="vcash-method-sub">حوّل من محفظتك مباشرة</div>
+          </div>
+          <div class="vcash-method-arrow">‹</div>
+        </div>
+        <div class="vcash-method-card instapay" onclick="acVcashSetStep('vcash8','instapay')" role="button" tabindex="0">
+          <div class="vcash-method-ico" style="background:#fff"><img decoding="async" src="data:image/png;base64,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" width="34" height="14.5" alt="InstaPay" style="display:block"></div>
+          <div class="vcash-method-txt">
+            <div class="vcash-method-name">InstaPay</div>
+            <div class="vcash-method-sub">تحويل فوري من أي بنك</div>
+          </div>
+          <div class="vcash-method-arrow">‹</div>
+        </div>
+      </div>
+      <!-- ── خطوة الدفع (فودافون كاش) ── -->
+      <div class="vcash-steps" id="vcash8-step-pay">
+        <button class="vcash-back-link" onclick="acVcashSetStep('vcash8','method')">→ رجوع لاختيار وسيلة الدفع</button>
+        <div class="vcash-info-card">
+          <div class="vcash-info-row">
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash8-price-display">25 جنيه</span></div>
+          </div>
+          <div class="vcash-info-divider"></div>
+          <div class="vcash-num-wrap">
+            <div class="vcash-num-lbl">أرسل على محفظة فودافون كاش</div>
+            <div class="vcash-num" id="vcash8-number">01095282573</div>
+            <button class="vcash-copy-btn" onclick="acCopyVcash8Num()">📋 نسخ الرقم</button>
+          </div>
+        </div>
+        <div class="vcash-steps-list">
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">1</div>
+            <div class="vcash-step-txt"><strong>افتح تطبيق فودافون كاش</strong>اختار «تحويل لمحفظة» وأدخل الرقم أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">2</div>
+            <div class="vcash-step-txt"><strong>أرسل المبلغ من رقم هاتفك</strong>تأكد من إرسال المبلغ بالكامل على الرقم أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num">3</div>
+            <div class="vcash-step-txt"><strong>أدخل التفاصيل هنا</strong>وسيُفعَّل الكورس خلال لحظات بعد التحقق</div>
+          </div>
+        </div>
+        <div class="vcash-field-lbl">رقم هاتفك المُرسِل (فودافون كاش)</div>
+        <input class="vcash-field" id="vcash8-phone" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <div class="vcash-field-lbl">رقم هاتفك الشخصي</div>
+        <input class="vcash-field" id="vcash8-ref" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <button class="vcash-btn-primary" id="vcash8-submit-btn" onclick="acSubmitGlpPayment('vodafone_cash')">أرسل طلب التفعيل</button>
+        <div class="vcash-note">سيتم مراجعة طلبك خلال لحظات وتفعيل الكورس تلقائياً</div>
+      </div>
+      <!-- ── خطوة الدفع (InstaPay) ── -->
+      <div class="vcash-steps" id="vcash8-step-instapay">
+        <button class="vcash-back-link" onclick="acVcashSetStep('vcash8','method')">→ رجوع لاختيار وسيلة الدفع</button>
+        <div class="vcash-info-card instapay">
+          <div class="vcash-info-row">
+            <span class="vcash-info-lbl">السعر بعد خصم 90%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">250 جنيه</s><span class="vcash-info-val" id="vcash8-ip-price-display">25 جنيه</span></div>
+          </div>
+          <div class="vcash-info-divider"></div>
+          <div class="vcash-num-wrap" id="vcash8-ip-identifiers"></div>
+        </div>
+        <div class="vcash-steps-list">
+          <div class="vcash-step-item">
+            <div class="vcash-step-num instapay">1</div>
+            <div class="vcash-step-txt"><strong>افتح تطبيق InstaPay أو تطبيق بنكك</strong>اختار «تحويل» وأدخل البيانات أعلاه</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num instapay">2</div>
+            <div class="vcash-step-txt"><strong>أرسل المبلغ من حسابك</strong>تأكد من إرسال المبلغ بالكامل</div>
+          </div>
+          <div class="vcash-step-item">
+            <div class="vcash-step-num instapay">3</div>
+            <div class="vcash-step-txt"><strong>أدخل التفاصيل هنا</strong>وسيُفعَّل الكورس خلال لحظات بعد التحقق</div>
+          </div>
+        </div>
+        <div class="vcash-field-lbl">رقم هاتفك المُرسِل</div>
+        <input class="vcash-field" id="vcash8-ip-phone" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <div class="vcash-field-lbl">رقم هاتفك الشخصي</div>
+        <input class="vcash-field" id="vcash8-ip-ref" type="tel" placeholder="مثال: 01012345678" maxlength="11" inputmode="numeric">
+        <button class="vcash-btn-primary" id="vcash8-ip-submit-btn" onclick="acSubmitGlpPayment('instapay')">أرسل طلب التفعيل</button>
+        <div class="vcash-note">سيتم مراجعة طلبك خلال لحظات وتفعيل الكورس تلقائياً</div>
+      </div>
+      <!-- ── خطوة الانتظار ── -->
+      <div class="vcash-steps" id="vcash8-step-pending">
+        <div class="vcash-pending-state">
+          <div class="vcash-pending-ico">⏳</div>
+          <div class="vcash-pending-title">طلبك قيد المراجعة</div>
+          <div class="vcash-pending-desc">تلقينا طلبك بنجاح وسيتم مراجعة التحويل وتفعيل الكورس خلال لحظات. ستُفتح الدورة تلقائياً بعد التفعيل.</div>
+          <div class="vcash-pending-ref" id="vcash8-pending-ref-display"></div>
           <div class="vcash-note">لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</div>
         </div>
       </div>
