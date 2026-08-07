@@ -8308,10 +8308,20 @@ db.enablePersistence({ synchronizeTabs: true })
     // App still works normally with network — no crash
   });
 
-// ── Course Config listener — gates openCourse() for paused courses ──
+// ── Course Config listener — gates openCourse()/acGo() for paused courses ──
 db.collection('course_config').onSnapshot(function(snap){
   _acCourseConfig={};
   snap.docs.forEach(function(d){_acCourseConfig[d.id]=d.data();});
+  // Live kick: if the course the student is looking at RIGHT NOW just got
+  // paused by the admin, boot them to the catalog immediately instead of
+  // waiting for their next click/navigation to trip the acGo() guard.
+  try{
+    if(typeof AC!=='undefined'&&AC.view&&AC.view!=='catalog'&&
+       typeof AC_CID!=='undefined'&&_acCourseConfig[AC_CID]&&_acCourseConfig[AC_CID].active===false&&
+       typeof acGo==='function'){
+      acGo('catalog',null);
+    }
+  }catch(e){}
 },function(){/* silent fail — courses stay accessible if rule missing */});
 
 // ======================== GLOBAL STATE ========================
