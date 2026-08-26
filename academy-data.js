@@ -17362,6 +17362,7 @@ cor:2,exp:'تراجع BCS من 3.25 إلى 2.50 يُشير لتوازن طاقة
 
 var _FD_VCASH_NUM='01095282573'; /* ← غيّر هنا برقم فودافون كاش */
 var _FD_COURSE_PRICE=100;          /* ← السعر بالجنيه — السعر الأصلي 200 جنيه بعد خصم 50% */
+var _FD_INSTAPAY_INFO={handle:'',mobile:'01095282573',iban:''}; /* ← يملأها المالك: معرّف/موبايل/IBAN — اترك أي حقل فارغاً لإخفائه */
 
 /* Returns locally-cached status: 'paid' | 'pending' | 'none' */
 function acFdStatus(){
@@ -17407,18 +17408,23 @@ cb('pending');
 
 function acShowFdPayModal(mode){
 var el=document.getElementById('vcash7-overlay');if(!el)return;
-var stepPay=document.getElementById('vcash7-step-pay');
-var stepPend=document.getElementById('vcash7-step-pending');
 document.getElementById('vcash7-number').textContent=_FD_VCASH_NUM;
 document.getElementById('vcash7-price-display').textContent=_FD_COURSE_PRICE+' جنيه';
+document.getElementById('vcash7-method-price-display').textContent=_FD_COURSE_PRICE+' جنيه';
+document.getElementById('vcash7-ip-price-display').textContent=_FD_COURSE_PRICE+' جنيه';
+acVcashRenderInstapayInfo('vcash7',_FD_INSTAPAY_INFO);
 if(mode==='pending'){
-stepPay.classList.remove('on');stepPend.classList.add('on');
+acVcashSetStep('vcash7','pending');
 }else{
-stepPay.classList.add('on');stepPend.classList.remove('on');
+acVcashSetStep('vcash7','method');
 var ph=document.getElementById('vcash7-phone');var rf=document.getElementById('vcash7-ref');
 if(ph)ph.value='';if(rf)rf.value='';
+var iph=document.getElementById('vcash7-ip-phone');var irf=document.getElementById('vcash7-ip-ref');
+if(iph)iph.value='';if(irf)irf.value='';
 var btn=document.getElementById('vcash7-submit-btn');
 if(btn){btn.disabled=false;btn.textContent='أرسل طلب التفعيل';}
+var ibtn=document.getElementById('vcash7-ip-submit-btn');
+if(ibtn){ibtn.disabled=false;ibtn.textContent='أرسل طلب التفعيل';}
 }
 el.classList.add('on');
 document.body.classList.add('modal-open');
@@ -17447,18 +17453,29 @@ if(typeof showToast==='function')showToast('تم نسخ الرقم','ok');
 }
 }
 
-function acSubmitFdPayment(){
+function acSubmitFdPayment(method){
+method=method||'vodafone_cash';
 var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
 if(!u){if(typeof showToast==='function')showToast('سجّل الدخول أولاً','err');return;}
-var phone=(document.getElementById('vcash7-phone').value||'').trim();
-var ref=(document.getElementById('vcash7-ref').value||'').trim();
+var isIP=method==='instapay';
+var phoneId=isIP?'vcash7-ip-phone':'vcash7-phone';
+var refId=isIP?'vcash7-ip-ref':'vcash7-ref';
+var btnId=isIP?'vcash7-ip-submit-btn':'vcash7-submit-btn';
+var phone=(document.getElementById(phoneId).value||'').trim();
+var ref=(document.getElementById(refId).value||'').trim();
+if(isIP){
+if(!phone||phone.length<3){
+if(typeof showToast==='function')showToast('برجاء إدخال اسم حساب انستاباي','err');return;
+}
+}else{
 if(!phone||phone.length<10){
 if(typeof showToast==='function')showToast('برجاء إدخال رقم الهاتف المُرسِل','err');return;
+}
 }
 if(!ref||ref.length<10){
 if(typeof showToast==='function')showToast('برجاء إدخال رقم هاتفك الشخصي','err');return;
 }
-var btn=document.getElementById('vcash7-submit-btn');
+var btn=document.getElementById(btnId);
 if(btn){btn.disabled=true;btn.textContent='جاري الإرسال...';}
 db.collection('course_payments').add({
 uid:u,
@@ -17469,17 +17486,15 @@ courseId:'feed-mgmt',
 amount:_FD_COURSE_PRICE,
 currency:'EGP',
 status:'pending',
+paymentMethod:method,
 createdAt:firebase.firestore.FieldValue.serverTimestamp()
 }).then(function(docRef){
 try{localStorage.setItem('nb-feed-mgmt-pending__'+u,'true');}catch(e){}
 _acNotifyAdminNewPayment('feed-mgmt',_FD_COURSE_PRICE,docRef.id);
-var stepPay=document.getElementById('vcash7-step-pay');
-var stepPend=document.getElementById('vcash7-step-pending');
 var refDisp=document.getElementById('vcash7-pending-ref-display');
 if(refDisp)refDisp.textContent='رقم الطلب: '+docRef.id.substring(0,14)+'…  |  رقم التواصل: '+ref;
-if(stepPay)stepPay.classList.remove('on');
-if(stepPend)stepPend.classList.add('on');
-if(typeof showToast==='function')showToast('تم إرسال طلبك — سيُفعَّل الكورس خلال 24 ساعة','ok');
+acVcashSetStep('vcash7','pending');
+if(typeof showToast==='function')showToast('تم إرسال طلبك — سيُفعَّل الكورس خلال لحظات','ok');
 /* Re-render catalog card if visible */
 if(typeof acR==='function'&&typeof AC!=='undefined'&&AC.view==='catalog')acR();
 }).catch(function(e){
@@ -17497,6 +17512,7 @@ if(typeof showToast==='function')showToast(_msg,'err');
 window.acCloseFdPayModal=acCloseFdPayModal;
 window.acCopyVcash7Num=acCopyVcash7Num;
 window.acSubmitFdPayment=acSubmitFdPayment;
+
 
 /* ── Vodafone Cash Payment — Food Safety Course ──────────────────
    رقم فودافون كاش: غيّر القيمة أدناه برقمك الفعلي                */
