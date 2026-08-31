@@ -267,6 +267,31 @@ body::before{content:'';position:fixed;inset:0;
 .broadcast-close{background:rgba(255,255,255,.05);border:1px solid var(--border-md);color:var(--muted);
   width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .broadcast-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;display:block}
+.mkdt-box{background:var(--card);border:1px solid var(--border-md);border-radius:22px;
+  padding:26px 26px 20px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;
+  position:relative;animation:confirmIn .25s var(--t)}
+.mkdt-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
+.mkdt-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.mkdt-summary-card{background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:13px;padding:14px 12px;text-align:center}
+.mkdt-summary-val{font-size:1.4rem;font-weight:900;color:#4ade80;letter-spacing:-.02em}
+.mkdt-summary-val.due{color:#fbbf24}
+.mkdt-summary-lbl{font-size:10.5px;color:var(--muted);margin-top:4px}
+.mkdt-days-title{font-size:11px;font-weight:800;color:var(--subtle);text-transform:uppercase;
+  letter-spacing:.08em;margin:18px 0 8px}
+.mkdt-day-row{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px}
+.mkdt-day-row:last-child{border-bottom:none}
+.mkdt-day-date{color:var(--text);font-weight:700}
+.mkdt-day-count{color:var(--muted);font-size:11px;margin-right:6px}
+.mkdt-day-amount{color:#4ade80;font-weight:800}
+.mkdt-settle-btn{width:100%;margin-top:20px;padding:13px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:13.5px;font-weight:800;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
+.mkdt-settle-btn:hover{filter:brightness(1.08)}
+.mkdt-settle-btn:disabled{opacity:.5;cursor:not-allowed}
+.mkdt-empty{text-align:center;opacity:.4;font-size:12px;padding:20px 0}
 .broadcast-textarea{width:100%;padding:11px 13px;background:rgba(255,255,255,.03);
   border:1px solid var(--border-md);border-radius:10px;font-size:13.5px;font-family:inherit;
   direction:rtl;outline:none;color:var(--text);resize:vertical;margin-bottom:6px;
@@ -399,6 +424,12 @@ body::before{content:'';position:fixed;inset:0;
         </div>
         <button class="broadcast-open-btn" onclick="openBroadcastModal()">📢 إرسال إشعار</button>
       </div>
+      <div class="sidebar-courses">
+        <div class="courses-heading">💼 مبيعات المسوّقين بالعمولة</div>
+        <div id="marketer-sales">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
+        </div>
+      </div>
       <div class="sidebar-footer">
         <div class="sidebar-user-badge">
           <div class="sidebar-user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -499,6 +530,39 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 </div>
 
+<!-- ── Marketer Commission Detail ── -->
+<div class="broadcast-overlay" id="marketer-detail-overlay">
+  <div class="mkdt-box">
+    <div class="broadcast-head">
+      <div class="broadcast-title" id="mkdt-title">💼 —</div>
+      <button class="broadcast-close" onclick="closeMarketerDetail()">✕</button>
+    </div>
+    <div class="mkdt-summary">
+      <div class="mkdt-summary-card">
+        <div class="mkdt-summary-val" id="mkdt-total">0 ج</div>
+        <div class="mkdt-summary-lbl">إجمالي المبيعات</div>
+      </div>
+      <div class="mkdt-summary-card">
+        <div class="mkdt-summary-val due" id="mkdt-due">0 ج</div>
+        <div class="mkdt-summary-lbl">مستحقات المسوّق (20%)</div>
+      </div>
+    </div>
+    <div class="mkdt-days-title">📅 تفصيل المبيعات حسب اليوم</div>
+    <div id="mkdt-days-list">
+      <div class="mkdt-empty">جاري التحميل...</div>
+    </div>
+    <button class="mkdt-settle-btn" id="mkdt-settle-btn" onclick="askSettleMarketer()">✅ تم تصفية حساب المسوّق</button>
+
+    <div class="mkdt-days-title" style="margin-top:22px">🔗 دمج مع كود مسوّق آخر (لو نفس الشخص كتب اسمه بشكل مختلف)</div>
+    <select class="broadcast-select" id="mkdt-merge-target">
+      <option value="">اختر الكود اللي هيتضم له...</option>
+    </select>
+    <button class="mkdt-settle-btn" id="mkdt-merge-btn" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);margin-top:10px" onclick="askMergeMarketer()">🔗 دمج الكودين</button>
+
+    <button class="mkdt-settle-btn" id="mkdt-delete-btn" style="background:transparent;border:1.5px solid rgba(239,68,68,.3);color:#f87171;margin-top:18px" onclick="askDeleteMarketer()">🗑️ حذف هذا المسوّق</button>
+  </div>
+</div>
+
 <!-- ── Toast Container ── -->
 <div class="toast-wrap" id="toast-wrap"></div>
 
@@ -560,7 +624,8 @@ const COURSE_LABELS = {
   'feed-mgmt':        'إدارة الأعلاف وبرامج التغذية في الإنتاج الحيواني',
   'food-microbiology':'الميكروبيولوجيا الغذائية وتطبيقاتها الحديثة',
   'plant-diseases':   'أمراض النبات: التشخيص العلمي والإدارة المتكاملة الحديثة',
-  'bioinformatics':   'المعلوماتية الحيوية'
+  'bioinformatics':   'المعلوماتية الحيوية',
+  'landscape-design': 'تصميم المناظر الطبيعية وتخطيط الحدائق'
 };
 
 /* ── Auth ───────────────────────────────────────── */
@@ -719,6 +784,211 @@ function updateStats() {
   document.getElementById('stat-rejected').textContent = rejected;
   document.getElementById('stat-revenue').textContent  = revenue + ' ج';
   updateEnrollments();
+  updateMarketers();
+}
+
+/* ── Marketer commission sales report ────────────── */
+function updateMarketers() {
+  var el = document.getElementById('marketer-sales');
+  if (!el) return;
+
+  var byCode = {};
+  allPayments.forEach(function(p) {
+    if (!p.referralCode) return;
+    var code = p.referralCode;
+    if (!byCode[code]) byCode[code] = { approved: 0, pending: 0, revenue: 0 };
+    if (p.status === 'approved' && !p.commissionSettled) {
+      byCode[code].approved++;
+      byCode[code].revenue += (p.amount || 0);
+    } else if (p.status === 'pending') {
+      byCode[code].pending++;
+    }
+  });
+
+  var codes = Object.keys(byCode);
+  if (!codes.length) {
+    el.innerHTML = '<div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">لا يوجد مبيعات بكود مسوّق حتى الآن</div>';
+    return;
+  }
+
+  codes.sort(function(a, b) { return byCode[b].revenue - byCode[a].revenue; });
+
+  el.innerHTML = codes.map(function(code) {
+    var d = byCode[code];
+    var sub = [];
+    if (d.approved) sub.push('✅ ' + d.approved + ' عملية');
+    if (d.pending)  sub.push('⏳ ' + d.pending + ' معلّق');
+    return '<div class="course-enroll-row" role="button" onclick="openMarketerDetail(\'' + code.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' +
+      '<div>' +
+        '<div class="course-enroll-name">' + code + '</div>' +
+        '<div class="course-enroll-pending">' + sub.join(' · ') + '</div>' +
+      '</div>' +
+      '<div class="course-enroll-count">' + d.revenue + '<span style="font-size:9px;opacity:.6;display:block;font-weight:600">جنيه</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── Marketer commission detail + settlement ─────── */
+var MK_COMMISSION_RATE = 0.20;
+var currentMarketerCode = null;
+
+function openMarketerDetail(code) {
+  currentMarketerCode = code;
+  document.getElementById('mkdt-title').textContent = '💼 ' + code;
+  populateMergeDropdown(code);
+  document.getElementById('marketer-detail-overlay').classList.add('on');
+  renderMarketerDetail();
+}
+
+function populateMergeDropdown(currentCode) {
+  var allCodes = {};
+  allPayments.forEach(function(p) {
+    if (p.referralCode) allCodes[p.referralCode] = true;
+  });
+  var others = Object.keys(allCodes).filter(function(c) { return c !== currentCode; }).sort();
+  var sel = document.getElementById('mkdt-merge-target');
+  sel.innerHTML = '<option value="">اختر الكود اللي هيتضم له...</option>' +
+    others.map(function(c) { return '<option value="' + c.replace(/"/g,'&quot;') + '">' + c + '</option>'; }).join('');
+}
+
+function closeMarketerDetail() {
+  document.getElementById('marketer-detail-overlay').classList.remove('on');
+  currentMarketerCode = null;
+}
+
+function renderMarketerDetail() {
+  if (!currentMarketerCode) return;
+  var sales = allPayments.filter(function(p) {
+    return p.referralCode === currentMarketerCode && p.status === 'approved' && !p.commissionSettled;
+  });
+
+  var total = sales.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+  var due = Math.round(total * MK_COMMISSION_RATE);
+  document.getElementById('mkdt-total').textContent = total + ' ج';
+  document.getElementById('mkdt-due').textContent = due + ' ج';
+
+  var settleBtn = document.getElementById('mkdt-settle-btn');
+  settleBtn.disabled = sales.length === 0;
+
+  var byDay = {};
+  var dayOrder = [];
+  sales.forEach(function(p) {
+    var dt = (p.createdAt && p.createdAt.toDate) ? p.createdAt.toDate() : null;
+    var key = dt ? dt.toLocaleDateString('ar-EG') : 'غير معروف';
+    if (!byDay[key]) { byDay[key] = { count: 0, amount: 0, ts: dt ? dt.getTime() : 0 }; dayOrder.push(key); }
+    byDay[key].count++;
+    byDay[key].amount += (p.amount || 0);
+  });
+  dayOrder.sort(function(a, b) { return byDay[b].ts - byDay[a].ts; });
+
+  var listEl = document.getElementById('mkdt-days-list');
+  if (!dayOrder.length) {
+    listEl.innerHTML = '<div class="mkdt-empty">لا توجد مبيعات غير مُصفّاة لهذا المسوّق</div>';
+    return;
+  }
+  listEl.innerHTML = dayOrder.map(function(day) {
+    var d = byDay[day];
+    return '<div class="mkdt-day-row">' +
+      '<div><span class="mkdt-day-date">' + day + '</span><span class="mkdt-day-count">(' + d.count + ' عملية)</span></div>' +
+      '<div class="mkdt-day-amount">' + d.amount + ' ج</div>' +
+    '</div>';
+  }).join('');
+}
+
+function askSettleMarketer() {
+  if (!currentMarketerCode) return;
+  var sales = allPayments.filter(function(p) {
+    return p.referralCode === currentMarketerCode && p.status === 'approved' && !p.commissionSettled;
+  });
+  if (!sales.length) return;
+  var total = sales.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+  var due = Math.round(total * MK_COMMISSION_RATE);
+
+  pendingAction = { type: 'settle-marketer', code: currentMarketerCode, docIds: sales.map(function(p){ return p._id; }) };
+  document.getElementById('confirm-ico').textContent   = '💰';
+  document.getElementById('confirm-title').textContent = 'تصفية حساب ' + currentMarketerCode;
+  document.getElementById('confirm-msg').textContent   =
+    'هل صرفت للمسوّق مستحقاته (' + due + ' جنيه) فعلياً؟ بعد التأكيد ستُصفَّى ' + sales.length +
+    ' عملية بيع من رصيده المستحق، وتبقى ضمن إجمالي إيراداتك دون أي حذف لسجل المبيعات.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '✅ تأكيد التصفية';
+  document.getElementById('confirm-ok-btn').style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doSettleMarketer(code, docIds) {
+  const batch = db.batch();
+  docIds.forEach(function(docId) {
+    batch.update(db.collection('course_payments').doc(docId), {
+      commissionSettled: true,
+      commissionSettledAt: firebase.firestore.FieldValue.serverTimestamp(),
+      commissionSettledBy: auth.currentUser ? auth.currentUser.uid : 'admin'
+    });
+  });
+  await batch.commit();
+  closeMarketerDetail();
+  showToast('تم تصفية حساب ' + code + ' بنجاح ✅', 'ok');
+}
+
+function askMergeMarketer() {
+  if (!currentMarketerCode) return;
+  var target = document.getElementById('mkdt-merge-target').value;
+  if (!target) { showToast('اختر الكود اللي هيتضم له الأول', 'err'); return; }
+
+  var fromCode = currentMarketerCode;
+  var docIds = allPayments.filter(function(p) { return p.referralCode === fromCode; }).map(function(p) { return p._id; });
+  if (!docIds.length) return;
+
+  pendingAction = { type: 'merge-marketer', fromCode: fromCode, toCode: target, docIds: docIds };
+  document.getElementById('confirm-ico').textContent   = '🔗';
+  document.getElementById('confirm-title').textContent = 'دمج الكودين';
+  document.getElementById('confirm-msg').textContent   =
+    'هيتم نقل كل عمليات "' + fromCode + '" (' + docIds.length + ' عملية) لتنضم تحت كود "' + target +
+    '" بشكل نهائي، متضمنة أي عمليات مُصفّاة من قبل. الإجراء ده لا يمكن التراجع عنه تلقائياً.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '🔗 تأكيد الدمج';
+  document.getElementById('confirm-ok-btn').style.background = 'linear-gradient(135deg,#3b82f6,#1d4ed8)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doMergeMarketer(fromCode, toCode, docIds) {
+  const batch = db.batch();
+  docIds.forEach(function(docId) {
+    batch.update(db.collection('course_payments').doc(docId), { referralCode: toCode });
+  });
+  await batch.commit();
+  closeMarketerDetail();
+  showToast('تم دمج "' + fromCode + '" داخل "' + toCode + '" بنجاح 🔗', 'ok');
+}
+
+function askDeleteMarketer() {
+  if (!currentMarketerCode) return;
+  var code = currentMarketerCode;
+  var docIds = allPayments.filter(function(p) { return p.referralCode === code; }).map(function(p) { return p._id; });
+  if (!docIds.length) return;
+
+  pendingAction = { type: 'delete-marketer', code: code, docIds: docIds };
+  document.getElementById('confirm-ico').textContent   = '🗑️';
+  document.getElementById('confirm-title').textContent = 'حذف المسوّق ' + code;
+  document.getElementById('confirm-msg').textContent   =
+    'هيتشال كود "' + code + '" من ' + docIds.length + ' عملية بيع، فيختفي المسوّق ده من القائمة نهائياً. ' +
+    'عمليات البيع والمبالغ نفسها هتفضل موجودة في إيراداتك — بس هتفقد ربطها بهذا المسوّق تحديداً، ولا يمكن التراجع عن الحذف.';
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-ok-btn').textContent = '🗑️ تأكيد الحذف';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doDeleteMarketer(code, docIds) {
+  const batch = db.batch();
+  docIds.forEach(function(docId) {
+    batch.update(db.collection('course_payments').doc(docId), {
+      referralCode: firebase.firestore.FieldValue.delete()
+    });
+  });
+  await batch.commit();
+  closeMarketerDetail();
+  showToast('تم حذف المسوّق ' + code + ' 🗑️', 'ok');
 }
 
 /* ── Studying Listener (academy_progress) ────────── */
@@ -1105,6 +1375,12 @@ async function confirmAction() {
       await toggleCourse(pendingAction.cid, false);
     } else if (pendingAction.type === 'send-notif') {
       await doSendBroadcast(pendingAction);
+    } else if (pendingAction.type === 'settle-marketer') {
+      await doSettleMarketer(pendingAction.code, pendingAction.docIds);
+    } else if (pendingAction.type === 'merge-marketer') {
+      await doMergeMarketer(pendingAction.fromCode, pendingAction.toCode, pendingAction.docIds);
+    } else if (pendingAction.type === 'delete-marketer') {
+      await doDeleteMarketer(pendingAction.code, pendingAction.docIds);
     } else {
       const note = (document.getElementById('confirm-note').value || '').trim();
       await doReject(pendingAction.docId, note);
@@ -1113,7 +1389,7 @@ async function confirmAction() {
   } catch(e) {
     showToast('خطأ: ' + e.message, 'err');
     btn.disabled = false;
-    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً', 'send-notif': '📤 تأكيد الإرسال' };
+    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً', 'send-notif': '📤 تأكيد الإرسال', 'settle-marketer': '✅ تأكيد التصفية', 'merge-marketer': '🔗 تأكيد الدمج', 'delete-marketer': '🗑️ تأكيد الحذف' };
     btn.textContent = labels[pendingAction.type] || 'تأكيد';
   }
 }
