@@ -243,6 +243,13 @@ body::before{content:'';position:fixed;inset:0;
   direction:rtl;outline:none;color:var(--text);resize:none;margin-bottom:14px;
   transition:border-color var(--t)}
 .confirm-note:focus{border-color:var(--emerald)}
+.confirm-price-wrap{margin-bottom:14px;text-align:right}
+.confirm-price-lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
+.confirm-price-input{width:100%;padding:10px 13px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border-md);border-radius:10px;font-size:15px;font-weight:800;font-family:inherit;
+  direction:ltr;text-align:center;outline:none;color:var(--text);
+  transition:border-color var(--t)}
+.confirm-price-input:focus{border-color:var(--emerald)}
 @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn  {from{opacity:0}to{opacity:1}}
 @keyframes cardIn  {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -492,6 +499,10 @@ body::before{content:'';position:fixed;inset:0;
     <div class="confirm-ico" id="confirm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M12 3.2L22.3 21H1.7L12 3.2z"/><line x1="12" y1="9.5" x2="12" y2="14.5"/><circle cx="12" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg></div>
     <div class="confirm-title" id="confirm-title"></div>
     <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-price-wrap" id="confirm-price-wrap" style="display:none">
+      <label class="confirm-price-lbl" for="confirm-price-input">السعر (جنيه)</label>
+      <input type="number" class="confirm-price-input" id="confirm-price-input" min="0" step="0.01" inputmode="decimal">
+    </div>
     <textarea class="confirm-note" id="confirm-note" rows="2" placeholder="سبب الرفض (اختياري)..." style="display:none"></textarea>
     <div class="confirm-actions">
       <button class="confirm-btn cancel" onclick="closeConfirm()">إلغاء</button>
@@ -1376,7 +1387,7 @@ function buildCard(p) {
   const waLink = p.phone ? 'https://wa.me/2' + p.phone.replace(/^0/, '') : null;
 
   const actions = p.status === 'pending' ?
-    '<button class="action-btn approve" onclick="askApprove(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\')">' + IC.check + ' قبول وتفعيل</button>' +
+    '<button class="action-btn approve" onclick="askApprove(\'' + p._id + '\',\'' + (p.uid||'') + '\',\'' + (p.courseId||'') + '\',' + (parseFloat(p.amount) || 0) + ')">' + IC.check + ' قبول وتفعيل</button>' +
     '<button class="action-btn reject"  onclick="askReject(\''  + p._id + '\',\'' + (p.uid||'') + '\')">' + IC.x + ' رفض</button>' +
     (waLink ? '<a class="action-btn wa" href="' + waLink + '" target="_blank" rel="noopener">' + IC.wa + ' واتساب</a>' : '')
     :
@@ -1411,12 +1422,14 @@ function buildCard(p) {
 }
 
 /* ── Actions ────────────────────────────────────── */
-function askApprove(docId, uid, courseId) {
+function askApprove(docId, uid, courseId, amount) {
   pendingAction = { type: 'approve', docId, uid, courseId };
   document.getElementById('confirm-ico').innerHTML   = IC3.check;
   document.getElementById('confirm-title').textContent = 'تأكيد القبول والتفعيل';
-  document.getElementById('confirm-msg').textContent   = 'سيتم تفعيل الدورة لهذا المستخدم فوراً. هل تأكدت من التحقق من التحويل في تطبيق فودافون كاش؟';
+  document.getElementById('confirm-msg').textContent   = 'سيتم تفعيل الدورة لهذا المستخدم فوراً. يمكنك تعديل السعر قبل التأكيد. هل تأكدت من التحقق من التحويل في تطبيق فودافون كاش؟';
   document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-price-wrap').style.display = 'block';
+  document.getElementById('confirm-price-input').value = amount || 0;
   document.getElementById('confirm-ok-btn').innerHTML = IC2.check + ' قبول وتفعيل';
   document.getElementById('confirm-ok-btn').style.background = 'var(--approved)';
   document.getElementById('confirm-overlay').classList.add('on');
@@ -1436,6 +1449,7 @@ function askReject(docId, uid) {
 
 function closeConfirm() {
   document.getElementById('confirm-overlay').classList.remove('on');
+  document.getElementById('confirm-price-wrap').style.display = 'none';
   pendingAction = null;
   document.getElementById('confirm-ok-btn').disabled = false;
 }
@@ -1447,7 +1461,15 @@ async function confirmAction() {
 
   try {
     if (pendingAction.type === 'approve') {
-      await doApprove(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
+      const priceInput = document.getElementById('confirm-price-input');
+      const newAmount = parseFloat(priceInput.value);
+      if (isNaN(newAmount) || newAmount < 0) {
+        showToast('من فضلك أدخل سعراً صحيحاً', 'err');
+        btn.disabled = false;
+        btn.innerHTML = IC2.check + ' قبول وتفعيل';
+        return;
+      }
+      await doApprove(pendingAction.docId, pendingAction.uid, pendingAction.courseId, newAmount);
     } else if (pendingAction.type === 'delete') {
       await doDelete(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
     } else if (pendingAction.type === 'suspend') {
@@ -1475,15 +1497,19 @@ async function confirmAction() {
   }
 }
 
-async function doApprove(docId, uid, courseId) {
+async function doApprove(docId, uid, courseId, newAmount) {
   const batch = db.batch();
 
-  // 1. Update payment doc status
-  batch.update(db.collection('course_payments').doc(docId), {
+  // 1. Update payment doc status (and price, if the admin edited it)
+  const paymentUpdate = {
     status:     'approved',
     approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
     approvedBy: auth.currentUser ? auth.currentUser.uid : 'admin'
-  });
+  };
+  if (typeof newAmount === 'number' && !isNaN(newAmount)) {
+    paymentUpdate.amount = newAmount;
+  }
+  batch.update(db.collection('course_payments').doc(docId), paymentUpdate);
 
   // 2. Add course to user's paidCourses
   if (uid && courseId) {
@@ -1498,7 +1524,10 @@ async function doApprove(docId, uid, courseId) {
 
   // Update local state
   const idx = allPayments.findIndex(function(p){ return p._id === docId; });
-  if (idx > -1) { allPayments[idx].status = 'approved'; }
+  if (idx > -1) {
+    allPayments[idx].status = 'approved';
+    if (typeof newAmount === 'number' && !isNaN(newAmount)) { allPayments[idx].amount = newAmount; }
+  }
   updateStats(); renderList();
   showToast('✅ تم التفعيل بنجاح — الكورس أصبح متاحاً للمستخدم', 'ok');
 }
