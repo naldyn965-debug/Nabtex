@@ -418,15 +418,21 @@ body::before{content:'';position:fixed;inset:0;
         </div>
       </div>
       <div class="sidebar-courses">
-        <div class="courses-heading">👥 الطلاب المسجّلون لكل دورة</div>
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M1.5 16c0-2.6 2.1-4.3 5-4.3s5 1.7 5 4.3"/><circle cx="6.5" cy="6.7" r="2.7"/><path d="M11.3 12c1.9.3 3.2 1.7 3.2 4"/><path d="M10.4 3.4a2.7 2.7 0 0 1 0 5.3"/></svg> الطلاب المسجّلون لكل دورة</div>
         <div id="course-enrollments">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
-        <button class="broadcast-open-btn" onclick="openBroadcastModal()">📢 إرسال إشعار</button>
+        <button class="broadcast-open-btn" onclick="openBroadcastModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.5 7.8h1.8l6.7-3.6v11.6L4.3 12.2H2.5a1 1 0 0 1-1-1V8.8a1 1 0 0 1 1-1z"/><path d="M14 7c1 .9 1 3.1 0 4"/><path d="M6.5 12.2v2.6a1 1 0 0 0 1 1h.6a1 1 0 0 0 1-1v-1.7"/></svg> إرسال إشعار</button>
       </div>
       <div class="sidebar-courses">
-        <div class="courses-heading">💼 مبيعات المسوّقين بالعمولة</div>
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
         <div id="marketer-sales">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
+        </div>
+      </div>
+      <div class="sidebar-courses">
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> الإيرادات الشهرية</div>
+        <div id="monthly-revenue">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
       </div>
@@ -446,7 +452,7 @@ body::before{content:'';position:fixed;inset:0;
           <div class="main-title">طلبات الدفع</div>
           <div class="main-subtitle" id="last-refresh">—</div>
         </div>
-        <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل">🔔 إشعارات الدفع</button>
+        <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg> إشعارات الدفع</button>
         <button class="refresh-btn" onclick="loadPayments()"><span class="ricon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>تحديث</button>
       </div>
 
@@ -483,7 +489,7 @@ body::before{content:'';position:fixed;inset:0;
 <!-- ── Confirm Dialog ── -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
-    <div class="confirm-ico" id="confirm-ico">⚠️</div>
+    <div class="confirm-ico" id="confirm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M12 3.2L22.3 21H1.7L12 3.2z"/><line x1="12" y1="9.5" x2="12" y2="14.5"/><circle cx="12" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg></div>
     <div class="confirm-title" id="confirm-title"></div>
     <div class="confirm-msg" id="confirm-msg"></div>
     <textarea class="confirm-note" id="confirm-note" rows="2" placeholder="سبب الرفض (اختياري)..." style="display:none"></textarea>
@@ -498,8 +504,8 @@ body::before{content:'';position:fixed;inset:0;
 <div class="broadcast-overlay" id="broadcast-overlay">
   <div class="broadcast-box">
     <div class="broadcast-head">
-      <div class="broadcast-title">📢 إرسال إشعار للطلاب</div>
-      <button class="broadcast-close" onclick="closeBroadcastModal()">✕</button>
+      <div class="broadcast-title"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-inline-end:4px"><path d="M2.5 7.8h1.8l6.7-3.6v11.6L4.3 12.2H2.5a1 1 0 0 1-1-1V8.8a1 1 0 0 1 1-1z"/><path d="M14 7c1 .9 1 3.1 0 4"/><path d="M6.5 12.2v2.6a1 1 0 0 0 1 1h.6a1 1 0 0 0 1-1v-1.7"/></svg> إرسال إشعار للطلاب</div>
+      <button class="broadcast-close" onclick="closeBroadcastModal()" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg></button>
     </div>
 
     <label class="broadcast-label">الرسالة</label>
@@ -519,7 +525,7 @@ body::before{content:'';position:fixed;inset:0;
       <option value="">بدون رابط</option>
     </select>
 
-    <button class="broadcast-send-btn" id="broadcast-send-btn" onclick="askSendBroadcast()" disabled>📤 مراجعة وإرسال</button>
+    <button class="broadcast-send-btn" id="broadcast-send-btn" onclick="askSendBroadcast()" disabled><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-inline-end:4px"><path d="M18 2L2 9l6 2.5L11 18l3-8 4-8z"/><path d="M8 11.5L18 2"/></svg> مراجعة وإرسال</button>
 
     <div class="broadcast-log-wrap">
       <div class="broadcast-log-title">آخر الإشعارات المُرسلة</div>
@@ -535,7 +541,7 @@ body::before{content:'';position:fixed;inset:0;
   <div class="mkdt-box">
     <div class="broadcast-head">
       <div class="broadcast-title" id="mkdt-title">💼 —</div>
-      <button class="broadcast-close" onclick="closeMarketerDetail()">✕</button>
+      <button class="broadcast-close" onclick="closeMarketerDetail()" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg></button>
     </div>
     <div class="mkdt-summary">
       <div class="mkdt-summary-card">
@@ -547,19 +553,19 @@ body::before{content:'';position:fixed;inset:0;
         <div class="mkdt-summary-lbl">مستحقات المسوّق (20%)</div>
       </div>
     </div>
-    <div class="mkdt-days-title">📅 تفصيل المبيعات حسب اليوم</div>
+    <div class="mkdt-days-title"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> تفصيل المبيعات حسب اليوم</div>
     <div id="mkdt-days-list">
       <div class="mkdt-empty">جاري التحميل...</div>
     </div>
-    <button class="mkdt-settle-btn" id="mkdt-settle-btn" onclick="askSettleMarketer()">✅ تم تصفية حساب المسوّق</button>
+    <button class="mkdt-settle-btn" id="mkdt-settle-btn" onclick="askSettleMarketer()"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8 14 16 6"/></svg> تم تصفية حساب المسوّق</button>
 
-    <div class="mkdt-days-title" style="margin-top:22px">🔗 دمج مع كود مسوّق آخر (لو نفس الشخص كتب اسمه بشكل مختلف)</div>
+    <div class="mkdt-days-title" style="margin-top:22px"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M7 9.6L5.4 11.2a2.6 2.6 0 0 0 3.7 3.7L10.7 13.3"/><path d="M13 10.4l1.6-1.6a2.6 2.6 0 0 0-3.7-3.7L9.3 6.7"/><path d="M7.7 12.3l4.6-4.6"/></svg> دمج مع كود مسوّق آخر (لو نفس الشخص كتب اسمه بشكل مختلف)</div>
     <select class="broadcast-select" id="mkdt-merge-target">
       <option value="">اختر الكود اللي هيتضم له...</option>
     </select>
-    <button class="mkdt-settle-btn" id="mkdt-merge-btn" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);margin-top:10px" onclick="askMergeMarketer()">🔗 دمج الكودين</button>
+    <button class="mkdt-settle-btn" id="mkdt-merge-btn" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);margin-top:10px" onclick="askMergeMarketer()"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.6L5.4 11.2a2.6 2.6 0 0 0 3.7 3.7L10.7 13.3"/><path d="M13 10.4l1.6-1.6a2.6 2.6 0 0 0-3.7-3.7L9.3 6.7"/><path d="M7.7 12.3l4.6-4.6"/></svg> دمج الكودين</button>
 
-    <button class="mkdt-settle-btn" id="mkdt-delete-btn" style="background:transparent;border:1.5px solid rgba(239,68,68,.3);color:#f87171;margin-top:18px" onclick="askDeleteMarketer()">🗑️ حذف هذا المسوّق</button>
+    <button class="mkdt-settle-btn" id="mkdt-delete-btn" style="background:transparent;border:1.5px solid rgba(239,68,68,.3);color:#f87171;margin-top:18px" onclick="askDeleteMarketer()"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 5 16 5"/><path d="M15 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5m2-2h6"/></svg> حذف هذا المسوّق</button>
   </div>
 </div>
 
@@ -597,6 +603,44 @@ const IC = {
   wa:     '<svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 11.9c-.23-.11-1.35-.67-1.56-.74-.21-.08-.36-.11-.51.11-.15.23-.58.74-.72.89-.13.15-.27.17-.5.06s-.96-.35-1.83-1.13c-.68-.6-1.14-1.35-1.27-1.58-.13-.23-.01-.35.1-.46.1-.1.23-.27.34-.4.11-.13.15-.23.23-.38.08-.15.04-.29-.02-.4-.06-.11-.51-1.24-.7-1.69-.19-.45-.38-.39-.52-.4l-.44-.01c-.15 0-.39.06-.6.28s-.78.77-.78 1.87.8 2.17.91 2.32c.11.15 1.57 2.4 3.8 3.37.53.23.95.37 1.27.47.54.17 1.02.14 1.41.09.43-.06 1.33-.54 1.52-1.07.19-.52.19-.97.13-1.06-.06-.1-.21-.15-.44-.26zM10 17h-.01a8 8 0 0 1-4.08-1.12l-.29-.17-3.02.79.81-2.96-.19-.3A8 8 0 0 1 2 10c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8z"/></svg>',
   circ_g: '<svg class="btn-icon" viewBox="0 0 20 20" fill="#4ade80"><circle cx="10" cy="10" r="8"/></svg>',
   circ_r: '<svg class="btn-icon" viewBox="0 0 20 20" fill="#f87171"><circle cx="10" cy="10" r="8"/></svg>',
+};
+/* Inline-flow icons (self-contained sizing, safe inside plain text / non-flex containers) */
+const IC2 = {
+  check: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:2px"><polyline points="4 10 8 14 16 6"/></svg>',
+  x:     '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:2px"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>',
+  clock: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:2px"><circle cx="10" cy="10" r="7.3"/><path d="M10 6.2v4l2.8 1.8"/></svg>',
+  pauseCircle: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:2px"><circle cx="10" cy="10" r="7.3"/><line x1="8" y1="7" x2="8" y2="13" stroke-linecap="round"/><line x1="12" y1="7" x2="12" y2="13" stroke-linecap="round"/></svg>',
+  cal:   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg>',
+  diamond: '<svg viewBox="0 0 16 16" fill="#38bdf8" style="width:11px;height:11px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M8 1l7 7-7 7-7-7z"/></svg>',
+  wallet: '<svg viewBox="0 0 16 16" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><rect x="1.5" y="4" width="13" height="9" rx="1.5"/><path d="M1.5 7h13"/><circle cx="11.5" cy="9.8" r="0.9" fill="#f87171" stroke="none"/></svg>',
+  warn:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M12 3.2L22.3 21H1.7L12 3.2z"/><line x1="12" y1="9.5" x2="12" y2="14.5"/><circle cx="12" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg>',
+  allClear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><circle cx="12" cy="12" r="9.5"/><polyline points="7.5 12.5 10.5 15.5 16.5 8.5"/></svg>',
+  inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M4 13l3-8h10l3 8"/><path d="M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6"/><path d="M4 13h5a1 1 0 0 1 1 1 2 2 0 0 0 4 0 1 1 0 0 1 1-1h5"/></svg>',
+  money: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="1.5" y="5" width="17" height="10.5" rx="2"/><circle cx="10" cy="10.3" r="2.7"/><line x1="4.5" y1="7.8" x2="4.5" y2="7.81"/><line x1="15.5" y1="12.8" x2="15.5" y2="12.81"/></svg>',
+  link:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M7 9.6L5.4 11.2a2.6 2.6 0 0 0 3.7 3.7L10.7 13.3"/><path d="M13 10.4l1.6-1.6a2.6 2.6 0 0 0-3.7-3.7L9.3 6.7"/><path d="M7.7 12.3l4.6-4.6"/></svg>',
+  trash: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><polyline points="4 5 16 5"/><path d="M15 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5m2-2h6"/></svg>',
+  megaphone: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.5 7.8h1.8l6.7-3.6v11.6L4.3 12.2H2.5a1 1 0 0 1-1-1V8.8a1 1 0 0 1 1-1z"/><path d="M14 7c1 .9 1 3.1 0 4"/><path d="M6.5 12.2v2.6a1 1 0 0 0 1 1h.6a1 1 0 0 0 1-1v-1.7"/></svg>',
+  send:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M18 2L2 9l6 2.5L11 18l3-8 4-8z"/><path d="M8 11.5L18 2"/></svg>',
+  lock:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="4" y="9" width="12" height="8" rx="1.6"/><path d="M6.5 9V6.3a3.5 3.5 0 0 1 7 0V9"/></svg>',
+  unlock:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="4" y="9" width="12" height="8" rx="1.6"/><path d="M6.5 9V6.3a3.5 3.5 0 0 1 6.5-1.8"/></svg>',
+  bell:  '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg>',
+  tower: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M10 3v14"/><path d="M6.5 6a5 5 0 0 0 0 8"/><path d="M13.5 6a5 5 0 0 1 0 8"/><path d="M3.5 3.5a9 9 0 0 0 0 13"/><path d="M16.5 3.5a9 9 0 0 1 0 13"/></svg>',
+  users_sm: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M1.5 16c0-2.6 2.1-4.3 5-4.3s5 1.7 5 4.3"/><circle cx="6.5" cy="6.7" r="2.7"/><path d="M11.3 12c1.9.3 3.2 1.7 3.2 4"/><path d="M10.4 3.4a2.7 2.7 0 0 1 0 5.3"/></svg>',
+  warnSm: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M10 2.5L18.3 17H1.7L10 2.5z"/><line x1="10" y1="7.5" x2="10" y2="11.5"/><circle cx="10" cy="14" r="0.8" fill="currentColor" stroke="none"/></svg>',
+};
+/* Large centered icons for the top of the confirm-dialog (40px, block+margin-auto so they
+   center regardless of ancestor text-align) */
+const IC3 = {
+  warn:  IC2.warn,
+  money: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><rect x="2" y="6" width="20" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="3.3"/><line x1="6" y1="9.5" x2="6" y2="9.51"/><line x1="18" y1="15.5" x2="18" y2="15.51"/></svg>',
+  link:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M9.5 12.2l-2 2a3.2 3.2 0 0 0 4.5 4.5l2.1-2.1"/><path d="M14.5 11.8l2-2a3.2 3.2 0 0 0-4.5-4.5l-2.1 2.1"/><path d="M10.2 13.8l3.6-3.6"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><polyline points="5 6.5 19 6.5"/><path d="M17.5 6.5V20a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20V6.5m3-2.5h5"/><line x1="10" y1="10.5" x2="10" y2="16.5"/><line x1="14" y1="10.5" x2="14" y2="16.5"/></svg>',
+  check: IC2.allClear,
+  x:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><circle cx="12" cy="12" r="9.5"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>',
+  megaphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><path d="M3 9.5h2.2l8-4.3v13.6l-8-4.3H3a1.2 1.2 0 0 1-1.2-1.2v-2.6A1.2 1.2 0 0 1 3 9.5z"/><path d="M16.5 8.3c1.2 1 1.2 3.7 0 4.7"/><path d="M7.7 14.5v3.1a1.2 1.2 0 0 0 1.2 1.2h.7a1.2 1.2 0 0 0 1.2-1.2v-2"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:40px;height:40px;display:block;margin:0 auto"><circle cx="12" cy="12" r="9.5"/><line x1="9.5" y1="8.5" x2="9.5" y2="15.5" stroke-linecap="round"/><line x1="14.5" y1="8.5" x2="14.5" y2="15.5" stroke-linecap="round"/></svg>',
+  lock:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>',
+  unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 7.5-2"/></svg>',
 };
 /* ── State ──────────────────────────────────────── */
 let allPayments = [];
@@ -660,7 +704,7 @@ function showApp() {
   try {
     if (localStorage.getItem('nb-admin-push-enabled') === 'true') {
       const btn = document.getElementById('admin-push-btn');
-      if (btn) btn.textContent = '🔔 مفعّلة على الجهاز ده';
+      if (btn) btn.innerHTML = IC2.bell + ' مفعّلة على الجهاز ده';
     }
   } catch (e) {}
 }
@@ -708,7 +752,7 @@ const ACADEMY_VAPID_KEY = 'BAochWY8UrFyQb1Tcrly8ntpxaGUd2nyFtNMVyfP-FjlrDh-vffKr
 
 async function enableAdminPaymentPush() {
   const btn = document.getElementById('admin-push-btn');
-  const restoreBtn = () => { if (btn) { btn.textContent = '🔔 إشعارات الدفع'; btn.disabled = false; } };
+  const restoreBtn = () => { if (btn) { btn.innerHTML = IC2.bell + ' إشعارات الدفع'; btn.disabled = false; } };
   if (btn) { btn.textContent = '...جاري التفعيل'; btn.disabled = true; }
   try {
     if (typeof firebase === 'undefined' || !firebase.messaging) {
@@ -765,7 +809,7 @@ function loadPayments() {
         '<span class="live-dot"></span>مباشر — ' + now.toLocaleTimeString('ar-EG');
     }, function(e) {
       document.getElementById('payments-container').innerHTML =
-        '<div class="empty-state"><div class="empty-ico">⚠️</div>' +
+        '<div class="empty-state"><div class="empty-ico">' + IC2.warn + '</div>' +
         '<div class="empty-title">خطأ في التحميل</div>' +
         '<div class="empty-desc">' + e.message + '</div></div>';
     });
@@ -785,6 +829,7 @@ function updateStats() {
   document.getElementById('stat-revenue').textContent  = revenue + ' ج';
   updateEnrollments();
   updateMarketers();
+  updateMonthlyRevenue();
 }
 
 /* ── Marketer commission sales report ────────────── */
@@ -816,14 +861,50 @@ function updateMarketers() {
   el.innerHTML = codes.map(function(code) {
     var d = byCode[code];
     var sub = [];
-    if (d.approved) sub.push('✅ ' + d.approved + ' عملية');
-    if (d.pending)  sub.push('⏳ ' + d.pending + ' معلّق');
+    if (d.approved) sub.push(IC2.check + d.approved + ' عملية');
+    if (d.pending)  sub.push(IC2.clock + d.pending + ' معلّق');
     return '<div class="course-enroll-row" role="button" onclick="openMarketerDetail(\'' + code.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' +
       '<div>' +
         '<div class="course-enroll-name">' + code + '</div>' +
         '<div class="course-enroll-pending">' + sub.join(' · ') + '</div>' +
       '</div>' +
       '<div class="course-enroll-count">' + d.revenue + '<span style="font-size:9px;opacity:.6;display:block;font-weight:600">جنيه</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── Monthly revenue breakdown ────────────────────── */
+function updateMonthlyRevenue() {
+  var el = document.getElementById('monthly-revenue');
+  if (!el) return;
+
+  var byMonth = {};
+  allPayments.forEach(function(p) {
+    if (p.status !== 'approved') return;
+    var pd = getPayDate(p); if (!pd) return;
+    var key = pd.getFullYear() + '-' + pd.getMonth();
+    if (!byMonth[key]) byMonth[key] = { y: pd.getFullYear(), m: pd.getMonth(), revenue: 0 };
+    byMonth[key].revenue += (p.amount || 0);
+  });
+
+  var keys = Object.keys(byMonth);
+  if (!keys.length) {
+    el.innerHTML = '<div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">لا يوجد إيرادات مسجّلة حتى الآن</div>';
+    return;
+  }
+
+  keys.sort(function(a, b) {
+    var A = byMonth[a], B = byMonth[b];
+    return (B.y - A.y) || (B.m - A.m);
+  });
+
+  el.innerHTML = keys.map(function(k) {
+    var d = byMonth[k];
+    return '<div class="course-enroll-row">' +
+      '<div>' +
+        '<div class="course-enroll-name">' + MONTHS_AR_FULL[d.m] + ' ' + d.y + '</div>' +
+      '</div>' +
+      '<div class="course-enroll-count">' + d.revenue.toFixed(0) + '<span style="font-size:9px;opacity:.6;display:block;font-weight:600">جنيه</span></div>' +
     '</div>';
   }).join('');
 }
@@ -905,13 +986,13 @@ function askSettleMarketer() {
   var due = Math.round(total * MK_COMMISSION_RATE);
 
   pendingAction = { type: 'settle-marketer', code: currentMarketerCode, docIds: sales.map(function(p){ return p._id; }) };
-  document.getElementById('confirm-ico').textContent   = '💰';
+  document.getElementById('confirm-ico').innerHTML   = IC3.money;
   document.getElementById('confirm-title').textContent = 'تصفية حساب ' + currentMarketerCode;
   document.getElementById('confirm-msg').textContent   =
     'هل صرفت للمسوّق مستحقاته (' + due + ' جنيه) فعلياً؟ بعد التأكيد ستُصفَّى ' + sales.length +
     ' عملية بيع من رصيده المستحق، وتبقى ضمن إجمالي إيراداتك دون أي حذف لسجل المبيعات.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '✅ تأكيد التصفية';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.check + ' تأكيد التصفية';
   document.getElementById('confirm-ok-btn').style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -940,13 +1021,13 @@ function askMergeMarketer() {
   if (!docIds.length) return;
 
   pendingAction = { type: 'merge-marketer', fromCode: fromCode, toCode: target, docIds: docIds };
-  document.getElementById('confirm-ico').textContent   = '🔗';
+  document.getElementById('confirm-ico').innerHTML   = IC3.link;
   document.getElementById('confirm-title').textContent = 'دمج الكودين';
   document.getElementById('confirm-msg').textContent   =
     'هيتم نقل كل عمليات "' + fromCode + '" (' + docIds.length + ' عملية) لتنضم تحت كود "' + target +
     '" بشكل نهائي، متضمنة أي عمليات مُصفّاة من قبل. الإجراء ده لا يمكن التراجع عنه تلقائياً.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '🔗 تأكيد الدمج';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.link + ' تأكيد الدمج';
   document.getElementById('confirm-ok-btn').style.background = 'linear-gradient(135deg,#3b82f6,#1d4ed8)';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -968,13 +1049,13 @@ function askDeleteMarketer() {
   if (!docIds.length) return;
 
   pendingAction = { type: 'delete-marketer', code: code, docIds: docIds };
-  document.getElementById('confirm-ico').textContent   = '🗑️';
+  document.getElementById('confirm-ico').innerHTML   = IC3.trash;
   document.getElementById('confirm-title').textContent = 'حذف المسوّق ' + code;
   document.getElementById('confirm-msg').textContent   =
     'هيتشال كود "' + code + '" من ' + docIds.length + ' عملية بيع، فيختفي المسوّق ده من القائمة نهائياً. ' +
     'عمليات البيع والمبالغ نفسها هتفضل موجودة في إيراداتك — بس هتفقد ربطها بهذا المسوّق تحديداً، ولا يمكن التراجع عن الحذف.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '🗑️ تأكيد الحذف';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.trash + ' تأكيد الحذف';
   document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -1056,8 +1137,8 @@ function updateEnrollments() {
     var pend  = pendingCount[cid] || 0;
 
     var sub = [];
-    if (paid) sub.push('✅ ' + paid + ' مشترك');
-    if (pend) sub.push('⏳ ' + pend + ' معلّق');
+    if (paid) sub.push(IC2.check + paid + ' مشترك');
+    if (pend) sub.push(IC2.clock + pend + ' معلّق');
 
     var toggleClick = isActive
       ? 'askPauseCourse(\'' + cid + '\')'
@@ -1277,7 +1358,7 @@ function renderList() {
   if (!list.length) {
     container.innerHTML =
       '<div class="empty-state">' +
-      '<div class="empty-ico">' + (currentFilter==='pending'?'🎉':'📭') + '</div>' +
+      '<div class="empty-ico">' + (currentFilter==='pending'?IC2.allClear:IC2.inbox) + '</div>' +
       '<div class="empty-title">' + (currentFilter==='pending' ? 'لا يوجد طلبات معلّقة' : 'لا توجد نتائج') + '</div>' +
       '<div class="empty-desc">' + (currentFilter==='pending' ? 'كل الطلبات تمت معالجتها!' : 'جرّب فلتر أو بحث مختلف') + '</div></div>';
     return;
@@ -1291,7 +1372,7 @@ function renderList() {
 function buildCard(p) {
   const date = p.createdAt ? new Date(p.createdAt.toDate ? p.createdAt.toDate() : p.createdAt).toLocaleString('ar-EG') : '—';
   const courseLabel = COURSE_LABELS[p.courseId] || p.courseId || '—';
-  const statusLabel = {pending:'⏳ قيد المراجعة', approved: p.suspended ? '⏸️ موقوف' : '✅ مفعّل', rejected:'❌ مرفوض'}[p.status] || p.status;
+  const statusLabel = {pending:IC2.clock+' قيد المراجعة', approved: p.suspended ? IC2.pauseCircle+' موقوف' : IC2.check+' مفعّل', rejected:IC2.x+' مرفوض'}[p.status] || p.status;
   const waLink = p.phone ? 'https://wa.me/2' + p.phone.replace(/^0/, '') : null;
 
   const actions = p.status === 'pending' ?
@@ -1312,7 +1393,7 @@ function buildCard(p) {
     '<div class="pay-card-top">' +
       '<div class="pay-card-info">' +
         '<div class="pay-email">' + (p.email || 'لا يوجد إيميل') + '</div>' +
-        '<div class="pay-date">📅 ' + date + '</div>' +
+        '<div class="pay-date">' + IC2.cal + date + '</div>' +
       '</div>' +
       '<span class="status-badge ' + (p.status||'') + '">' + statusLabel + '</span>' +
     '</div>' +
@@ -1322,7 +1403,7 @@ function buildCard(p) {
       '<div class="detail-item"><div class="detail-lbl">الدورة</div><div class="detail-val">' + courseLabel + '</div></div>' +
       '<div class="detail-item"><div class="detail-lbl">المبلغ</div><div class="detail-val">' + (p.amount||'—') + ' جنيه</div></div>' +
       '<div class="detail-item" style="word-break:break-all"><div class="detail-lbl">رقم الطلب</div><div class="detail-val" style="font-size:11px">' + p._id + '</div></div>' +
-      (p.paymentMethod ? '<div class="detail-item"><div class="detail-lbl">طريقة الدفع</div><div class="detail-val">' + (p.paymentMethod==='instapay' ? '🔷 InstaPay' : (p.paymentMethod==='vodafone_cash' ? '🔴 فودافون كاش' : p.paymentMethod)) + '</div></div>' : '') +
+      (p.paymentMethod ? '<div class="detail-item"><div class="detail-lbl">طريقة الدفع</div><div class="detail-val">' + (p.paymentMethod==='instapay' ? IC2.diamond+'InstaPay' : (p.paymentMethod==='vodafone_cash' ? IC2.wallet+'فودافون كاش' : p.paymentMethod)) + '</div></div>' : '') +
       (p.receiptUrl ? '<div class="detail-item"><div class="detail-lbl">إيصال التحويل</div><div class="detail-val"><a href="' + p.receiptUrl + '" target="_blank" rel="noopener"><img src="' + p.receiptUrl + '" alt="إيصال الدفع" style="width:100%;max-width:110px;border-radius:8px;display:block;margin-top:2px"></a></div></div>' : '') +
     '</div>' +
     '<div class="pay-card-actions">' + actions + '</div>' +
@@ -1332,23 +1413,23 @@ function buildCard(p) {
 /* ── Actions ────────────────────────────────────── */
 function askApprove(docId, uid, courseId) {
   pendingAction = { type: 'approve', docId, uid, courseId };
-  document.getElementById('confirm-ico').textContent   = '✅';
+  document.getElementById('confirm-ico').innerHTML   = IC3.check;
   document.getElementById('confirm-title').textContent = 'تأكيد القبول والتفعيل';
   document.getElementById('confirm-msg').textContent   = 'سيتم تفعيل الدورة لهذا المستخدم فوراً. هل تأكدت من التحقق من التحويل في تطبيق فودافون كاش؟';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '✅ قبول وتفعيل';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.check + ' قبول وتفعيل';
   document.getElementById('confirm-ok-btn').style.background = 'var(--approved)';
   document.getElementById('confirm-overlay').classList.add('on');
 }
 
 function askReject(docId, uid) {
   pendingAction = { type: 'reject', docId, uid };
-  document.getElementById('confirm-ico').textContent   = '❌';
+  document.getElementById('confirm-ico').innerHTML   = IC3.x;
   document.getElementById('confirm-title').textContent = 'رفض الطلب';
   document.getElementById('confirm-msg').textContent   = 'هل تريد رفض هذا الطلب؟ سيتم إشعار المستخدم بالرفض.';
   document.getElementById('confirm-note').style.display = 'block';
   document.getElementById('confirm-note').value = '';
-  document.getElementById('confirm-ok-btn').textContent = '❌ رفض الطلب';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.x + ' رفض الطلب';
   document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -1389,8 +1470,8 @@ async function confirmAction() {
   } catch(e) {
     showToast('خطأ: ' + e.message, 'err');
     btn.disabled = false;
-    const labels = { approve: '✅ قبول وتفعيل', reject: '❌ رفض الطلب', delete: '🗑️ حذف نهائياً', 'send-notif': '📤 تأكيد الإرسال', 'settle-marketer': '✅ تأكيد التصفية', 'merge-marketer': '🔗 تأكيد الدمج', 'delete-marketer': '🗑️ تأكيد الحذف' };
-    btn.textContent = labels[pendingAction.type] || 'تأكيد';
+    const labels = { approve: IC2.check+' قبول وتفعيل', reject: IC2.x+' رفض الطلب', delete: IC2.trash+' حذف نهائياً', 'send-notif': IC2.send+' تأكيد الإرسال', 'settle-marketer': IC2.check+' تأكيد التصفية', 'merge-marketer': IC2.link+' تأكيد الدمج', 'delete-marketer': IC2.trash+' تأكيد الحذف' };
+    btn.innerHTML = labels[pendingAction.type] || 'تأكيد';
   }
 }
 
@@ -1442,13 +1523,13 @@ async function doReject(docId, note) {
 /* ── Per-Student Suspension ─────────────────────── */
 function askSuspend(docId, uid, courseId) {
   pendingAction = { type: 'suspend', docId, uid, courseId };
-  document.getElementById('confirm-ico').textContent   = String.fromCodePoint(0x23F8, 0xFE0F);
+  document.getElementById('confirm-ico').innerHTML   = IC3.pause;
   document.getElementById('confirm-title').textContent = 'إيقاف الطالب من الدورة';
   document.getElementById('confirm-msg').textContent   =
     'سيتم إيقاف وصول هذا الطالب إلى دورة "' + (COURSE_LABELS[courseId] || courseId) +
     '" فوراً. يمكنك رفع الإيقاف في أي وقت.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = String.fromCodePoint(0x23F8, 0xFE0F) + ' إيقاف الطالب';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.pauseCircle + ' إيقاف الطالب';
   document.getElementById('confirm-ok-btn').style.background = '#92400e';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -1494,14 +1575,13 @@ function startCourseConfigListener() {
 
 function askPauseCourse(cid) {
   pendingAction = { type: 'pause-course', cid: cid };
-  var lockIcon = String.fromCodePoint(0x1F512);
-  document.getElementById('confirm-ico').textContent   = lockIcon;
+  document.getElementById('confirm-ico').innerHTML   = IC3.lock;
   document.getElementById('confirm-title').textContent = 'إيقاف الدورة مؤقتاً';
   document.getElementById('confirm-msg').textContent   =
     'سيتم إيقاف الوصول إلى دورة "' + (COURSE_LABELS[cid] || cid) +
     '" فوراً لجميع الطلاب. يمكنك إعادة تفعيلها في أي وقت.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = lockIcon + ' إيقاف الدورة';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.lock + ' إيقاف الدورة';
   document.getElementById('confirm-ok-btn').style.background = '#b45309';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -1519,13 +1599,13 @@ async function toggleCourse(cid, makeActive) {
 /* ── Delete Approved Payment ────────────────────── */
 function askDelete(docId, uid, courseId, status) {
   pendingAction = { type: 'delete', docId, uid, courseId };
-  document.getElementById('confirm-ico').textContent   = '🗑️';
+  document.getElementById('confirm-ico').innerHTML   = IC3.trash;
   document.getElementById('confirm-title').textContent = 'حذف سجل الدفعة';
   document.getElementById('confirm-msg').textContent   = status === 'rejected'
     ? 'سيتم حذف الطلب المرفوض نهائياً وإزالته من الإحصائيات.'
     : 'سيتم حذف سجل الدفع من الإيرادات نهائياً. اشتراك المستخدم في الدورة سيبقى كما هو.';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '🗑️ حذف نهائياً';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.trash + ' حذف نهائياً';
   document.getElementById('confirm-ok-btn').style.background = '#991b1b';
   document.getElementById('confirm-overlay').classList.add('on');
 }
@@ -1587,11 +1667,11 @@ function onBroadcastTargetChange() {
   const cid  = document.getElementById('broadcast-target').value;
   const hint = document.getElementById('broadcast-recipient-count');
   if (cid === 'all') {
-    hint.textContent = '📡 هيوصل لكل الطلاب (إشعار بث واحد)';
+    hint.innerHTML = IC2.tower + 'هيوصل لكل الطلاب (إشعار بث واحد)';
   } else {
     const n = _broadcastAudienceUids(cid).length;
-    hint.textContent = n ? ('👥 هيوصل لـ ' + n + ' طالب مسجّل في هذه الدورة')
-                         : '⚠️ لا يوجد طلاب مسجّلون في هذه الدورة بعد';
+    hint.innerHTML = n ? (IC2.users_sm + 'هيوصل لـ ' + n + ' طالب مسجّل في هذه الدورة')
+                         : (IC2.warnSm + 'لا يوجد طلاب مسجّلون في هذه الدورة بعد');
   }
 }
 
@@ -1618,12 +1698,12 @@ function askSendBroadcast() {
 
   const esc = function(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   const audienceLabel = isAll ? 'كل الطلاب' : (uids.length + ' طالب في دورة "' + (COURSE_LABELS[targetCid]||targetCid) + '"');
-  document.getElementById('confirm-ico').textContent   = '📢';
+  document.getElementById('confirm-ico').innerHTML   = IC3.megaphone;
   document.getElementById('confirm-title').textContent = 'تأكيد إرسال الإشعار';
   document.getElementById('confirm-msg').innerHTML =
     'سيصل هذا الإشعار إلى <b>' + esc(audienceLabel) + '</b>:<br><br>«' + esc(message) + '»';
   document.getElementById('confirm-note').style.display = 'none';
-  document.getElementById('confirm-ok-btn').textContent = '📤 تأكيد الإرسال';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.send + ' تأكيد الإرسال';
   document.getElementById('confirm-ok-btn').style.background = 'var(--emerald)';
   closeBroadcastModal();
   document.getElementById('confirm-overlay').classList.add('on');
