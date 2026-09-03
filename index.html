@@ -4168,6 +4168,7 @@ body.modal-open { overflow: hidden; }
       <!-- تم نقل الرئيسية / مزرعتي / السوق / الأكاديمية للشريط السفلي -->
       <a href="#" class="nl" id="nl-goals" onclick="showPage('goals');return false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-left:5px;flex-shrink:0"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>أهداف المنصة</a>
       <a href="#" class="nl" onclick="showPage('privacy');return false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-left:5px;flex-shrink:0"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>سياسة الخصوصية</a>
+      <a href="#" class="nl" onclick="showPage('ip-policy');return false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-left:5px;flex-shrink:0"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>الملكية الفكرية</a>
     </div>
     <div class="nav-actions" id="nav-actions">
       <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر" aria-label="تبديل المظهر">
@@ -4232,6 +4233,7 @@ body.modal-open { overflow: hidden; }
     <!-- تم نقل الرئيسية / مزرعتي / السوق / الأكاديمية للشريط السفلي -->
     <a href="#" class="nl" onclick="showPage('goals');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>أهداف المنصة</a>
     <a href="#" class="nl" onclick="showPage('privacy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>سياسة الخصوصية</a>
+    <a href="#" class="nl" onclick="showPage('ip-policy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>الملكية الفكرية</a>
     <!-- زرار تحميل التطبيق: Android → مباشر | iOS → تعليمات -->
     <a href="#" class="nl nb-dl-btn" id="mob-install-app" onclick="closeMob();setTimeout(openPwaModal,180);return false">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2v13"/><path d="M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>حمّل تطبيق نبتيكس
@@ -4389,6 +4391,7 @@ body.modal-open { overflow: hidden; }
         <div>
           <h4>قانوني</h4>
           <a href="#" onclick="showPage('privacy');return false">سياسة الخصوصية وملفات تعريف الارتباط</a>
+          <a href="#" onclick="showPage('ip-policy');return false">الملكية الفكرية وحماية المحتوى</a>
         </div>
       </div>
       <div class="footer-bot">
@@ -4532,6 +4535,85 @@ body.modal-open { overflow: hidden; }
 
       <div class="pv-contact">
         <h3>عندك سؤال عن خصوصية بياناتك؟</h3>
+        <p>تواصل معنا مباشرة وهنرد عليك في أقرب وقت</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <a href="mailto:naldyn965@gmail.com">📧 راسلنا بالإيميل</a>
+          <a href="tel:01095282573">📞 01095282573</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: IP / COPYRIGHT POLICY ══════════ -->
+<div class="page" id="pg-ip-policy">
+  <style>
+    .ipp-wrap{max-width:820px;margin:0 auto;padding:8px 0 60px}
+    .ipp-hero{text-align:center;padding:28px 0 8px}
+    .ipp-hero h1{font-family:var(--f-display);font-size:2.1rem;color:var(--ink);margin:0 0 8px}
+    .ipp-hero p{color:var(--muted);font-size:14px;margin:0}
+    .ipp-updated{display:inline-flex;align-items:center;gap:6px;background:var(--brand-mist);color:var(--brand-d);border-radius:var(--rpill);padding:6px 14px;font-size:12.5px;font-weight:700;margin-top:12px}
+    [data-dark] .ipp-updated{background:rgba(27,107,58,.15);color:var(--brand-xl)}
+    .ipp-notice{background:var(--gold-pale);border:1.5px solid var(--gold-l);border-radius:var(--r3);padding:16px 18px;margin:24px 0;font-size:13.5px;line-height:1.9;color:var(--ink2)}
+    [data-dark] .ipp-notice{background:rgba(201,135,26,.1);border-color:rgba(201,135,26,.35)}
+    .ipp-section{margin-top:34px}
+    .ipp-section h2{font-size:1.25rem;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+    .ipp-section p,.ipp-section li{color:var(--slate);font-size:14.5px;line-height:2;margin:0 0 10px}
+    .ipp-section ul{margin:0 0 10px;padding-inline-start:20px}
+    .ipp-card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r3);padding:18px 20px;margin-bottom:12px;box-shadow:var(--s1)}
+    .ipp-card h3{font-size:14.5px;color:var(--ink);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+    .ipp-card p{margin:0;font-size:13.5px;color:var(--muted)}
+    .ipp-contact{background:linear-gradient(135deg,var(--brand-d),var(--brand));border-radius:var(--r3);padding:24px;text-align:center;margin-top:40px}
+    .ipp-contact h3{color:#fff;font-size:1.1rem;margin:0 0 8px}
+    .ipp-contact p{color:rgba(255,255,255,.85);font-size:13.5px;margin:0 0 14px}
+    .ipp-contact a{display:inline-flex;background:#fff;color:var(--brand-d);border-radius:var(--rpill);padding:9px 22px;font-size:13.5px;font-weight:800;text-decoration:none}
+  </style>
+  <div class="page-back-bar"><div class="W"><button class="page-back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button></div></div>
+  <div class="W">
+    <div class="ipp-wrap">
+      <div class="ipp-hero">
+        <h1>الملكية الفكرية وحماية المحتوى</h1>
+        <p>ملكية محتوى منصة نبتيكس، والاستخدامات المسموح بها، والإجراءات المتّبعة ضد أي مخالفة</p>
+        <div class="ipp-updated">📅 آخر تحديث: سبتمبر 2026</div>
+      </div>
+
+      <div class="ipp-notice">
+        <strong>⚠️ ملاحظة مهمة:</strong> هذه السياسة صياغة أولية توضّح إطار حماية محتوى المنصة والإجراءات المقترحة ضد المخالفين، وهي قيد المراجعة القانونية النهائية من محامٍ مصري متخصص في الملكية الفكرية قبل اعتمادها بشكل كامل.
+      </div>
+
+      <div class="ipp-section">
+        <h2>1️⃣ نطاق التطبيق</h2>
+        <p>تسري هذه السياسة على جميع محتويات منصة نبتيكس (أكاديمي والسوق الإلكتروني الملحق بها) بلا استثناء: الدروس المرئية والمسموعة، النصوص والمقالات، بنوك الأسئلة والاختبارات، هيكلة الكورسات ومحتواها، التصميمات المرئية، الشعار والعلامة التجارية، وقواعد البيانات والأكواد البرمجية التي يقوم عليها الموقع. بمجرد التسجيل في المنصة أو الاشتراك في أي كورس، فإنك توافق على الالتزام الكامل بها.</p>
+      </div>
+
+      <div class="ipp-section">
+        <h2>2️⃣ من يملك هذا المحتوى؟</h2>
+        <p>جميع المحتويات المتاحة عبر منصة نبتيكس محمية بموجب قانون حماية حقوق الملكية الفكرية المصري رقم 82 لسنة 2002، وتؤول ملكيتها الفكرية الكاملة حصريًا لمالك ومطوّر منصة نبتيكس. الاشتراك في أي كورس يمنحك ترخيص استخدام شخصي محدود لغرض التعلّم الفردي فقط، وليس نقلاً لملكية المحتوى أو أي جزء منه.</p>
+      </div>
+
+      <div class="ipp-section">
+        <h2>3️⃣ الاستخدامات المحظورة</h2>
+        <div class="ipp-card"><h3>🎥 تحميل أو تسجيل الفيديوهات</h3><p>يُحظر تحميل الدروس أو تسجيل الشاشة أثناء عرضها، أو استخدام أي أداة لاستخلاص الملفات الصوتية أو المرئية من المنصة.</p></div>
+        <div class="ipp-card"><h3>📤 إعادة النشر والتوزيع</h3><p>يُحظر نسخ أو إعادة نشر أي جزء من المحتوى (نصوص، أسئلة، فيديوهات، صور) على أي منصة أخرى بأي صورة، مجانية كانت أو مدفوعة.</p></div>
+        <div class="ipp-card"><h3>🔑 مشاركة الحساب</h3><p>يُحظر مشاركة بيانات الدخول لحساب واحد بين أكثر من مستخدم، أو بيع أو تأجير حق الوصول لحساب مُفعَّل.</p></div>
+        <div class="ipp-card"><h3>🤖 الاستخراج الآلي</h3><p>يُحظر استخدام برامج الزحف الآلي أو أي وسيلة تقنية لاستخراج بيانات الكورسات أو بنوك الأسئلة بصورة جماعية.</p></div>
+        <div class="ipp-card"><h3>💰 إعادة البيع</h3><p>يُحظر إعادة بيع الوصول للمنصة أو لأي كورس بها، سواء بشكل مباشر أو ضمن منتج أو خدمة أخرى.</p></div>
+        <div class="ipp-card"><h3>🏷️ استخدام الاسم والشعار</h3><p>يُحظر استخدام اسم "نبتيكس" أو شعارها أو هويتها البصرية في أي نشاط تجاري أو تسويقي دون إذن كتابي.</p></div>
+      </div>
+
+      <div class="ipp-section">
+        <h2>4️⃣ الإجراءات ضد المخالفين</h2>
+        <p>عند رصد أو ثبوت أي مخالفة، تحتفظ إدارة المنصة بحقها في اتخاذ إجراء واحد أو أكثر مما يأتي، حسب جسامة المخالفة: إنذار كتابي عبر البريد الإلكتروني المسجَّل — تعليق الحساب مؤقتًا — الإنهاء الدائم للحساب وسحب صلاحيات الوصول للكورسات دون رد أي مبالغ مدفوعة — المطالبة القضائية بالتعويض عن الأضرار المادية والأدبية — تحويل الواقعة للنيابة العامة أو الجهات المختصة لاتخاذ الإجراءات الجنائية بموجب قانون حماية حقوق الملكية الفكرية رقم 82 لسنة 2002 وقانون مكافحة جرائم تقنية المعلومات رقم 175 لسنة 2018.</p>
+        <p>تحتفظ المنصة بسجلات الدخول وعناوين IP وأوقات المشاهدة والتحميل والبيانات الوصفية المرتبطة بأي نشاط مخالف، لاستخدامها كدليل رقمي عند اللجوء للجهات القضائية.</p>
+      </div>
+
+      <div class="ipp-section">
+        <h2>5️⃣ الإبلاغ عن انتهاكات خارج المنصة</h2>
+        <p>لو لقيت محتوى نبتيكس منشورًا دون إذن على موقع أو منصة خارجية (يوتيوب، فيسبوك، تيليجرام، إلخ)، برجاء إبلاغنا فورًا عبر بيانات التواصل أسفل الصفحة، مع رابط المحتوى المخالف ولقطة شاشة موثّقة بالتاريخ والوقت إن أمكن.</p>
+      </div>
+
+      <div class="ipp-contact">
+        <h3>لاحظت مخالفة أو عندك سؤال؟</h3>
         <p>تواصل معنا مباشرة وهنرد عليك في أقرب وقت</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a href="mailto:naldyn965@gmail.com">📧 راسلنا بالإيميل</a>
