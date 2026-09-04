@@ -387,25 +387,34 @@ body::before{content:'';position:fixed;inset:0;
 /* ── Marketer PDF statement (screen: hidden / print: only this shows) ── */
 #mk-print-sheet{display:none}
 @media print{
+  /* The site is dark-themed (html,body background:var(--bg) is near-black).
+     Without forcing white here, that dark background prints too, and the
+     sheet's dark text becomes invisible on it — which is exactly what
+     showed up on a real device even though it looked fine in a plain
+     light-background test page. */
+  html,body{background:#fff !important}
+  body::before{display:none !important}
   body > *:not(#mk-print-sheet){display:none !important}
   #mk-print-sheet{display:block !important;direction:rtl;font-family:'Cairo',Arial,sans-serif;
-    color:#111;padding:0;max-width:100%}
+    background:#fff !important;color:#111 !important;padding:0;max-width:100%;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #mk-print-sheet *{color:#111}
   #mk-print-sheet .mkps-head{display:flex;align-items:center;justify-content:space-between;
     border-bottom:2px solid #16a34a;padding-bottom:12px;margin-bottom:18px}
-  #mk-print-sheet .mkps-brand{font-size:20px;font-weight:900;color:#16a34a}
-  #mk-print-sheet .mkps-date{font-size:12px;color:#555}
+  #mk-print-sheet .mkps-brand{font-size:20px;font-weight:900;color:#16a34a !important}
+  #mk-print-sheet .mkps-date{font-size:12px;color:#555 !important}
   #mk-print-sheet h2{font-size:16px;margin:0 0 4px}
-  #mk-print-sheet .mkps-sub{font-size:12px;color:#555;margin:0 0 16px}
+  #mk-print-sheet .mkps-sub{font-size:12px;color:#555 !important;margin:0 0 16px}
   #mk-print-sheet .mkps-totals{display:flex;gap:14px;margin-bottom:20px}
   #mk-print-sheet .mkps-total-box{flex:1;border:1px solid #ccc;border-radius:8px;
-    padding:10px 12px;text-align:center}
+    padding:10px 12px;text-align:center;background:#fff !important}
   #mk-print-sheet .mkps-total-val{font-size:17px;font-weight:900}
-  #mk-print-sheet .mkps-total-lbl{font-size:10.5px;color:#666;margin-top:3px}
-  #mk-print-sheet table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px}
-  #mk-print-sheet th{background:#f0f0f0;text-align:right;padding:7px 9px;border:1px solid #ccc}
-  #mk-print-sheet td{padding:6px 9px;border:1px solid #ddd}
+  #mk-print-sheet .mkps-total-lbl{font-size:10.5px;color:#666 !important;margin-top:3px}
+  #mk-print-sheet table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px;background:#fff !important}
+  #mk-print-sheet th{background:#f0f0f0 !important;text-align:right;padding:7px 9px;border:1px solid #ccc}
+  #mk-print-sheet td{padding:6px 9px;border:1px solid #ddd;background:#fff !important}
   #mk-print-sheet .mkps-section-title{font-size:13px;font-weight:800;margin:0 0 8px}
-  #mk-print-sheet .mkps-foot{font-size:10.5px;color:#888;margin-top:24px;border-top:1px solid #ddd;padding-top:10px}
+  #mk-print-sheet .mkps-foot{font-size:10.5px;color:#888 !important;margin-top:24px;border-top:1px solid #ddd;padding-top:10px}
 }
 </style>
 </head>
