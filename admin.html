@@ -287,18 +287,29 @@ body::before{content:'';position:fixed;inset:0;
 .mkdt-summary-lbl{font-size:10.5px;color:var(--muted);margin-top:4px}
 .mkdt-days-title{font-size:11px;font-weight:800;color:var(--subtle);text-transform:uppercase;
   letter-spacing:.08em;margin:18px 0 8px}
-.mkdt-day-row{display:flex;align-items:center;justify-content:space-between;
+.mkdt-day-row,.mkdt-course-row{display:flex;align-items:center;justify-content:space-between;
   padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px}
-.mkdt-day-row:last-child{border-bottom:none}
-.mkdt-day-date{color:var(--text);font-weight:700}
-.mkdt-day-count{color:var(--muted);font-size:11px;margin-right:6px}
-.mkdt-day-amount{color:#4ade80;font-weight:800}
+.mkdt-day-row:last-child,.mkdt-course-row:last-child{border-bottom:none}
+.mkdt-day-date,.mkdt-course-name{color:var(--text);font-weight:700}
+.mkdt-day-count,.mkdt-course-count{color:var(--muted);font-size:11px;margin-right:6px}
+.mkdt-day-amount,.mkdt-course-amount{color:#4ade80;font-weight:800}
+.mkdt-pdf-btn{width:100%;margin-top:16px;padding:12px;border-radius:12px;
+  border:1.5px solid var(--border-md);background:rgba(255,255,255,.03);color:var(--text);
+  font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.mkdt-pdf-btn:hover{background:rgba(255,255,255,.06)}
 .mkdt-settle-btn{width:100%;margin-top:20px;padding:13px;border-radius:12px;border:none;
   background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:13.5px;font-weight:800;
   cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
 .mkdt-settle-btn:hover{filter:brightness(1.08)}
 .mkdt-settle-btn:disabled{opacity:.5;cursor:not-allowed}
 .mkdt-empty{text-align:center;opacity:.4;font-size:12px;padding:20px 0}
+.mk-total-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mk-total-card{background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:14px;padding:12px 10px;text-align:center}
+.mk-total-val{font-size:1.15rem;font-weight:900;letter-spacing:-.02em;color:#4ade80}
+.mk-total-val.due{color:#fbbf24}
+.mk-total-lbl{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
 .broadcast-textarea{width:100%;padding:11px 13px;background:rgba(255,255,255,.03);
   border:1px solid var(--border-md);border-radius:10px;font-size:16px;font-family:inherit;
   direction:rtl;outline:none;color:var(--text);resize:vertical;margin-bottom:6px;
@@ -372,6 +383,30 @@ body::before{content:'';position:fixed;inset:0;
   opacity:.7;padding:2px;display:flex;transition:opacity var(--t)}
 .date-clear-btn:hover{opacity:1}
 .date-clear-btn svg{width:15px;height:15px}
+
+/* ── Marketer PDF statement (screen: hidden / print: only this shows) ── */
+#mk-print-sheet{display:none}
+@media print{
+  body > *:not(#mk-print-sheet){display:none !important}
+  #mk-print-sheet{display:block !important;direction:rtl;font-family:'Cairo',Arial,sans-serif;
+    color:#111;padding:0;max-width:100%}
+  #mk-print-sheet .mkps-head{display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px solid #16a34a;padding-bottom:12px;margin-bottom:18px}
+  #mk-print-sheet .mkps-brand{font-size:20px;font-weight:900;color:#16a34a}
+  #mk-print-sheet .mkps-date{font-size:12px;color:#555}
+  #mk-print-sheet h2{font-size:16px;margin:0 0 4px}
+  #mk-print-sheet .mkps-sub{font-size:12px;color:#555;margin:0 0 16px}
+  #mk-print-sheet .mkps-totals{display:flex;gap:14px;margin-bottom:20px}
+  #mk-print-sheet .mkps-total-box{flex:1;border:1px solid #ccc;border-radius:8px;
+    padding:10px 12px;text-align:center}
+  #mk-print-sheet .mkps-total-val{font-size:17px;font-weight:900}
+  #mk-print-sheet .mkps-total-lbl{font-size:10.5px;color:#666;margin-top:3px}
+  #mk-print-sheet table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px}
+  #mk-print-sheet th{background:#f0f0f0;text-align:right;padding:7px 9px;border:1px solid #ccc}
+  #mk-print-sheet td{padding:6px 9px;border:1px solid #ddd}
+  #mk-print-sheet .mkps-section-title{font-size:13px;font-weight:800;margin:0 0 8px}
+  #mk-print-sheet .mkps-foot{font-size:10.5px;color:#888;margin-top:24px;border-top:1px solid #ddd;padding-top:10px}
+}
 </style>
 </head>
 <body>
@@ -433,6 +468,16 @@ body::before{content:'';position:fixed;inset:0;
       </div>
       <div class="sidebar-courses">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
+        <div class="mk-total-summary">
+          <div class="mk-total-card">
+            <div class="mk-total-val due" id="mk-total-due">0 ج</div>
+            <div class="mk-total-lbl">إجمالي مستحقات كل المسوّقين</div>
+          </div>
+          <div class="mk-total-card">
+            <div class="mk-total-val" id="mk-total-profit">0 ج</div>
+            <div class="mk-total-lbl">صافي مكسبك من مبيعاتهم</div>
+          </div>
+        </div>
         <div id="marketer-sales">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
@@ -564,10 +609,15 @@ body::before{content:'';position:fixed;inset:0;
         <div class="mkdt-summary-lbl">مستحقات المسوّق (30%)</div>
       </div>
     </div>
-    <div class="mkdt-days-title"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> تفصيل المبيعات حسب اليوم</div>
+    <div class="mkdt-days-title"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.3 5.3h15.4M2.3 10h15.4M2.3 14.7h9"/></svg> تفصيل المبيعات حسب الكورس</div>
+    <div id="mkdt-courses-list">
+      <div class="mkdt-empty">جاري التحميل...</div>
+    </div>
+    <div class="mkdt-days-title" style="margin-top:18px"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> تفصيل المبيعات حسب اليوم</div>
     <div id="mkdt-days-list">
       <div class="mkdt-empty">جاري التحميل...</div>
     </div>
+    <button class="mkdt-pdf-btn" onclick="downloadMarketerStatement()"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="2" width="13" height="16" rx="1.5"/><path d="M7 6.5h6M7 9.5h6M7 12.5h3.5"/><path d="M13.5 15.5l1.3 1.3 2.2-2.5" stroke="#22c55e"/></svg> تحميل كشف حساب (PDF)</button>
     <button class="mkdt-settle-btn" id="mkdt-settle-btn" onclick="askSettleMarketer()"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8 14 16 6"/></svg> تم تصفية حساب المسوّق</button>
 
     <div class="mkdt-days-title" style="margin-top:22px"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M7 9.6L5.4 11.2a2.6 2.6 0 0 0 3.7 3.7L10.7 13.3"/><path d="M13 10.4l1.6-1.6a2.6 2.6 0 0 0-3.7-3.7L9.3 6.7"/><path d="M7.7 12.3l4.6-4.6"/></svg> دمج مع كود مسوّق آخر (لو نفس الشخص كتب اسمه بشكل مختلف)</div>
@@ -582,6 +632,7 @@ body::before{content:'';position:fixed;inset:0;
 
 <!-- ── Toast Container ── -->
 <div class="toast-wrap" id="toast-wrap"></div>
+<div id="mk-print-sheet"></div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -862,6 +913,19 @@ function updateMarketers() {
   });
 
   var codes = Object.keys(byCode);
+
+  // Totals across ALL marketers, from the same unsettled-approved revenue
+  // figures used per-code below — one commission rate, so summing revenue
+  // first and applying the rate once avoids any per-code rounding drift.
+  var totalRevenueAll = 0;
+  codes.forEach(function(code) { totalRevenueAll += byCode[code].revenue; });
+  var totalDueAll    = Math.round(totalRevenueAll * MK_COMMISSION_RATE);
+  var totalProfitAll = totalRevenueAll - totalDueAll;
+  var dueElAll = document.getElementById('mk-total-due');
+  var profitElAll = document.getElementById('mk-total-profit');
+  if (dueElAll)    dueElAll.textContent    = totalDueAll    + ' ج';
+  if (profitElAll) profitElAll.textContent = totalProfitAll + ' ج';
+
   if (!codes.length) {
     el.innerHTML = '<div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">لا يوجد مبيعات بكود مسوّق حتى الآن</div>';
     return;
@@ -962,6 +1026,35 @@ function renderMarketerDetail() {
   var settleBtn = document.getElementById('mkdt-settle-btn');
   settleBtn.disabled = sales.length === 0;
 
+  var coursesListEl = document.getElementById('mkdt-courses-list');
+  var daysListEl    = document.getElementById('mkdt-days-list');
+
+  if (!sales.length) {
+    coursesListEl.innerHTML = '<div class="mkdt-empty">لا توجد مبيعات غير مُصفّاة لهذا المسوّق</div>';
+    daysListEl.innerHTML    = '<div class="mkdt-empty">لا توجد مبيعات غير مُصفّاة لهذا المسوّق</div>';
+    return;
+  }
+
+  // By course
+  var byCourse = {};
+  var courseOrder = [];
+  sales.forEach(function(p) {
+    var cid = p.courseId || 'غير محدد';
+    if (!byCourse[cid]) { byCourse[cid] = { count: 0, amount: 0 }; courseOrder.push(cid); }
+    byCourse[cid].count++;
+    byCourse[cid].amount += (p.amount || 0);
+  });
+  courseOrder.sort(function(a, b) { return byCourse[b].amount - byCourse[a].amount; });
+  coursesListEl.innerHTML = courseOrder.map(function(cid) {
+    var c = byCourse[cid];
+    var label = COURSE_LABELS[cid] || cid;
+    return '<div class="mkdt-course-row">' +
+      '<div><span class="mkdt-course-name">' + label + '</span><span class="mkdt-course-count">(' + c.count + ' عملية)</span></div>' +
+      '<div class="mkdt-course-amount">' + c.amount + ' ج</div>' +
+    '</div>';
+  }).join('');
+
+  // By day
   var byDay = {};
   var dayOrder = [];
   sales.forEach(function(p) {
@@ -973,18 +1066,96 @@ function renderMarketerDetail() {
   });
   dayOrder.sort(function(a, b) { return byDay[b].ts - byDay[a].ts; });
 
-  var listEl = document.getElementById('mkdt-days-list');
-  if (!dayOrder.length) {
-    listEl.innerHTML = '<div class="mkdt-empty">لا توجد مبيعات غير مُصفّاة لهذا المسوّق</div>';
-    return;
-  }
-  listEl.innerHTML = dayOrder.map(function(day) {
+  daysListEl.innerHTML = dayOrder.map(function(day) {
     var d = byDay[day];
     return '<div class="mkdt-day-row">' +
       '<div><span class="mkdt-day-date">' + day + '</span><span class="mkdt-day-count">(' + d.count + ' عملية)</span></div>' +
       '<div class="mkdt-day-amount">' + d.amount + ' ج</div>' +
     '</div>';
   }).join('');
+}
+
+/* ── PDF statement export ──────────────────────────
+   No PDF library is bundled here on purpose: correctly shaping/joining
+   Arabic letters in jsPDF-style libraries needs an extra reshaping step
+   and still risks garbled text. Instead we render a clean printable sheet
+   in-page (Arabic renders perfectly since it's the real browser engine)
+   and hand off to the browser's native "Save as PDF" print destination —
+   supported on every desktop/mobile browser, zero extra dependencies. */
+function downloadMarketerStatement() {
+  if (!currentMarketerCode) return;
+  var sales = allPayments.filter(function(p) {
+    return p.referralCode === currentMarketerCode && p.status === 'approved' && !p.commissionSettled;
+  });
+
+  var total = sales.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+  var due   = Math.round(total * MK_COMMISSION_RATE);
+  var ratePct = MK_COMMISSION_RATE * 100;
+
+  var byCourse = {};
+  var courseOrder = [];
+  sales.forEach(function(p) {
+    var cid = p.courseId || 'غير محدد';
+    if (!byCourse[cid]) { byCourse[cid] = { count: 0, amount: 0 }; courseOrder.push(cid); }
+    byCourse[cid].count++;
+    byCourse[cid].amount += (p.amount || 0);
+  });
+  courseOrder.sort(function(a, b) { return byCourse[b].amount - byCourse[a].amount; });
+
+  var byDay = {};
+  var dayOrder = [];
+  sales.forEach(function(p) {
+    var dt = (p.createdAt && p.createdAt.toDate) ? p.createdAt.toDate() : null;
+    var key = dt ? dt.toLocaleDateString('ar-EG') : 'غير معروف';
+    if (!byDay[key]) { byDay[key] = { count: 0, amount: 0, ts: dt ? dt.getTime() : 0 }; dayOrder.push(key); }
+    byDay[key].count++;
+    byDay[key].amount += (p.amount || 0);
+  });
+  dayOrder.sort(function(a, b) { return byDay[b].ts - byDay[a].ts; });
+
+  var todayStr = new Date().toLocaleDateString('ar-EG');
+
+  var courseRows = courseOrder.length ? courseOrder.map(function(cid) {
+    var c = byCourse[cid];
+    var label = COURSE_LABELS[cid] || cid;
+    var lineDue = Math.round(c.amount * MK_COMMISSION_RATE);
+    return '<tr><td>' + label + '</td><td>' + c.count + '</td><td>' + c.amount + ' ج</td><td>' + lineDue + ' ج</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:#999">لا يوجد</td></tr>';
+
+  var dayRows = dayOrder.length ? dayOrder.map(function(day) {
+    var d = byDay[day];
+    return '<tr><td>' + day + '</td><td>' + d.count + '</td><td>' + d.amount + ' ج</td></tr>';
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:#999">لا يوجد</td></tr>';
+
+  document.getElementById('mk-print-sheet').innerHTML =
+    '<div class="mkps-head">' +
+      '<div class="mkps-brand">🌱 نبتيكس Nabtex</div>' +
+      '<div class="mkps-date">تاريخ الإصدار: ' + todayStr + '</div>' +
+    '</div>' +
+    '<h2>كشف حساب المسوّق: ' + currentMarketerCode + '</h2>' +
+    '<div class="mkps-sub">يشمل المبيعات غير المُصفّاة حتى تاريخ الإصدار — نسبة العمولة ' + ratePct + '%</div>' +
+    '<div class="mkps-totals">' +
+      '<div class="mkps-total-box"><div class="mkps-total-val">' + sales.length + '</div><div class="mkps-total-lbl">عدد العمليات</div></div>' +
+      '<div class="mkps-total-box"><div class="mkps-total-val">' + total + ' ج</div><div class="mkps-total-lbl">إجمالي المبيعات</div></div>' +
+      '<div class="mkps-total-box"><div class="mkps-total-val">' + due + ' ج</div><div class="mkps-total-lbl">المستحق للمسوّق</div></div>' +
+    '</div>' +
+    '<div class="mkps-section-title">تفصيل حسب الكورس</div>' +
+    '<table><thead><tr><th>الكورس</th><th>عدد العمليات</th><th>الإيرادات</th><th>العمولة (' + ratePct + '%)</th></tr></thead><tbody>' + courseRows + '</tbody></table>' +
+    '<div class="mkps-section-title">تفصيل حسب اليوم</div>' +
+    '<table><thead><tr><th>التاريخ</th><th>عدد العمليات</th><th>الإيرادات</th></tr></thead><tbody>' + dayRows + '</tbody></table>' +
+    '<div class="mkps-foot">تم إصدار هذا الكشف تلقائيًا من لوحة تحكم منصة نبتيكس. المبالغ تخص المبيعات غير المُصفّاة فقط حتى تاريخ الإصدار — أي عملية سبق تصفيتها لا تظهر هنا.</div>';
+
+  // Browsers use the document title as the suggested filename in the
+  // "Save as PDF" dialog — set it to something meaningful, then restore it.
+  var prevTitle = document.title;
+  document.title = 'كشف حساب ' + currentMarketerCode + ' - ' + todayStr;
+  function restoreTitle() {
+    document.title = prevTitle;
+    window.removeEventListener('afterprint', restoreTitle);
+  }
+  window.addEventListener('afterprint', restoreTitle);
+
+  window.print();
 }
 
 function askSettleMarketer() {
@@ -1204,6 +1375,20 @@ function buildDateNav(scrollToToday) {
   }
 
   var today = new Date();
+
+  // Single O(N) pass to bucket payment counts by day-key, instead of the
+  // previous 30 separate allPayments.filter() calls (O(30*N)) below — with
+  // several hundred payment records this ran tens of thousands of date
+  // comparisons on every re-render (i.e. after every write), which is what
+  // made action buttons appear to "freeze" for a few seconds until it
+  // finished and the UI caught up.
+  var dayCounts = {};
+  allPayments.forEach(function(p) {
+    var pd = getPayDate(p); if (!pd) return;
+    var key = pd.getFullYear() + '-' + pd.getMonth() + '-' + pd.getDate();
+    dayCounts[key] = (dayCounts[key] || 0) + 1;
+  });
+
   var html  = '';
   for (var i = 29; i >= 0; i--) {
     var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
@@ -1212,12 +1397,7 @@ function buildDateNav(scrollToToday) {
       d.getFullYear() === currentDateFilter.getFullYear() &&
       d.getMonth()    === currentDateFilter.getMonth() &&
       d.getDate()     === currentDateFilter.getDate();
-    var count = allPayments.filter(function(p) {
-      var pd = getPayDate(p); if (!pd) return false;
-      return pd.getFullYear() === d.getFullYear() &&
-             pd.getMonth()    === d.getMonth() &&
-             pd.getDate()     === d.getDate();
-    }).length;
+    var count = dayCounts[d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()] || 0;
     var y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
     html += '<button class="day-btn' +
       (isSelected ? ' selected' : '') + (isToday ? ' today' : '') +
@@ -1782,16 +1962,27 @@ async function doSendBroadcast(action) {
   // network hiccup here can't undo or block it.
   try {
     const idToken = await auth.currentUser.getIdToken();
-    const pushRes = await fetch(ACADEMY_BROADCAST_PUSH_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        idToken: idToken,
-        message: action.message,
-        courseId: action.linkCid || action.targetCid || null,
-        uids: action.targetCid ? action.uids : null
-      })
-    });
+    // Hard timeout: without this, a slow/unresponsive Edge Function leaves
+    // the confirm button stuck on "جاري التنفيذ..." indefinitely, since
+    // this whole call is awaited before confirmAction() can re-enable it.
+    const pushCtrl = new AbortController();
+    const pushTimeout = setTimeout(function(){ pushCtrl.abort(); }, 12000);
+    let pushRes;
+    try {
+      pushRes = await fetch(ACADEMY_BROADCAST_PUSH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: pushCtrl.signal,
+        body: JSON.stringify({
+          idToken: idToken,
+          message: action.message,
+          courseId: action.linkCid || action.targetCid || null,
+          uids: action.targetCid ? action.uids : null
+        })
+      });
+    } finally {
+      clearTimeout(pushTimeout);
+    }
     const pushStats = await pushRes.json().catch(function(){ return null; });
     console.log('[broadcast push]', pushRes.status, pushStats);
     // Surface push failures in the UI, not just the console — otherwise a
@@ -1805,8 +1996,9 @@ async function doSendBroadcast(action) {
       showToast('⚠️ الإشعار وصل لأصحاب التاب المفتوح بس push للأجهزة المقفولة فشل: ' + reason, 'err');
     }
   } catch (e) {
-    console.warn('[broadcast push] send skipped/failed:', e && e.message);
-    showToast('⚠️ push للأجهزة المقفولة فشل (الإشعار جوه الموقع لسه وصل): ' + (e && e.message || 'خطأ شبكة'), 'err');
+    const isTimeout = e && e.name === 'AbortError';
+    console.warn('[broadcast push] send skipped/failed:', isTimeout ? 'timed out after 12s' : (e && e.message));
+    showToast('⚠️ push للأجهزة المقفولة ' + (isTimeout ? 'ماخدش رد في الوقت المناسب' : 'فشل') + ' (الإشعار جوه الموقع لسه وصل): ' + (isTimeout ? 'timeout' : (e && e.message || 'خطأ شبكة')), 'err');
   }
 }
 
