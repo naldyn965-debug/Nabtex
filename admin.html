@@ -219,7 +219,7 @@ body::before{content:'';position:fixed;inset:0;
 .toast.ok {background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80}
 .toast.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171}
 @keyframes toastIn{from{opacity:0;transform:translateY(-12px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-.confirm-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.72);
+.confirm-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.72);
   backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
 .confirm-overlay.on{display:flex;animation:fadeIn .2s ease}
 .confirm-box{background:var(--card);border:1px solid var(--border-md);border-radius:22px;
@@ -912,10 +912,16 @@ function updateMarketers() {
   allPayments.forEach(function(p) {
     if (!p.referralCode) return;
     var code = p.referralCode;
-    if (!byCode[code]) byCode[code] = { approved: 0, pending: 0, revenue: 0 };
-    if (p.status === 'approved' && !p.commissionSettled) {
-      byCode[code].approved++;
-      byCode[code].revenue += (p.amount || 0);
+    if (!byCode[code]) byCode[code] = { approved: 0, pending: 0, revenue: 0, revenueAllTime: 0 };
+    if (p.status === 'approved') {
+      // All-time: counted regardless of settlement — profit was earned at
+      // sale time, so it shouldn't shrink just because a past debt to the
+      // marketer got paid off later.
+      byCode[code].revenueAllTime += (p.amount || 0);
+      if (!p.commissionSettled) {
+        byCode[code].approved++;
+        byCode[code].revenue += (p.amount || 0);
+      }
     } else if (p.status === 'pending') {
       byCode[code].pending++;
     }
@@ -923,13 +929,18 @@ function updateMarketers() {
 
   var codes = Object.keys(byCode);
 
-  // Totals across ALL marketers, from the same unsettled-approved revenue
-  // figures used per-code below — one commission rate, so summing revenue
-  // first and applying the rate once avoids any per-code rounding drift.
-  var totalRevenueAll = 0;
-  codes.forEach(function(code) { totalRevenueAll += byCode[code].revenue; });
-  var totalDueAll    = Math.round(totalRevenueAll * MK_COMMISSION_RATE);
-  var totalProfitAll = totalRevenueAll - totalDueAll;
+  // Dues owed: only unsettled sales — this correctly drops once you pay a
+  // marketer, since you no longer owe that money.
+  var totalRevenueUnsettled = 0;
+  // Net profit: ALL approved sales ever — this should only grow over time,
+  // independent of when each marketer actually got paid.
+  var totalRevenueAllTime = 0;
+  codes.forEach(function(code) {
+    totalRevenueUnsettled += byCode[code].revenue;
+    totalRevenueAllTime   += byCode[code].revenueAllTime;
+  });
+  var totalDueAll    = Math.round(totalRevenueUnsettled * MK_COMMISSION_RATE);
+  var totalProfitAll = totalRevenueAllTime - Math.round(totalRevenueAllTime * MK_COMMISSION_RATE);
   var dueElAll = document.getElementById('mk-total-due');
   var profitElAll = document.getElementById('mk-total-profit');
   if (dueElAll)    dueElAll.textContent    = totalDueAll    + ' ج';
