@@ -754,14 +754,17 @@ return questions.map(function(q,i){return acShuffleOptsToPosition(q,positions[i]
 
 /* ── State ────────────────────────────────────────────────── */
 
-var AC={view:'catalog',lid:null,qState:null};
+var AC={view:'catalog',lid:null,qState:null,pathId:null};
 
 function acGo(view,lid){
 /* Free-preview teaser: the course info page, and its "first lecture free"
    deep-link, stay reachable without login — but only for the monetized
    courses this applies to. Every other view/course keeps the guard below. */
 var acFreeTeaser=(view==='info'||(view==='lesson'&&lid&&acFlatLessons()[0]===lid))&&(AC_CID==='mol-bio'||AC_CID==='food-safety'||AC_CID==='tissue-culture'||AC_CID==='pesticide-tech'||AC_CID==='feed-mgmt'||AC_CID==='glp'||AC_CID==='food-microbiology'||AC_CID==='plant-diseases'||AC_CID==='bioinformatics'||AC_CID==='landscape-design');
-if(view!=='catalog'&&!acFreeTeaser&&!(typeof currentUser!=='undefined'&&currentUser)){
+/* 'path' (Learning Paths) is a pure browsing/organization layer over the
+   catalog — no course content, no purchase — so it stays reachable
+   without login, same as 'catalog'. */
+if(view!=='catalog'&&view!=='path'&&!acFreeTeaser&&!(typeof currentUser!=='undefined'&&currentUser)){
  if(typeof showToast==='function')showToast('سجّل الدخول أو أنشئ حساباً جديداً للبدء في الدورة','inf');
  if(typeof openAuth==='function')openAuth('login');
  view='catalog';lid=null;
@@ -770,7 +773,7 @@ if(view!=='catalog'&&!acFreeTeaser&&!(typeof currentUser!=='undefined'&&currentU
    openCourse() only gates the initial entry, so re-check here on every
    in-course navigation (home/lesson/quiz/...) and bounce to the catalog
    immediately if it's been paused mid-session. ── */
-if(view!=='catalog'&&typeof _acCourseConfig!=='undefined'&&_acCourseConfig[AC_CID]&&_acCourseConfig[AC_CID].active===false){
+if(view!=='catalog'&&view!=='path'&&typeof _acCourseConfig!=='undefined'&&_acCourseConfig[AC_CID]&&_acCourseConfig[AC_CID].active===false){
  if(typeof showToast==='function')showToast('⛔ هذه الدورة موقوفة مؤقتاً — تابعونا قريباً','inf');
  view='catalog';lid=null;
 }
@@ -782,6 +785,7 @@ if((view==='lesson'||view==='quiz')&&lid&&!acIsUnlocked(lid)){
  view='home';lid=null;
 }
 AC.view=view;AC.lid=lid||null;
+if(view==='path')AC.pathId=lid||null;
 if(view==='quiz'){
  var qz=AC_QUIZZES[lid];
  AC.qState={step:0,answers:[],revealed:false,qs:qz?acShuffleQuestions(qz.questions):[]};
@@ -796,6 +800,7 @@ function acR(){
 var root=document.getElementById('acad-root');
 if(!root)return;
 if(AC.view==='catalog'){root.innerHTML=acRenderCatalog();acRefreshCatalogStatuses();}
+else if(AC.view==='path')root.innerHTML=acRenderPathView(AC.pathId);
 else if(AC.view==='home')root.innerHTML=acRenderHome();
 else if(AC.view==='info')root.innerHTML=acRenderInfo();
 else if(AC.view==='lesson'){root.innerHTML=acRenderLesson();if(typeof tcEnhanceVideos==='function')tcEnhanceVideos();}
@@ -860,7 +865,96 @@ window.acIco=acIco; /* تعريض عالمي — يستخدمه renderUnifiedHom
 
 /* ── CATALOG ──────────────────────────────────────────────── */
 
+/* ── Learning Paths (نبتيكس أكاديمي) ─────────────────────────
+   Pure visual/organizational layer over the existing catalog: groups
+   existing Course IDs by specialty so the Academy reads as tracks
+   instead of one long list. Adds no course data, no new routing/
+   purchase/login logic — clicking into a path just filters the same
+   Course Cards built by acBuildCatalogCards() below. To add a course to
+   a path later, append its existing Course ID to that path's `courses`
+   array — nothing else needs to change. 'الشعبة العامة' uses the
+   'ALL' sentinel instead of a fixed list, so it always shows every
+   current AND future course automatically (it just mirrors
+   AC_CATALOG_ORDER below — no manual edit needed when a course is added). ── */
+var AC_CATALOG_ORDER=['pest','mol-bio','food-quality','ag-english','food-safety','glp','land-reclamation','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design'];
+var AC_LEARNING_PATHS=[
+{id:'general',title:'الشعبة العامة',desc:'كل كورسات نبتيكس أكاديمي في مكان واحد',color:'#1B6B3A',img:'https://images.unsplash.com/photo-1719178006695-e0e36780adac?auto=format&fit=crop&w=900&q=70',courses:'ALL'},
+{id:'biotech',title:'التكنولوجيا الحيوية',desc:'من البيولوجيا الجزيئية إلى ممارسات المعامل الجيدة',color:'#2563eb',img:'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?auto=format&fit=crop&w=900&q=70',courses:['mol-bio','glp','bioinformatics']},
+{id:'plant-production',title:'الإنتاج النباتي',desc:'زراعة الأنسجة النباتية وتصميم المناظر الطبيعية',color:'#16a34a',img:'https://images.unsplash.com/photo-1593590908928-268bcf40aad9?auto=format&fit=crop&w=900&q=70',courses:['tissue-culture','landscape-design']},
+{id:'animal-production',title:'الإنتاج الحيواني',desc:'إدارة الأعلاف وبرامج التغذية للثروة الحيوانية',color:'#92400e',img:'https://images.unsplash.com/photo-1573731281021-d1cc573b3310?auto=format&fit=crop&w=900&q=70',courses:['feed-mgmt']},
+{id:'plant-protection',title:'وقاية النبات',desc:'تشخيص وإدارة أمراض وآفات النبات ومكافحتها',color:'#dc2626',img:'https://images.unsplash.com/photo-1620055494738-248ba57ed714?auto=format&fit=crop&w=900&q=70',courses:['plant-diseases','pest','pesticide-tech']},
+{id:'food-science',title:'علوم الأغذية',desc:'سلامة وجودة الغذاء والميكروبيولوجيا الغذائية',color:'#d97706',img:'https://images.unsplash.com/photo-1684259498786-ffaf1ec5c5e8?auto=format&fit=crop&w=900&q=70',courses:['food-safety','food-quality','food-microbiology']},
+{id:'soil-water',title:'علوم الأراضي والمياه',desc:'استصلاح الأراضي وبرامج التسميد والري',color:'#b45309',img:'https://images.unsplash.com/photo-1692369584496-3216a88f94c1?auto=format&fit=crop&w=900&q=70',courses:['land-reclamation']}
+];
+
+/* True if course `cid` belongs to learning path `pathId` ('ALL' paths — i.e.
+   'الشعبة العامة' — contain every course). Used to safely route the course
+   page's back button to the path the learner actually came from. */
+function acPathContainsCourse(pathId,cid){
+var p=null;
+for(var i=0;i<AC_LEARNING_PATHS.length;i++)if(AC_LEARNING_PATHS[i].id===pathId){p=AC_LEARNING_PATHS[i];break}
+if(!p)return false;
+return p.courses==='ALL'||p.courses.indexOf(cid)>-1;
+}
+
+/* Renders the "المسارات التعليمية" section shown at the top of the catalog. */
+function acRenderLearningPathsSection(){
+var PARROW='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+var cards=AC_LEARNING_PATHS.map(function(p){
+var cnt=(p.courses==='ALL')?AC_CATALOG_ORDER.length:p.courses.length;
+var cntLabel=cnt===1?'كورس واحد':(cnt===2?'كورسان':(cnt>=11?cnt+' كورس':cnt+' كورسات'));
+return '<div class="acad-path-card" onclick="NAcademy.openPath(\''+p.id+'\')" role="button">'+
+'<div class="acad-path-card-top" style="background-image:url(\''+p.img+'\')"></div>'+
+'<div class="acad-path-card-body">'+
+'<div class="acad-path-card-title">'+p.title+'</div>'+
+'<div class="acad-path-card-desc">'+p.desc+'</div>'+
+'<div class="acad-path-card-meta">'+cntLabel+'</div>'+
+'<div class="acad-path-card-cta" style="--pc:'+p.color+';--pc-g:'+p.color+'40">استكشف المسار '+PARROW+'</div>'+
+'</div></div>'}).join('');
+return '<div class="acad-course-section"><div class="acad-wrap">'+
+'<div class="acad-section-title">المسارات التعليمية</div>'+
+'<div class="acad-path-grid">'+cards+'</div>'+
+'</div></div>'}
+
+/* Renders a single path's page: same hero shell as the catalog, but the
+   grid is filtered to that path's Course IDs using the exact same
+   Course Cards from acBuildCatalogCards() — no separate course data,
+   no separate course-card markup. */
+function acRenderPathView(pathId){
+var path=null;
+for(var i=0;i<AC_LEARNING_PATHS.length;i++)if(AC_LEARNING_PATHS[i].id===pathId){path=AC_LEARNING_PATHS[i];break}
+if(!path)return acRenderCatalog();
+var CARDS=acBuildCatalogCards();
+var ids=(path.courses==='ALL')?AC_CATALOG_ORDER:path.courses;
+var grid=ids.map(function(id){return CARDS[id]||''}).join('');
+return '<div class="acad-hero acad-hero--path-'+path.id+'"><div class="acad-hero-inner">'+
+'<div class="acad-hero-back" role="button" onclick="NAcademy.goCatalog()">‹ الأكاديمية</div>'+
+'<div class="acad-hero-badge"><i></i> نبتيكس أكاديمي</div>'+
+'<div class="acad-hero-title">'+path.title+'</div>'+
+'<div class="acad-hero-sub">'+path.desc+'</div>'+
+'</div></div>'+
+'<div class="acad-course-section"><div class="acad-wrap">'+
+'<div class="acad-cat-grid">'+(grid||'<div class="acad-path-empty">لا توجد كورسات في هذا المسار حالياً</div>')+'</div>'+
+'</div></div>'}
+
+/* Thin wrapper: hero + Learning Paths section only. The flat course
+   grid that used to render here was removed on request — courses now
+   surface exclusively through their Learning Path (المسارات التعليمية),
+   including 'الشعبة العامة' which covers every course via the 'ALL'
+   sentinel. acBuildCatalogCards()/AC_CATALOG_ORDER are unused here now
+   but stay intact for acRenderPathView() below, which still needs them. */
 function acRenderCatalog(){
+return '<div class="acad-hero acad-hero--catalog"><div class="acad-hero-inner">'+
+'<div class="acad-hero-title">دوراتنا التعليمية</div>'+
+'<div class="acad-hero-sub">محتوى علمي موثّق باللغة العربية من فريق نبتيكس. اختر دورة لتبدأ رحلة التعلّم.</div>'+
+'</div></div>'+
+acRenderLearningPathsSection()}
+
+/* Builds every catalog Course Card (id → HTML string). Body unchanged
+   from the original acRenderCatalog() — only the ending changed from
+   assembling the full page to returning the per-course card map, so
+   both acRenderCatalog() and acRenderPathView() can reuse it. */
+function acBuildCatalogCards(){
 var CERT_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5"/></svg>';
 var CLOCK_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
 var BARS_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-7"/></svg>';
@@ -1087,15 +1181,7 @@ var ldCard='<div class="acad-cat-card premium" onclick="NAcademy.openCourse(\'la
 '</div>'+
 ldBottom+
 '</div></div>';
-return '<div class="acad-hero"><div class="acad-hero-inner">'+
-'<div class="acad-hero-back" role="button" onclick="showPage(\'home\')">‹ الرئيسية</div>'+
-'<div class="acad-hero-badge"><i></i> نبتيكس أكاديمي</div>'+
-'<div class="acad-hero-title">دوراتنا التعليمية</div>'+
-'<div class="acad-hero-sub">محتوى علمي موثّق باللغة العربية من فريق نبتيكس. اختر دورة لتبدأ رحلة التعلّم.</div>'+
-'</div></div>'+
-'<div class="acad-course-section"><div class="acad-wrap">'+
-'<div class="acad-cat-grid">'+liveCard+molBioCard+fqCard+agCard+foodSafetyCard+glpCard+lrCard+tcCard+ptCard+feedCard+fmbCard+pdCard+biCard+ldCard+'</div>'+
-'</div></div>'}
+return {pest:liveCard,'mol-bio':molBioCard,'food-quality':fqCard,'ag-english':agCard,'food-safety':foodSafetyCard,glp:glpCard,'land-reclamation':lrCard,'tissue-culture':tcCard,'pesticide-tech':ptCard,'feed-mgmt':feedCard,'food-microbiology':fmbCard,'plant-diseases':pdCard,bioinformatics:biCard,'landscape-design':ldCard}}
 
 /* ── HOME ─────────────────────────────────────────────────── */
 
@@ -1186,7 +1272,7 @@ var acDurNum=acDurNumM?acDurNumM[0]:AC_COURSE.duration;
 var acDurUnit=String(AC_COURSE.duration).replace(/^\d+\s*/,'')||'مدة الدورة';
 
 return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner">'+
-'<div class="acad-hero-back" role="button" onclick="NAcademy.goCatalog()">‹ كل الدورات</div>'+
+'<div class="acad-hero-back" role="button" onclick="NAcademy.goBackFromCourse()">‹ كل الدورات</div>'+
 '<div class="acad-hero-badge"><i></i> نبتيكس أكاديمي</div>'+
 '<div class="acad-hero-title">'+AC_COURSE.title+'</div>'+
 '<div class="acad-hero-sub">'+AC_COURSE.heroSub+'</div>'+
@@ -1262,7 +1348,7 @@ var acDurNum=acDurNumM?acDurNumM[0]:AC_COURSE.duration;
 var acDurUnit=String(AC_COURSE.duration).replace(/^\d+\s*/,'')||'مدة الدورة';
 
 return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner">'+
-'<div class="acad-hero-back" role="button" onclick="NAcademy.goCatalog()">‹ كل الدورات</div>'+
+'<div class="acad-hero-back" role="button" onclick="NAcademy.goBackFromCourse()">‹ كل الدورات</div>'+
 '<div class="acad-hero-badge"><i></i> نبتيكس أكاديمي</div>'+
 '<div class="acad-hero-title">'+AC_COURSE.title+'</div>'+
 '<div class="acad-hero-sub">'+AC_COURSE.heroSub+'</div>'+
@@ -31777,6 +31863,11 @@ getCurrentCourseId:function(){return AC_CID},
 getCurrentCourseInfo:function(){return acCertCourseInfo(AC_CID)},
 goHome:function(){acGo('home',null)},
 goCatalog:function(){acGo('catalog',null)},
+goBackFromCourse:function(){
+if(AC.pathId&&acPathContainsCourse(AC.pathId,AC_CID)){acGo('path',AC.pathId);}
+else{acGo('catalog',null);}
+},
+openPath:function(id){acGo('path',id)},
 openCourse:function(id,resume){
 /* Shared course link opened while logged out: acGo()/the mol-bio & food-safety
    branches below will bounce to the login modal. Remember the target course so
