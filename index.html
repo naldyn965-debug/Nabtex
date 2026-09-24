@@ -19653,6 +19653,13 @@ html {
   /* iOS 27/Safari fallback tint لو ملقاش عنصر fixed مؤهل فوق —
      من غيرها ممكن يرجع أبيض افتراضي حتى في الوضع الغامق */
   background-color: var(--bg);
+  /* Stops WebKit's automatic text-size inflation, which recalculates
+     after a rotation and blows up font-size (and any em-based padding
+     riding on it, like the mob-menu links/pill button) without the
+     layout actually changing — this is what makes the top-bar dropdown
+     menu items balloon in size after flipping the screen. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 /* Refined scrollbar — thin & auto-fade */
 ::-webkit-scrollbar         { width: 3px; height: 3px; }
@@ -20573,25 +20580,45 @@ body {
     function _nbFixBottomNavAfterRotate() {
       var nav = document.getElementById('nb-bottom-nav');
       if (!nav) return;
+      /* Toggling display alone doesn't always re-anchor this element
+         after a full portrait→landscape→portrait cycle, because it
+         already lives on its own compositor layer (translateZ(0)
+         above) — WebKit can keep that layer's stale position even
+         through a display:none/'' cycle. Also cycling `position`
+         forces the fixed render context itself to be dropped and
+         recreated, which is the more reliable fix for that case. */
+      nav.style.position = 'static';
+      void nav.offsetHeight;
       nav.style.display = 'none';
       void nav.offsetHeight; /* force synchronous reflow */
       nav.style.display = '';
+      nav.style.position = '';
     }
 
     /* Reposition pill on resize (orientation change, etc.) */
-    window.addEventListener('resize', function () {
+    function _nbHandleViewportResize() {
       _nbFixBottomNavAfterRotate();
       var active = document.querySelector('#nb-bottom-nav .nb-nav-item.active');
       if (active && !active.classList.contains('nb-center-item')) moveSlidePill(active);
-    }, { passive: true });
+    }
+    window.addEventListener('resize', _nbHandleViewportResize, { passive: true });
 
     /* 'resize' can fire before iOS finishes settling the new
        viewport/toolbar size on rotation, so also retry shortly
-       after 'orientationchange' fires. */
+       after 'orientationchange' fires — with one extra, later retry
+       for the slower rotation-settle cases. */
     window.addEventListener('orientationchange', function () {
       setTimeout(_nbFixBottomNavAfterRotate, 100);
       setTimeout(_nbFixBottomNavAfterRotate, 400);
+      setTimeout(_nbFixBottomNavAfterRotate, 800);
     });
+
+    /* visualViewport settles at a more reliable point than window
+       'resize' on iOS Safari — listen here too as a fallback path,
+       purely additive to the two listeners above. */
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _nbHandleViewportResize, { passive: true });
+    }
 
     /* iOS momentum scroll for long scrollable containers */
     document.querySelectorAll(
