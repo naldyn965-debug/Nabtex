@@ -20608,9 +20608,15 @@ body {
        after 'orientationchange' fires — with one extra, later retry
        for the slower rotation-settle cases. */
     window.addEventListener('orientationchange', function () {
-      setTimeout(_nbFixBottomNavAfterRotate, 100);
-      setTimeout(_nbFixBottomNavAfterRotate, 400);
-      setTimeout(_nbFixBottomNavAfterRotate, 800);
+      /* Each retry must also re-run moveSlidePill, not just the nav's
+         own repaint fix — otherwise a pill position measured while the
+         flex row was still mid-transition (offsetLeft/offsetWidth not
+         settled yet) stays wrong forever, since nothing later would
+         ever recompute it. That's what was making the pill drift off
+         its tab after a rotation. */
+      setTimeout(_nbHandleViewportResize, 100);
+      setTimeout(_nbHandleViewportResize, 400);
+      setTimeout(_nbHandleViewportResize, 800);
     });
 
     /* visualViewport settles at a more reliable point than window
