@@ -1302,7 +1302,7 @@ return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner
 '</div></div></div>'+
 '<div class="acad-course-section"><div class="acad-wrap">'+
 '<div class="acad-card">'+
-'<div class="acad-card-top'+(AC_CID==='mol-bio'?' mb':AC_CID==='food-quality'?' fq':AC_CID==='ag-english'?' ag':AC_CID==='food-safety'?' fs':AC_CID==='glp'?' glp':AC_CID==='land-reclamation'?' lr':AC_CID==='tissue-culture'?' tc':AC_CID==='pesticide-tech'?' pt':AC_CID==='feed-mgmt'?' fd':AC_CID==='plant-diseases'?' pd':AC_CID==='bioinformatics'?' bi':AC_CID==='landscape-design'?' ld':'')+'"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
+'<div class="acad-card-top'+(AC_CID==='mol-bio'?' mb':AC_CID==='food-quality'?' fq':AC_CID==='ag-english'?' ag':AC_CID==='food-safety'?' fs':AC_CID==='glp'?' glp':AC_CID==='land-reclamation'?' lr':AC_CID==='tissue-culture'?' tc':AC_CID==='pesticide-tech'?' pt':AC_CID==='feed-mgmt'?' fd':AC_CID==='plant-diseases'?' pd':AC_CID==='bioinformatics'?' bi':AC_CID==='landscape-design'?' ld':AC_CID==='hydroponics-professional'?' hyd':'')+'"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
 '<div class="acad-card-body">'+
 '<div class="acad-card-kicker">'+AC_COURSE.kicker+'</div>'+
 '<div class="acad-card-title">'+AC_COURSE.title+'</div>'+
@@ -1378,7 +1378,7 @@ return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner
 '</div></div></div>'+
 '<div class="acad-course-section"><div class="acad-wrap">'+
 '<div class="acad-card">'+
-'<div class="acad-card-top'+(AC_CID==='mol-bio'?' mb':AC_CID==='food-safety'?' fs':AC_CID==='pesticide-tech'?' pt':AC_CID==='feed-mgmt'?' fd':AC_CID==='glp'?' glp':AC_CID==='food-microbiology'?' fmb':AC_CID==='plant-diseases'?' pd':AC_CID==='bioinformatics'?' bi':AC_CID==='landscape-design'?' ld':' tc')+'"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
+'<div class="acad-card-top'+(AC_CID==='mol-bio'?' mb':AC_CID==='food-safety'?' fs':AC_CID==='pesticide-tech'?' pt':AC_CID==='feed-mgmt'?' fd':AC_CID==='glp'?' glp':AC_CID==='food-microbiology'?' fmb':AC_CID==='plant-diseases'?' pd':AC_CID==='bioinformatics'?' bi':AC_CID==='landscape-design'?' ld':AC_CID==='hydroponics-professional'?' hyd':' tc')+'"><button type="button" class="acad-share-btn" data-action="share-academy" aria-label="مشاركة الدورة">'+acIco('share',17)+'</button></div>'+
 '<div class="acad-card-body">'+
 '<div class="acad-card-title">'+AC_COURSE.title+'</div>'+
 '<div class="acad-card-desc">'+AC_COURSE.description+'</div>'+
