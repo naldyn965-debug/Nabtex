@@ -19,17 +19,18 @@
   --rejected:#ef4444;--rejected-bg:rgba(239,68,68,.08);
   --text:#dbeade;--muted:#5a8068;--subtle:#2c4235;
   --r:16px;--t:.22s cubic-bezier(.4,0,.2,1);}
-/* ── Light mode — same light theme as nabtex.vercel.app, toggled via the
-     button in the header ([data-light] on <body>). Dark mode above stays
-     the default; only the surface/text tokens change here. ── */
-[data-light]{
-  --bg:#fafef9;--surface:#f3faf4;--card:#ffffff;--card-hov:#eef8f0;
+/* ── Light mode (premium day theme — mirrors nabtex.vercel.app's own light/dark tokens) ── */
+body[data-light]{
+  --bg:#fafef9;--surface:#ffffff;--card:#ffffff;--card-hov:#f3faf4;
   --border:rgba(27,107,58,.10);--border-md:rgba(27,107,58,.22);
-  --text:#1e2a24;--muted:#6d8f7a;--subtle:#8aa596;
+  --glow:rgba(34,197,94,.16);
+  --pending:#b45309;--pending-bg:rgba(245,158,11,.10);
+  --approved:#16a34a;--approved-bg:rgba(34,197,94,.10);
+  --rejected:#dc2626;--rejected-bg:rgba(239,68,68,.08);
+  --text:#1e2a24;--muted:#6d8f7a;--subtle:#86a293;
 }
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;
-  background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;
-  transition:background .3s,color .3s}
+  background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
 body::before{content:'';position:fixed;inset:0;
   background-image:radial-gradient(rgba(34,197,94,.035) 1px,transparent 1px);
   background-size:30px 30px;pointer-events:none;z-index:0}
@@ -77,6 +78,16 @@ body::before{content:'';position:fixed;inset:0;
   pointer-events:none;animation:ambientShift 9s ease-in-out infinite alternate}
 @keyframes ambientShift{0%{transform:translate(0,0)}100%{transform:translate(16px,18px) scale(1.08)}}
 .sidebar-head{padding:26px 22px 22px;border-bottom:1px solid var(--border);position:relative}
+/* ── Theme toggle (same icon/shape as the nabtex.vercel.app nav toggle) ── */
+#admin-thm-btn{position:absolute;top:22px;left:22px;width:38px;height:38px;border-radius:50%;
+  display:grid;place-items:center;border:1.5px solid var(--border-md);color:var(--muted);
+  background:var(--card);cursor:pointer;transition:all .22s cubic-bezier(.34,1.56,.64,1);z-index:2}
+#admin-thm-btn:hover{transform:scale(1.1);border-color:var(--emerald);color:var(--emerald)}
+#admin-thm-btn:active{transform:scale(.95)}
+#admin-thm-btn svg{transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s}
+#admin-thm-btn .moon-icon{display:none}
+body[data-light] #admin-thm-btn .sun-icon{display:none}
+body[data-light] #admin-thm-btn .moon-icon{display:block}
 .sidebar-logo-icon{display:flex;align-items:center;gap:10px;margin-bottom:2px}
 .sidebar-logo-svg{filter:drop-shadow(0 0 8px rgba(34,197,94,.35))}
 .sidebar-logo-name{font-size:1rem;font-weight:900;letter-spacing:-.01em}
@@ -150,12 +161,6 @@ body::before{content:'';position:fixed;inset:0;
 #admin-push-btn{padding:7px 14px;font-size:12px;gap:5px}
 .ricon{transition:transform .4s var(--t);display:flex;align-items:center}
 .refresh-btn svg,.logout-btn svg{display:block}
-/* Theme toggle icon states — mirrors #thm-btn on nabtex.vercel.app */
-#thm-btn .sun-icon,#thm-btn .moon-icon{transition:opacity .3s}
-#thm-btn:not(.is-light) .sun-icon{display:none}
-#thm-btn:not(.is-light) .moon-icon{display:block}
-#thm-btn.is-light .sun-icon{display:block}
-#thm-btn.is-light .moon-icon{display:none}
 .controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .tabs{display:flex;gap:4px;background:var(--card);border-radius:12px;
   padding:5px;border:1px solid var(--border)}
@@ -365,6 +370,7 @@ body::before{content:'';position:fixed;inset:0;
 .day-stat.revenue-s  .day-stat-val{color:#c084fc}
 @media(max-width:768px){.app-layout{grid-template-columns:1fr}.sidebar{display:none}.main-content{padding:16px}}
 /* ── Date Navigator ─────────────────────────────── */
+
 .date-nav-wrap{overflow-x:auto;margin-bottom:10px;padding:2px 0 6px;
   scrollbar-width:none;-ms-overflow-style:none;
   direction:ltr;                   /* force LTR so today is on right */
@@ -484,9 +490,99 @@ body::before{content:'';position:fixed;inset:0;
   /* Clearance so content doesn't sit behind the floating nav */
   .sidebar,.main-content{padding-bottom:100px}
 }
+
+/* ══════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES
+   Variables above already repaint most of the UI. These
+   rules only cover spots that use hardcoded dark-only
+   colors (white-overlay "sunken" surfaces, heavy black
+   shadows, and bright pastel accents tuned for a near-
+   black background) so they stay legible and premium-
+   looking on the light background too.
+═══════════════════════════════════════════════════════ */
+body[data-light] .sidebar{background:linear-gradient(170deg,#ffffff 0%,#f7fcf8 55%,#eef8f0 100%)}
+body[data-light] .auth-card{box-shadow:0 24px 64px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-light] .auth-input{background:#f3faf4}
+body[data-light] .google-btn{background:#f3faf4}
+body[data-light] .google-btn:hover{background:#eef8f0;border-color:rgba(27,107,58,.18)}
+body[data-light] .stat-card{background:#f3faf4}
+body[data-light] .stat-card:hover{background:#eef8f0}
+body[data-light] .stat-card.pending  .stat-icon{color:#b45309}
+body[data-light] .stat-card.approved .stat-icon{color:#16a34a}
+body[data-light] .stat-card.rejected .stat-icon{color:#dc2626}
+body[data-light] .stat-card.revenue  .stat-icon{color:#9333ea}
+body[data-light] .stat-card.pending  .stat-val{color:#b45309}
+body[data-light] .stat-card.approved .stat-val{color:#16a34a}
+body[data-light] .stat-card.rejected .stat-val{color:#dc2626}
+body[data-light] .stat-card.revenue  .stat-val{color:#9333ea}
+body[data-light] .course-enroll-row{background:#f3faf4}
+body[data-light] .course-enroll-row:hover{background:#eef8f0}
+body[data-light] .course-enroll-count{color:#16a34a}
+body[data-light] .course-toggle-btn.active{color:#16a34a}
+body[data-light] .course-toggle-btn.active:hover{color:#dc2626}
+body[data-light] .course-toggle-btn.paused{color:#dc2626}
+body[data-light] .course-toggle-btn.paused:hover{color:#16a34a}
+body[data-light] .live-dot{background:#16a34a}
+body[data-light] .sidebar-user-badge{background:#f3faf4}
+body[data-light] .logout-btn{color:#dc2626}
+body[data-light] .refresh-btn{box-shadow:0 2px 8px rgba(0,0,0,.05)}
+body[data-light] .pay-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.07)}
+body[data-light] .detail-item{background:#f3faf4}
+body[data-light] .action-btn.approve{color:#16a34a}
+body[data-light] .action-btn.reject{color:#dc2626}
+body[data-light] .action-btn.delete{color:#dc2626}
+body[data-light] .action-btn.suspend{color:#b45309}
+body[data-light] .action-btn.unsuspend{color:#16a34a}
+body[data-light] .toast{box-shadow:0 8px 28px rgba(0,0,0,.12)}
+body[data-light] .toast.ok{color:#16a34a}
+body[data-light] .toast.err{color:#dc2626}
+body[data-light] .confirm-box{box-shadow:0 24px 64px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-light] .confirm-btn.cancel{background:#f3faf4}
+body[data-light] .confirm-btn.cancel:hover{background:#eef8f0}
+body[data-light] .confirm-note{background:#f3faf4}
+body[data-light] .confirm-price-input{background:#f3faf4}
+body[data-light] .broadcast-open-btn{color:#16a34a}
+body[data-light] .broadcast-close{background:#f3faf4}
+body[data-light] .mkdt-summary-card{background:#f3faf4}
+body[data-light] .mkdt-summary-val{color:#16a34a}
+body[data-light] .mkdt-summary-val.due{color:#b45309}
+body[data-light] .mkdt-day-amount,body[data-light] .mkdt-course-amount{color:#16a34a}
+body[data-light] .mkdt-pdf-btn{background:#f3faf4}
+body[data-light] .mkdt-pdf-btn:hover{background:#eef8f0}
+body[data-light] .mk-total-card{background:#f3faf4}
+body[data-light] .mk-total-val{color:#16a34a}
+body[data-light] .mk-total-val.due{color:#b45309}
+body[data-light] .broadcast-textarea{background:#f3faf4}
+body[data-light] .broadcast-select{background:#f3faf4}
+body[data-light] .day-summary-header svg{color:#16a34a}
+body[data-light] .day-stat{background:#f3faf4}
+body[data-light] .day-stat.approved-s .day-stat-val{color:#16a34a}
+body[data-light] .day-stat.pending-s  .day-stat-val{color:#b45309}
+body[data-light] .day-stat.rejected-s .day-stat-val{color:#dc2626}
+body[data-light] .day-stat.revenue-s  .day-stat-val{color:#9333ea}
+body[data-light] .day-btn.selected .day-num{color:#16a34a}
+body[data-light] .day-btn.selected .day-month{color:rgba(22,163,74,.75)}
+body[data-light] .day-count{color:#16a34a}
+body[data-light] .date-active-label{color:#16a34a}
+body[data-light] .date-clear-btn{color:#16a34a}
+body[data-light] #admin-bottom-nav::before{background:rgba(255,255,255,.85);
+  box-shadow:0 16px 40px rgba(0,0,0,.12),0 4px 14px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-light] #mkdt-delete-btn{color:#dc2626!important}
 </style>
 </head>
 <body data-atab-active="home">
+<script>
+/* Apply the saved light/dark choice before first paint, so the page
+   doesn't flash dark-then-light on load. Independent of the main
+   nabtex.vercel.app site's own theme choice (separate storage key). */
+(function(){
+  try{
+    if(localStorage.getItem('nb-admin-light')==='1'){
+      document.body.setAttribute('data-light','');
+    }
+  }catch(e){}
+})();
+</script>
 
 <!-- ── Auth Screen ───────────────────────────────────────── -->
 <div id="auth-screen">
@@ -516,6 +612,16 @@ body::before{content:'';position:fixed;inset:0;
           <div class="sidebar-logo-name">نبتيكس أكاديمي</div>
         </div>
         <div class="sidebar-logo-sub">لوحة تحكم المدفوعات</div>
+        <button id="admin-thm-btn" title="تبديل المظهر" aria-label="تبديل المظهر">
+          <!-- Sun icon (shown in dark mode — tap to switch to light) -->
+          <svg class="sun-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon icon (shown in light mode — tap to switch to dark) -->
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
       </div>
       <div class="sidebar-section-label">الإحصائيات</div>
       <div class="sidebar-stats">
@@ -601,11 +707,6 @@ body::before{content:'';position:fixed;inset:0;
         </div>
         <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل"><svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg> إشعارات الدفع</button>
         <button class="refresh-btn" onclick="loadPayments()"><span class="ricon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>تحديث</button>
-        <button class="refresh-btn" id="thm-btn" onclick="toggleAdminTheme()" title="تبديل المظهر (فاتح/داكن)" aria-label="تبديل المظهر">
-          <svg class="btn-icon sun-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"/></svg>
-          <svg class="btn-icon moon-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <span id="thm-btn-label">الوضع الفاتح</span>
-        </button>
       </div>
 
       <div class="controls-row">
@@ -781,22 +882,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ── Theme (light/dark) — same light/dark toggle pattern as nabtex.vercel.app,
-     persisted separately from the main site's own preference ── */
-function applyAdminTheme(isLight) {
-  document.body.toggleAttribute('data-light', isLight);
-  var btn = document.getElementById('thm-btn');
-  if (btn) btn.classList.toggle('is-light', isLight);
-  var lbl = document.getElementById('thm-btn-label');
-  if (lbl) lbl.textContent = isLight ? 'الوضع الداكن' : 'الوضع الفاتح';
-}
-function toggleAdminTheme() {
-  var isLight = !document.body.hasAttribute('data-light');
-  localStorage.setItem('nb-admin-light', isLight ? '1' : '0');
-  applyAdminTheme(isLight);
-}
-applyAdminTheme(localStorage.getItem('nb-admin-light') === '1');
-
 const IC = {
   check:  '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8 14 16 6"/></svg>',
   x:      '<svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>',
@@ -845,6 +930,22 @@ const IC3 = {
   lock:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>',
   unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;display:block;margin:0 auto"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 7.5-2"/></svg>',
 };
+/* ── Theme toggle (light/dark) ─────────────────── */
+(function(){
+  var btn = document.getElementById('admin-thm-btn');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    var isLight = document.body.hasAttribute('data-light');
+    if(isLight){
+      document.body.removeAttribute('data-light');
+      try{ localStorage.setItem('nb-admin-light','0'); }catch(e){}
+    } else {
+      document.body.setAttribute('data-light','');
+      try{ localStorage.setItem('nb-admin-light','1'); }catch(e){}
+    }
+  });
+})();
+
 /* ── State ──────────────────────────────────────── */
 let allPayments = [];
 let currentFilter = 'pending';
