@@ -416,9 +416,62 @@ body::before{content:'';position:fixed;inset:0;
   #mk-print-sheet .mkps-section-title{font-size:13px;font-weight:800;margin:0 0 8px}
   #mk-print-sheet .mkps-foot{font-size:10.5px;color:#888 !important;margin-top:24px;border-top:1px solid #ddd;padding-top:10px}
 }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV — الرئيسية / الطلبات / ملفي
+   Adds a Nabtex-app-style floating glass tab bar on mobile
+   only, and shows/hides existing sections per active tab.
+   Desktop layout (>768px) is completely untouched.
+═══════════════════════════════════════════════════════ */
+#admin-bottom-nav{display:none;position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:420px;z-index:500}
+#admin-bottom-nav::before{content:'';position:absolute;inset:0;z-index:0;border-radius:26px;
+  background:rgba(12,21,16,.82);border:1px solid var(--border-md);
+  backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  box-shadow:0 16px 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
+.abn-inner{display:flex;align-items:center;justify-content:space-around;padding:8px 6px;position:relative;z-index:1}
+#abn-slide-pill{position:absolute;left:0;top:6px;bottom:6px;width:33.33%;border-radius:18px;
+  background:var(--glow);pointer-events:none;z-index:0;opacity:0;
+  transition:transform .32s cubic-bezier(.16,1,.3,1),width .32s cubic-bezier(.16,1,.3,1),opacity .18s ease}
+.abn-item{flex:1;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:8px 4px 6px;border-radius:16px;border:none;
+  background:transparent!important;font-family:inherit;cursor:pointer;min-height:52px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s ease}
+.abn-item .abn-ico{display:flex;align-items:center;justify-content:center;color:var(--muted);
+  transition:color .24s ease,transform .3s cubic-bezier(.16,1,.3,1)}
+.abn-item .abn-ico svg{width:22px;height:22px;display:block;transition:stroke-width .24s ease}
+.abn-item .abn-lbl{font-size:9.5px;font-weight:600;color:var(--muted);white-space:nowrap;
+  letter-spacing:.02em;line-height:1;transition:color .24s ease,transform .28s cubic-bezier(.16,1,.3,1)}
+.abn-item.active .abn-ico{color:var(--emerald);transform:translateY(-3px) scale(1.18)}
+.abn-item.active .abn-ico svg{stroke-width:2.6}
+.abn-item.active .abn-lbl{color:var(--text);font-weight:800;transform:translateY(1px)}
+.abn-item:active{transform:scale(.94);transition:transform .16s ease-out!important}
+
+@media(max-width:768px){
+  #admin-bottom-nav{display:block}
+
+  /* Sidebar sections are split across the Home and My Profile tabs.
+     Hidden by default at this breakpoint, then re-shown per active tab. */
+  .sidebar-head,.sidebar-section-label,.sidebar-stats,.sidebar-courses,.sidebar-footer{display:none}
+  body[data-atab-active="home"] .sidebar,
+  body[data-atab-active="profile"] .sidebar{display:flex}
+  body[data-atab-active="home"] .sidebar-head{display:block}
+  body[data-atab-active="home"] .sidebar-section-label{display:block}
+  body[data-atab-active="home"] .sidebar-stats{display:flex}
+  body[data-atab-active="home"] .sidebar-courses[data-atab="home"]{display:block}
+  body[data-atab-active="profile"] .sidebar-courses[data-atab="profile"]{display:block}
+  body[data-atab-active="profile"] .sidebar-footer{display:block}
+
+  /* Orders tab = existing payments dashboard (.main-content) */
+  .main-content{display:none}
+  body[data-atab-active="orders"] .main-content{display:block}
+
+  /* Clearance so content doesn't sit behind the floating nav */
+  .sidebar,.main-content{padding-bottom:100px}
+}
 </style>
 </head>
-<body>
+<body data-atab-active="home">
 
 <!-- ── Auth Screen ───────────────────────────────────────── -->
 <div id="auth-screen">
@@ -468,14 +521,14 @@ body::before{content:'';position:fixed;inset:0;
           <div class="stat-info"><div class="stat-val" id="stat-revenue">—</div><div class="stat-lbl">الإيرادات (جنيه)</div></div>
         </div>
       </div>
-      <div class="sidebar-courses">
+      <div class="sidebar-courses" data-atab="home">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M1.5 16c0-2.6 2.1-4.3 5-4.3s5 1.7 5 4.3"/><circle cx="6.5" cy="6.7" r="2.7"/><path d="M11.3 12c1.9.3 3.2 1.7 3.2 4"/><path d="M10.4 3.4a2.7 2.7 0 0 1 0 5.3"/></svg> الطلاب المسجّلون لكل دورة</div>
         <div id="course-enrollments">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
         <button class="broadcast-open-btn" onclick="openBroadcastModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.5 7.8h1.8l6.7-3.6v11.6L4.3 12.2H2.5a1 1 0 0 1-1-1V8.8a1 1 0 0 1 1-1z"/><path d="M14 7c1 .9 1 3.1 0 4"/><path d="M6.5 12.2v2.6a1 1 0 0 0 1 1h.6a1 1 0 0 0 1-1v-1.7"/></svg> إرسال إشعار</button>
       </div>
-      <div class="sidebar-courses">
+      <div class="sidebar-courses" data-atab="profile">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
         <div class="mk-total-summary">
           <div class="mk-total-card">
@@ -491,9 +544,27 @@ body::before{content:'';position:fixed;inset:0;
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
       </div>
-      <div class="sidebar-courses">
+      <div class="sidebar-courses" data-atab="profile">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> الإيرادات الشهرية</div>
         <div id="monthly-revenue">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
+        </div>
+      </div>
+      <div class="sidebar-courses" data-atab="profile">
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> نظرة عامة على الإيرادات</div>
+        <div id="profile-revenue-overview">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
+        </div>
+      </div>
+      <div class="sidebar-courses" data-atab="profile">
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.5 15.5V4.5a1 1 0 0 1 1-1H12l4.5 4.5v7.5a1 1 0 0 1-1 1h-12a1 1 0 0 1-1-1z"/><path d="M12 3.5V8h4.5"/><path d="M6 12l2.2 2.2L14 8.5"/></svg> الكورسات الأكثر والأقل مبيعًا</div>
+        <div id="profile-course-ranking">
+          <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
+        </div>
+      </div>
+      <div class="sidebar-courses" data-atab="profile">
+        <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="3" y="4" width="14" height="13" rx="2"/><line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/></svg> الأيام الأكثر مبيعًا</div>
+        <div id="profile-best-days">
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
       </div>
@@ -545,6 +616,31 @@ body::before{content:'';position:fixed;inset:0;
       </div>
     </main>
   </div>
+
+  <!-- ── Mobile Bottom Nav (Home / Orders / My Profile) ── -->
+  <nav id="admin-bottom-nav" aria-label="التنقل السريع" role="navigation">
+    <div class="abn-inner">
+      <span id="abn-slide-pill" aria-hidden="true"></span>
+      <button class="abn-item active" data-atab="home" onclick="setAdminTab('home')" aria-label="الرئيسية" aria-current="page">
+        <span class="abn-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </span>
+        <span class="abn-lbl">الرئيسية</span>
+      </button>
+      <button class="abn-item" data-atab="orders" onclick="setAdminTab('orders')" aria-label="الطلبات">
+        <span class="abn-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h1.5A1.5 1.5 0 0 1 19 6.5v14A1.5 1.5 0 0 1 17.5 22h-11A1.5 1.5 0 0 1 5 20.5v-14A1.5 1.5 0 0 1 6.5 5H8V4a1 1 0 0 1 1-1z"/><path d="M9 13l2 2 4-4"/></svg>
+        </span>
+        <span class="abn-lbl">الطلبات</span>
+      </button>
+      <button class="abn-item" data-atab="profile" onclick="setAdminTab('profile')" aria-label="ملفي">
+        <span class="abn-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </span>
+        <span class="abn-lbl">ملفي</span>
+      </button>
+    </div>
+  </nav>
 </div>
 
 <!-- ── Confirm Dialog ── -->
@@ -779,6 +875,37 @@ function showApp() {
       if (btn) btn.innerHTML = IC2.bell + ' مفعّلة على الجهاز ده';
     }
   } catch (e) {}
+  requestAnimationFrame(function() { initAdminBottomNav(); });
+}
+
+/* ── Mobile bottom nav (الرئيسية / الطلبات / ملفي) ──────── */
+function setAdminTab(tab) {
+  document.body.setAttribute('data-atab-active', tab);
+  document.querySelectorAll('#admin-bottom-nav .abn-item').forEach(function(btn) {
+    var isActive = btn.dataset.atab === tab;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-current', isActive ? 'page' : 'false');
+  });
+  var activeEl = document.querySelector('#admin-bottom-nav .abn-item.active');
+  var pill = document.getElementById('abn-slide-pill');
+  if (activeEl && pill) {
+    pill.style.transform = 'translateX(' + activeEl.offsetLeft + 'px)';
+    pill.style.width     = activeEl.offsetWidth + 'px';
+    pill.style.opacity   = '1';
+  }
+  window.scrollTo(0, 0);
+}
+
+function initAdminBottomNav() {
+  setAdminTab('home');
+  window.addEventListener('resize', function() {
+    var activeEl = document.querySelector('#admin-bottom-nav .abn-item.active');
+    var pill = document.getElementById('abn-slide-pill');
+    if (activeEl && pill) {
+      pill.style.transform = 'translateX(' + activeEl.offsetLeft + 'px)';
+      pill.style.width     = activeEl.offsetWidth + 'px';
+    }
+  }, { passive: true });
 }
 
 async function doLogin() {
@@ -890,7 +1017,13 @@ function loadPayments() {
 /* ── Stats ──────────────────────────────────────── */
 function updateStats() {
   const pending  = allPayments.filter(function(p){ return p.status === 'pending'; }).length;
-  const approved = allPayments.filter(function(p){ return p.status === 'approved'; }).length;
+  // "مقبول" = unique subscribed accounts, not raw enrollment rows — someone
+  // subscribed to several courses from the same account counts once here.
+  const approvedUids = {};
+  allPayments.forEach(function(p){
+    if (p.status === 'approved') approvedUids[p.uid || p._id] = true;
+  });
+  const approved = Object.keys(approvedUids).length;
   const rejected = allPayments.filter(function(p){ return p.status === 'rejected'; }).length;
   const revenue  = allPayments
     .filter(function(p){ return p.status === 'approved'; })
@@ -902,6 +1035,7 @@ function updateStats() {
   updateEnrollments();
   updateMarketers();
   updateMonthlyRevenue();
+  updateProfileAnalytics();
 }
 
 /* ── Marketer commission sales report ────────────── */
@@ -1003,6 +1137,87 @@ function updateMonthlyRevenue() {
       '<div class="course-enroll-count">' + d.revenue.toFixed(0) + '<span style="font-size:9px;opacity:.6;display:block;font-weight:600">جنيه</span></div>' +
     '</div>';
   }).join('');
+}
+
+/* ── ملفي: نظرة عامة على الإيرادات + الكورسات الأكثر/الأقل
+   مبيعًا + الأيام الأكثر مبيعًا ─────────────────────────── */
+var WEEKDAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+function updateProfileAnalytics() {
+  var approved = allPayments.filter(function(p) { return p.status === 'approved'; });
+
+  // Revenue overview
+  var ovEl = document.getElementById('profile-revenue-overview');
+  if (ovEl) {
+    var totalRevenue = approved.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+    var avgOrder     = approved.length ? (totalRevenue / approved.length) : 0;
+    var approvalRate = allPayments.length ? Math.round((approved.length / allPayments.length) * 100) : 0;
+    ovEl.innerHTML =
+      '<div class="day-summary-stats">' +
+        '<div class="day-stat revenue-s"><div class="day-stat-val">' + totalRevenue.toFixed(0) + '</div><div class="day-stat-lbl">إجمالي الإيرادات (ج)</div></div>' +
+        '<div class="day-stat approved-s"><div class="day-stat-val">' + approved.length + '</div><div class="day-stat-lbl">عمليات ناجحة</div></div>' +
+        '<div class="day-stat"><div class="day-stat-val">' + avgOrder.toFixed(0) + '</div><div class="day-stat-lbl">متوسط قيمة الطلب (ج)</div></div>' +
+        '<div class="day-stat"><div class="day-stat-val">' + approvalRate + '%</div><div class="day-stat-lbl">نسبة القبول</div></div>' +
+      '</div>';
+  }
+
+  // Courses ranked by number of sales (best → worst), with revenue per course
+  var rankEl = document.getElementById('profile-course-ranking');
+  if (rankEl) {
+    var byCourse = {};
+    approved.forEach(function(p) {
+      if (!p.courseId) return;
+      if (!byCourse[p.courseId]) byCourse[p.courseId] = { count: 0, revenue: 0 };
+      byCourse[p.courseId].count++;
+      byCourse[p.courseId].revenue += (p.amount || 0);
+    });
+    var cids = Object.keys(byCourse);
+    cids.sort(function(a, b) { return byCourse[b].count - byCourse[a].count; });
+    if (!cids.length) {
+      rankEl.innerHTML = '<div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">لا يوجد مبيعات مسجّلة حتى الآن</div>';
+    } else {
+      rankEl.innerHTML = cids.map(function(cid, i) {
+        var d = byCourse[cid];
+        var label = COURSE_LABELS[cid] || cid;
+        var badge = i === 0 ? ' 🏆' : (i === cids.length - 1 && cids.length > 1 ? ' 🔻' : '');
+        return '<div class="course-enroll-row">' +
+          '<div>' +
+            '<div class="course-enroll-name">' + label + badge + '</div>' +
+            '<div class="course-enroll-pending">' + d.revenue.toFixed(0) + ' جنيه</div>' +
+          '</div>' +
+          '<div class="course-enroll-count">' + d.count + '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Weekdays ranked by revenue (best-selling days)
+  var daysEl = document.getElementById('profile-best-days');
+  if (daysEl) {
+    var byDay = [0, 1, 2, 3, 4, 5, 6].map(function() { return { count: 0, revenue: 0 }; });
+    approved.forEach(function(p) {
+      var pd = getPayDate(p); if (!pd) return;
+      byDay[pd.getDay()].count++;
+      byDay[pd.getDay()].revenue += (p.amount || 0);
+    });
+    var dayIdxs = [0, 1, 2, 3, 4, 5, 6].sort(function(a, b) { return byDay[b].revenue - byDay[a].revenue; });
+    var anySales = byDay.some(function(d) { return d.count > 0; });
+    if (!anySales) {
+      daysEl.innerHTML = '<div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">لا يوجد بيانات كافية بعد</div>';
+    } else {
+      daysEl.innerHTML = dayIdxs.map(function(idx, i) {
+        var d = byDay[idx];
+        var badge = (i === 0 && d.count > 0) ? ' 🏆' : '';
+        return '<div class="course-enroll-row">' +
+          '<div>' +
+            '<div class="course-enroll-name">' + WEEKDAYS_AR[idx] + badge + '</div>' +
+            '<div class="course-enroll-pending">' + d.revenue.toFixed(0) + ' جنيه</div>' +
+          '</div>' +
+          '<div class="course-enroll-count">' + d.count + '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
 }
 
 /* ── Marketer commission detail + settlement ─────── */
