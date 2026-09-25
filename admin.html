@@ -162,18 +162,25 @@ body[data-light] #admin-thm-btn .moon-icon{display:block}
   transition:all var(--t);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .refresh-btn:hover{background:var(--card-hov);border-color:var(--border-md)}
 .refresh-btn:hover .ricon{transform:rotate(-40deg)}
-/* Same pill size/scale as its sibling refresh button — only the label differs,
-   so the two main-header buttons read as one consistent visual system. */
+/* Notification-status pill: intentionally the smaller, secondary control. */
+#admin-push-btn{padding:7px 14px;font-size:12px;gap:5px}
+/* Refresh: icon-only circular button, matching the theme-toggle button's shape. */
+.icon-btn{width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;
+  border:1.5px solid var(--border-md);color:var(--muted);background:var(--card);
+  cursor:pointer;transition:all .22s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.icon-btn:hover{transform:scale(1.08);border-color:var(--emerald);color:var(--emerald)}
+.icon-btn:hover .ricon{transform:rotate(-40deg)}
+.icon-btn:active{transform:scale(.93)}
 .ricon{transition:transform .4s var(--t);display:flex;align-items:center}
-.refresh-btn svg,.logout-btn svg{display:block}
+.refresh-btn svg,.logout-btn svg,.icon-btn svg{display:block}
 .controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-.tabs{display:flex;gap:4px;background:var(--card);border-radius:12px;
-  padding:5px;border:1px solid var(--border)}
+.tabs{display:flex;gap:4px;justify-content:space-between;background:var(--card);border-radius:12px;
+  padding:5px;border:1px solid var(--border);flex:1;min-width:220px}
 .tab-btn{padding:7px 16px;border-radius:8px;border:none;background:transparent;
   font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;
   transition:all var(--t);white-space:nowrap}
 .tab-btn.active{background:var(--emerald);color:#fff;box-shadow:0 2px 10px rgba(34,197,94,.35)}
-.search-wrap{flex:1;min-width:200px}
+.search-wrap{flex:1;min-width:220px}
 .search-input{width:100%;padding:10px 14px;background:var(--card);
   border:1px solid var(--border);border-radius:10px;font-size:16px;
   font-family:inherit;direction:rtl;outline:none;color:var(--text);transition:all var(--t)}
@@ -711,8 +718,8 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
           <div class="main-title">طلبات الدفع</div>
           <div class="main-subtitle" id="last-refresh">—</div>
         </div>
-        <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل"><svg style="width:15px;height:15px;flex-shrink:0;display:block" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg> إشعارات الدفع</button>
-        <button class="refresh-btn" onclick="loadPayments()"><span class="ricon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>تحديث</button>
+        <button class="refresh-btn" id="admin-push-btn" onclick="enableAdminPaymentPush()" title="تفعيل إشعار فوري على الموبايل عند وصول طلب دفع جديد، حتى لو الموقع قافل"><svg style="width:13px;height:13px;flex-shrink:0;display:block" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg> إشعارات الدفع</button>
+        <button class="icon-btn" onclick="loadPayments()" title="تحديث" aria-label="تحديث"><span class="ricon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span></button>
       </div>
 
       <div class="controls-row">
@@ -917,7 +924,7 @@ const IC2 = {
   send:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M18 2L2 9l6 2.5L11 18l3-8 4-8z"/><path d="M8 11.5L18 2"/></svg>',
   lock:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="4" y="9" width="12" height="8" rx="1.6"/><path d="M6.5 9V6.3a3.5 3.5 0 0 1 7 0V9"/></svg>',
   unlock:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="4" y="9" width="12" height="8" rx="1.6"/><path d="M6.5 9V6.3a3.5 3.5 0 0 1 6.5-1.8"/></svg>',
-  bell:  '<svg style="width:15px;height:15px;flex-shrink:0;display:block" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg>',
+  bell:  '<svg style="width:13px;height:13px;flex-shrink:0;display:block" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.2 1 4.3 1.5 5H3.5c.5-.7 1.5-1.8 1.5-5z"/><path d="M8.3 16a1.8 1.8 0 0 0 3.4 0"/></svg>',
   tower: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M10 3v14"/><path d="M6.5 6a5 5 0 0 0 0 8"/><path d="M13.5 6a5 5 0 0 1 0 8"/><path d="M3.5 3.5a9 9 0 0 0 0 13"/><path d="M16.5 3.5a9 9 0 0 1 0 13"/></svg>',
   users_sm: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M1.5 16c0-2.6 2.1-4.3 5-4.3s5 1.7 5 4.3"/><circle cx="6.5" cy="6.7" r="2.7"/><path d="M11.3 12c1.9.3 3.2 1.7 3.2 4"/><path d="M10.4 3.4a2.7 2.7 0 0 1 0 5.3"/></svg>',
   warnSm: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:3px"><path d="M10 2.5L18.3 17H1.7L10 2.5z"/><line x1="10" y1="7.5" x2="10" y2="11.5"/><circle cx="10" cy="14" r="0.8" fill="currentColor" stroke="none"/></svg>',
