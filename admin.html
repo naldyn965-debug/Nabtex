@@ -29,6 +29,10 @@ body[data-light]{
   --rejected:#dc2626;--rejected-bg:rgba(239,68,68,.08);
   --text:#1e2a24;--muted:#6d8f7a;--subtle:#86a293;
 }
+/* iOS Safari reveals <html>'s own background during overscroll/pull-to-refresh
+   bounce, separately from <body>'s — so it needs the light color too, or a
+   dark flash shows at the edges while scrolling in light mode. */
+html[data-light]{background:#fafef9}
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;
   background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
 body::before{content:'';position:fixed;inset:0;
@@ -579,6 +583,7 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
   try{
     if(localStorage.getItem('nb-admin-light')==='1'){
       document.body.setAttribute('data-light','');
+      document.documentElement.setAttribute('data-light','');
     }
   }catch(e){}
 })();
@@ -938,9 +943,11 @@ const IC3 = {
     var isLight = document.body.hasAttribute('data-light');
     if(isLight){
       document.body.removeAttribute('data-light');
+      document.documentElement.removeAttribute('data-light');
       try{ localStorage.setItem('nb-admin-light','0'); }catch(e){}
     } else {
       document.body.setAttribute('data-light','');
+      document.documentElement.setAttribute('data-light','');
       try{ localStorage.setItem('nb-admin-light','1'); }catch(e){}
     }
   });
