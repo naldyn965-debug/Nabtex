@@ -94,6 +94,11 @@ body[data-light] #admin-thm-btn .sun-icon{display:none}
 body[data-light] #admin-thm-btn .moon-icon{display:block}
 .sidebar-logo-icon{display:flex;align-items:center;gap:10px;margin-bottom:2px}
 .sidebar-logo-svg{filter:drop-shadow(0 0 8px rgba(34,197,94,.35))}
+/* Nabtex brand mark — identical badge/icon to the one in index.html's nav */
+.sidebar-logo-mark{width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(145deg,#2d9a58,#0f552e);display:grid;place-items:center;
+  box-shadow:0 4px 12px rgba(15,85,46,.35);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.sidebar-logo-icon:hover .sidebar-logo-mark{transform:rotate(-8deg) scale(1.1)}
 .sidebar-logo-name{font-size:1rem;font-weight:900;letter-spacing:-.01em}
 .sidebar-logo-sub{font-size:11px;color:var(--muted);margin-top:3px;margin-right:36px}
 .sidebar-section-label{font-size:10px;font-weight:800;color:var(--subtle);
@@ -621,7 +626,11 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
     <aside class="sidebar">
       <div class="sidebar-head">
         <div class="sidebar-logo-icon">
-          <svg class="sidebar-logo-svg" width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(34,197,94,0.1)"/><path d="M14 23C14 23 7 18.5 7 12C7 8.13 10.13 5 14 5C17.87 5 21 8.13 21 12C21 18.5 14 23 14 23Z" fill="rgba(34,197,94,0.18)" stroke="#22c55e" stroke-width="1.2"/><line x1="14" y1="23" x2="14" y2="10" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/><path d="M14 16C14 16 10.5 13 10.5 10" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/><path d="M14 19.5C14 19.5 17.5 16.5 17.5 13.5" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <div class="sidebar-logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/>
+            </svg>
+          </div>
           <div class="sidebar-logo-name">نبتيكس أكاديمي</div>
         </div>
         <div class="sidebar-logo-sub">لوحة تحكم المدفوعات</div>
