@@ -871,6 +871,10 @@ body.modal-open { overflow: hidden; }
 .adiv{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
 .adiv::before,.adiv::after{content:'';flex:1;height:1px;background:var(--line)}
 .btn-goo{padding:11px;border-radius:var(--rpill);background:var(--bg2);color:var(--ink);font-weight:700;font-size:14px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s var(--ease-spring)}
+.fp-link{text-align:right}
+.fp-link a,.fp-back a{color:var(--brand);font-size:12.5px;font-weight:700;text-decoration:none}
+.fp-link a:hover,.fp-back a:hover{text-decoration:underline}
+.fp-back{text-align:center}
 .btn-goo:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:0 0 12px rgba(27,107,58,0.3);}
 .rip{position:absolute;border-radius:50%;background:rgba(27,107,58,.18);animation:ripA .7s linear;pointer-events:none}
 @keyframes ripA{0%{transform:scale(0);opacity:.7}100%{transform:scale(4);opacity:0}}
@@ -5002,6 +5006,7 @@ body.modal-open { overflow: hidden; }
       <form class="aform" id="af-l" onsubmit="hLogin(event)">
         <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
         <div class="fg"><label>كلمة المرور</label><input type="password" required placeholder="••••••••"></div>
+        <div class="fp-link"><a href="#" onclick="event.preventDefault();showForgotPassword()">نسيت كلمة المرور؟</a></div>
         <button type="submit" class="btn-sub">تسجيل الدخول</button>
         <div class="adiv">أو</div>
         <button type="button" class="btn-goo" onclick="signInWithGoogle()">
@@ -5021,6 +5026,16 @@ body.modal-open { overflow: hidden; }
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
           التسجيل بـ Google
         </button>
+      </form>
+      <form class="aform" id="af-fp" style="display:none" onsubmit="hForgotPassword(event)">
+        <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
+        <button type="submit" class="btn-sub">إرسال رابط إعادة التعيين</button>
+        <div class="fp-back"><a href="#" onclick="event.preventDefault();backToLogin()">رجوع لتسجيل الدخول</a></div>
+      </form>
+      <form class="aform" id="af-np" style="display:none" onsubmit="hResetPassword(event)">
+        <div class="fg"><label>كلمة المرور الجديدة</label><input type="password" required minlength="8" placeholder="••••••••"></div>
+        <div class="fg"><label>تأكيد كلمة المرور الجديدة</label><input type="password" required minlength="8" placeholder="••••••••"></div>
+        <button type="submit" class="btn-sub">حفظ كلمة المرور الجديدة</button>
       </form>
     </div>
   </div>
@@ -8875,6 +8890,7 @@ let userJoinDate = null;
 let userProvider = 'email';
 let profileEditMode = false;
 let _nbAuthReady = false; // true بعد أول رد فعلي من auth.onAuthStateChanged (نعرف بقى مسجل ولا زائر)
+let _nbResetOobCode = null; // كود إعادة تعيين كلمة المرور الحالي (من رابط الإيميل)
 // ======================== DATABASE ========================
 // (تم حذف قاعدة بيانات النباتات DB بالكامل — إزالة قسم الموسوعة النباتية)
 
@@ -9799,6 +9815,50 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
   }
 }
 
+async function sendPasswordReset(email) {
+  try {
+    const actionCodeSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
+    await auth.sendPasswordResetEmail(email, actionCodeSettings);
+    showToast('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'ok');
+    backToLogin();
+  } catch (error) {
+    let msg = 'تعذر إرسال رابط إعادة التعيين: ';
+    switch (error.code) {
+      case 'auth/user-not-found': msg += 'البريد الإلكتروني غير مسجل'; break;
+      case 'auth/invalid-email': msg += 'البريد الإلكتروني غير صالح'; break;
+      case 'auth/too-many-requests': msg += 'محاولات كثيرة، حاول لاحقاً'; break;
+      case 'auth/unauthorized-continue-uri': msg += 'النطاق الحالي غير مصرح به، أضفه في Firebase Console (Authentication → Settings → Authorized domains)'; break;
+      default: msg += error.message;
+    }
+    showToast(msg, 'err');
+  }
+}
+
+async function applyNewPassword(newPassword, confirmPassword) {
+  if (newPassword !== confirmPassword) {
+    showToast('❌ كلمتا المرور غير متطابقتين', 'err');
+    return;
+  }
+  try {
+    await auth.confirmPasswordReset(_nbResetOobCode, newPassword);
+    showToast('✅ تم تغيير كلمة المرور بنجاح، سجّل دخولك بكلمة المرور الجديدة', 'ok');
+    _nbResetOobCode = null;
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+    document.getElementById('af-np').style.display = 'none';
+    document.querySelector('.auth-tabs').style.display = 'flex';
+    swAuth('login');
+  } catch (error) {
+    let msg = 'تعذر تغيير كلمة المرور: ';
+    switch (error.code) {
+      case 'auth/expired-action-code': msg += 'انتهت صلاحية الرابط، اطلب رابط جديد'; break;
+      case 'auth/invalid-action-code': msg += 'الرابط غير صالح، اطلب رابط جديد'; break;
+      case 'auth/weak-password': msg += 'كلمة المرور ضعيفة'; break;
+      default: msg += error.message;
+    }
+    showToast(msg, 'err');
+  }
+}
+
 async function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
@@ -9946,6 +10006,10 @@ auth.onAuthStateChanged(async (user) => {
 // ======================== UI HELPERS ========================
 function closeAuth() {
   document.getElementById('auth-bg').classList.remove('on');
+  const fpForm = document.getElementById('af-fp');
+  if (fpForm) fpForm.style.display = 'none';
+  const tabs = document.querySelector('.auth-tabs');
+  if (tabs) tabs.style.display = 'flex';
 }
 function openAuth(tab) {
   document.getElementById('auth-bg').classList.add('on');
@@ -9967,6 +10031,30 @@ function swAuth(tab) {
     loginTab.classList.remove('on');
     regTab.classList.add('on');
   }
+}
+
+function showForgotPassword() {
+  const loginEmail = document.querySelector('#af-l input[type="email"]');
+  const fpEmail = document.querySelector('#af-fp input[type="email"]');
+  if (loginEmail && fpEmail) fpEmail.value = loginEmail.value;
+  document.querySelector('.auth-tabs').style.display = 'none';
+  document.getElementById('af-l').style.display = 'none';
+  document.getElementById('af-r').style.display = 'none';
+  document.getElementById('af-fp').style.display = 'flex';
+}
+
+function backToLogin() {
+  document.getElementById('af-fp').style.display = 'none';
+  document.querySelector('.auth-tabs').style.display = 'flex';
+  swAuth('login');
+}
+
+function showResetPasswordForm() {
+  document.querySelector('.auth-tabs').style.display = 'none';
+  document.getElementById('af-l').style.display = 'none';
+  document.getElementById('af-r').style.display = 'none';
+  document.getElementById('af-fp').style.display = 'none';
+  document.getElementById('af-np').style.display = 'flex';
 }
 
 function chkStr(val) {
@@ -10431,6 +10519,40 @@ async function hReg(event) {
   }
 }
 
+async function hForgotPassword(event) {
+  event.preventDefault();
+  const form = event.target;
+  const email = form.querySelector('input[type="email"]').value;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جاري الإرسال...';
+  try {
+    await sendPasswordReset(email);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+}
+
+async function hResetPassword(event) {
+  event.preventDefault();
+  const form = event.target;
+  const pwInputs = form.querySelectorAll('input[type="password"]');
+  const newPassword = pwInputs[0].value;
+  const confirmPassword = pwInputs[1].value;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جاري الحفظ...';
+  try {
+    await applyNewPassword(newPassword, confirmPassword);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+}
+
 /* ═══ Premium Card Ripple Effect ═══ */
 (function initCardRipple() {
   function addRipple(card, rippleClass) {
@@ -10447,6 +10569,20 @@ async function hReg(event) {
     });
   }
   document.querySelectorAll('.farm-entry-card').forEach(c => addRipple(c, 'fec-ripple'));
+})();
+
+/* ═══ Password Reset Link Handler — يفتح فورم تعيين كلمة مرور جديدة لو الصفحة اتفتحت من رابط إيميل Firebase ═══ */
+(function checkPasswordResetLink() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') !== 'resetPassword' || !params.get('oobCode')) return;
+  const oobCode = params.get('oobCode');
+  auth.verifyPasswordResetCode(oobCode).then(() => {
+    _nbResetOobCode = oobCode;
+    openAuth('login');
+    showResetPasswordForm();
+  }).catch(() => {
+    showToast('⚠️ رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية', 'err');
+  });
 })();
 </script>
 
