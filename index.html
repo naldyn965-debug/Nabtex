@@ -9817,8 +9817,7 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
 
 async function sendPasswordReset(email) {
   try {
-    const actionCodeSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
-    await auth.sendPasswordResetEmail(email, actionCodeSettings);
+    await auth.sendPasswordResetEmail(email);
     showToast('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'ok');
     backToLogin();
   } catch (error) {
@@ -9827,7 +9826,6 @@ async function sendPasswordReset(email) {
       case 'auth/user-not-found': msg += 'البريد الإلكتروني غير مسجل'; break;
       case 'auth/invalid-email': msg += 'البريد الإلكتروني غير صالح'; break;
       case 'auth/too-many-requests': msg += 'محاولات كثيرة، حاول لاحقاً'; break;
-      case 'auth/unauthorized-continue-uri': msg += 'النطاق الحالي غير مصرح به، أضفه في Firebase Console (Authentication → Settings → Authorized domains)'; break;
       default: msg += error.message;
     }
     showToast(msg, 'err');
