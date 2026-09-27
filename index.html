@@ -5009,7 +5009,7 @@ body.modal-open { overflow: hidden; }
         <div class="fp-link"><a href="#" onclick="event.preventDefault();showForgotPassword()">نسيت كلمة المرور؟</a></div>
         <button type="submit" class="btn-sub">تسجيل الدخول</button>
         <div class="adiv">أو</div>
-        <button type="button" class="btn-goo" onclick="signInWithGoogle()">
+        <button type="button" class="btn-goo" onclick="signInWithGoogle('login')">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
           متابعة بـ Google
         </button>
@@ -5022,7 +5022,7 @@ body.modal-open { overflow: hidden; }
         <div class="fg"><label>دورك</label><select><option>🌾 مزارع</option><option>👨‍🔬 خبير زراعي</option><option>🎓 طالب</option><option>🏢 شركة</option></select></div>
         <button type="submit" class="btn-sub">إنشاء الحساب</button>
         <div class="adiv">أو</div>
-        <button type="button" class="btn-goo" onclick="signInWithGoogle()">
+        <button type="button" class="btn-goo" onclick="signInWithGoogle('reg')">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
           التسجيل بـ Google
         </button>
@@ -9857,10 +9857,21 @@ async function applyNewPassword(newPassword, confirmPassword) {
   }
 }
 
-async function signInWithGoogle() {
+async function signInWithGoogle(intent) {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     const result = await auth.signInWithPopup(provider);
+    const isNewUser = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
+    if (intent === 'login' && isNewUser) {
+      await result.user.delete();
+      showToast('فشل تسجيل الدخول: لا يوجد حساب مسجل بهذا البريد، أنشئ حساب جديد أولاً', 'err');
+      return;
+    }
+    if (intent === 'reg' && isNewUser === false) {
+      await auth.signOut();
+      showToast('فشل التسجيل: هذا الحساب مسجل بالفعل، سجّل الدخول بدلاً من ذلك', 'err');
+      return;
+    }
     showToast(`مرحباً ${result.user.displayName || result.user.email}`, 'ok');
     closeAuth();
     showPage('profile');
