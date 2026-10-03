@@ -53,7 +53,7 @@
      PWA — THEME & STATUS BAR
 ═══════════════════════════════════════════════════════ -->
 <meta name="theme-color" content="#1B6B3A" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b160d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#1f2d25" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 
 <!-- ═══════════════════════════════════════════════════════
@@ -991,6 +991,19 @@ body.modal-open { overflow: hidden; }
 .mob-menu{overflow:hidden;max-height:0;opacity:0;transition:max-height .32s var(--ease-out),opacity .28s ease,padding .28s ease;display:flex!important;padding-top:0;padding-bottom:0}
 .mob-menu.open{max-height:420px;opacity:1;padding-top:12px;padding-bottom:20px}
 .toast{max-width:88vw;white-space:normal;word-wrap:break-word}
+/* Toast refinement: #tw was shrink-wrapped to 50vw (left:50%) which forced every toast onto 2-3 lines. */
+#tw{width:max-content;max-width:94vw;gap:6px}
+.toast{max-width:94vw;padding:8px 14px 8px 10px;gap:8px;border-radius:999px;font-size:12px;font-weight:700;line-height:1.4;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2),0 1px 3px rgba(0,0,0,.12)}
+.toast>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.toast.long{white-space:normal;border-radius:16px;line-height:1.5;padding:9px 14px 9px 10px}
+.toast-icon-wrap{width:20px;height:20px}
+.toast-icon-wrap svg{width:11px!important;height:11px!important}
+.toast.ok{background:rgba(17,30,22,.94);color:#fff;border:1px solid rgba(74,222,128,.3)}
+.toast.ok .toast-icon-wrap{background:#22a55a}
+.toast.err{background:rgba(44,20,20,.95);color:#fff;border:1px solid rgba(248,113,113,.38)}
+.toast.err .toast-icon-wrap{background:#dc2626}
+.toast.inf{background:rgba(22,30,38,.95);color:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.14)}
+.toast.inf .toast-icon-wrap{background:rgba(255,255,255,.18)}
 .sp-result-item{animation:riIn .4s var(--ease-out) both}
 .pcard{animation-fill-mode:both}
 .cat-card{isolation:isolate}
@@ -4663,17 +4676,22 @@ body.modal-open { overflow: hidden; }
 <!-- ══════════ PAGE: PROFILE (PREMIUM) ══════════ -->
 <div class="page" id="pg-profile">
   <style>
-    .prf-card{max-width:700px;margin:0 auto;background:var(--card);border-radius:28px;box-shadow:0 24px 64px rgba(0,0,0,.14),0 0 0 1px rgba(27,107,58,.08);overflow:hidden}
-    .prf-cover{background:linear-gradient(135deg,var(--brand-d) 0%,#1a8547 55%,var(--brand) 100%);padding:40px 32px 56px;text-align:center;position:relative;overflow:hidden}
-    .prf-cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,.12),transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(27,107,58,.35),transparent 55%);pointer-events:none}
-    .prf-cover::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:32px;background:var(--card);clip-path:ellipse(55% 100% at 50% 100%)}
-    .prf-avatar-wrap{width:108px;height:108px;background:rgba(255,255,255,.18);border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;border:4px solid rgba(255,255,255,.55);overflow:hidden;position:relative;box-shadow:0 8px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.3);backdrop-filter:blur(4px)}
-    .prf-name-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-    .prf-name{font-family:var(--f-display);font-size:1.75rem;color:#fff;margin:0;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.2)}
-    .edit-profile-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);border-radius:40px;padding:6px 15px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .22s;font-family:var(--f-ui);display:inline-flex;align-items:center;gap:5px;backdrop-filter:blur(8px)}
-    .edit-profile-btn:hover{background:rgba(255,255,255,.32);transform:scale(1.04)}
-    .prf-email{color:rgba(255,255,255,.78);margin-top:4px;font-size:13px;text-decoration:none}
-    .prf-body{padding:28px 28px 28px}
+    /* ── Header: clean, no hero — avatar + name + email + edit (same elements, new layout) ── */
+    .prf-card{max-width:700px;margin:0 auto;background:transparent}
+    .prf-cover{display:grid;grid-template-columns:auto auto auto minmax(0,1fr);grid-template-areas:"av name name name" "av mail mail mail" "av edit save .";align-items:center;text-align:start;padding:6px 2px 22px}
+    .prf-avatar-wrap{grid-area:av;align-self:center;width:88px;height:88px;margin:0 0 0 16px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;border:3px solid var(--card);overflow:hidden;position:relative;flex:none;box-shadow:0 0 0 1px var(--line2),0 8px 22px rgba(27,107,58,.14)}
+    .prf-name-row{display:contents}
+    .prf-name{grid-area:name;align-self:end;font-family:var(--f-ui);font-size:1.5rem;font-weight:800;line-height:1.3;color:var(--ink);margin:0;letter-spacing:0;min-width:0;overflow-wrap:anywhere}
+    .prf-email{grid-area:mail;align-self:start;margin:2px 0 0;color:var(--muted);font-size:13px;line-height:1.5;text-decoration:none;min-width:0;overflow-wrap:anywhere}
+    .edit-profile-btn{grid-area:edit;justify-self:start;margin-top:8px;min-height:30px;background:transparent;border:1px solid var(--line2);border-radius:9999px;padding:4px 12px;color:var(--slate);font-size:12px;font-weight:600;line-height:1.4;cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .15s;font-family:var(--f-ui);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .edit-profile-btn svg{width:11px!important;height:11px!important;opacity:.75}
+    .edit-profile-btn:hover{background:rgba(27,107,58,.06);border-color:rgba(27,107,58,.28);color:var(--brand)}
+    .edit-profile-btn:active,#saveNameBtn:active{transform:scale(.97)}
+    #saveNameBtn{grid-area:save;justify-self:start;margin:8px 0 0 8px;min-height:30px;background:var(--brand);border:1px solid var(--brand);border-radius:9999px;padding:4px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--f-ui);align-items:center;gap:5px;transition:background .2s,transform .15s}
+    #saveNameBtn:hover{background:var(--brand-d)}
+    #editNameInput{width:min(240px,100%)!important;max-width:100%;box-sizing:border-box;font-family:var(--f-ui)!important;font-size:1.1rem!important;font-weight:700;text-align:start!important;color:var(--ink)!important;background:var(--card)!important;border:1.5px solid var(--line2)!important;border-radius:12px!important;padding:8px 12px!important;outline:none}
+    #editNameInput:focus{border-color:var(--brand)!important;box-shadow:0 0 0 3px rgba(27,107,58,.14)}
+    .prf-body{padding:0}
     .prf-stats{display:flex;gap:12px;justify-content:center;margin-bottom:28px}
     .prf-stat{flex:1;text-align:center;background:var(--bg2);border-radius:18px;padding:16px 8px;border:1px solid var(--line);transition:all .25s cubic-bezier(.16,1,.3,1)}
     .prf-stat:hover{background:var(--brand-pale);border-color:rgba(27,107,58,.2);transform:translateY(-2px)}
@@ -4694,6 +4712,102 @@ body.modal-open { overflow: hidden; }
     .prf-chpw-btn:hover{border-color:rgba(27,107,58,.3);background:var(--brand-pale);color:var(--brand)}
     .prf-logout-btn{display:flex;align-items:center;gap:7px;background:var(--bg2);color:var(--red,#ef4444);border:1.5px solid var(--line);border-radius:40px;padding:10px 18px;font-size:13px;font-weight:700;font-family:var(--f-ui);cursor:pointer;transition:all .22s}
     .prf-logout-btn:hover{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.07)}
+    /* ── Streak card (أيام الحماسة) — focal component ── */
+    #pg-profile #nbxp-fire{margin:0}
+    #pg-profile .nbxf{margin:0 0 16px;padding:20px;border-radius:24px;background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,40,26,.04),0 10px 28px rgba(16,40,26,.06)}
+    #pg-profile .nbxf-h{gap:14px}
+    #pg-profile .nbxf-fl{width:44px;height:44px;border-radius:50%;background:rgba(251,86,7,.09);box-shadow:none}
+    #pg-profile .nbxf-fl svg{width:26px;height:26px}
+    #pg-profile .nbxf-m b{font-size:1.2rem;font-weight:800;line-height:1.3;color:var(--ink)}
+    #pg-profile .nbxf-m span{display:block;margin-top:3px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+    #pg-profile .nbxf-n{flex:none;width:76px;height:76px;border-radius:50%;position:relative;border:5px solid rgba(251,86,7,.14);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    #pg-profile .nbxf-n b{display:block;font-size:1.6rem;font-weight:900;line-height:1;letter-spacing:-.02em;color:var(--brand);background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor}
+    @property --q{syntax:'<number>';inherits:false;initial-value:0}
+    #pg-profile .nbxf-n::before{--q:var(--p,0);content:"";position:absolute;inset:-5px;padding:5px;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,#ffb703 0,#fb5607 calc(var(--q)*.6%),#e63946 calc(var(--q)*1%),transparent 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);filter:drop-shadow(0 0 3px rgba(251,86,7,.45))}
+    @keyframes nbxfRing{from{--q:0}}
+    @media(prefers-reduced-motion:no-preference){#pg-profile .nbxf-n::before{animation:nbxfRing 1.1s var(--ease-out) both}}
+    #pg-profile .nbxf-n small{margin-top:3px;font-size:10.5px;font-weight:700;color:var(--muted)}
+    #pg-profile .nbxf-bar{height:8px;border-radius:8px;background:rgba(251,86,7,.14);margin:20px 0 0}
+    #pg-profile .nbxf-bar i{border-radius:8px;background:linear-gradient(90deg,#e63946,#fb5607,#ffb703,#fb5607,#e63946);background-size:200% 100%;box-shadow:none}
+    #pg-profile .nbxf-st{display:flex;align-items:stretch;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+    #pg-profile .nbxf-s{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px}
+    #pg-profile .nbxf-s+.nbxf-s{flex:0 0 auto}
+    #pg-profile .nbxf-s+.nbxf-s small{white-space:nowrap}
+    #pg-profile .nbxf-s+.nbxf-s{margin-inline-start:10px;padding-inline-start:12px;border-inline-start:1px solid var(--line)}
+    #pg-profile .nbxf-si{width:32px;height:32px;border-radius:50%;background:rgba(27,107,58,.08);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none}
+    #pg-profile .nbxf-si svg{width:16px;height:16px;vertical-align:baseline}
+    #pg-profile .nbxf-sx{min-width:0;display:block}
+    #pg-profile .nbxf-sx small{display:block;font-size:11.5px;line-height:1.45;color:var(--muted)}
+    #pg-profile .nbxf-sx b{display:block;margin-top:1px;font-size:1.1rem;font-weight:800;line-height:1.35;color:var(--brand)}
+    #pg-profile .nbxf-sx b em{font-style:normal;color:var(--ink)}
+    #pg-profile .nbxf-f{margin-top:14px;padding-top:0;border-top:0;gap:12px}
+    #pg-profile .nbxf-btn{flex:1 1 100%;justify-content:center;min-height:46px;padding:11px 18px;border-radius:9999px;background:linear-gradient(135deg,var(--brand-l),var(--brand));box-shadow:0 6px 16px rgba(27,107,58,.24);transition:transform .15s,box-shadow .2s}
+    #pg-profile .nbxf-btn:active{transform:scale(.98)}
+    #pg-profile .nbxf-done{flex:1 1 100%;justify-content:center;min-height:42px;padding:10px 14px;border-radius:14px;background:rgba(27,107,58,.07);font-size:12.5px}
+    @media(prefers-reduced-motion:no-preference){#pg-profile .nbxf-bar i{animation:prfBarIn .9s var(--ease-out) both,nbxfFlow 2.4s linear infinite,nbxfPulse 1.6s ease-in-out infinite alternate}}
+    @keyframes prfBarIn{from{width:0}}@keyframes nbxfFlow{to{background-position:200% 0}}@keyframes nbxfPulse{from{filter:brightness(1)}to{filter:brightness(1.15)}}
+    /* ── Level / XP card ── */
+    #pg-profile .nbxp{max-width:700px;margin:0 auto;padding:20px;border-radius:24px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,40,26,.04),0 10px 28px rgba(16,40,26,.06)}
+    #pg-profile .nbxp-h{gap:14px}
+    #pg-profile .nbxp-lv{width:48px;height:48px;border-radius:50%;font-size:19px}
+    #pg-profile .nbxp-hm b{font-size:1.05rem;font-weight:800;line-height:1.35}
+    #pg-profile .nbxp-hm span{display:block;margin-top:2px;font-size:12px}
+    #pg-profile .nbxp-bar{height:8px;border-radius:8px;background:rgba(27,107,58,.10);margin:14px 0 8px}
+    #pg-profile .nbxp-bar i{border-radius:8px;background:linear-gradient(90deg,var(--brand-l),var(--brand))}
+    /* ── Level tiers: platinum (1-2) → silver (3-4) → gold (5-6) → pink diamond (7) ── */
+    #pg-profile .nbxp[data-lv="0"]{--tl:#dbe3ec;--tm:#a3b3c6;--td:#6b7d92;--tt:#16202c;--tg:rgba(107,125,146,.38);--tk:rgba(107,125,146,.16)}
+    #pg-profile .nbxp[data-lv="1"]{--tl:#eef3f9;--tm:#b2c2d6;--td:#7b8fa8;--tt:#17222f;--tg:rgba(123,143,168,.40);--tk:rgba(123,143,168,.18)}
+    #pg-profile .nbxp[data-lv="2"]{--tl:#f5f5f6;--tm:#c0c2c6;--td:#8b8e94;--tt:#1f2329;--tg:rgba(139,142,148,.38);--tk:rgba(139,142,148,.18)}
+    #pg-profile .nbxp[data-lv="3"]{--tl:#ffffff;--tm:#dcdee1;--td:#a2a5ab;--tt:#1b1f26;--tg:rgba(162,165,171,.45);--tk:rgba(162,165,171,.20)}
+    #pg-profile .nbxp[data-lv="4"]{--tl:#f3d98b;--tm:#c9a13a;--td:#8f6a14;--tt:#2e1f00;--tg:rgba(201,161,58,.42);--tk:rgba(201,161,58,.18)}
+    #pg-profile .nbxp[data-lv="5"]{--tl:#fff3b8;--tm:#f6c744;--td:#c58a0c;--tt:#3a2400;--tg:rgba(246,199,68,.52);--tk:rgba(246,199,68,.20)}
+    #pg-profile .nbxp[data-lv="6"]{--tl:#fff0f8;--tm:#ff77b7;--td:#d6277f;--tt:#fff;--tg:rgba(255,79,163,.52);--tk:rgba(255,79,163,.16)}
+    #pg-profile .nbxp[data-lv] .nbxp-lv{position:relative;overflow:hidden;color:var(--tt);background:radial-gradient(circle at 30% 22%,var(--tl),var(--tm) 55%,var(--td));text-shadow:0 1px 0 rgba(255,255,255,.4);box-shadow:inset 0 1.5px 2px rgba(255,255,255,.75),inset 0 -4px 8px rgba(0,0,0,.2),0 0 0 3px var(--tk),0 6px 18px var(--tg)}
+    #pg-profile .nbxp[data-lv] .nbxp-h+.nbxp-bar{background:var(--tk)}
+    #pg-profile .nbxp[data-lv] .nbxp-h+.nbxp-bar i{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--td),var(--tm),var(--tl),var(--tm),var(--td));box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,0,0,.14)}
+    #pg-profile .nbxp[data-lv] .nbxp-lv::after,#pg-profile .nbxp[data-lv] .nbxp-h+.nbxp-bar i::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);transform:translateX(-120%)}
+    #pg-profile .nbxp[data-lv="6"] .nbxp-lv{background:conic-gradient(from 210deg,#ff4fa3,#ffd3ea,#ff7ab8,#fff3fa,#e0398a,#ffb3d9,#ff4fa3);text-shadow:0 1px 3px rgba(140,10,75,.65)}
+    #pg-profile .nbxp[data-lv="6"] .nbxp-h+.nbxp-bar i{background:linear-gradient(90deg,#ff4fa3,#ffd3ea,#ff7ab8,#fff3fa,#ff4fa3)}
+    @keyframes nbxpShine{0%{transform:translateX(-120%)}60%,100%{transform:translateX(120%)}}
+    @keyframes nbxpFlow{to{background-position:200% 0}}
+    @media(prefers-reduced-motion:no-preference){#pg-profile .nbxp[data-lv] .nbxp-lv::after,#pg-profile .nbxp[data-lv] .nbxp-h+.nbxp-bar i::after{animation:nbxpShine 3.2s ease-in-out infinite}#pg-profile .nbxp[data-lv] .nbxp-lv::after{animation-delay:.6s}#pg-profile .nbxp[data-lv="6"] .nbxp-h+.nbxp-bar i{background-size:200% 100%;animation:nbxpFlow 2.6s linear infinite}}
+    #pg-profile .nbxp-sm{flex-wrap:wrap;gap:4px 12px;line-height:1.5}
+    #pg-profile .nbxp-t{margin:22px 0 10px;padding-top:18px;border-top:1px solid var(--line);font-size:13.5px}
+    #pg-profile .nbxp-g{gap:10px}
+    #pg-profile .nbxp-c{padding:14px;border-radius:16px;background:var(--bg2);border-color:var(--line)}
+    #pg-profile .nbxp-c b{font-size:1.3rem;font-weight:800;line-height:1.2}
+    #pg-profile .nbxp-c span{display:block;margin-top:2px;font-size:11.5px;line-height:1.5}
+    #pg-profile .nbxp-ms{padding:10px 0;font-size:13px}
+    #pg-profile .nbxp-w{padding:16px;border-radius:18px;background:rgba(27,107,58,.06);border:1px solid rgba(27,107,58,.10)}
+    #pg-profile #nbxp-rd{width:100%;justify-content:center;min-height:44px;margin-top:12px}
+    #pg-profile .nbxp-btn{border-radius:9999px;transition:transform .15s,opacity .2s}
+    #pg-profile .nbxp-btn:active{transform:scale(.97)}
+    #pg-profile .nbxp-ac{gap:8px}
+    #pg-profile .nbxp-ac span{padding:7px 12px;font-size:12px}
+    #pg-profile .nbxp-r{padding:10px 6px}
+    #pg-profile .nbxp-r.me{border-radius:12px}
+    /* ── Leaderboard podium: 1 pink diamond · 2 gold · 3 silver ── */
+    #pg-profile .nbxp-r.t1{--tl:#fff0f8;--tm:#ff77b7;--td:#d6277f;--tt:#fff;--tx:#c21f72;--tg:rgba(255,79,163,.55);--tk:rgba(255,79,163,.14)}
+    #pg-profile .nbxp-r.t2{--tl:#fff3b8;--tm:#f6c744;--td:#c58a0c;--tt:#3a2400;--tx:#9a6a06;--tg:rgba(246,199,68,.6);--tk:rgba(246,199,68,.16)}
+    #pg-profile .nbxp-r.t3{--tl:#ffffff;--tm:#dcdee1;--td:#a2a5ab;--tt:#1b1f26;--tx:#6c7078;--tg:rgba(162,165,171,.6);--tk:rgba(162,165,171,.18)}
+    #pg-profile .nbxp-r.top{position:relative;overflow:hidden;margin:6px 0;padding:11px 10px;border:1px solid var(--tk);border-radius:14px;background:linear-gradient(270deg,var(--tk),transparent 80%);box-shadow:0 6px 16px -10px var(--tg),inset 0 1px 0 rgba(255,255,255,.55)}
+    #pg-profile .nbxp-r.top::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px;background:linear-gradient(180deg,var(--tl),var(--tm),var(--td))}
+    #pg-profile .nbxp-r.top::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.5) 50%,transparent 62%);transform:translateX(-120%)}
+    #pg-profile .nbxp-r.top i{flex:none;width:32px;height:32px;align-items:center;border-radius:50%;background:radial-gradient(circle at 30% 22%,var(--tl),var(--tm) 55%,var(--td));box-shadow:inset 0 1.5px 2px rgba(255,255,255,.75),inset 0 -3px 6px rgba(0,0,0,.18),0 0 0 2px var(--tk),0 4px 12px var(--tg)}
+    #pg-profile .nbxp-r.top span{font-weight:800;color:var(--ink)}
+    #pg-profile .nbxp-r.top em{font-weight:800;color:var(--tx)}
+    #pg-profile .nbxp-r.top i svg{width:19px;height:19px;stroke-width:2.4;fill:rgba(255,255,255,.45);filter:drop-shadow(0 1px 0 rgba(255,255,255,.6))}
+    #pg-profile .nbxp-r.t1{padding:14px 10px}
+    #pg-profile .nbxp-r.t1 i{width:38px;height:38px;background:conic-gradient(from 210deg,#ff4fa3,#ffd3ea,#ff7ab8,#fff3fa,#e0398a,#ffb3d9,#ff4fa3)}
+    #pg-profile .nbxp-r.t1 i svg{width:23px;height:23px;stroke:#7a0b43;fill:rgba(255,255,255,.65);filter:drop-shadow(0 1px 0 rgba(255,255,255,.75))}
+    #pg-profile .nbxp-r.t1 span{font-size:14.5px}
+    #pg-profile .nbxp-r.top.me{box-shadow:0 0 0 1.5px var(--tm),0 8px 20px -10px var(--tg)}
+    @media(prefers-reduced-motion:no-preference){#pg-profile .nbxp-r.top::after{animation:nbxpShine 3.6s ease-in-out infinite}#pg-profile .nbxp-r.t2::after{animation-delay:.5s}#pg-profile .nbxp-r.t3::after{animation-delay:1s}#pg-profile .nbxp-r.t1 i{animation:nbxfPulse 1.8s ease-in-out infinite alternate}}
+    /* ── Bottom actions ── */
+    #pg-profile .prf-actions{gap:10px}
+    #pg-profile .prf-chpw-btn,#pg-profile .prf-logout-btn{flex:1 1 150px;justify-content:center;min-height:46px;background:var(--card);border:1px solid var(--line2);border-radius:9999px;padding:10px 18px}
+    #pg-profile .prf-chpw-btn:active,#pg-profile .prf-logout-btn:active{transform:scale(.98)}
+    @media(max-width:430px){.profile-page .W{padding:0 16px}.prf-name{font-size:1.4rem}#pg-profile .nbxf,#pg-profile .nbxp{padding:16px}#pg-profile .nbxf-n{width:70px;height:70px}}
     /* ── Archive Card ─────────────────────────────── */
     .prf-arch-wrap{max-width:700px;margin:24px auto 0;background:var(--card);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.08),0 0 0 1px rgba(27,107,58,.08);overflow:hidden}
     .prf-arch-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,var(--brand-pale) 0%,transparent 80%)}
@@ -4721,9 +4835,9 @@ body.modal-open { overflow: hidden; }
             <h2 id="profileName" class="prf-name">--</h2>
             <button class="edit-profile-btn" onclick="toggleProfileEdit()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              تعديل
+              تعديل الملف الشخصي
             </button>
-            <button type="button" id="saveNameBtn" onclick="saveProfileChanges()" style="display:none;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.5);border-radius:40px;padding:6px 15px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--f-ui);align-items:center;gap:5px;backdrop-filter:blur(8px);">
+            <button type="button" id="saveNameBtn" onclick="saveProfileChanges()" style="display:none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>
               حفظ
             </button>
@@ -4732,7 +4846,8 @@ body.modal-open { overflow: hidden; }
         </div>
         <!-- Body -->
         <div class="prf-body">
-          <div class="prf-info">
+          <div id="nbxp-fire"></div>
+          <div class="prf-info" style="display:none">
             <div class="prf-info-row">
               <span class="prf-info-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -4756,16 +4871,19 @@ body.modal-open { overflow: hidden; }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg>
               حفظ التغييرات
             </button>
-            <button class="prf-chpw-btn" onclick="changePassword()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              تغيير كلمة المرور
-            </button>
-            <button class="prf-logout-btn" onclick="logoutUser()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              تسجيل الخروج
-            </button>
           </div>
         </div>
+      </div>
+      <div id="nbxp-card"></div>
+      <div class="prf-actions" style="margin-top:20px;justify-content:center">
+        <button class="prf-chpw-btn" onclick="changePassword()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          تغيير كلمة المرور
+        </button>
+        <button class="prf-logout-btn" onclick="logoutUser()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          تسجيل الخروج
+        </button>
       </div>
     </div>
   </section>
@@ -9621,6 +9739,7 @@ async function loadUserProfile() {
 
   // Load farm archive in profile
   loadProfileFarmArchive();
+  try { if (window.NBXP) NBXP.render('nbxp-card'); } catch (e) { console.warn(e); }
 }
 
 function loadProfileFarmArchive() {
@@ -9660,7 +9779,7 @@ function loadProfileFarmArchive() {
     .catch(function(e){ console.warn('Profile archive error',e); });
 }
 
-const _editBtnSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> تعديل`;
+const _editBtnSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> تعديل الملف الشخصي`;
 function toggleProfileEdit() {
   profileEditMode = !profileEditMode;
   const profileNameSpan = document.getElementById('profileName');
@@ -10092,6 +10211,7 @@ function showToast(msg, type = 'inf') {
   // Strip any leading emoji from msg (they're replaced by proper SVG icons)
   const cleanMsg = msg.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}]+\s?/u, '');
   el.innerHTML = `<span class="toast-icon-wrap">${icons[type] || icons.inf}</span><span>${cleanMsg}</span>`;
+  if (cleanMsg.length > 56) el.classList.add('long');
   w.appendChild(el);
   setTimeout(() => {
     el.style.opacity = '0';
@@ -22061,6 +22181,75 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
   });
 })();
 </script>
+
+<style id="nb-dark-soften">
+/* ═══════════════════════════════════════════════════════════════
+   DARK THEME — أنعم + فصل بصري بين الأجزاء
+   إضافة فقط (override) — كل القواعد مقيّدة بـ [data-dark]
+   فالوضع الفاتح والـ JS والوظائف مش متأثرة. للتراجع: امسح البلوك ده.
+═══════════════════════════════════════════════════════════════ */
+
+/* 1) الألوان: من أسود-أخضر شبه مطفي إلى أخضر غابات هادي (طبقات واضحة) */
+[data-dark]{
+  --bg:#16211b;--bg2:#1b2820;--bg3:#223229;
+  --card:#1f2d25;--glass:rgba(31,45,37,.88);
+  --ink:#e6f1e9;--ink2:#c6dacb;--slate:#9dc1a9;--muted:#84a590;
+  --line:rgba(190,235,205,.09);--line2:rgba(190,235,205,.17);
+}
+
+/* 2) الشريط العلوي: سطح أفتح من الصفحة + خط فاصل + ظل ناعم */
+[data-dark] .nav-bg,
+[data-dark] .nav.up .nav-bg{
+  background:var(--glass);
+  box-shadow:inset 0 -1px 0 rgba(190,235,205,.12),0 10px 28px -12px rgba(0,0,0,.55);
+}
+[data-dark] .nav-icon-btn{background:rgba(255,255,255,.05)}
+
+/* 3) الشريط السفلي: كان أغمق من الصفحة (يختفي فيها) — دلوقتي سطح عايم أفتح */
+[data-dark] #nb-bottom-nav::before{
+  background:rgba(40,58,48,.84);
+  border:1px solid rgba(190,235,205,.16);
+  backdrop-filter:blur(30px) saturate(160%) brightness(100%);
+  -webkit-backdrop-filter:blur(30px) saturate(160%) brightness(100%);
+  box-shadow:0 14px 36px rgba(0,0,0,.45),0 3px 10px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09);
+}
+
+/* 4) شريط تبويبات الأكاديمية (كان لونه ثابت غامق) */
+[data-dark] #pg-academy .mkt-subnav,
+[data-dark] #acad-social-subnav{
+  background:var(--glass) !important;
+  border-bottom-color:var(--line2) !important;
+}
+
+/* 5) كروت صفحة "ملفي": عمق خفيف بدل ظل الوضع الفاتح اللي مش بيبان */
+[data-dark] #pg-profile .nbxf,
+[data-dark] #pg-profile .nbxp{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(0,0,0,.28);
+}
+/* أرقام السلسلة كانت أخضر غامق (تباين 2.5:1) → أخضر فاتح مقروء */
+[data-dark] #pg-profile .nbxf-n b,
+[data-dark] #pg-profile .nbxf-sx b,
+[data-dark] #pg-profile .nbxf-si{color:var(--brand-xl,#5fc97e)}
+</style>
+
+<style id="nb-logo-refine">
+/* ═══════════════════════════════════════════════════════════════
+   LOGO (الهيدر) — خلفية خضراء أهدأ + رمز أبرز ومفصول عنها
+   إضافة فقط (override) على .logo-mark — لا تغيير في الـ HTML أو الـ JS
+   للتراجع: امسح البلوك ده.
+═══════════════════════════════════════════════════════════════ */
+.logo-mark{
+  /* تدرّج هادي بدل التدرّج الحاد القديم + ظل واحد ناعم */
+  background:linear-gradient(160deg,#2b8350 0%,#1f6d3e 100%);
+  box-shadow:0 2px 8px rgba(27,107,58,.20),inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.logo-mark svg{
+  /* الرمز أكبر وأسمك وبظل خفيف يفصله عن الخلفية */
+  width:23px;height:23px;
+  stroke-width:2.4;
+  filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25));
+}
+</style>
 
 </body>
 </html>

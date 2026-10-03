@@ -713,7 +713,256 @@ var flat=acFlatLessons();
 var idx=flat.indexOf(id);
 if(idx===-1||idx>=flat.length-1)return null;
 return flat[idx+1]}
-function acSaveFE(score){var p=acProg();p.fe=score;acSave(p)}
+function acSaveFE(score){var p=acProg();p.fe=score;acSave(p);try{if(score>=70)NBXP.course(AC_CID)}catch(e){}}
+/* ── NBXP · Gamification & Rewards ─────────────────────────────────────────
+   xp_events/{uid}_{key}  create-only ledger  → deterministic id ⇒ an event can never be granted twice.
+   xp_wallet/{uid}        aggregate, written in the SAME transaction as exactly one new event.
+   firestore.rules re-validate amounts, keys, daily cap, counters, streak and redemption.
+   The daily cap limits XP of repeatable learning events only — learning/progress is never blocked. */
+var NBXP=(function(){
+var CAP=50,CRED=1000,LV=[0,100,300,700,1500,3000,5000],
+LVN=['مبتدئ','متعلّم','مجتهد','متمكّن','خبير','محترف','أستاذ'],
+NOM={lecture_completed:0,question_correct:0,quiz_completed:0,course_completed:0,path_completed:0,mission_completed:0,reward_redemption:0,daily_gift:5},REST=3,MIL=[7,14,30,60,100,365],
+CAPPED={mission_completed:1},
+STK={3:0,7:0,14:0,30:0,60:0,100:0},
+ACH={first_lecture:[0,'أول محاضرة','book'],first_course:[0,'أول دورة','cap'],streak7:[0,'7 أيام متتالية','flame'],correct100:[0,'100 إجابة صحيحة','target'],courses3:[0,'3 دورات','medal'],path_done:[0,'إتمام مسار','compass']},
+MIS={m1:['أكمل محاضرة',1,'dl',15],m2:['أجب 5 أسئلة بشكل صحيح',5,'dq',20],m3:['أنهِ اختباراً',1,'dz',15]},
+BONUS={mission_completed:1,streak_bonus:1,achievement_bonus:1,daily_gift:1,level_bonus:1},LVU={mission_completed:1,daily_gift:1,level_bonus:1},
+ELIG={'mol-bio':'تقنيات البيولوجيا الجزيئية','food-safety':'سلامة الغذاء','glp':'ممارسات المعامل الجيدة والسلامة الحيوية','tissue-culture':'زراعة الأنسجة النباتية','pesticide-tech':'تكنولوجيا المبيدات والاستخدام الآمن','feed-mgmt':'إدارة الأعلاف وبرامج التغذية','food-microbiology':'الميكروبيولوجيا الغذائية','plant-diseases':'أمراض النبات والإدارة المتكاملة','bioinformatics':'المعلوماتية الحيوية','landscape-design':'الاندسكيب الزراعي','hydroponics-professional':'الزراعة المائية الاحترافية'},
+EVL={lecture_completed:'إكمال محاضرة',question_correct:'إجابة صحيحة',quiz_completed:'إكمال اختبار',course_completed:'إتمام دورة',path_completed:'إتمام مسار',mission_completed:'مهمة يومية',streak_bonus:'مكافأة سلسلة',achievement_bonus:'مكافأة إنجاز',reward_redemption:'استبدال كريدت بدورة',admin_adjustment:'تعديل من الإدارة',daily_visit:'زيارة يومية',daily_gift:'هدية الحماسة اليومية',level_bonus:'مكافأة ترقية مستوى'};
+var _seen={},_capDay=0,_q=Promise.resolve(),_err='';
+var IP={
+book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+cap:'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
+flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+medal:'<path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/>',
+compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+circle:'<circle cx="12" cy="12" r="10"/>',
+trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
+bolt:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+tasks:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+award:'<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>'};
+function ic(n,z,c){return'<svg viewBox="0 0 24 24" width="'+z+'" height="'+z+'" fill="none" stroke="'+(c||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;vertical-align:-2px">'+IP[n]+'</svg>'}
+function tt(n,x){return'<div class="nbxp-t">'+ic(n,15)+x+'</div>'}
+function uid(){return(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||null}
+function DB(){return(typeof db!=='undefined'&&db)||null}
+function sx(s){return String(s).replace(/[^\w-]/g,'_')}
+function dayN(){return Math.floor((Date.now()+7200000)/86400000)}
+function monN(){var t=new Date(Date.now()+7200000);return t.getUTCFullYear()*12+t.getUTCMonth()+1}
+function wkN(d){return Math.floor((d+3)/7)}
+function lvl(xp){var i=LV.length-1;while(i>0&&xp<LV[i])i--;return i}
+function nm(){return((currentUser.displayName||'').trim().split(/\s+/)[0]||'طالب').slice(0,20)}
+function T(m,k){if(typeof showToast==='function')showToast(m,k||'ok')}
+function W0(u){return{uid:u,nm:'',xp:0,spent:0,dn:0,dx:0,dl:0,dq:0,dz:0,lc:0,qc:0,zc:0,zs:0,cc:0,pc:0,st:0,sd:0,bs:0,ld:0,wk:0,wx:0,mo:0,mx:0,ac:[],sb:[],ml:[],lb:0,last:''}}
+function gx(v){return 5+2*(((v>0?v:1)-1)%7)}
+/* daily gift: 5,7,9,11,13,15,17 XP over the streak week, then back to 5 (mirrors xpGift() in firestore.rules) */
+function nomOf(t,f){return t==='streak_bonus'?STK[f.n]:t==='achievement_bonus'?ACH[f.aid][0]:t==='daily_gift'?gx(f.vs):t==='mission_completed'?MIS[f.m][3]:t==='level_bonus'?10*(f.n+1):NOM[t]}
+/* Builds the event + the next wallet state for one event (pure — no I/O). */
+function mut(w,type,f){
+var d=dayN(),same=w.dn===d,bx=same?w.dx:0,nom=nomOf(type,f),cap=!!CAPPED[type],
+amt=cap?(bx+nom<=CAP?nom:CAP-bx):nom,cr=cap&&bx<10&&bx+amt>=10,t=Object.assign({},w),
+e={uid:w.uid,type:type,key:f.key,amt:amt,ts:firebase.firestore.FieldValue.serverTimestamp()};
+['cid','lid','i','sc','pid','m','n','aid'].forEach(function(k){if(f[k]!==undefined)e[k]=f[k]});
+function is(x){return type===x?1:0}
+t.nm=nm();t.xp=w.xp+amt;t.dn=d;t.dx=bx+(cap?amt:0);
+t.dl=(same?w.dl:0)+is('lecture_completed');t.dq=(same?w.dq:0)+is('question_correct');t.dz=(same?w.dz:0)+is('quiz_completed');
+t.lc=w.lc+is('lecture_completed');t.qc=w.qc+is('question_correct');t.zc=w.zc+is('quiz_completed');
+t.zs=w.zs+(type==='quiz_completed'?f.sc:0);t.cc=w.cc+is('course_completed');t.pc=w.pc+is('path_completed');
+t.wk=wkN(d);t.wx=(w.wk===t.wk?w.wx:0)+amt;t.mo=monN();t.mx=(w.mo===t.mo?w.mx:0)+amt;
+if(cr){t.sd=d;t.st=(w.sd===d-1)?w.st+1:1;t.ld=w.ld+1}
+t.bs=Math.max(w.bs,t.st);
+if(type==='reward_redemption')t.spent=w.spent+CRED;
+if(type==='achievement_bonus')t.ac=w.ac.concat([f.aid]);
+if(type==='streak_bonus')t.sb=w.sb.concat([f.n]);
+if(type==='level_bonus')t.lb=f.n;
+if(type==='mission_completed')t.ml=w.ml.filter(function(k){return k.indexOf(d+'_')===0}).concat([d+'_'+f.m]);
+t.last=w.uid+'_'+f.key;
+return{e:e,t:t}}
+/* One compact toast per learning action: events fired within ~1.2s are merged into a single line. */
+var _pend=null,_pt=0;
+function toast(r){
+var e=r.e,t=r.t,ty=e.type,p=_pend||(_pend={xp:0,dx:0,cp:0,lv:'',ach:'',stk:0,ms:0,capd:0,gift:0});
+if(ty==='daily_gift')p.gift=1;
+if(ty!=='question_correct')p.xp+=e.amt;
+p.dx=t.dx;
+if(CAPPED[ty]&&ty!=='question_correct')p.cp=1;
+if(lvl(t.xp)>lvl(r.w.xp))p.lv=LVN[lvl(t.xp)];
+if(ty==='achievement_bonus')p.ach=ACH[e.aid][1];
+if(ty==='streak_bonus')p.stk=e.n;
+if(ty==='mission_completed')p.ms++;
+if(CAPPED[ty]&&e.amt===0&&_capDay!==t.dn){_capDay=t.dn;p.capd=1}
+clearTimeout(_pt);_pt=setTimeout(flush,1200)}
+function flush(){
+var p=_pend;_pend=null;if(!p)return;
+var a=[];
+if(p.gift)a.push('هدية الحماسة');
+if(p.xp>0)a.push('+'+p.xp+' XP');
+if(p.lv)a.push('مستوى جديد: '+p.lv);else if(p.ach)a.push('إنجاز: '+p.ach);else if(p.stk)a.push('سلسلة تعلّم '+p.stk+' أيام');
+if(p.ms)a.push(p.ms>1?p.ms+' مهام':'مهمة مكتملة');
+if(p.xp>0&&p.cp)a.push(p.dx+'/'+CAP+' اليوم');
+if(p.capd)T('وصلت للحد اليومي '+CAP+' XP — تقدّمك محفوظ','inf');
+else if(a.length)T(a.join(' · '),'ok')}
+/* Idempotent award: in-session guard + deterministic doc id + transactional "already exists" check. */
+function award(type,f){
+var p=_q.then(function(){return doAward(type,f)});_q=p.catch(function(){});
+return p.then(function(r){if(!r)return null;toast(r);return BONUS[type]?(LVU[type]?lvb(r.t).then(function(){return r}):r):follow(r.t).then(function(){return r})})}
+function doAward(type,f){
+var u=uid(),D=DB();if(!u||!D)return Promise.resolve(null);
+var eid=u+'_'+f.key;if(_seen[eid])return Promise.resolve(null);_seen[eid]=1;
+var eR=D.collection('xp_events').doc(eid),wR=D.collection('xp_wallet').doc(u);
+return D.runTransaction(function(tx){
+return tx.get(eR).then(function(es){
+if(es.exists)return null;
+/* once the lecture's quiz was completed (qz_ event exists), retakes award no per-question XP */
+return(type==='question_correct'?tx.get(D.collection('xp_events').doc(u+'_qz_'+f.cid+'_'+f.lid)):Promise.resolve(null)).then(function(qd){
+if(qd&&qd.exists)return null;
+return tx.get(wR).then(function(ws){
+var w=Object.assign(W0(u),ws.exists?ws.data():{}),m=mut(w,type,f);
+tx.set(eR,m.e);tx.set(wR,m.t);return{w:w,t:m.t,e:m.e}})})})
+})
+.catch(function(x){delete _seen[eid];_err=type+' - '+((x&&x.code)||(x&&x.message)||'error');console.warn('[XP]',type,(x&&x.code)||x);return null})}
+/* Level-up bonus: 20 XP for reaching level 2, then +10 per level (30,40,50,60,70). Granted in order via wallet.lb; mirrors firestore.rules. */
+function lvb(w){var p=Promise.resolve(),L=lvl(w.xp),n;
+for(n=(w.lb||0)+1;n<=L;n++)(function(k){p=p.then(function(){return award('level_bonus',{key:'lv_'+k,n:k})})})(n);
+return p}
+/* Missions / streak milestones / achievements that the latest wallet state has earned. */
+function follow(w){
+var p=Promise.resolve(),d=dayN();
+function q(t,f){p=p.then(function(){return award(t,f)})}
+Object.keys(MIS).forEach(function(m){if(w[MIS[m][2]]>=MIS[m][1]&&w.ml.indexOf(d+'_'+m)<0)q('mission_completed',{key:'ms_'+d+'_'+m,m:m})});
+Object.keys(STK).forEach(function(k){var n=+k;if(w.st>=n&&w.sb.indexOf(n)<0)q('streak_bonus',{key:'st_'+n,n:n})});
+var A={first_lecture:w.lc>=1,first_course:w.cc>=1,streak7:w.bs>=7,correct100:w.qc>=100,courses3:w.cc>=3,path_done:w.pc>=1};
+Object.keys(A).forEach(function(a){if(A[a]&&w.ac.indexOf(a)<0)q('achievement_bonus',{key:'ach_'+a,aid:a})});
+p=p.then(function(){return lvb(w)});
+return p}
+/* Learning path = every course in the path has a passed final exam (fe>=70). */
+function paths(){
+var u=uid();if(!u||typeof AC_LEARNING_PATHS==='undefined')return Promise.resolve();
+function fe(c){try{return(JSON.parse(localStorage.getItem('nb-'+c+'-p__'+u)||'{}').fe)>=70}catch(x){return false}}
+var p=Promise.resolve();
+AC_LEARNING_PATHS.forEach(function(pt){
+if(pt.id==='general'||pt.courses==='ALL'||!pt.courses.length||!pt.courses.every(fe))return;
+p=p.then(function(){return award('path_completed',{key:'path_'+pt.id,pid:pt.id})})});
+return p}
+function getW(){var u=uid();return DB().collection('xp_wallet').doc(u).get().then(function(s){return Object.assign(W0(u),s.exists?s.data():{})})}
+function board(){
+var u=uid();
+return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u})});return r})}
+/* ── Enthusiasm streak: one automatic check-in per day (event daily_visit, 0 XP) + a +5 XP gift the student collects (daily_gift).
+   Missed days are bridged automatically by "enthusiasm restores" (3 per calendar month); otherwise the streak restarts from 1. */
+var _vp=null,_vday=0,FO='M12 2c.5 3-1 4.5-2.5 6.3C8 10.1 6 12 6 15.2 6 18.6 8.7 22 12 22s6-3.4 6-6.8c0-2-.9-3.6-2-5-.3 1-.8 1.8-1.6 2.3C14.8 9.6 14.6 5.2 12 2z',FI='M12 22c-1.9 0-3.3-1.6-3.3-3.6 0-1.6 1-2.6 1.9-3.8.5-.7.9-1.5 1.1-2.5 1.6 1.5 3.6 3.4 3.6 6.1 0 2-1.4 3.8-3.3 3.8z';
+function flame(z){return'<svg viewBox="0 0 24 24" width="'+z+'" height="'+z+'" aria-hidden="true"><defs><linearGradient id="nbxg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e63946"/><stop offset=".55" stop-color="#fb5607"/><stop offset="1" stop-color="#ffb703"/></linearGradient></defs><path fill="url(#nbxg)" d="'+FO+'"/><path fill="#fff3c4" opacity=".92" d="'+FI+'"/></svg>'}
+function sfl(on){return'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="'+(on?'#fb5607':'none')+'" stroke="'+(on?'#e63946':'#b9bfc7')+'" stroke-width="1.6" stroke-linejoin="round" d="'+FO+'"/></svg>'}
+function S0(u){return{uid:u,vs:0,vb:0,vd:0,rm:0,ru:0,last:''}}
+function getS(){var u=uid();return DB().collection('xp_streak').doc(u).get().then(function(s){return Object.assign(S0(u),s.exists?s.data():{})})}
+function getG(){var u=uid();return DB().collection('xp_events').doc(u+'_dg_'+dayN()).get().then(function(s){return s.exists})}
+function vnext(s,d){var g=d-s.vd-1,mn=monN(),ru=s.rm===mn?s.ru:0,rs=s.vd>0&&g>0&&ru+g<=REST,vs=s.vd===0?1:(g===0||rs)?s.vs+1:1;
+return{uid:s.uid,vs:vs,vb:Math.max(s.vb,vs),vd:d,rm:mn,ru:rs?ru+g:ru,last:s.uid+'_dv_'+d}}
+function doVisit(d){
+var u=uid(),D=DB(),eid=u+'_dv_'+d;if(_seen[eid])return Promise.resolve(null);_seen[eid]=1;
+var eR=D.collection('xp_events').doc(eid),sR=D.collection('xp_streak').doc(u);
+return D.runTransaction(function(tx){return tx.get(eR).then(function(es){if(es.exists)return null;
+return tx.get(sR).then(function(ss){var s=Object.assign(S0(u),ss.exists?ss.data():{});if(s.vd>=d)return null;var n=vnext(s,d);
+tx.set(eR,{uid:u,type:'daily_visit',key:'dv_'+d,amt:0,ts:firebase.firestore.FieldValue.serverTimestamp()});tx.set(sR,n);return{s:s,n:n}})})})
+.catch(function(x){delete _seen[eid];_err='daily_visit - '+((x&&x.code)||(x&&x.message)||'error');console.warn('[XP] daily_visit',(x&&x.code)||x);return null})}
+function visit(){
+var u=uid(),D=DB(),d=dayN();if(!u||!D)return Promise.resolve(null);
+if(_vp&&_vday===d)return _vp;_vday=d;_err='';
+_vp=getS().then(function(s){if(s.vd>=d)return null;
+return doVisit(d).then(function(r){
+if(r){if(r.n.ru>(r.s.rm===r.n.rm?r.s.ru:0))T('تم استخدام استعادة الحماسة — سلسلتك محفوظة','ok');
+else if(r.s.vd>0&&r.s.vs>1&&r.n.vs===1)T('انقطعت سلسلة الحماسة — ابدأ من جديد اليوم','inf')}
+if(!r&&_err)_vp=null;return r})}).catch(function(x){_vp=null;_err=_err||('visit - '+((x&&x.code)||(x&&x.message)||'error'));console.warn('[XP] visit',x);return null});
+return _vp}
+function diag(btn){
+var u=uid(),D=DB(),box=document.getElementById('nbxf-dg'),out=[];if(!u||!D||!box)return;if(btn)btn.disabled=true;box.textContent='...';
+var tests=[['read xp_streak',function(){return D.collection('xp_streak').doc(u).get()}],['read xp_events (new doc)',function(){return D.collection('xp_events').doc(u+'_probe').get()}],['read xp_wallet',function(){return D.collection('xp_wallet').doc(u).get()}],['read admins/me',function(){return D.collection('admins').doc(u).get()}]];
+var p=Promise.resolve();
+tests.forEach(function(x){p=p.then(function(){return x[1]().then(function(){out.push('OK    '+x[0])},function(e){out.push('FAIL  '+x[0]+' -> '+((e&&e.code)||(e&&e.message)||'error'))})})});
+p.then(function(){out.push('last error: '+(_err||'-'));out.push('device time: '+new Date().toISOString().slice(0,16)+' UTC | day '+dayN());box.innerHTML='<pre style="margin:0;white-space:pre-wrap;direction:ltr;text-align:left;font-size:11px;line-height:1.6;color:var(--muted,#6b7280)">'+out.join('\n').replace(/[<>&]/g,'')+'</pre>';if(btn)btn.disabled=false})}
+function fmerge(s,g){return{vs:s.vs,vb:s.vb,vd:s.vd,rm:s.rm,ru:s.ru,vg:g?dayN():0}}
+function fireHTML(w){
+var d=dayN(),vs=w.vd>0?w.vs:0,col=w.vg===d,ready=w.vd===d&&!col,used=Math.min(REST,w.rm===monN()?w.ru:0),nx=0,pv=0,i;
+for(i=0;i<MIL.length;i++){if(MIL[i]>vs){nx=MIL[i];break}pv=MIL[i]}
+var pct=nx?(vs-pv)/(nx-pv)*100:100;
+return'<div class="nbxf"><div class="nbxf-h"><div class="nbxf-fl">'+flame(30)+'</div><div class="nbxf-m"><b>أيام الحماسة</b><span>افتح نبتيكس كل يوم واجمع هديتك</span></div><div class="nbxf-n" style="--p:'+Math.max(4,Math.min(100,pct))+'"><b>'+vs+'</b><small>'+(vs===1?'يوم':'أيام')+'</small></div></div>'+
+'<div class="nbxf-bar"><i style="width:'+Math.max(4,Math.min(100,pct))+'%"></i></div>'+
+'<div class="nbxf-st"><div class="nbxf-s" title="تُستخدم تلقائياً لو فاتك يوم"><span class="nbxf-si">'+ic('cal',18)+'</span><span class="nbxf-sx"><small>استعادة الحماسة هذا الشهر</small><b>'+used+'/'+REST+'</b></span></div><div class="nbxf-s"><span class="nbxf-si">'+ic('trophy',18)+'</span><span class="nbxf-sx"><small>أفضل سلسلة</small><b><em>'+w.vb+'</em> '+(w.vb===1?'يوم':'أيام')+'</b></span></div></div>'+
+'<div class="nbxf-f">'+
+(ready?'<button class="nbxf-btn" onclick="NBXP.gift(this)">'+ic('gift',16)+' اجمع هديتك +'+gx(vs)+' XP</button>':col?'<div class="nbxf-done">'+ic('check',16)+' تم جمع هدية اليوم — عُد غداً</div>':(_err?'<button class="nbxf-btn" onclick="NBXP.retry(this)">إعادة المحاولة</button><button class="nbxf-btn" style="background:var(--card,#fff);color:var(--brand,#1B6B3A);border:1px solid var(--line,#e5e7eb);box-shadow:none" onclick="NBXP.diag(this)">فحص المشكلة</button><div id="nbxf-dg" style="flex:1 1 100%"></div><div style="flex:1 1 100%;text-align:center;font-size:11px;color:var(--muted,#6b7280)">تعذر تسجيل الزيارة ('+String(_err).replace(/[<>&"]/g,'')+')</div>':'<div class="nbxf-done">جاري تسجيل زيارتك...</div>'))+'</div></div>'}
+function css(){
+if(document.getElementById('nbxp-css'))return;
+var s=document.createElement('style');s.id='nbxp-css';
+s.textContent='.nbxf{margin:0 0 16px;padding:16px;border-radius:22px;background:linear-gradient(135deg,rgba(255,183,3,.12),rgba(251,86,7,.10));border:1px solid rgba(251,86,7,.22);font-family:inherit}.nbxf *{box-sizing:border-box}.nbxf-h{display:flex;align-items:center;gap:12px}.nbxf-fl{width:50px;height:50px;border-radius:16px;background:linear-gradient(160deg,rgba(255,183,3,.22),rgba(230,57,70,.16));display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 0 22px rgba(251,86,7,.28)}.nbxf-fl svg{animation:nbxfl 1.6s ease-in-out infinite;transform-origin:50% 90%}@keyframes nbxfl{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.08) rotate(2deg)}}@media(prefers-reduced-motion:reduce){.nbxf-fl svg{animation:none}}.nbxf-m{flex:1;min-width:0}.nbxf-m b{display:block;font-size:1rem;color:var(--ink,#111)}.nbxf-m span{font-size:11.5px;color:var(--muted,#6b7280)}.nbxf-n{text-align:center;line-height:1}.nbxf-n b{font-size:2rem;font-weight:900;color:#fb5607;background:linear-gradient(180deg,#ffb703,#e63946);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.nbxf-n small{display:block;font-size:11px;color:var(--muted,#6b7280);margin-top:3px}.nbxf-bar{height:10px;border-radius:10px;background:rgba(251,86,7,.14);overflow:hidden;margin:14px 0 6px}.nbxf-bar i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#ffb703,#fb5607,#e63946);box-shadow:0 0 10px rgba(251,86,7,.5)}.nbxf-sm{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted,#6b7280)}.nbxf-f{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}.nbxf-rs{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted,#6b7280)}.nbxf-rs svg{flex:none}.nbxf-rs span{margin-inline-start:3px}.nbxf-btn{border:0;border-radius:40px;padding:10px 18px;font:inherit;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ffb703,#fb5607 55%,#e63946);box-shadow:0 6px 18px rgba(251,86,7,.35);cursor:pointer;display:inline-flex;align-items:center;gap:7px}.nbxf-btn:disabled{opacity:.6}.nbxf-done{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--brand,#1B6B3A)}.nbxp{max-width:700px;margin:16px auto 0;background:var(--card,#fff);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.08),0 0 0 1px rgba(27,107,58,.08);padding:18px;font-family:inherit}.nbxp *{box-sizing:border-box}.nbxp-h{display:flex;align-items:center;gap:12px}.nbxp-lv{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--brand-d,#0f4d2a),var(--brand,#1B6B3A));color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;flex:none}.nbxp-hm{flex:1;min-width:0}.nbxp-hm b{display:block;font-size:1.05rem;color:var(--ink,#111)}.nbxp-hm span{font-size:12px;color:var(--muted,#6b7280)}.nbxp-rk{font-weight:800;color:var(--brand,#1B6B3A);font-size:14px;text-align:center}.nbxp-rk small{display:block;font-size:10px;color:var(--muted,#6b7280);font-weight:600}.nbxp-bar{height:9px;border-radius:9px;background:var(--line,#e5e7eb);overflow:hidden;margin:10px 0 4px}.nbxp-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--brand,#1B6B3A),#4ade80)}.nbxp-sm{font-size:11.5px;color:var(--muted,#6b7280);display:flex;justify-content:space-between;gap:8px}.nbxp-t{font-weight:800;font-size:13px;margin:16px 0 8px;color:var(--ink,#111);display:flex;align-items:center;gap:7px}.nbxp-t svg{color:var(--brand,#1B6B3A)}.nbxp-c svg{display:block;margin-bottom:6px;color:var(--brand,#1B6B3A)}.nbxp-ms .d{color:var(--brand,#1B6B3A)}.nbxp-ms .p{color:var(--muted,#9ca3af)}.nbxp-ms span:first-child{display:flex}.nbxp-ac span{display:inline-flex;align-items:center;gap:6px}.nbxp-ac span.on svg{color:var(--brand,#1B6B3A)}.nbxp-btn{display:inline-flex;align-items:center;gap:6px}.nbxp-r i{display:flex;justify-content:center}.nbxp-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.nbxp-c{background:var(--bg,#f6f8f6);border:1px solid var(--line,#e5e7eb);border-radius:14px;padding:10px 12px}.nbxp-c b{display:block;font-size:1.15rem;color:var(--ink,#111)}.nbxp-c span{font-size:11px;color:var(--muted,#6b7280)}.nbxp-ms{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:7px 0;border-bottom:1px dashed var(--line,#e5e7eb)}.nbxp-ms:last-child{border:0}.nbxp-ms em{margin-inline-start:auto;font-style:normal;font-weight:700;color:var(--brand,#1B6B3A)}.nbxp-ac{display:flex;flex-wrap:wrap;gap:7px}.nbxp-ac span{font-size:11.5px;padding:6px 10px;border-radius:40px;border:1px solid var(--line,#e5e7eb);opacity:.42;background:var(--bg,#f6f8f6)}.nbxp-ac span.on{opacity:1;border-color:var(--brand,#1B6B3A);background:rgba(27,107,58,.08);font-weight:700}.nbxp-w{background:linear-gradient(135deg,rgba(27,107,58,.09),rgba(74,222,128,.12));border-radius:16px;padding:14px}.nbxp-w b{font-size:1.1rem}.nbxp-btn{border:0;border-radius:40px;padding:9px 16px;font:inherit;font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--brand,#1B6B3A),var(--brand-d,#0f4d2a));cursor:pointer;margin-top:10px}.nbxp-btn:disabled{opacity:.5}.nbxp-r{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line,#e5e7eb);font-size:13px}.nbxp-r.me{background:rgba(27,107,58,.08);border-radius:10px;font-weight:800}.nbxp-r i{font-style:normal;width:26px;text-align:center;color:var(--muted,#6b7280)}.nbxp-r span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nbxp-r em{font-style:normal;font-weight:700}.nbxp-e{text-align:center;color:var(--muted,#6b7280);font-size:12.5px;padding:18px 0}';
+document.head.appendChild(s)}
+function bar(p){return'<div class="nbxp-bar"><i style="width:'+Math.max(0,Math.min(100,p))+'%"></i></div>'}
+/* Today's performance: blends weighted daily-mission progress (incl. partial progress) with today's collected XP. Read-only, derived from wallet values already loaded - no new reads/writes. */
+function perf(w,dx,same){
+var tot=0,t=0,x=Math.min(dx/CAP,1)*100,s,c;
+Object.keys(MIS).forEach(function(m){var v=same?w[MIS[m][2]]:0;tot+=MIS[m][3];t+=MIS[m][3]*Math.min(v/MIS[m][1],1)});
+s=Math.floor((t/tot*100+x)/2);
+c=s>=100?['ممتاز','#1B6B3A']:s>=70?['جيد جدًا','#2f9e5b']:s>=40?['جيد','#d4a017']:s>0?['في البداية','#e8590c']:['لم تبدأ بعد','#8a94a3'];
+return'<div class="nbxp-perf" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:9px 12px;border-radius:12px;background:'+c[1]+'14;border:1px solid '+c[1]+'33"><span style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:'+c[1]+'">'+ic('chart',14,c[1])+'أداء اليوم: '+c[0]+'</span><b style="font-size:13px;font-weight:800;color:'+c[1]+'">'+s+'%</b></div>'}
+function view(w,lb){
+var d=dayN(),L=lvl(w.xp),cur=LV[L],nx=LV[L+1],same=w.dn===d,dx=same?w.dx:0,un=w.xp-w.spent,cr=Math.floor(un/CRED),rem=un%CRED,
+rk=0,gap='',i;for(i=0;i<lb.length;i++)if(lb[i].me){rk=i+1;if(i>0)gap=lb[i-1].v-lb[i].v;break}
+var st=(w.sd>=d-1)?w.st:0,h='<div class="nbxp" data-lv="'+L+'"><div class="nbxp-h"><div class="nbxp-lv">'+(L+1)+'</div><div class="nbxp-hm"><b>المستوى '+(L+1)+' — '+LVN[L]+'</b><span>'+w.xp+' XP'+(nx?' • التالي عند '+nx:' • أعلى مستوى')+'</span></div><div class="nbxp-rk">'+(rk?'#'+rk:'—')+'<small>ترتيبك</small></div></div>'+
+bar(nx?(w.xp-cur)/(nx-cur)*100:100)+'<div class="nbxp-sm"><span>'+(nx?'باقي '+(nx-w.xp)+' XP للمستوى التالي':'وصلت لأعلى مستوى')+'</span>'+(gap!==''?'<span>'+gap+' XP للمركز الأعلى</span>':'')+'</div>'+
+tt('cal','اليوم')+'<div class="nbxp-sm"><span>'+ic('bolt',13,'#d4a017')+' XP اليوم: <b>'+dx+' / '+CAP+'</b></span><span>'+ic('flame',13,'#e8590c')+' سلسلة التعلّم: <b>'+st+'</b> يوم</span></div>'+bar(dx/CAP*100)+perf(w,dx,same)+
+tt('tasks','المهام اليومية');
+Object.keys(MIS).forEach(function(m){var v=same?w[MIS[m][2]]:0,dn=v>=MIS[m][1];h+='<div class="nbxp-ms"><span class="'+(dn?'d':'p')+'">'+ic(dn?'check':'circle',17)+'</span><span>'+MIS[m][0]+' <small style="opacity:.65;font-weight:800">+'+MIS[m][3]+' XP</small></span><em>'+Math.min(v,MIS[m][1])+'/'+MIS[m][1]+'</em></div>'});
+h+=tt('chart','إحصائياتك')+'<div class="nbxp-g"><div class="nbxp-c">'+ic('cap',18)+'<b>'+w.cc+'</b><span>دورات مكتملة</span></div><div class="nbxp-c">'+ic('target',18)+'<b>'+w.qc+'</b><span>إجابات صحيحة</span></div><div class="nbxp-c">'+ic('chart',18)+'<b>'+(w.zc?Math.round(w.zs/w.zc)+'%':'—')+'</b><span>متوسط الاختبارات ('+w.zc+')</span></div><div class="nbxp-c">'+ic('flame',18,'#e8590c')+'<b>'+w.bs+'</b><span>أطول سلسلة • '+w.ld+' يوم تعلّم</span></div></div>'+
+tt('wallet','محفظة المكافآت')+'<div class="nbxp-w"><b>'+cr+' كريدت دورة + '+rem+' XP</b><div class="nbxp-sm"><span>1000 XP = 1 كريدت دورة (XP ليست نقداً)</span><span>'+rem+'/1000</span></div>'+bar(rem/CRED*100)+'<button class="nbxp-btn" id="nbxp-rd" '+(cr>0?'':'disabled')+' onclick="NBXP.pick()">'+ic('gift',14)+' استبدل كريدت بدورة</button><div id="nbxp-pk"></div></div>'+
+tt('award','الإنجازات')+'<div class="nbxp-ac">';
+Object.keys(ACH).forEach(function(a){h+='<span class="'+(w.ac.indexOf(a)>-1?'on':'')+'">'+ic(ACH[a][2],14)+ACH[a][1]+'</span>'});
+return h+'</div>'+tt('trophy','أعلى 15 متصدر')+'<div id="nbxp-pn">'+rows(lb)+'</div></div>'}
+function rows(lb){
+if(!lb.length)return'<div class="nbxp-e">لا توجد بيانات بعد — ابدأ التعلّم لتظهر هنا</div>';
+return lb.slice(0,15).map(function(r,i){return'<div class="nbxp-r'+(i<3?' top t'+(i+1):'')+(r.me?' me':'')+'"><i>'+(i<3?ic('trophy',15,['#fff','#3a2400','#1b1f26'][i]):i+1)+'</i><span>'+acEsc(r.nm)+(r.me?' (أنت)':'')+'</span><em>'+r.v+' XP</em></div>'}).join('')}
+(function boot(n){if(uid()&&DB()){visit();return}if(n<45)setTimeout(function(){boot(n+1)},2000)})(0);
+return{
+correct:function(c,l,i){c=sx(c);l=sx(l);return award('question_correct',{key:'q_'+c+'_'+l+'_'+i,cid:c,lid:l,i:i})},
+quiz:function(c,l,score,passed){
+c=sx(c);l=sx(l);var sc=Math.max(0,Math.min(100,Math.round(score)));
+return award('quiz_completed',{key:'qz_'+c+'_'+l,cid:c,lid:l,sc:sc}).then(function(){return passed?award('lecture_completed',{key:'lec_'+c+'_'+l,cid:c,lid:l}):null})},
+course:function(c){c=sx(c);return award('course_completed',{key:'crs_'+c,cid:c}).then(paths)},
+render:function(id){
+var el=document.getElementById(id);if(!el||!uid()||!DB())return;css();
+visit().then(function(){return Promise.all([getS().catch(function(x){_err=_err||('read xp_streak - '+((x&&x.code)||'error'));return S0(uid())}),getG().catch(function(){return false}),getW()])}).then(function(r){var fe=document.getElementById('nbxp-fire');if(fe)fe.innerHTML=fireHTML(fmerge(r[0],r[1]));return Promise.all([r[2],board()])}).then(function(r){el.innerHTML=view(r[0],r[1])}).catch(function(x){console.warn('[XP] profile',x);el.innerHTML=''})},
+diag:function(btn){diag(btn)},
+retry:function(btn){if(btn)btn.disabled=true;_vp=null;_vday=0;_err='';NBXP.render('nbxp-card')},
+gift:function(btn){
+if(!uid()||!DB())return;_err='';if(btn){if(btn.disabled)return;btn.disabled=true}
+visit().then(function(){return Promise.all([getS(),getG()])}).then(function(r){var d=dayN();if(r[0].vd!==d||r[1])return null;return award('daily_gift',{key:'dg_'+d,vs:r[0].vs})})
+.then(function(r){if(!r&&_err)T('تعذر جمع الهدية ('+String(_err).replace(/[<>&"]/g,'')+')','err');NBXP.render('nbxp-card')}).catch(function(){if(btn)btn.disabled=false;T('تعذر جمع الهدية — حاول مرة أخرى','err')})},
+pick:function(){
+var box=document.getElementById('nbxp-pk'),u=uid();if(!box||!u)return;
+DB().collection('users').doc(u).get().then(function(s){
+var own=(s.exists&&s.data().paidCourses)||[],h='<div style="margin-top:10px">';
+Object.keys(ELIG).forEach(function(c){if(own.indexOf(c)<0)h+='<div class="nbxp-r"><span>'+ELIG[c]+'</span><button class="nbxp-btn" style="margin:0;padding:6px 12px" onclick="NBXP.redeem(\''+c+'\',this)">استبدال</button></div>'});
+box.innerHTML=h+'</div>'})},
+redeem:function(c,btn){
+var u=uid(),D=DB();if(!u||!D||!ELIG[c])return;
+if(!window.confirm('استبدال 1 كريدت (1000 XP) بالدورة: '+ELIG[c]+'؟'))return;
+if(btn){if(btn.disabled)return;btn.disabled=true}
+var f={key:'rd_'+c,cid:c},eid=u+'_'+f.key,eR=D.collection('xp_events').doc(eid),wR=D.collection('xp_wallet').doc(u),uR=D.collection('users').doc(u);
+D.runTransaction(function(tx){
+return tx.get(eR).then(function(es){return tx.get(wR).then(function(ws){return tx.get(uR).then(function(us){
+var w=Object.assign(W0(u),ws.exists?ws.data():{});
+if(es.exists||(us.exists&&(us.data().paidCourses||[]).indexOf(c)>-1))throw new Error('owned');
+if(w.xp-w.spent<CRED)throw new Error('nocredit');
+var m=mut(w,'reward_redemption',f);
+tx.set(eR,m.e);tx.set(wR,m.t);tx.set(uR,{paidCourses:firebase.firestore.FieldValue.arrayUnion(c)},{merge:true})})})})
+}).then(function(){T('تم الاستبدال — الدورة متاحة الآن','ok');NBXP.render('nbxp-card')})
+.catch(function(x){if(btn)btn.disabled=false;T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':'تعذر الاستبدال — حاول مجدداً','err')})}
+}})();
+window.NBXP=NBXP;
 
 /* ── Answer-order randomization (balanced: even spread of the correct
    position within EACH quiz attempt, not just over many attempts) ── */
@@ -32100,6 +32349,7 @@ var q=AC_QUIZZES[AC.lid];if(!q)return;
 var qs=st.qs||q.questions;
 var cur=qs[st.step];
 st.answers.push(idx);st.revealed=true;
+if(idx===cur.cor)try{NBXP.correct(AC_CID,AC.lid,st.step)}catch(e){}
 var opts=document.querySelectorAll('.acad-opt');
 opts.forEach(function(o,i){
  o.disabled=true;
@@ -32118,6 +32368,7 @@ var st=AC.qState;if(!st||st.revealed)return;
 var qs=st.qs||AC_FINAL_EXAM.questions;
 var cur=qs[st.step];
 st.answers.push(idx);st.revealed=true;
+if(idx===cur.cor)try{NBXP.correct(AC_CID,'fe',st.step)}catch(e){}
 var opts=document.querySelectorAll('.acad-opt');
 opts.forEach(function(o,i){
  o.disabled=true;
@@ -32134,6 +32385,7 @@ acR()},
 _finishQuiz:function(lid,score){
 var passed=score>=60;
 if(passed)acMark(lid);
+try{NBXP.quiz(AC_CID,lid,score,passed)}catch(e){}
 var nextId=passed?acNextLessonId(lid):null;
 var gateRem=nextId?acUnitGateRemaining(nextId):0;
 /* Free-preview gate: passing the first lesson's quiz on a monetized course

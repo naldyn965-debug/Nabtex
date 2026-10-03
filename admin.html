@@ -711,6 +711,18 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
       </div>
+      <div class="sidebar-courses" data-atab="profile">
+        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>نظام النقاط XP — بحث وتعديل</div>
+        <input class="broadcast-select" id="xp-q" placeholder="إيميل الطالب أو UID" style="margin-bottom:8px">
+        <button class="broadcast-send-btn" onclick="xpLookup()">بحث عن طالب</button>
+        <div id="xp-student" style="margin-top:10px"></div>
+        <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>المتصدرون (الكل)</div>
+        <div id="xp-top"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
+        <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>آخر معاملات XP</div>
+        <div id="xp-tx"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
+        <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>سجل استبدال الكريدت</div>
+        <div id="xp-rd"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
+      </div>
       <div class="sidebar-footer">
         <div class="sidebar-user-badge">
           <div class="sidebar-user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -1020,6 +1032,7 @@ auth.onAuthStateChanged(async function(user) {
   startPaidCoursesListener();
   startCourseConfigListener();
   startBroadcastLogListener();
+  xpAdminLoad();
 });
 
 function showAuth() {
@@ -2436,6 +2449,91 @@ function showToast(msg, type) {
   setTimeout(function(){ t.remove(); }, 3500);
 }
 
+/* ── XP / Rewards admin ─────────────────────────────────────────────
+   xp_events is create-only (audit trail). Adjustments need a reason and are written
+   together with a matching admin_adjustment event; firestore.rules only allow xp + last to change. */
+const XP_LBL = {lecture_completed:'محاضرة',question_correct:'إجابة صحيحة',quiz_completed:'اختبار',course_completed:'دورة',path_completed:'مسار',mission_completed:'مهمة',streak_bonus:'سلسلة',achievement_bonus:'إنجاز',reward_redemption:'استبدال كريدت',admin_adjustment:'تعديل إداري',daily_visit:'زيارة يومية',daily_gift:'هدية الحماسة'};
+function xpEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function xpBox(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function xpEmpty(t) { return '<div style="text-align:center;opacity:.4;font-size:12px;padding:6px 0">' + t + '</div>'; }
+/* Composite index missing? fall back to a client-side sort so the panel still works. */
+function xpFallback(q, n) {
+  return q.limit(200).get().then(function(s) {
+    const ms = function(d) { const t = d.data().ts; return t && t.toMillis ? t.toMillis() : Infinity; };
+    const docs = s.docs.slice().sort(function(a, b) { return ms(b) - ms(a); }).slice(0, n);
+    return { empty: !docs.length, docs: docs };
+  });
+}
+function xpEvRows(snap) {
+  if (snap.empty) return xpEmpty('لا توجد معاملات');
+  return snap.docs.map(function(d) {
+    const e = d.data(), t = e.ts && e.ts.toDate ? e.ts.toDate().toLocaleString('ar-EG', {dateStyle:'short', timeStyle:'short'}) : '';
+    return '<div class="broadcast-log-item"><b>' + xpEsc(XP_LBL[e.type] || e.type) + '</b> ' +
+      (e.type === 'reward_redemption' ? '' : '<span style="color:var(--emerald)">' + (e.amt > 0 ? '+' : '') + e.amt + ' XP</span>') +
+      '<div style="opacity:.6;font-size:11px;cursor:pointer" onclick="xpLookup(\'' + xpEsc(e.uid) + '\')">' +
+      xpEsc(e.cid ? (COURSE_LABELS[e.cid] || e.cid) : '') + (e.note ? ' — ' + xpEsc(e.note) : '') + ' • ' + xpEsc(String(e.uid).slice(0, 6)) + '… • ' + t + '</div></div>';
+  }).join('');
+}
+function xpAdminLoad() {
+  db.collection('xp_events').orderBy('ts','desc').limit(80).get().then(function(s) { const docs = s.docs.filter(function(d) { return d.data().type !== 'daily_visit'; }).slice(0, 20); xpBox('xp-tx', xpEvRows({ empty: !docs.length, docs: docs })); }).catch(function(e) { xpBox('xp-tx', xpEmpty('تعذر التحميل')); console.warn(e); });
+  const rq = db.collection('xp_events').where('type','==','reward_redemption');
+  rq.orderBy('ts','desc').limit(15).get().catch(function() { return xpFallback(rq, 15); }).then(function(s) { xpBox('xp-rd', xpEvRows(s)); }).catch(function(e) { xpBox('xp-rd', xpEmpty('تعذر التحميل')); console.warn(e); });
+  db.collection('xp_wallet').orderBy('xp','desc').limit(10).get().then(function(s) {
+    xpBox('xp-top', s.empty ? xpEmpty('لا توجد بيانات') : s.docs.map(function(d, i) {
+      const w = d.data();
+      return '<div class="broadcast-log-item" style="cursor:pointer" onclick="xpLookup(\'' + xpEsc(d.id) + '\')">' + (i + 1) + '. ' + xpEsc(w.nm || 'طالب') + ' <span style="color:var(--emerald);float:left">' + w.xp + ' XP</span></div>';
+    }).join(''));
+  }).catch(function(e) { xpBox('xp-top', xpEmpty('تعذر التحميل')); console.warn(e); });
+}
+async function xpLookup(v) {
+  const q = String(v || document.getElementById('xp-q').value || '').trim();
+  if (!q) return;
+  xpBox('xp-student', xpEmpty('جاري البحث...'));
+  try {
+    let uid = q;
+    if (q.indexOf('@') > -1) {
+      const us = await db.collection('users').where('email','==',q.toLowerCase()).limit(1).get();
+      if (us.empty) { xpBox('xp-student', xpEmpty('لا يوجد طالب بهذا الإيميل')); return; }
+      uid = us.docs[0].id;
+    }
+    const ws = await db.collection('xp_wallet').doc(uid).get();
+    if (!ws.exists) { xpBox('xp-student', xpEmpty('لا يوجد حساب XP لهذا الطالب بعد')); return; }
+    const w = ws.data(), un = w.xp - (w.spent || 0);
+    const eq = db.collection('xp_events').where('uid','==',uid);
+    const ev0 = await eq.orderBy('ts','desc').limit(40).get().catch(function() { return xpFallback(eq, 40); });
+    const evd = ev0.docs.filter(function(d) { return d.data().type !== 'daily_visit'; }).slice(0, 10);
+    const ev = { empty: !evd.length, docs: evd };
+    xpBox('xp-student',
+      '<div class="broadcast-log-item"><b>' + xpEsc(w.nm || 'طالب') + '</b> — ' + w.xp + ' XP<div style="opacity:.7;font-size:11.5px">كريدت: ' + Math.floor(un / 1000) + ' + ' + (un % 1000) + ' XP • مستبدل: ' + Math.floor((w.spent || 0) / 1000) +
+      ' • سلسلة: ' + (w.st || 0) + ' (أفضل ' + (w.bs || 0) + ') • دورات: ' + (w.cc || 0) + ' • إجابات صحيحة: ' + (w.qc || 0) + '</div></div>' +
+      '<input class="broadcast-select" id="xp-amt" type="number" step="1" placeholder="+50 أو -20 XP" style="margin:8px 0 6px">' +
+      '<input class="broadcast-select" id="xp-note" maxlength="200" placeholder="سبب التعديل (إلزامي)" style="margin-bottom:8px">' +
+      '<button class="broadcast-send-btn" onclick="xpAdjust(\'' + xpEsc(uid) + '\')">تعديل XP (مُسجَّل)</button>' +
+      '<div style="margin-top:10px">' + xpEvRows(ev) + '</div>');
+  } catch (e) { console.warn(e); xpBox('xp-student', xpEmpty('تعذر البحث')); }
+}
+async function xpAdjust(uid) {
+  const amt = parseInt(document.getElementById('xp-amt').value, 10), note = document.getElementById('xp-note').value.trim();
+  if (!Number.isInteger(amt) || amt === 0) { showToast('أدخل رقماً صحيحاً غير صفر', 'err'); return; }
+  if (note.length < 3) { showToast('اكتب سبب التعديل (3 أحرف على الأقل)', 'err'); return; }
+  if (!window.confirm('تعديل ' + amt + ' XP لهذا الطالب؟\nالسبب: ' + note + '\nسيُسجَّل في سجل المعاملات ولا يمكن حذفه.')) return;
+  const key = 'adj_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), eid = uid + '_' + key;
+  const wR = db.collection('xp_wallet').doc(uid), eR = db.collection('xp_events').doc(eid);
+  try {
+    await db.runTransaction(async function(tx) {
+      const s = await tx.get(wR);
+      if (!s.exists) throw new Error('nowallet');
+      const w = s.data(), xp = w.xp + amt;
+      if (xp - (w.spent || 0) < 0) throw new Error('neg');
+      tx.set(eR, { uid: uid, type: 'admin_adjustment', key: key, amt: amt, note: note, by: auth.currentUser.uid, ts: firebase.firestore.FieldValue.serverTimestamp() });
+      tx.update(wR, { xp: xp, last: eid });
+    });
+    showToast('تم التعديل وتسجيله', 'ok'); xpLookup(uid); xpAdminLoad();
+  } catch (e) {
+    console.warn(e);
+    showToast(e.message === 'neg' ? 'التعديل يجعل الرصيد سالباً' : e.message === 'nowallet' ? 'لا يوجد حساب XP لهذا الطالب' : 'تعذر التعديل', 'err');
+  }
+}
 
 </script>
 </body>

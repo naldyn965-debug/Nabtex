@@ -14,9 +14,27 @@ service cloud.firestore {
       return isAuth() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    // ── USERS: access fields (paidCourses / suspendedCourses) are no longer self-editable ──
+    // Admin: unrestricted. Student: every other field stays freely writable, but paidCourses may grow by
+    // exactly ONE course, and only in the same write that creates a brand-new reward_redemption event
+    // (the 1000-XP spend itself is validated by the xp_events / xp_wallet rules below).
+    function uOld(f) { return resource == null ? [] : resource.data.get(f, []); }
+    function uNew(f) { return request.resource.data.get(f, []); }
+    function uRdOk(uid) {
+      let w = getAfter(/databases/$(database)/documents/xp_wallet/$(uid)).data;
+      let e = getAfter(/databases/$(database)/documents/xp_events/$(w.last)).data;
+      return e.type == 'reward_redemption' && e.uid == uid
+        && !exists(/databases/$(database)/documents/xp_events/$(w.last))
+        && uNew('paidCourses') == uOld('paidCourses').concat([e.cid]);
+    }
+
     match /users/{uid} {
       allow read:  if true;
-      allow write: if isSelf(uid) || isAdmin();
+      allow create, update: if (isSelf(uid)
+          && uNew('suspendedCourses') == uOld('suspendedCourses')
+          && (uNew('paidCourses') == uOld('paidCourses') || uRdOk(uid)))
+        || isAdmin();
+      allow delete: if isSelf(uid) || isAdmin();
     }
 
     match /admins/{uid} {
@@ -68,7 +86,8 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.courseId is string
                     && request.resource.data.phone is string
-                    && request.resource.data.transactionRef is string;
+                    && request.resource.data.transactionRef is string
+                    && request.resource.data.status == 'pending';   // only admin.html can set approved/rejected
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -153,10 +172,6 @@ service cloud.firestore {
     }
 
     // ── ACADEMY NOTIFICATIONS (bell: broadcasts + per-user, e.g. inactivity) ──
-    // scope:'broadcast' → readable by any signed-in student (admin.html + the
-    //   Supabase inactivity job write these; students never write them).
-    // scope:'user'      → readable only by the target student (readable /
-    //   mark-as-read); admin.html fan-outs and the Supabase job write these.
     match /academy_notifications/{notifId} {
       allow read: if isAuth() && (
         resource.data.scope == 'broadcast' ||
@@ -170,9 +185,6 @@ service cloud.firestore {
                     && request.resource.data.readBy.hasAll(resource.data.readBy)
                     && request.resource.data.readBy.hasOnly(resource.data.readBy.concat([request.auth.uid]));
       allow create, delete: if isAdmin();
-      // Note: the Supabase Edge Function and any Cloud Function use the
-      // Admin SDK / service-account token, which bypasses these rules
-      // entirely — isAdmin() above only gates admin.html's own client writes.
     }
 
     // ── ACADEMY BROADCAST LOG (admin.html "last 10 sent" list — admin-only) ──
@@ -182,12 +194,170 @@ service cloud.firestore {
     }
 
     // ── ADMIN CONFIG (payment-push FCM device tokens — admin.html only) ──
-    // Client side only needs write access (admin.html registers its own
-    // token here). The payment-request-push Edge Function reads this via
-    // the Firebase Admin SDK / service-account credentials, which bypass
-    // these rules entirely — same model as academy_notifications above.
     match /admin_config/{docId} {
       allow read, write: if isAdmin();
+    }
+
+    // ── GAMIFICATION (XP / rewards) — mirrors NBXP in academy-data.js ──
+    function xpEv(id) { return /databases/$(database)/documents/xp_events/$(id); }
+    function xpDay()  { return int(math.floor((request.time.toMillis() + 7200000) / 86400000)); }
+    function xpB(f)   { return resource == null ? 0 : resource.data.get(f, 0); }
+    // Daily gift grows by 2 XP per streak day: 5,7,9,11,13,15,17 then back to 5 on day 8 (mirrors gx() in academy-data.js).
+    // Uses the server-validated xp_streak doc; the streak must have been checked in today, otherwise -1 (rejected by nom >= 0).
+    function xpGift() {
+      let s = get(/databases/$(database)/documents/xp_streak/$(request.auth.uid)).data;
+      return (s.vd == xpDay() && s.vs >= 1) ? 5 + 2 * ((s.vs - 1) % 7) : -1;
+    }
+    // XP sources: (1) daily missions = 50/day (15 + 20 + 15), (2) daily gift, (3) level-up bonus (20,30,...,70).
+    // Lecture / question / quiz / course / path / streak / achievement events are still recorded (progress counters, badges) but carry 0 XP.
+    function xpNom(e) {
+      return e.type == 'lecture_completed' ? 0
+        : e.type == 'question_correct' ? 0
+        : e.type == 'quiz_completed' ? 0
+        : e.type == 'course_completed' ? 0
+        : e.type == 'path_completed' ? 0
+        : e.type == 'mission_completed' ? (e.m == 'm2' ? 20 : 15)
+        : e.type == 'streak_bonus' ? {'3': 0, '7': 0, '14': 0, '30': 0, '60': 0, '100': 0}[string(e.n)]
+        : e.type == 'achievement_bonus' ? {'first_lecture': 0, 'first_course': 0, 'streak7': 0, 'correct100': 0, 'courses3': 0, 'path_done': 0}[e.aid]
+        : e.type == 'reward_redemption' ? 0
+        : e.type == 'daily_gift' ? xpGift()
+        : e.type == 'level_bonus' ? 10 * (e.n + 1)
+        : -1;
+    }
+    function xpCourse(c) {
+      return c in ['pest','mol-bio','food-quality','ag-english','food-safety','glp','land-reclamation','tissue-culture',
+                   'pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional'];
+    }
+    function xpKeyOk(e) {
+      return e.key.size() < 120 && (
+        e.type == 'lecture_completed' ? xpCourse(e.cid) && e.key == 'lec_' + e.cid + '_' + e.lid
+        : e.type == 'question_correct' ? xpCourse(e.cid) && e.i is int && e.i >= 0 && e.key == 'q_' + e.cid + '_' + e.lid + '_' + string(e.i)
+        : e.type == 'quiz_completed' ? xpCourse(e.cid) && e.sc is int && e.sc >= 0 && e.sc <= 100 && e.key == 'qz_' + e.cid + '_' + e.lid
+        : e.type == 'course_completed' ? xpCourse(e.cid) && e.key == 'crs_' + e.cid
+        : e.type == 'path_completed' ? e.pid in ['biotech','plant-production','animal-production','plant-protection','food-science','soil-water'] && e.key == 'path_' + e.pid
+        : e.type == 'mission_completed' ? e.m in ['m1','m2','m3'] && e.key == 'ms_' + string(xpDay()) + '_' + e.m
+        : e.type == 'streak_bonus' ? e.key == 'st_' + string(e.n)
+        : e.type == 'achievement_bonus' ? e.key == 'ach_' + e.aid
+        : e.type == 'reward_redemption' ? e.cid in ['mol-bio','food-safety','glp','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional'] && e.key == 'rd_' + e.cid
+        : e.type == 'daily_gift' ? e.key == 'dg_' + string(xpDay())
+        : e.type == 'level_bonus' ? e.n is int && e.n >= 1 && e.n <= 6 && e.key == 'lv_' + string(e.n)
+        : false);
+    }
+    // bonus events must be backed by the counters of the resulting wallet
+    function xpCondOk(e, a) {
+      return e.type == 'mission_completed' ? (e.m == 'm1' ? a.dl >= 1 : e.m == 'm2' ? a.dq >= 5 : a.dz >= 1)
+        : e.type == 'streak_bonus' ? a.st >= e.n
+        : e.type == 'achievement_bonus' ? (e.aid == 'first_lecture' ? a.lc >= 1 : e.aid == 'first_course' ? a.cc >= 1
+            : e.aid == 'streak7' ? a.bs >= 7 : e.aid == 'correct100' ? a.qc >= 100 : e.aid == 'courses3' ? a.cc >= 3 : a.pc >= 1)
+        : e.type == 'reward_redemption' ? a.spent == xpB('spent') + 1000 && a.xp - a.spent >= 0
+        : e.type == 'level_bonus' ? e.n == xpB('lb') + 1 && xpB('xp') >= [0, 100, 300, 700, 1500, 3000, 5000][e.n]
+        : true;
+    }
+    function xpMn() { let t = request.time + duration.value(2, 'h'); return t.year() * 12 + t.month(); }
+    // Tolerance for device-vs-server clock skew (streak only): client value must be an int within ±1 of the server value.
+    function xpNear(x, s) { return x is int && x >= s - 1 && x <= s + 1; }
+    // Enthusiasm streak: restores = missed days bridged automatically, max 3 per calendar month; otherwise the streak restarts at 1.
+    function xpRu0(mn)       { return xpB('rm') == mn ? xpB('ru') : 0; }
+    function xpRestore(d, mn) { return xpB('vd') != 0 && d - xpB('vd') - 1 > 0 && xpRu0(mn) + (d - xpB('vd') - 1) <= 3; }
+    function xpNvs(d, mn)    { return xpB('vd') == 0 ? 1 : ((d - xpB('vd') - 1 == 0 || xpRestore(d, mn)) ? xpB('vs') + 1 : 1); }
+    function xpWalletOk(uid) {
+      let a = request.resource.data;
+      let e = getAfter(xpEv(a.last)).data;
+      let d = xpDay();
+      let same = xpB('dn') == d;
+      let bx = same ? xpB('dx') : 0;
+      let nom = xpNom(e);
+      let cap = e.type == 'mission_completed';
+      let amt = cap ? (bx + nom <= 50 ? nom : 50 - bx) : nom;
+      let cr = cap && bx < 10 && bx + amt >= 10;
+      return a.keys().hasOnly(['uid','nm','xp','spent','dn','dx','dl','dq','dz','lc','qc','zc','zs','cc','pc','st','sd','bs','ld','wk','wx','mo','mx','ac','sb','ml','last','vs','vb','vd','vg','rm','ru','lb'])
+        && a.uid == uid && a.nm is string && a.nm.size() <= 20
+        && !exists(xpEv(a.last)) && e.uid == uid && nom >= 0 && e.amt == amt && xpKeyOk(e) && xpCondOk(e, a)
+        && a.xp == xpB('xp') + e.amt
+        && a.dn == d && a.dx == bx + (cap ? amt : 0)
+        && a.dl == (same ? xpB('dl') : 0) + (e.type == 'lecture_completed' ? 1 : 0)
+        && a.dq == (same ? xpB('dq') : 0) + (e.type == 'question_correct' ? 1 : 0)
+        && a.dz == (same ? xpB('dz') : 0) + (e.type == 'quiz_completed' ? 1 : 0)
+        && a.lc == xpB('lc') + (e.type == 'lecture_completed' ? 1 : 0)
+        && a.qc == xpB('qc') + (e.type == 'question_correct' ? 1 : 0)
+        && a.zc == xpB('zc') + (e.type == 'quiz_completed' ? 1 : 0)
+        && a.zs == xpB('zs') + (e.type == 'quiz_completed' ? e.sc : 0)
+        && a.cc == xpB('cc') + (e.type == 'course_completed' ? 1 : 0)
+        && a.pc == xpB('pc') + (e.type == 'path_completed' ? 1 : 0)
+        && a.wk == math.floor((d + 3) / 7) && a.wx == (xpB('wk') == a.wk ? xpB('wx') : 0) + e.amt
+        && a.mo == xpMn() && a.mx == (xpB('mo') == a.mo ? xpB('mx') : 0) + e.amt
+        && a.sd == (cr ? d : xpB('sd'))
+        && a.st == (cr ? (xpB('sd') == d - 1 ? xpB('st') + 1 : 1) : xpB('st'))
+        && a.bs == (a.st > xpB('bs') ? a.st : xpB('bs'))
+        && a.ld == xpB('ld') + (cr ? 1 : 0)
+        && a.spent == xpB('spent') + (e.type == 'reward_redemption' ? 1000 : 0)
+        && a.get('lb', 0) == (e.type == 'level_bonus' ? e.n : xpB('lb'));
+    }
+    // Enthusiasm streak (separate doc so the wallet rule stays small): one daily_visit event + one xp_streak write per day.
+    function xpStreakOk(uid) {
+      let a = request.resource.data;
+      let d = a.vd;
+      let mn = a.rm;
+      return a.keys().hasOnly(['uid','vs','vb','vd','rm','ru','last'])
+        && xpNear(d, xpDay()) && xpNear(mn, xpMn())
+        && a.uid == uid && a.last == uid + '_dv_' + string(d)
+        && getAfter(xpEv(a.last)).data.type == 'daily_visit'
+        && xpB('vd') < d
+        && a.vs == xpNvs(d, mn)
+        && a.vb == (a.vs > xpB('vb') ? a.vs : xpB('vb'))
+        && a.ru == (xpRestore(d, mn) ? xpRu0(mn) + d - xpB('vd') - 1 : xpRu0(mn));
+    }
+    // audited admin adjustment: only xp + last change, and a matching admin_adjustment event must be created with it
+    function xpAdminOk(uid) {
+      let a = request.resource.data;
+      let e = getAfter(xpEv(a.last)).data;
+      return resource != null && !exists(xpEv(a.last))
+        && e.type == 'admin_adjustment' && e.uid == uid && e.by == request.auth.uid
+        && a.xp == resource.data.xp + e.amt && a.xp >= 0
+        && a.diff(resource.data).affectedKeys().hasOnly(['xp', 'last']);
+    }
+
+    match /xp_events/{eid} {
+      allow read: if (isAuth() && (resource == null || resource.data.uid == request.auth.uid)) || isAdmin();
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly(['uid','type','key','amt','cid','lid','i','sc','pid','m','n','aid','ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.amt is int
+        && request.resource.data.ts == request.time
+        && eid == request.auth.uid + '_' + request.resource.data.key
+        && getAfter(/databases/$(database)/documents/xp_wallet/$(request.auth.uid)).data.last == eid;
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly(['uid','type','key','amt','ts'])
+        && request.resource.data.type == 'daily_visit'
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.amt == 0
+        && request.resource.data.ts == request.time
+        && request.resource.data.key == 'dv_' + string(getAfter(/databases/$(database)/documents/xp_streak/$(request.auth.uid)).data.vd)
+        && eid == request.auth.uid + '_' + request.resource.data.key
+        && getAfter(/databases/$(database)/documents/xp_streak/$(request.auth.uid)).data.last == eid;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['uid','type','key','amt','note','by','ts'])
+        && request.resource.data.type == 'admin_adjustment'
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.amt is int && request.resource.data.amt != 0
+        && request.resource.data.note is string && request.resource.data.note.size() >= 3 && request.resource.data.note.size() <= 200
+        && request.resource.data.ts == request.time
+        && eid == request.resource.data.uid + '_' + request.resource.data.key
+        && request.resource.data.key.matches('adj_.*')
+        && getAfter(/databases/$(database)/documents/xp_wallet/$(request.resource.data.uid)).data.last == eid;
+      allow update, delete: if false;
+    }
+
+    match /xp_wallet/{uid} {
+      allow read: if isAuth();
+      allow create, update: if (isSelf(uid) && xpWalletOk(uid)) || (isAdmin() && xpAdminOk(uid));
+      allow delete: if false;
+    }
+
+    match /xp_streak/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow create, update: if isSelf(uid) && xpStreakOk(uid);
+      allow delete: if false;
     }
 
     match /users/{uid}/{subcollection}/{docId} {
