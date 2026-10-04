@@ -7480,6 +7480,11 @@ body.modal-open { overflow: hidden; }
   background:rgba(27,107,58,.15) !important;
   border-color:rgba(46,170,92,.25) !important;
 }
+[data-dark] .acad-lesson-row.locked:hover{
+  background:transparent !important;
+  border-color:var(--line) !important;
+  box-shadow:0 1px 6px rgba(0,0,0,.25),0 2px 12px rgba(0,0,0,.18) !important;
+}
 [data-dark] .acad-lesson-check{
   background:rgba(255,255,255,.06) !important;
   border-color:rgba(255,255,255,.12) !important;
@@ -9458,7 +9463,7 @@ const App = {
     if(typeof BI_COURSE!=='undefined') reg.push({cid:'bioinformatics',    course:BI_COURSE, icon:'💻', grad:'linear-gradient(135deg,#7c3aed,#4c1d95)', paid:true, price:250, oldPrice:500, img:'https://images.unsplash.com/photo-1643780668909-580822430155?auto=format&fit=crop&w=900&q=70'});
     if(typeof LD_COURSE!=='undefined') reg.push({cid:'landscape-design',  course:LD_COURSE, icon:'🌳', grad:'linear-gradient(135deg,#16a34a,#0a2410)', paid:true, price:150, oldPrice:250, img:'https://images.unsplash.com/photo-1761637822930-fb1c1a3df94d?auto=format&fit=crop&w=900&q=70'});
     if(typeof HYD_COURSE!=='undefined') reg.push({cid:'hydroponics-professional', course:HYD_COURSE, icon:'💧', grad:'linear-gradient(135deg,#0284c7,#031c2e)', paid:true, price:200, oldPrice:500, img:'https://images.unsplash.com/photo-1682629088819-95edaf226223?auto=format&fit=crop&w=900&q=70'});
-    if(typeof BF_COURSE!=='undefined') reg.push({cid:'biofertilizers-professional', course:BF_COURSE, icon:'🦠', grad:'linear-gradient(135deg,#059669,#062018)', paid:true, price:200, img:'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=70'});
+    if(typeof BF_COURSE!=='undefined') reg.push({cid:'biofertilizers-professional', course:BF_COURSE, icon:'🦠', grad:'linear-gradient(135deg,#059669,#062018)', paid:true, price:200, oldPrice:400, img:'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=70'});
     return reg;
   },
 
@@ -19845,8 +19850,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="vcash-steps on" id="vcash14-step-method">
         <div class="vcash-info-card">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 60%</span>
-            <div><span class="vcash-info-val" id="vcash14-method-price-display">200 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 50%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">400 جنيه</s><span class="vcash-info-val" id="vcash14-method-price-display">200 جنيه</span></div>
           </div>
         </div>
         <div class="vcash-trust-line">🔒 دفع آمن — تفعيل خلال لحظات</div>
@@ -19872,8 +19877,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="vcash-back-link" onclick="acVcashSetStep('vcash14','method')">→ رجوع لاختيار وسيلة الدفع</button>
         <div class="vcash-info-card">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 60%</span>
-            <div><span class="vcash-info-val" id="vcash14-price-display">200 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 50%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">400 جنيه</s><span class="vcash-info-val" id="vcash14-price-display">200 جنيه</span></div>
           </div>
           <div class="vcash-info-divider"></div>
           <div class="vcash-num-wrap">
@@ -19910,8 +19915,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="vcash-back-link" onclick="acVcashSetStep('vcash14','method')">→ رجوع لاختيار وسيلة الدفع</button>
         <div class="vcash-info-card instapay">
           <div class="vcash-info-row">
-            <span class="vcash-info-lbl">السعر بعد خصم 60%</span>
-            <div><span class="vcash-info-val" id="vcash14-ip-price-display">200 جنيه</span></div>
+            <span class="vcash-info-lbl">السعر بعد خصم 50%</span>
+            <div><s style="font-size:12px;opacity:.65;margin-left:6px">400 جنيه</s><span class="vcash-info-val" id="vcash14-ip-price-display">200 جنيه</span></div>
           </div>
           <div class="vcash-info-divider"></div>
           <div class="vcash-num-wrap" id="vcash14-ip-identifiers"></div>
