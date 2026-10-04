@@ -226,7 +226,7 @@ service cloud.firestore {
     }
     function xpCourse(c) {
       return c in ['pest','mol-bio','food-quality','ag-english','food-safety','glp','land-reclamation','tissue-culture',
-                   'pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional'];
+                   'pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional','biofertilizers-professional'];
     }
     function xpKeyOk(e) {
       return e.key.size() < 120 && (
@@ -238,7 +238,7 @@ service cloud.firestore {
         : e.type == 'mission_completed' ? e.m in ['m1','m2','m3'] && e.key == 'ms_' + string(xpDay()) + '_' + e.m
         : e.type == 'streak_bonus' ? e.key == 'st_' + string(e.n)
         : e.type == 'achievement_bonus' ? e.key == 'ach_' + e.aid
-        : e.type == 'reward_redemption' ? e.cid in ['mol-bio','food-safety','glp','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional'] && e.key == 'rd_' + e.cid
+        : e.type == 'reward_redemption' ? e.cid in ['mol-bio','food-safety','glp','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional','biofertilizers-professional'] && e.key == 'rd_' + e.cid
         : e.type == 'daily_gift' ? e.key == 'dg_' + string(xpDay())
         : e.type == 'level_bonus' ? e.n is int && e.n >= 1 && e.n <= 6 && e.key == 'lv_' + string(e.n)
         : false);
