@@ -852,9 +852,17 @@ if(pt.id==='general'||pt.courses==='ALL'||!pt.courses.length||!pt.courses.every(
 p=p.then(function(){return award('path_completed',{key:'path_'+pt.id,pid:pt.id})})});
 return p}
 function getW(){var u=uid();return DB().collection('xp_wallet').doc(u).get().then(function(s){return Object.assign(W0(u),s.exists?s.data():{})})}
+var _nmc={};
+function nm2(s){var p=String(s||'').trim().split(/\s+/),a=p[0]||'',b=p[1]?a+' '+p[1]:a;return a?(b.length<=20?b:a).slice(0,20):''}
 function board(){
 var u=uid();
-return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u})});return r})}
+return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u,id:x.id})});
+/* older wallet docs hold only the first name: for the visible top 15, read first + second name from the public users/{uid} doc (read-only, cached per session) */
+return Promise.all(r.slice(0,15).map(function(x){
+if(x.me||x.nm.indexOf(' ')>-1)return;
+if(_nmc[x.id]!==undefined){if(_nmc[x.id])x.nm=_nmc[x.id];return}
+return DB().collection('users').doc(x.id).get().then(function(d){var n=d.exists?nm2(d.data().displayName||d.data().name):'';_nmc[x.id]=n;if(n)x.nm=n},function(){})
+})).then(function(){return r})})}
 /* ── Enthusiasm streak: one automatic check-in per day (event daily_visit, 0 XP) + a +5 XP gift the student collects (daily_gift).
    Missed days are bridged automatically by "enthusiasm restores" (3 per calendar month); otherwise the streak restarts from 1. */
 var _vp=null,_vday=0,FO='M12 2c.5 3-1 4.5-2.5 6.3C8 10.1 6 12 6 15.2 6 18.6 8.7 22 12 22s6-3.4 6-6.8c0-2-.9-3.6-2-5-.3 1-.8 1.8-1.6 2.3C14.8 9.6 14.6 5.2 12 2z',FI='M12 22c-1.9 0-3.3-1.6-3.3-3.6 0-1.6 1-2.6 1.9-3.8.5-.7.9-1.5 1.1-2.5 1.6 1.5 3.6 3.4 3.6 6.1 0 2-1.4 3.8-3.3 3.8z';
