@@ -852,16 +852,19 @@ if(pt.id==='general'||pt.courses==='ALL'||!pt.courses.length||!pt.courses.every(
 p=p.then(function(){return award('path_completed',{key:'path_'+pt.id,pid:pt.id})})});
 return p}
 function getW(){var u=uid();return DB().collection('xp_wallet').doc(u).get().then(function(s){return Object.assign(W0(u),s.exists?s.data():{})})}
+/* keeps the leaderboard name in step with the profile name: touches only nm on the user's own existing wallet doc, never xp */
+function syncName(){var u=uid(),D=DB();if(!u||!D)return Promise.resolve();
+return D.collection('xp_wallet').doc(u).get().then(function(s){var n=nm();if(!s.exists||s.data().nm===n)return;return s.ref.update({nm:n})}).catch(function(){})}
 var _nmc={};
 function nm2(s){var p=String(s||'').trim().split(/\s+/),a=p[0]||'',b=p[1]?a+' '+p[1]:a;return a?(b.length<=20?b:a).slice(0,20):''}
 function board(){
 var u=uid();
-return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u,id:x.id})});
+return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u,id:x.id});if(x.id===u&&v.nm!==nm())syncName()});
 /* older wallet docs hold only the first name: for the visible top 15, read first + second name from the public users/{uid} doc (read-only, cached per session) */
 return Promise.all(r.slice(0,15).map(function(x){
 if(x.me||x.nm.indexOf(' ')>-1)return;
 if(_nmc[x.id]!==undefined){if(_nmc[x.id])x.nm=_nmc[x.id];return}
-return DB().collection('users').doc(x.id).get().then(function(d){var n=d.exists?nm2(d.data().displayName||d.data().name):'';_nmc[x.id]=n;if(n)x.nm=n},function(){})
+return DB().collection('users').doc(x.id).get().then(function(d){var n=d.exists?nm2(d.data().displayName||d.data().name):'';if(n.indexOf(x.nm)!==0)n='';_nmc[x.id]=n;if(n)x.nm=n},function(){})
 })).then(function(){return r})})}
 /* ── Enthusiasm streak: one automatic check-in per day (event daily_visit, 0 XP) + a +5 XP gift the student collects (daily_gift).
    Missed days are bridged automatically by "enthusiasm restores" (3 per calendar month); otherwise the streak restarts from 1. */
@@ -936,6 +939,7 @@ if(!lb.length)return'<div class="nbxp-e">لا توجد بيانات بعد — �
 return lb.slice(0,15).map(function(r,i){return'<div class="nbxp-r'+(i<3?' top t'+(i+1):'')+(r.me?' me':'')+'"><i>'+(i<3?ic('trophy',15,['#fff','#3a2400','#1b1f26'][i]):i+1)+'</i><span>'+acEsc(r.me?nm():r.nm)+(r.me?' (أنت)':'')+'</span><em>'+r.v+' XP</em></div>'}).join('')}
 (function boot(n){if(uid()&&DB()){visit();return}if(n<45)setTimeout(function(){boot(n+1)},2000)})(0);
 return{
+syncName:syncName,
 correct:function(c,l,i){c=sx(c);l=sx(l);return award('question_correct',{key:'q_'+c+'_'+l+'_'+i,cid:c,lid:l,i:i})},
 quiz:function(c,l,score,passed){
 c=sx(c);l=sx(l);var sc=Math.max(0,Math.min(100,Math.round(score)));

@@ -316,6 +316,12 @@ service cloud.firestore {
         && a.xp == resource.data.xp + e.amt && a.xp >= 0
         && a.diff(resource.data).affectedKeys().hasOnly(['xp', 'last']);
     }
+    // display-name sync: the owner may change only nm (leaderboard name) on an existing wallet doc
+    function xpNameOk() {
+      let a = request.resource.data;
+      return resource != null && a.nm is string && a.nm.size() > 0 && a.nm.size() <= 20
+        && a.diff(resource.data).affectedKeys().hasOnly(['nm']);
+    }
 
     match /xp_events/{eid} {
       allow read: if (isAuth() && (resource == null || resource.data.uid == request.auth.uid)) || isAdmin();
@@ -350,7 +356,7 @@ service cloud.firestore {
 
     match /xp_wallet/{uid} {
       allow read: if isAuth();
-      allow create, update: if (isSelf(uid) && xpWalletOk(uid)) || (isAdmin() && xpAdminOk(uid));
+      allow create, update: if (isSelf(uid) && xpWalletOk(uid)) || (isAdmin() && xpAdminOk(uid)) || (isSelf(uid) && xpNameOk());
       allow delete: if false;
     }
 

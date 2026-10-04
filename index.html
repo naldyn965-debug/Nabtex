@@ -9873,6 +9873,7 @@ async function saveProfileChanges() {
       const newName = newNameInput.value.trim();
       if (newName && newName !== currentUser.displayName) {
         await currentUser.updateProfile({ displayName: newName });
+        try { if (window.NBXP && NBXP.syncName) NBXP.syncName(); } catch (e) {}
       }
     }
     await loadUserProfile();
