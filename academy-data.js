@@ -758,7 +758,7 @@ function dayN(){return Math.floor((Date.now()+7200000)/86400000)}
 function monN(){var t=new Date(Date.now()+7200000);return t.getUTCFullYear()*12+t.getUTCMonth()+1}
 function wkN(d){return Math.floor((d+3)/7)}
 function lvl(xp){var i=LV.length-1;while(i>0&&xp<LV[i])i--;return i}
-function nm(){return((currentUser.displayName||'').trim().split(/\s+/)[0]||'طالب').slice(0,20)}
+function nm(){var p=(currentUser.displayName||'').trim().split(/\s+/),a=p[0]||'طالب',b=p[1]?a+' '+p[1]:a;return(b.length<=20?b:a).slice(0,20)}
 function T(m,k){if(typeof showToast==='function')showToast(m,k||'ok')}
 function W0(u){return{uid:u,nm:'',xp:0,spent:0,dn:0,dx:0,dl:0,dq:0,dz:0,lc:0,qc:0,zc:0,zs:0,cc:0,pc:0,st:0,sd:0,bs:0,ld:0,wk:0,wx:0,mo:0,mx:0,ac:[],sb:[],ml:[],lb:0,last:''}}
 function gx(v){return 5+2*(((v>0?v:1)-1)%7)}
@@ -925,7 +925,7 @@ Object.keys(ACH).forEach(function(a){h+='<span class="'+(w.ac.indexOf(a)>-1?'on'
 return h+'</div>'+tt('trophy','أعلى 15 متصدر')+'<div id="nbxp-pn">'+rows(lb)+'</div></div>'}
 function rows(lb){
 if(!lb.length)return'<div class="nbxp-e">لا توجد بيانات بعد — ابدأ التعلّم لتظهر هنا</div>';
-return lb.slice(0,15).map(function(r,i){return'<div class="nbxp-r'+(i<3?' top t'+(i+1):'')+(r.me?' me':'')+'"><i>'+(i<3?ic('trophy',15,['#fff','#3a2400','#1b1f26'][i]):i+1)+'</i><span>'+acEsc(r.nm)+(r.me?' (أنت)':'')+'</span><em>'+r.v+' XP</em></div>'}).join('')}
+return lb.slice(0,15).map(function(r,i){return'<div class="nbxp-r'+(i<3?' top t'+(i+1):'')+(r.me?' me':'')+'"><i>'+(i<3?ic('trophy',15,['#fff','#3a2400','#1b1f26'][i]):i+1)+'</i><span>'+acEsc(r.me?nm():r.nm)+(r.me?' (أنت)':'')+'</span><em>'+r.v+' XP</em></div>'}).join('')}
 (function boot(n){if(uid()&&DB()){visit();return}if(n<45)setTimeout(function(){boot(n+1)},2000)})(0);
 return{
 correct:function(c,l,i){c=sx(c);l=sx(l);return award('question_correct',{key:'q_'+c+'_'+l+'_'+i,cid:c,lid:l,i:i})},
