@@ -19960,6 +19960,330 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
+<!-- ═══ Nabtex Premium Checkout (additive layer) ═══════════════════════════
+     يعيد تصميم واجهة نوافذ الدفع .vcash-overlay لكل الكورسات المدفوعة.
+     لا يغيّر أي دالة دفع / Firestore: يملأ الحقول الأصلية ثم ينفّذ زر الإرسال الأصلي.
+     للتراجع: احذف هذا الـ block (style + script) فقط. ══════════════════ -->
+<style id="nb-checkout-css">
+.vcash-overlay.nbco-on{background:rgba(8,22,14,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:flex-end;padding:0}
+@media(min-width:560px){.vcash-overlay.nbco-on{align-items:center;padding:20px}}
+.nbco-on .vcash-box{max-width:440px;max-height:94vh;background:#fff;border-radius:28px 28px 0 0;box-shadow:0 -12px 60px rgba(10,40,20,.2);animation:nbcoUp .5s cubic-bezier(.22,1,.36,1)}
+@media(min-width:560px){.nbco-on .vcash-box{border-radius:28px}}
+.nbco-on .vcash-head,.nbco-on .vcash-body{display:none}
+.nbco{--g:#1B6B3A;--g2:#2d9a58;--gs:#eef7f1;--tx:#14261b;--mu:#6b7f72;--ln:#e5ede7;flex:1;overflow-y:auto;overscroll-behavior:contain;direction:rtl;padding:0 22px calc(24px + env(safe-area-inset-bottom));color:var(--tx);background:#fff;position:relative}
+.nbco svg{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nbco-top{display:flex;align-items:center;justify-content:space-between;padding:16px 0 10px;position:sticky;top:0;background:#fff;z-index:3}
+.nbco[data-st=received] .nbco-top,.nbco[data-st=active] .nbco-top{display:none}
+.nbco-ib{width:38px;height:38px;border-radius:50%;border:0;background:#f2f6f3;color:var(--tx);font-size:18px;display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .15s}
+.nbco-ib:active{transform:scale(.92)}.nbco-ib:disabled{opacity:.4}
+.nbco-brand{display:flex;align-items:center;gap:7px;direction:ltr;font-weight:800;font-size:17px;line-height:1;color:var(--g)}
+.nbco-brand svg{width:22px;height:22px;fill:none;stroke-width:2.5;overflow:visible;filter:drop-shadow(0 1px 2px rgba(27,107,58,.25));animation:nbcoLogo .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes nbcoLogo{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:none}}
+.nbco [hidden]{display:none!important}.nbco-s{display:none}.nbco-s.on{display:block}
+.nbco-s.on>*{animation:nbcoIn .55s cubic-bezier(.22,1,.36,1) both}
+.nbco-s.on>*:nth-child(2){animation-delay:.05s}.nbco-s.on>*:nth-child(3){animation-delay:.1s}.nbco-s.on>*:nth-child(4){animation-delay:.15s}.nbco-s.on>*:nth-child(5){animation-delay:.2s}.nbco-s.on>*:nth-child(6){animation-delay:.25s}.nbco-s.on>*:nth-child(7){animation-delay:.3s}.nbco-s.on>*:nth-child(n+8){animation-delay:.35s}
+.nbco-prog{display:flex;align-items:flex-start;margin:4px 4px 22px}
+.nbco-pn{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--mu);min-width:54px}
+.nbco-pn i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;background:#eef2ef;color:#8a9b90;transition:all .4s}
+.nbco-pn.d i{background:var(--g);color:#fff}.nbco-pn.d{color:var(--tx)}
+.nbco-pn.c i{background:var(--g);color:#fff;box-shadow:0 0 0 5px rgba(27,107,58,.14);animation:nbcoPulse 2s infinite}.nbco-pn.c{color:var(--g)}
+.nbco-pl{flex:1;height:2px;background:#e3eae5;margin-top:14px;border-radius:2px;position:relative;overflow:hidden}
+.nbco-pl::after{content:"";position:absolute;inset:0;background:var(--g);transform:scaleX(0);transform-origin:right;transition:transform .6s .1s}.nbco-pl.f::after{transform:scaleX(1)}
+.nbco-course{display:flex;gap:14px;align-items:center;margin:4px 0 16px}
+.nbco-cico{width:62px;height:62px;border-radius:20px;background:linear-gradient(145deg,#e6f5ec,#cfeadb);display:grid;place-items:center;font-size:30px;flex-shrink:0}
+.nbco-course h2{margin:0 0 4px;font-size:17px;line-height:1.45;font-weight:800}
+.nbco-course p{margin:0;font-size:12.5px;line-height:1.5;color:var(--mu);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nbco-price{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-radius:22px;background:linear-gradient(135deg,#f0faf4,#fff 70%);border:1px solid var(--ln);box-shadow:0 6px 20px rgba(27,107,58,.07);margin-bottom:20px}
+.nbco-amt{font-size:42px;font-weight:900;color:var(--g);letter-spacing:-.02em;line-height:1}.nbco-cur{font-size:16px;font-weight:800;color:var(--g);margin-inline-start:6px}
+.nbco-oldw{display:flex;flex-direction:column;align-items:flex-end;gap:6px}.nbco-oldw s{color:#9aa9a0;font-size:14px}
+.nbco-off{background:#dff3e6;color:var(--g);font-size:12px;font-weight:800;padding:4px 11px;border-radius:99px}
+.nbco-lbl,.nbco-fl{display:block;font-size:13px;font-weight:800;margin:0 0 10px;color:var(--tx);line-height:1.5}.nbco-fl em{font-style:normal;font-weight:600;color:var(--mu);font-size:12px;margin-inline-start:4px}
+.nbco-method{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:14px 16px;border:1px solid var(--ln);border-radius:20px;background:#fbfdfc;margin-bottom:10px}
+.nbco-mi{width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);display:grid;place-items:center;overflow:hidden}.nbco-mi img{width:34px;height:auto}.nbco-method[hidden]{display:none}.nbco-mi svg{font-size:22px;color:#e53030}
+.nbco-method b{display:block;font-size:14.5px}.nbco-hint b{display:inline;font-size:inherit}.nbco-num{display:block;direction:ltr;text-align:right;font-size:18px;font-weight:800;letter-spacing:.04em;margin-top:2px}
+.nbco-cp{border:0;background:var(--gs);color:var(--g);font:inherit;font-size:12.5px;font-weight:800;padding:8px 14px;border-radius:99px;display:flex;gap:6px;align-items:center;cursor:pointer;transition:all .25s}.nbco-cp.ok{background:var(--g);color:#fff}
+.nbco-hint{grid-column:1/-1;margin:8px 0 0;padding-top:10px;border-top:1px dashed var(--ln);font-size:13px;color:#47604f}
+.nbco-tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#eff4f1;border-radius:20px;padding:5px;margin-bottom:12px}
+.nbco-tabs::before{content:"";position:absolute;top:5px;bottom:5px;right:5px;width:calc((100% - 16px)/2);background:#fff;border-radius:15px;box-shadow:0 3px 12px rgba(27,107,58,.16);transition:transform .38s cubic-bezier(.22,1,.36,1)}
+.nbco-tabs[data-m=ip]::before{transform:translateX(calc(-100% - 6px))}
+.nbco-tab{position:relative;z-index:1;border:0;background:transparent;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:9px;font:inherit;font-size:14px;font-weight:800;color:var(--mu);cursor:pointer;transition:color .25s,transform .15s}
+.nbco-tab:active{transform:scale(.97)}.nbco-tab.on{color:var(--tx)}
+.nbco-tab img{height:24px;width:auto;max-width:48px;object-fit:contain;filter:grayscale(1);opacity:.55;transition:filter .3s,opacity .3s}.nbco-tab.on img{filter:none;opacity:1}
+.nbco-tab svg{font-size:20px}
+.nbco-pp{animation:nbcoIn .4s cubic-bezier(.22,1,.36,1) both}
+.nbco-idrow{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
+.nbco-idrow+.nbco-idrow{border-top:1px solid var(--ln)}
+.nbco-idrow small{display:block;font-size:12px;color:var(--mu);font-weight:700;margin-bottom:2px}
+.nbco-idrow .nbco-num{margin-top:0;word-break:break-all;font-size:17px}
+.nbco-ipmsg{grid-column:1/-1;font-size:13px;color:#47604f;padding:6px 0}
+.nbco-q{font-size:17px;font-weight:800;margin:18px 0 12px}
+.nbco-btn{width:100%;height:54px;border-radius:99px;font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;border:1.5px solid transparent;margin-bottom:10px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .25s,opacity .2s}
+.nbco-btn:active{transform:scale(.975)}.nbco-btn svg{font-size:18px}
+.nbco-btn.p{background:linear-gradient(135deg,var(--g),var(--g2));color:#fff;box-shadow:0 10px 24px rgba(27,107,58,.28)}
+.nbco-btn.p::after{content:"";position:absolute;top:0;bottom:0;width:60px;right:-80px;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:nbcoShine 3.2s infinite}
+.nbco-btn.s{background:#fff;color:var(--tx);border-color:#d9e3dc}
+.nbco-btn:disabled{opacity:.7;cursor:default}.nbco-btn.ld{color:transparent}.nbco-btn.ld::before{content:"";position:absolute;width:22px;height:22px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:nbcoSpin .7s linear infinite}
+.nbco-sec{display:flex;justify-content:center;align-items:center;gap:6px;font-size:12px;color:var(--g);font-weight:700;margin-top:6px;text-align:center}
+.nbco-stp{font-size:13px;color:var(--mu);font-weight:700;margin-bottom:4px}
+.nbco-h{margin:0 0 8px;font-size:23px;font-weight:900;line-height:1.35}.nbco-p{margin:0 0 20px;font-size:14px;line-height:1.75;color:#4b6053}
+.nbco-in{width:100%;height:54px;border:1.5px solid var(--ln);border-radius:16px;padding:0 16px;font:inherit;font-size:16px;color:var(--tx);background:#fff;direction:ltr;text-align:right;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
+.nbco-in:focus{border-color:var(--g2);box-shadow:0 0 0 4px rgba(45,154,88,.14)}
+/* الـ :focus-visible العام في الموقع يضيف outline وradius:6px — نلغيه داخل الـcheckout فقط */
+.nbco .nbco-in:focus,.nbco .nbco-in:focus-visible{outline:none;border-radius:16px}
+.nbco .nbco-btn:focus-visible{border-radius:99px}.nbco .nbco-cp:focus-visible{border-radius:99px}.nbco .nbco-ib:focus-visible{border-radius:50%}.nbco .nbco-tab:focus-visible{border-radius:15px}.nbco-in::placeholder{color:#a9b6ae}
+.nbco-in.err{border-color:#d64545;animation:nbcoShake .4s}.nbco-em{color:#c23a3a;font-size:12.5px;font-weight:700;min-height:18px;margin:6px 2px 8px}
+.nbco-note{display:flex;gap:9px;align-items:flex-start;background:var(--gs);border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.6;color:#3b5a46;margin:0 0 22px}.nbco-note svg{margin-top:2px;color:var(--g)}
+.nbco-ex{display:inline-block;margin-inline-start:2px;padding:1px 9px;border-radius:8px;background:#fff;border:1px solid #cfe3d6;color:var(--g);font-weight:800;font-size:13.5px;letter-spacing:.12em;line-height:1.5;vertical-align:baseline}
+.nbco-center{text-align:center;padding-top:34px}.nbco-center .nbco-p{margin-bottom:18px}
+.nbco-ring{position:relative;width:104px;height:104px;border-radius:50%;margin:0 auto 22px;display:grid;place-items:center;background:radial-gradient(circle,#e3f5ea 55%,#f1faf4 56%);font-size:44px;color:var(--g)}
+.nbco-ring::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(45,154,88,.25);animation:nbcoRing 2.2s infinite}
+.nbco-ring.pop{animation:nbcoPop .65s cubic-bezier(.34,1.56,.64,1)}
+.nbco-ring.ok{background:var(--g);color:#fff;animation:nbcoPop .6s cubic-bezier(.34,1.56,.64,1)}.nbco-ring.ok svg{stroke-width:3;stroke-dasharray:30;animation:nbcoDraw .6s .3s both}
+.nbco-ring i{position:absolute;left:50%;top:50%;width:4px;height:12px;margin:-6px -2px;border-radius:3px;background:var(--c,#2d9a58);transform:rotate(var(--a)) translateY(-70px);animation:nbcoSpark 1s .35s both}
+.nbco-ord{background:var(--gs);border-radius:16px;padding:12px;margin:0 0 16px;cursor:pointer}.nbco-ord small{display:block;color:var(--mu);font-size:12px;margin-bottom:2px}.nbco-ord b{color:var(--g);font-size:17px;direction:ltr;display:inline-block;letter-spacing:.03em}
+.nbco-tl{list-style:none;margin:0 0 22px;padding:6px 18px;border:1px solid var(--ln);border-radius:20px;text-align:right}
+.nbco-tl li{display:flex;align-items:center;gap:12px;padding:12px 0;font-size:14px;font-weight:700;color:#9aa9a0;position:relative}
+.nbco-tl li+li::before{content:"";position:absolute;right:10px;top:-12px;height:24px;width:2px;background:#e3eae5}
+.nbco-tl li b{width:22px;height:22px;border-radius:50%;border:2px solid #d5dfd8;display:grid;place-items:center;font-size:12px;color:#fff;flex-shrink:0}
+.nbco-tl li.done{color:var(--tx)}.nbco-tl li.done b{background:var(--g);border-color:var(--g)}.nbco-tl li.done+li::before{background:var(--g)}
+.nbco-tl li.cur{color:var(--g)}.nbco-tl li.cur b{border-color:var(--g);background:radial-gradient(circle,var(--g) 45%,#fff 47%);animation:nbcoPulse 1.6s infinite}
+@keyframes nbcoUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+@keyframes nbcoIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes nbcoPulse{0%,100%{box-shadow:0 0 0 0 rgba(27,107,58,.32)}50%{box-shadow:0 0 0 7px rgba(27,107,58,0)}}
+@keyframes nbcoShine{0%,55%{right:-80px}100%{right:120%}}
+@keyframes nbcoSpin{to{transform:rotate(360deg)}}
+@keyframes nbcoShake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+@keyframes nbcoRing{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.3);opacity:0}}
+@keyframes nbcoPop{0%{transform:scale(.5)}100%{transform:scale(1)}}
+@keyframes nbcoDraw{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+@keyframes nbcoSpark{0%{opacity:0;transform:rotate(var(--a)) translateY(-40px) scaleY(.3)}30%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-86px) scaleY(1)}}
+@media(prefers-reduced-motion:reduce){.nbco *,.nbco-on .vcash-box{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+<script id="nb-checkout-js">
+(function(){
+'use strict';
+var CID={vcash:'mol-bio',vcash2:'food-quality',vcash3:'ag-english',vcash4:'food-safety',vcash5:'tissue-culture',vcash6:'pesticide-tech',vcash7:'feed-mgmt',vcash8:'glp',vcash9:'food-microbiology',vcash10:'plant-diseases',vcash11:'bioinformatics',vcash12:'landscape-design',vcash13:'hydroponics-professional',vcash14:'biofertilizers-professional'};
+var I={
+ ck:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>',
+ x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ bk:'<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ fw:'<svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+ sd:'<svg viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg>',
+ hm:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z"/></svg>',
+ dc:'<svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 14l2 2 4-4"/></svg>',
+ cp:'<svg viewBox="0 0 24 24"><path d="M9 9h10v11H9zM5 15V4h10"/></svg>',
+ lk:'<svg viewBox="0 0 24 24"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg>',
+ inf:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+ wl:'<svg viewBox="0 0 24 24"><path d="M4 7h15a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1zM4 7l12-3v3M16 13h2"/></svg>'
+};
+function $(id){return document.getElementById(id)}
+function toast(m,t){if(typeof showToast==='function')showToast(m,t||'inf')}
+function en(s){return String(s||'').replace(/[\u0660-\u0669]/g,function(d){return d.charCodeAt(0)-1632}).replace(/[\u06F0-\u06F9]/g,function(d){return d.charCodeAt(0)-1776})}
+function copy(v,msg){
+ try{if(navigator.clipboard){navigator.clipboard.writeText(v).then(function(){toast(msg,'ok')},function(){});return}}catch(e){}
+ try{var t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast(msg,'ok')}catch(e){}
+}
+function brandSvg(p){var g='nbcoLg-'+p;return '<svg viewBox="2 4 20 20" aria-hidden="true"><defs><linearGradient id="'+g+'" x1="4" y1="5" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34a862"/><stop offset="1" stop-color="#0f552e"/></linearGradient></defs><g stroke="url(#'+g+')" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g></svg>'}
+/* ── صوت نجاح الدفع: Web Audio مُولَّد برمجيًا (بدون ملفات/مكتبات) — يُفتح عند ضغطة المستخدم ويُشغَّل عند نجاح الإرسال فقط ── */
+var AC=null;
+function sndUnlock(){
+ try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  if(!AC)AC=new C();
+  if(AC.state==='suspended'){var r=AC.resume();if(r&&r.catch)r.catch(function(){})}
+  var u=AC.createBufferSource();u.buffer=AC.createBuffer(1,1,22050);u.connect(AC.destination);u.start(0);
+ }catch(e){}
+}
+function sndChime(c,t){
+ var out=c.createGain(),lp=c.createBiquadFilter(),dl=c.createDelay(),fb=c.createGain(),wet=c.createGain();
+ out.gain.value=.2;lp.type='lowpass';lp.frequency.value=5500;dl.delayTime.value=.14;fb.gain.value=.3;wet.gain.value=.32;
+ out.connect(lp);lp.connect(c.destination);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(c.destination);
+ [[1318.51,0,.6],[1975.53,.12,1.2]].forEach(function(n){
+  [[1,1],[2,.16],[3,.05]].forEach(function(h){
+   var o=c.createOscillator(),g=c.createGain(),st=t+n[1],d=n[2]*(h[0]===1?1:.5);
+   o.type='sine';o.frequency.value=n[0]*h[0];
+   g.gain.setValueAtTime(.0001,st);g.gain.exponentialRampToValueAtTime(h[1],st+.01);g.gain.exponentialRampToValueAtTime(.0001,st+d);
+   o.connect(g);g.connect(out);o.start(st);o.stop(st+d+.05);
+  });
+ });
+ return [out,lp,dl,fb,wet];
+}
+function sndSuccess(){
+ try{if(!AC)return;var ns=sndChime(AC,AC.currentTime+.03);
+  setTimeout(function(){ns.forEach(function(n){try{n.disconnect()}catch(e){}})},4000)}catch(e){}
+}
+window.nbcoChime=function(){sndUnlock();sndSuccess()};
+function sparks(c){var h='';for(var i=0;i<8;i++)h+='<i style="--a:'+(i*45)+'deg;--c:'+(i%2?'#e8a33d':'#2d9a58')+'"></i>';return h}
+
+function build(ov){
+ var p=ov.id.replace('-overlay',''),box=ov.querySelector('.vcash-box');
+ if(!box||ov._nb||!CID[p])return;
+ var cid=CID[p],hasIP=!!$(p+'-ip-submit-btn'),O=function(n){return $(p+'-'+n)};
+ var fid='nbco-'+p+'-',st={s:'pay',un:null,busy:false,ord:'',num:'',m:'vf'};
+ var root=document.createElement('div');root.className='nbco';
+ root.innerHTML=
+ '<div class="nbco-top"><button type="button" class="nbco-ib" data-a="back" aria-label="رجوع"></button><div class="nbco-brand">'+brandSvg(p)+'<span>Nabtex</span></div><span style="width:38px"></span></div>'+
+ '<div class="nbco-prog" hidden></div>'+
+ '<section class="nbco-s" data-s="pay">'+
+  '<div class="nbco-course"><div class="nbco-cico" data-f="ico"></div><div><h2 data-f="title"></h2><p data-f="sub"></p></div></div>'+
+  '<div class="nbco-price"><div><span class="nbco-amt" data-f="amt"></span><span class="nbco-cur">جنيه</span></div><div class="nbco-oldw" data-f="oldw"><span class="nbco-off" data-f="off"></span><s data-f="old"></s></div></div>'+
+  '<div class="nbco-lbl">'+(hasIP?'اختر وسيلة الدفع':'ادفع عبر')+'</div>'+
+  (hasIP?'<div class="nbco-tabs" data-f="tabs" data-m="vf" role="tablist"><button type="button" class="nbco-tab on" data-a="m-vf" role="tab" aria-selected="true"><span data-f="tvf"></span><span>Vodafone Cash</span></button><button type="button" class="nbco-tab" data-a="m-ip" role="tab" aria-selected="false"><span data-f="tip"></span><span>InstaPay</span></button></div>':'')+
+  '<div class="nbco-method nbco-pp" data-f="pvf"><div class="nbco-mi" data-f="mi"></div><div><b>Vodafone Cash</b><span class="nbco-num" data-f="num"></span></div><button type="button" class="nbco-cp" data-a="copy">'+I.cp+'<span>نسخ</span></button><p class="nbco-hint">أرسل <b data-f="amt2"></b> جنيه إلى الرقم الموضح أعلاه.</p></div>'+
+  (hasIP?'<div class="nbco-method nbco-pp" data-f="pip" hidden><div class="nbco-mi" data-f="mi2"></div><div><b>InstaPay</b></div><span></span><div data-f="ipr" style="display:contents"></div><p class="nbco-hint">أرسل <b data-f="amt3"></b> جنيه إلى حساب انستاباي الموضح أعلاه.</p></div>':'')+
+  '<div class="nbco-q">هل أرسلت المبلغ؟</div>'+
+  '<button type="button" class="nbco-btn p" data-a="sent"><span>نعم، تم التحويل</span>'+I.fw+'</button>'+
+  '<button type="button" class="nbco-btn s" data-a="no">لا، لم أرسل بعد</button>'+
+  '<div class="nbco-sec">'+I.lk+'<span>بياناتك آمنة ومشفرة</span></div></section>'+
+ '<section class="nbco-s" data-s="verify"><div class="nbco-stp">الخطوة 2 من 3</div><h2 class="nbco-h">تأكيد عملية التحويل</h2>'+
+  '<p class="nbco-p" data-f="vp"></p>'+
+  '<label class="nbco-fl" for="'+fid+'from" data-f="vl"></label>'+
+  '<input class="nbco-in" id="'+fid+'from" type="tel" dir="ltr" autocomplete="off" enterkeyhint="next"><div class="nbco-em"></div>'+
+  '<div class="nbco-note">'+I.inf+'<span data-f="vn"></span></div>'+
+  '<button type="button" class="nbco-btn p" data-a="next"><span>متابعة</span>'+I.fw+'</button></section>'+
+ '<section class="nbco-s" data-s="data"><div class="nbco-stp">الخطوة 3 من 3</div><h2 class="nbco-h">بيانات التواصل</h2>'+
+  '<p class="nbco-p">أدخل رقم هاتفك الشخصي للتواصل معك بخصوص تفعيل الكورس.</p>'+
+  '<label class="nbco-fl" for="'+fid+'me">رقم هاتفك الشخصي</label>'+
+  '<input class="nbco-in" id="'+fid+'me" type="tel" inputmode="numeric" dir="ltr" autocomplete="tel" maxlength="11" placeholder="01012345678"><div class="nbco-em"></div>'+
+  '<label class="nbco-fl" for="'+fid+'code">كود المسوق<em>(اختياري)</em></label>'+
+  '<input class="nbco-in" id="'+fid+'code" type="text" dir="rtl" autocomplete="off" placeholder="أدخل كود المسوق إن وجد" style="text-transform:uppercase;text-align:right"><div class="nbco-em"></div>'+
+  '<div class="nbco-note">'+I.inf+'<span>إذا لم يكن لديك كود مسوق، يمكنك ترك الحقل فارغًا.</span></div>'+
+  '<button type="button" class="nbco-btn p" data-a="send"><span>إرسال طلب التفعيل</span>'+I.sd+'</button></section>'+
+ '<section class="nbco-s nbco-center" data-s="received"><div class="nbco-ring">'+I.dc+'</div><h2 class="nbco-h">تم استلام طلبك</h2>'+
+  '<p class="nbco-p">جاري التحقق من عملية الدفع، وسيتم تفعيل الكورس بعد التأكد من التحويل.</p>'+
+  '<div class="nbco-ord" data-a="cord" hidden><small>رقم الطلب</small><b data-f="ord"></b></div>'+
+  '<ul class="nbco-tl"><li class="done"><b>'+I.ck+'</b>تم إرسال الطلب</li><li class="cur"><b></b>جاري التحقق من الدفع</li><li><b></b>تفعيل الكورس</li></ul>'+
+  '<button type="button" class="nbco-btn s" data-a="close">'+I.hm+'<span>العودة إلى الأكاديمية</span></button>'+
+  '<div class="nbco-sec"><span>لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</span></div></section>'+
+ '<section class="nbco-s nbco-center" data-s="active"><div class="nbco-ring ok">'+I.ck+sparks()+'</div><h2 class="nbco-h">تم تفعيل الكورس بنجاح</h2>'+
+  '<p class="nbco-p">يمكنك الآن الوصول إلى محتوى الكورس عبر أكاديمية نبتيكس.</p>'+
+  '<button type="button" class="nbco-btn p" data-a="go"><span>الذهاب إلى الكورس</span>'+I.fw+'</button>'+
+  '<button type="button" class="nbco-btn s" data-a="close">'+I.hm+'<span>العودة إلى الأكاديمية</span></button></section>';
+ box.appendChild(root);
+
+ var Q=function(a){return root.querySelector('[data-f='+a+']')},
+     secs=root.querySelectorAll('.nbco-s'),prog=root.querySelector('.nbco-prog'),back=root.querySelector('[data-a=back]'),
+     fFrom=$(fid+'from'),fMe=$(fid+'me'),fCode=$(fid+'code');
+ var logo=ov.querySelector('.vcash-method-card.vodafone img');
+ var logoIP=ov.querySelector('.vcash-method-card.instapay img'),vfI=logo?'<img alt="" src="'+logo.src+'">':I.wl;
+ Q('mi').innerHTML=vfI;
+ if(hasIP){Q('tvf').innerHTML=vfI;Q('tip').innerHTML=logoIP?'<img alt="" src="'+logoIP.src+'">':I.wl;Q('mi2').innerHTML=logoIP?'<img alt="" src="'+logoIP.src+'">':I.wl}
+ function esc(x){return String(x).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+ function setM(m){
+  st.m=hasIP&&m==='ip'?'ip':'vf';var ip=st.m==='ip';
+  if(hasIP){var tb=Q('tabs');tb.setAttribute('data-m',st.m);
+   [].forEach.call(tb.querySelectorAll('.nbco-tab'),function(b){var on=b.getAttribute('data-a')==='m-'+st.m;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
+   Q('pvf').hidden=ip;Q('pip').hidden=!ip}
+  Q('vp').textContent=ip?'أدخل اسم حساب انستاباي (Username / IPA) الذي أرسلت منه المبلغ.':'أدخل رقم Vodafone Cash الذي أرسلت منه المبلغ.';
+  Q('vn').innerHTML=ip?'استخدم نفس الحساب الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.':'استخدم نفس الرقم الذي تم إرسال المبلغ منه للتحقق من عملية الدفع. وإذا لم يتوفر لديك الرقم، اكتب رقم العملية الموجود في رسالة التحويل، مثال: <bdi dir="ltr" class="nbco-ex">02**********</bdi>';
+  Q('vl').textContent=ip?'اسم حساب انستاباي المرسل منه':'رقم Vodafone Cash المرسل منه';
+  var f=fFrom;f.type=ip?'text':'tel';f.setAttribute('inputmode',ip?'email':'numeric');f.maxLength=ip?60:12;
+  f.placeholder=ip?'example@instapay':'01012345678';f.setAttribute('autocapitalize','none');f.setAttribute('autocorrect','off');f.spellcheck=false;
+  f.value='';clr(f);
+ }
+
+ function progHTML(n){var L=['الدفع','التحقق','البيانات'],h='';
+  for(var i=1;i<=3;i++){h+='<div class="nbco-pn '+(i<n?'d':i===n?'c':'')+'"><i>'+(i<n?I.ck:i)+'</i><span>'+L[i-1]+'</span></div>';if(i<3)h+='<div class="nbco-pl'+(i<n?' f':'')+'"></div>'}
+  return h}
+ function go(s){
+  st.s=s;root.setAttribute('data-st',s);
+  for(var i=0;i<secs.length;i++)secs[i].classList.toggle('on',secs[i].getAttribute('data-s')===s);
+  var n=s==='verify'?2:s==='data'?3:0;prog.hidden=!n;if(n)prog.innerHTML=progHTML(n);
+  back.innerHTML=s==='pay'?I.x:I.bk;back.setAttribute('data-a',s==='pay'?'close':'back');
+  root.scrollTop=0;
+ }
+ function busy(b){st.busy=b;var c=root.querySelector('[data-a=send]');c.disabled=b;c.classList.toggle('ld',b);back.disabled=b}
+ function bad(inp,msg){inp.classList.remove('err');void inp.offsetWidth;inp.classList.add('err');inp.nextElementSibling.textContent=msg;try{inp.focus()}catch(e){}return false}
+ function clr(inp){inp.classList.remove('err');if(inp.nextElementSibling)inp.nextElementSibling.textContent=''}
+ [fFrom,fMe,fCode].forEach(function(f){f.addEventListener('input',function(){clr(f)})});
+ function closeM(){var b=ov.querySelector('.vcash-close-btn');if(b)b.click()}
+ function unwatch(){if(st.un){try{st.un()}catch(e){}st.un=null}}
+ function activate(){unwatch();go('active')}
+ function watch(){
+  unwatch();
+  var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)||null;
+  if(!u||typeof db==='undefined')return;
+  try{st.un=db.collection('course_payments').where('uid','==',u).onSnapshot(function(qs){
+   var ok=false;qs.forEach(function(d){var x=d.data();if(x&&x.courseId===cid&&x.status==='approved')ok=true});
+   if(ok&&ov.classList.contains('on'))activate();
+  },function(){})}catch(e){}
+ }
+ function celebrate(){
+  if(!st.snd||Date.now()-st.snd>20000)return;st.snd=0;
+  sndSuccess();try{if(navigator.vibrate)navigator.vibrate([14,50,26])}catch(e){}
+  var rg=root.querySelector('[data-s=received] .nbco-ring');if(rg){rg.classList.remove('pop');void rg.offsetWidth;rg.classList.add('pop')}
+ }
+ function received(){
+  var d=O('pending-ref-display'),m=d&&/رقم الطلب:\s*([A-Za-z0-9]+)/.exec(d.textContent||'');
+  st.ord=m?m[1]:'';var o=Q('ord');o.textContent=st.ord?'#'+st.ord:'';o.parentNode.hidden=!st.ord;
+  if(st.s!=='active')go('received');watch();celebrate();
+ }
+ function refresh(){
+  var T=function(s){var e=ov.querySelector(s);return e?e.textContent.trim():''};
+  var pr=O('price-display'),amt=pr?pr.textContent.replace(/[^\d.]/g,''):'',
+      old=ov.querySelector('.vcash-body s'),oldv=old?old.textContent.replace(/[^\d.]/g,''):'',
+      off=(T('.vcash-info-lbl').match(/(\d+)\s*%/)||[])[1];
+  Q('ico').textContent=T('.vcash-head-logo');Q('title').textContent=T('.vcash-head-title');Q('sub').textContent=T('.vcash-head-sub');
+  Q('amt').textContent=amt;Q('amt2').textContent=amt;Q('old').textContent=oldv?oldv+' جنيه':'';Q('off').innerHTML=off?'خصم <bdi dir="ltr">'+off+'%</bdi>':'';
+  Q('oldw').hidden=!(oldv||off);Q('old').hidden=!oldv;Q('off').hidden=!off;
+  st.num=(O('number')||{}).textContent||'';Q('num').textContent=st.num;
+  Q('amt2').textContent=amt;
+  if(hasIP){Q('amt3').textContent=amt;var ids=ov.querySelectorAll('#'+p+'-ip-identifiers .vcash-num'),h='';
+   [].forEach.call(ids,function(e){var l=e.previousElementSibling,lb=l&&l.classList.contains('vcash-num-lbl')?l.textContent.trim():'',v=e.textContent.trim();
+    if(v)h+='<div class="nbco-idrow"><div><small>'+esc(lb)+'</small><span class="nbco-num">'+esc(v)+'</span></div><button type="button" class="nbco-cp" data-a="cpv" data-v="'+esc(v)+'">'+I.cp+'<span>نسخ</span></button></div>'});
+   if(!h){var m=O('ip-identifiers');h='<div class="nbco-ipmsg">'+esc(m?m.textContent.trim():'تواصل مع الدعم للحصول على بيانات التحويل')+'</div>';Q('pip').querySelector('.nbco-hint').hidden=true}
+   else Q('pip').querySelector('.nbco-hint').hidden=false;
+   Q('ipr').innerHTML=h}
+ }
+ function reset(){[fFrom,fMe,fCode].forEach(function(f){f.value='';clr(f)});busy(false);unwatch();st.snd=0}
+ function opened(){
+  refresh();var pend=O('step-pending')&&O('step-pending').classList.contains('on');
+  reset();setM('vf');if(pend)received();else go('pay');
+ }
+
+ root.addEventListener('click',function(e){
+  var t=e.target.closest('[data-a]');if(!t||st.busy)return;var a=t.getAttribute('data-a');
+  if(a==='close')closeM();
+  else if(a==='back')go(st.s==='data'?'verify':'pay');
+  else if(a==='copy'||a==='cpv'){copy(a==='cpv'?t.getAttribute('data-v'):st.num,a==='cpv'?'تم النسخ':'تم نسخ رقم فودافون كاش');var c=t.querySelector('span');c.textContent='تم النسخ';t.classList.add('ok');setTimeout(function(){c.textContent='نسخ';t.classList.remove('ok')},1800)}
+  else if(a==='m-vf'||a==='m-ip')setM(a.slice(2));
+  else if(a==='sent'){go('verify');setTimeout(function(){try{fFrom.focus({preventScroll:true})}catch(x){}},420)}
+  else if(a==='no'){closeM();toast('يمكنك العودة لإتمام الاشتراك بعد التحويل','inf')}
+  else if(a==='next'){
+   var v=en(fFrom.value).trim();
+   if(st.m==='ip'){if(v.length<3)return bad(fFrom,'برجاء إدخال اسم حساب انستاباي')}
+   else{if(!v)return bad(fFrom,'برجاء إدخال رقم Vodafone Cash الذي أرسلت منه المبلغ');
+    if(/[^\d\s+\-]/.test(v))return bad(fFrom,'برجاء إدخال أرقام فقط');
+    v=v.replace(/[\s\-]/g,'');var dl=v.replace(/\D/g,'').length;if(dl<10)return bad(fFrom,'الرقم غير مكتمل');if(dl>12)return bad(fFrom,'الرقم أطول من المطلوب (12 رقمًا كحد أقصى)')}
+   fFrom.value=v;go('data');setTimeout(function(){try{fMe.focus({preventScroll:true})}catch(x){}},420);
+  }
+  else if(a==='send'){
+   var me=en(fMe.value).replace(/\s/g,'');if(!/^\d{10,11}$/.test(me))return bad(fMe,'برجاء إدخال رقم هاتفك الشخصي بشكل صحيح');
+   var from=en(fFrom.value).trim(),ip=hasIP&&st.m==='ip',k=ip?'ip-':'';
+   var set=function(n,v){var el=O(k+n);if(el)el.value=v};
+   set('phone',ip?from:from.replace(/[\s\-]/g,''));set('ref',me);set('refcode',fCode.value.trim());
+   var b=O(k+'submit-btn');if(!b)return;st.snd=Date.now();sndUnlock();b.click();if(b.disabled)busy(true);
+  }
+  else if(a==='cord')copy(st.ord,'تم نسخ رقم الطلب');
+  else if(a==='go'){closeM();if(window.NAcademy&&NAcademy.openCourse)NAcademy.openCourse(cid)}
+ });
+ root.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;e.preventDefault();
+  var b=root.querySelector('[data-a='+(e.target===fFrom?'next':'send')+']');if(b)b.click()});
+
+ /* مراقبة الحالة الأصلية: نجاح الإرسال (pending) / فشله (إعادة تفعيل الزر) / فتح-إغلاق النافذة */
+ var open=false;
+ new MutationObserver(function(){var on=ov.classList.contains('on');if(on&&!open)opened();if(!on&&open)reset();open=on}).observe(ov,{attributes:true,attributeFilter:['class']});
+ var pe=O('step-pending');
+ if(pe)new MutationObserver(function(){if(ov.classList.contains('on')&&pe.classList.contains('on')){busy(false);received()}}).observe(pe,{attributes:true,attributeFilter:['class']});
+ ['submit-btn','ip-submit-btn'].forEach(function(n){var b=O(n);if(b)new MutationObserver(function(){if(!b.disabled&&st.busy)busy(false)}).observe(b,{attributes:true,attributeFilter:['disabled']})});
+
+ ov._nb=1;go('pay');ov.classList.add('nbco-on');
+ if(ov.classList.contains('on')){open=true;opened()}
+}
+try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try{build(ov)}catch(e){console.warn('[nbco]',ov.id,e)}})}catch(e){}
+})();
+</script>
+<!-- ═══ /Nabtex Premium Checkout ═══════════════════════════════════════ -->
+
 <!-- SOCIAL MODULE — عدّل رقم v= مع كل تحديث لـ social.js عشان تضمن نسخة جديدة من أي كاش (Vercel/CDN) -->
 <script defer src="social.js?v=1"></script>
 
