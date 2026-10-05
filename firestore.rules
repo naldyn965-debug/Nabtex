@@ -239,7 +239,7 @@ service cloud.firestore {
         : e.type == 'streak_bonus' ? e.key == 'st_' + string(e.n)
         : e.type == 'achievement_bonus' ? e.key == 'ach_' + e.aid
         : e.type == 'reward_redemption' ? e.cid in ['mol-bio','food-safety','glp','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional','biofertilizers-professional'] && e.key == 'rd_' + e.cid
-        : e.type == 'daily_gift' ? e.key == 'dg_' + string(xpDay())
+        : e.type == 'daily_gift' ? e.key in ['dg_' + string(xpDay()), 'dg_' + string(xpDay() - 1), 'dg_' + string(xpDay() + 1)]
         : e.type == 'level_bonus' ? e.n is int && e.n >= 1 && e.n <= 6 && e.key == 'lv_' + string(e.n)
         : false);
     }
