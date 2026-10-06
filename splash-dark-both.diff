@@ -1,0 +1,40 @@
+--- index.html (قبل)
++++ index.html (بعد)
+@@ -189,17 +189,16 @@
+    خلفي — الـ pseudo-elements مش بتتقرأ من خوارزمية Safari، فـ #ldr
+    نفسه يفضل شفاف من وجهة نظرها. مفيش أي تغيير في الشكل الظاهر. */
+ /* ── Splash v2 ─────────────────────────────────────────────────────
+-   خلفية فاتحة بتدرّج ألوان الموقع (أخضر + لمسة ذهبي، وحبيبات خفيفة تمنع الـ banding) + لوجو النبتة بيتـرسم + اسم Nabtex
++   خلفية داكنة (تصميم الدارك) ثابتة في الوضعين بتدرّج ألوان الموقع (أخضر + لمسة ذهبي، وحبيبات خفيفة تمنع الـ banding) + لوجو النبتة بيتـرسم + اسم Nabtex
+    بحروف بتظهر بالتتابع + خروج بستارة بتتسحب لفوق بحافة منحنية.
+    - الخلفية فضلت على ::before (إصلاح Safari فوق متحفظ عليه زي ما هو).
+    - مدة الخروج 560ms أقل من مؤقت الحذف (600ms) في App._loader()، فمفيش JS اتغيّر.
+    - الخط: Cormorant Garamond 600 مقصوص على حروف Nabtex بس (~1.8KB) ومدمج،
+      عشان الاسم يظهر من أول فريم من غير FOUT. لو اتمسح بيرجع لـ Google Fonts.
+-   - الدارك مود: #ldr بياخد data-dark من سكريبت صغير بعد الـ HTML. */
++   - الوضعين: #ldr عليه data-dark ثابت في الـ HTML، فالتصميم واحد نهاري/ليلي. */
+ @font-face{font-family:'NbxMark';font-style:normal;font-weight:600;font-display:block;src:url(data:font/woff2;base64,d09GMgABAAAAAAVYAA8AAAAACeAAAAUAAAQAQgAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbgRwcMAZgP1NUQVREAFgRCAqHWIYnATYCJAMcCxAABCAFhFwHIBseCECO1FZzFElyEw/PH3vPfT9ylZSYOMqkwAzfsKzEJjbiaNH/83jaS36mJBUmIIOOY3bntIPQ3jk9yBi6nP5/2ze3RaOQr29c314+5gQMJA7ssLGBAknkCQOiqVJda6aew09PF6gCkhDyQqBsVAxiNrl7NlgctNSWg8VJbUEZWFxy9ZVggYB3j5aLgtpKMGWVyEow8nAyzEvzmHhIDtue2i+A2l/AZCQ5L9I5SZTpnIzQTHonHeQDMeSUjV8cm54NlY3XeB4YkR6u+GBlk9iGAC8g1w7gXyafhAPQU3Nmzr+HANklzJKrLe7wGgA9nuHFMK1nbKDpqqi4HqPAh2/cGO05ozEsCl4AuWwKAbCKp2QGrVRwVUyYBaraUVnrNArUa44Owj2bO/1/M0Bt4f/x/8cAhrKNTEEYEpQIaSqAekdebLmfYePLSmUk6Wxqyy+1UdkKXJQKZwsHgkXOuO4gZdCR/LYWO2LS3zUd5nRTlKX7TtWmrQV2vHume0E/wgPpD6E6oYce4PhrEazu6knKcB3TXyP5M27K1edPU4arV0F35YpmyjTV8vUY0s8ieac7Bzt9rZ0KxCa/bR2GweZl6i7dft52ugHwm72UYbdq+lT5niv9tl0jsR6GMod0MyiLydkWuev22WYvzc4wz1l70nGC7rjuyyqyZ8xZiVcsYZXs+nkuM5YnrnhxUwpg37SpumbFHPmMFSS/CtPvP32dMlwEuBHPdZ0+VT6Y3wc3rz8dyiqypyxZ0QaWq3rd5izZksNfu1bC6wL3XAXdFJJcfI3kr4Du6lXKsNs1gOv6WrDQfv1w4f3g6a6IRoqDltaM6hLpdf13BpogfuAb5qUG3qmsRmKDCQTb2lv3mjQZrX0ePMoNp3HFJUsLqQLRyG0FGFc9elkJwktD3ONmqfwD2Yx+sTlBjodGjEyi3rp6pbl5Z8R2i8nX+iuN/cLsxq92e+lwXiIy+HUT84wdTkxHU2EHpX7/1PGRcmSenBATD1dsRUKij/tQe/WQW/bNAUycTXK/5nRjT7V7d6PNeA/SjIM/iEZKzeXlvzWbJTiNiz6KHDOU+Xb5hKfLfk8TSRGNxBlixwwqQ9sw3seTuTsxfX/Uc1YIWrXQQX3w4P7dUX2WzfCSMqtzEM1/t2a8bkBUzt9I/NdrQ+xIS/M1W2i30SpVkFA56n2C1MI9IWyLbaxMHMZEMA7+HiNtrS7lUqWuPqk2m/e5ytV/5Gby7VnCZP+qSnhCxbLBXnkBUeGDtOGxkUxopCDWJNPdjnHxDshMinDMTvINtJ3QLimSBqRbbzKCNyQHgEDW9OueW78GiaK+miL0AoCvEZ3mAPwsjVb8n/HvqdFaFAYgL4HgLcJ0T+f9zRj4xvJiCvEVBqY7YJFwyEcGWMUOIGIJ+MQ8sIeh4BVIELZjFQ+ARNYMeAG4k4dpS+RJvX95xoYvs1kueU53pMryxkNThplAYyzI5RRUYwNOs/Y8RgDlOAEJqlRrUatEkWL17ATw4y+YnWwMLwB84VoV5zCnMg/2VotISxXQFjMa1CueYF2edFOkpN3fQMOHVpUKvhJwOMVxwpJjOFmV1lV1fG0td7cfTsHdUxXS6/nsdI8BnaVAhRLxqpTTYSaSLNKgXC4ZxIdflHRE6qmXnpJEZgOt9DaavfFcMiLAPWNXTlHzYARnDfzqaepxysNamekLLNCGgNocCLAB) format('woff2')}
+ #ldr{--ld-curve:min(16vh,150px)}
+-#ldr::before{content:'';position:absolute;inset:0 0 calc(var(--ld-curve) * -1) 0;z-index:-1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.32 0 0 0 0 0.18 0.07 0 0 0 -0.015'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px,radial-gradient(58% 34% at 50% 45%,rgba(255,255,255,.92) 0%,rgba(255,255,255,0) 100%),radial-gradient(75% 48% at 8% 6%,rgba(95,201,126,.30) 0%,rgba(95,201,126,0) 100%),radial-gradient(70% 44% at 96% 98%,rgba(252,200,118,.38) 0%,rgba(252,200,118,0) 100%),radial-gradient(85% 50% at 0% 100%,rgba(45,154,88,.22) 0%,rgba(45,154,88,0) 100%),linear-gradient(168deg,#f7fcf8 0%,#e7f5ec 52%,#d3ebdb 100%);border-radius:0 0 50% 50% / 0 0 var(--ld-curve) var(--ld-curve)}
+-#ldr[data-dark]::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.85 0 0 0 0 0.65 0.06 0 0 0 -0.015'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px,radial-gradient(58% 34% at 50% 45%,rgba(95,201,126,.12) 0%,rgba(95,201,126,0) 100%),radial-gradient(75% 48% at 8% 6%,rgba(45,154,88,.34) 0%,rgba(45,154,88,0) 100%),radial-gradient(70% 44% at 96% 98%,rgba(201,135,26,.22) 0%,rgba(201,135,26,0) 100%),linear-gradient(168deg,#10231a 0%,#0b160d 55%,#070e08 100%)}
++#ldr::before{content:'';position:absolute;inset:0 0 calc(var(--ld-curve) * -1) 0;z-index:-1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.85 0 0 0 0 0.65 0.06 0 0 0 -0.015'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px,radial-gradient(58% 34% at 50% 45%,rgba(95,201,126,.13) 0%,rgba(95,201,126,0) 100%),radial-gradient(75% 48% at 8% 6%,rgba(45,154,88,.37) 0%,rgba(45,154,88,0) 100%),radial-gradient(70% 44% at 96% 98%,rgba(201,135,26,.24) 0%,rgba(201,135,26,0) 100%),linear-gradient(168deg,#163124 0%,#132516 55%,#0e1c10 100%);border-radius:0 0 50% 50% / 0 0 var(--ld-curve) var(--ld-curve)}
+ #ldr .l-stage{display:flex;flex-direction:column;align-items:center;margin-top:-3vh}
+ #ldr .l-logo{display:flex;align-items:center;direction:ltr;gap:.24em;font-size:clamp(40px,12vw,56px);line-height:1}
+ #ldr .l-mark{width:1.2em;height:1.2em;overflow:visible;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 .03em .07em rgba(27,107,58,.22));animation:ldrMark 1.1s var(--ease-out) both}
+@@ -4218,7 +4217,7 @@
+ <div id="cur-r"></div>
+ 
+ <!-- LOADER -->
+-<div id="ldr">
++<div id="ldr" data-dark>
+   <div class="l-stage">
+     <div class="l-logo" role="img" aria-label="Nabtex">
+       <svg class="l-mark" viewBox="2 4 20 20" aria-hidden="true"><defs><linearGradient id="nbLdrLg" x1="4" y1="5" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34a862"/><stop offset="1" stop-color="#0f552e"/></linearGradient></defs><g stroke="url(#nbLdrLg)"><path class="a" pathLength="1" d="M12 22V12"/><path class="b" pathLength="1" d="M12 12C12 8 8 5 4 6"/><path class="b" pathLength="1" d="M12 12C12 8 16 5 20 6"/><path class="c" pathLength="1" d="M5 20c2-3 5-5 7-8" opacity=".5"/></g></svg>
+@@ -4228,7 +4227,6 @@
+     <div class="l-line"></div>
+   </div>
+ </div>
+-<script>try{if(localStorage.getItem('nb-dark')==='1')document.getElementById('ldr').setAttribute('data-dark','')}catch(e){}</script>
+ 
+ <!-- NAV -->
+ <nav class="nav" id="nav">
