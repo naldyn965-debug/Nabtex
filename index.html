@@ -4187,9 +4187,7 @@ body.modal-open { overflow: hidden; }
   <div class="nav-inner">
     <a href="#" class="logo" onclick="showPage('home');return false">
       <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/>
-        </svg>
+        <svg viewBox="2 4 20 20" aria-hidden="true"><defs><linearGradient id="nbHdrLg" x1="4" y1="5" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34a862"/><stop offset="1" stop-color="#0f552e"/></linearGradient></defs><g stroke="url(#nbHdrLg)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g></svg>
       </div>
       <span class="logo-name"><span>N</span>abtex</span>
     </a>
@@ -4820,6 +4818,27 @@ body.modal-open { overflow: hidden; }
     .prf-arch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:20px 24px}
     .prf-arch-loading{color:var(--muted);font-size:13px;text-align:center;grid-column:1/-1;padding:28px 0}
     @media(max-width:600px){.prf-arch-hdr{padding:14px 16px}.prf-arch-grid{padding:14px 16px}.prf-arch-icon{width:36px;height:36px;border-radius:10px}.prf-arch-main{font-size:1rem}}
+    /* ── Skeleton تحميل لكرتَي الحماسة والمستوى: بيحجز مكانهم لحد ما NBXP يرسمهم، وبعدها الـ JS بيستبدله تلقائياً ──
+          لو القراءة فشلت أو مفيش مستخدم، بيختفي لوحده بعد 15 ثانية. للتراجع: امسح الكلاسات nbsk* ورجّع الـ div الفاضي. */
+    .nbsk{box-sizing:border-box;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:18px;padding:20px;border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 1px 2px rgba(16,40,26,.04),0 10px 28px rgba(16,40,26,.06);pointer-events:none;animation:nbskOut .4s ease 15s forwards}
+    .nbsk-fire{margin:0 0 16px}
+    .nbsk-xp{max-width:700px;margin:0 auto}
+    .nbsk-r{display:flex;align-items:center;gap:14px}
+    .nbsk-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+    .nbsk-c,.nbsk-l,.nbsk-bar,.nbsk-pill,.nbsk-s,.nbsk-blk{display:block;background:var(--line)}
+    .nbsk-c{flex:none;width:76px;height:76px;border-radius:50%}
+    .nbsk-xp .nbsk-c{width:48px;height:48px}
+    .nbsk-l{height:12px;border-radius:9999px}
+    .nbsk-bar{height:8px;border-radius:8px}
+    .nbsk-s{flex:1;height:34px;border-radius:12px}
+    .nbsk-pill{height:46px;border-radius:9999px}
+    .nbsk-blk{height:40px;border-radius:14px}
+    .nbsk::after{content:"";position:absolute;inset:0;background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:200% 100%;animation:nbskSh 1.5s linear infinite}
+    [data-dark] .nbsk{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(0,0,0,.28)}
+    [data-dark] .nbsk::after{background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%)}
+    @keyframes nbskSh{from{background-position:0 0}to{background-position:100% 0}}
+    @keyframes nbskOut{to{opacity:0;visibility:hidden;height:0;padding:0;margin:0;border-width:0}}
+    @media(prefers-reduced-motion:reduce){.nbsk::after{display:none}}
   </style>
   <div class="page-back-bar"><div class="W"><button class="page-back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button></div></div>
   <section class="profile-page" style="padding: 20px 0 80px; min-height: 80vh;">
@@ -4846,7 +4865,7 @@ body.modal-open { overflow: hidden; }
         </div>
         <!-- Body -->
         <div class="prf-body">
-          <div id="nbxp-fire"></div>
+          <div id="nbxp-fire"><div class="nbsk nbsk-fire" aria-hidden="true"><div class="nbsk-r"><i class="nbsk-c"></i><div class="nbsk-t"><i class="nbsk-l" style="width:58%"></i><i class="nbsk-l" style="width:86%"></i></div></div><i class="nbsk-bar"></i><div class="nbsk-r"><i class="nbsk-s"></i><i class="nbsk-s"></i></div><i class="nbsk-pill"></i></div></div>
           <div class="prf-info" style="display:none">
             <div class="prf-info-row">
               <span class="prf-info-label">
@@ -4874,7 +4893,7 @@ body.modal-open { overflow: hidden; }
           </div>
         </div>
       </div>
-      <div id="nbxp-card"></div>
+      <div id="nbxp-card"><div class="nbsk nbsk-xp" aria-hidden="true"><div class="nbsk-r"><i class="nbsk-c"></i><div class="nbsk-t"><i class="nbsk-l" style="width:50%"></i><i class="nbsk-l" style="width:72%"></i></div></div><i class="nbsk-bar"></i><i class="nbsk-l" style="width:46%"></i><i class="nbsk-blk"></i><i class="nbsk-blk"></i><i class="nbsk-blk"></i></div></div>
       <div class="prf-actions" style="margin-top:20px;justify-content:center">
         <button class="prf-chpw-btn" onclick="changePassword()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -5105,59 +5124,580 @@ body.modal-open { overflow: hidden; }
 <!-- AUTH -->
 <div class="auth-bg" id="auth-bg">
   <div class="auth-veil" onclick="closeAuth()"></div>
-  <div class="auth-box">
+  <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="authx-title">
     <div class="auth-top">
-      <button class="auth-close" onclick="closeAuth()">✕</button>
-      <div class="auth-logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="30" height="30">
-          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/>
-        </svg>
+      <button class="auth-close" onclick="closeAuth()" aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button type="button" class="authx-back" onclick="backToLogin()" aria-label="رجوع لتسجيل الدخول">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <div class="authx-illus">
+      <svg class="authx-svg" viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path class="ax-blob" d="M120 20c40 0 74 24 78 62 4 38-18 78-58 90-32 9-74 4-92-26C30 116 36 72 66 46c14-16 30-26 54-26z"/>
+        <g class="ax-leaves">
+          <g transform="translate(30 178)">
+            <path d="M0 0C2-22 5-44 13-62" fill="none" stroke="#7fae96" stroke-width="2" stroke-linecap="round"/>
+            <path d="M13-62c-14 2-20 14-18 26 12-2 20-12 18-26z" fill="#a9cdb9"/>
+            <path d="M7-38c-14-2-24 6-26 18 12 4 24 0 26-18z" fill="#8dbba4"/>
+            <path d="M3-18c10-8 22-6 28 2-8 8-20 10-28-2z" fill="#b9d6c6"/>
+          </g>
+          <g transform="translate(210 178) scale(-1 1)">
+            <path d="M0 0C2-22 5-44 13-62" fill="none" stroke="#7fae96" stroke-width="2" stroke-linecap="round"/>
+            <path d="M13-62c-14 2-20 14-18 26 12-2 20-12 18-26z" fill="#a9cdb9"/>
+            <path d="M7-38c-14-2-24 6-26 18 12 4 24 0 26-18z" fill="#8dbba4"/>
+            <path d="M3-18c10-8 22-6 28 2-8 8-20 10-28-2z" fill="#b9d6c6"/>
+          </g>
+        </g>
+
+        <g class="ax-char">
+          <!-- backpack -->
+          <rect x="68" y="112" width="36" height="104" rx="15" fill="#24503d"/>
+          <rect x="72" y="146" width="26" height="28" rx="9" fill="#2d6049"/>
+          <path d="M78 156h14" stroke="#58a07c" stroke-width="2.2" stroke-linecap="round"/>
+
+          <!-- torso -->
+          <path d="M78 202V154c0-17 12-28 30-32h24c18 4 30 15 30 32v48z" fill="#3b7a5b"/>
+          <path d="M78 202V154c0-14 8-24 20-29-5 18-6 52-4 77z" fill="#2f6a4e" opacity=".5"/>
+          <path d="M146 126c11 5 16 14 16 28v22c-4-16-8-34-16-50z" fill="#55a07a" opacity=".45"/>
+          <!-- straps -->
+          <path d="M99 127c-5 16-7 30-5 46" fill="none" stroke="#1f4636" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M141 127c5 16 7 30 5 46" fill="none" stroke="#1f4636" stroke-width="6.5" stroke-linecap="round"/>
+          <!-- hood + neck -->
+          <path d="M97 124c0-16 10-22 23-22s23 6 23 22c0 11-10 17-23 17s-23-6-23-17z" fill="#2f6a4e"/>
+          <path d="M110 94h20v26c0 7-20 7-20 0z" fill="#e0a283"/>
+          <path d="M110 106c6 7 14 7 20 0v-8h-20z" fill="#c98767" opacity=".65"/>
+          <path d="M104 125c5 8 27 8 32 0" fill="none" stroke="#25563f" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M114 134v18M126 134v18" stroke="#dcebe2" stroke-width="2.2" stroke-linecap="round"/>
+
+          <!-- head -->
+          <ellipse cx="96" cy="76" rx="4.6" ry="6.6" fill="#eba98a"/>
+          <ellipse cx="144" cy="76" rx="4.6" ry="6.6" fill="#e29e7e"/>
+          <path d="M96 72c0-18 10-27 24-27s24 9 24 27c0 18-9 29-24 29S96 90 96 72z" fill="#f4bb9a"/>
+          <path d="M144 72c0 18-9 29-24 29 12-3 19-12 19-29 0-10-3-18-9-23 9 3 14 10 14 23z" fill="#e8a888" opacity=".5"/>
+          <!-- hair -->
+          <path d="M94 78c-5-24 6-41 27-41 21 0 32 15 25 41 0-13-4-20-10-25-9 5-24 5-34-2-4 8-7 16-8 27z" fill="#3a2a22"/>
+          <path d="M99 51c-1-15 13-23 28-20 14 3 23 13 20 27-4-9-12-14-22-14-10 0-20 2-26 7z" fill="#3a2a22"/>
+          <path d="M107 42c7-5 18-6 27-2" fill="none" stroke="#5b4136" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>
+          <path d="M98 64c1-5 4-9 7-12" fill="none" stroke="#5b4136" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+
+          <!-- face -->
+          <g class="ax-eyes">
+            <ellipse cx="109" cy="74.5" rx="4.4" ry="3.7" fill="#fff"/>
+            <ellipse cx="131" cy="74.5" rx="4.4" ry="3.7" fill="#fff"/>
+            <circle cx="109.6" cy="74.6" r="2.8" fill="#3b2a21"/>
+            <circle cx="131.6" cy="74.6" r="2.8" fill="#3b2a21"/>
+            <circle cx="109.6" cy="74.6" r="1.2" fill="#140c09"/>
+            <circle cx="131.6" cy="74.6" r="1.2" fill="#140c09"/>
+            <circle cx="110.5" cy="73.4" r=".95" fill="#fff"/>
+            <circle cx="132.5" cy="73.4" r=".95" fill="#fff"/>
+            <path d="M104.4 73.4c1.6-3 7.8-3 9.4 0M126.2 73.4c1.6-3 7.8-3 9.4 0" fill="none" stroke="#3a2a22" stroke-width="1.6" stroke-linecap="round"/>
+          </g>
+          <path class="ax-brow-n" d="M103.5 66.6c3.4-2.6 8.4-2.6 11 -.4M125.5 66.2c2.6-2.2 7.6-2.2 11 .4" fill="none" stroke="#3a2a22" stroke-width="2.8" stroke-linecap="round"/>
+          <path class="ax-brow-t" d="M103.5 64.6c3.4-3 8.4-3 11-.4M125.5 65.6c2.8-1.4 7.8-.8 11 1.6" fill="none" stroke="#3a2a22" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M120 78.5c-1.5 4-2 6-.2 7 .8.4 1.8.4 2.6-.2" fill="none" stroke="#d98f6f" stroke-width="1.8" stroke-linecap="round"/>
+          <ellipse cx="103" cy="85" rx="5" ry="3" fill="#f28f7d" opacity=".3"/>
+          <ellipse cx="137" cy="85" rx="5" ry="3" fill="#f28f7d" opacity=".3"/>
+          <path class="ax-mouth-a" d="M112 90c4 6 12 6 16 0" fill="none" stroke="#a9503f" stroke-width="2.4" stroke-linecap="round"/>
+          <g class="ax-mouth-b"><path d="M111 89.4c4 9 14 9 18 0z" fill="#9c4536" stroke="#9c4536" stroke-width="1.6" stroke-linejoin="round"/><path d="M113.6 90.8h12.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></g>
+          <path class="ax-mouth-c" d="M114 91.6c3 2.6 9 2.6 12 0" fill="none" stroke="#a9503f" stroke-width="2.4" stroke-linecap="round"/>
+
+          <!-- POSE A · login -->
+          <g class="ax-pose ax-pose-a">
+            <path d="M84 140c-13 14-14 36 4 44l16 3" fill="none" stroke="#3b7a5b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M156 140c13 14 12 34-2 42l-14 3" fill="none" stroke="#3b7a5b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+            <g transform="rotate(-6 121 172)">
+              <rect x="98" y="143" width="46" height="58" rx="6.5" fill="#1e2a31"/>
+              <rect x="101.4" y="146.4" width="39.2" height="51.2" rx="4" fill="#2c4650"/>
+              <path d="M121 186c-1-9 1-16 8-21 1 8-1 16-8 21z" fill="#7dd19a"/>
+              <path d="M121 186c-8-2-12-8-12-14 8 1 13 6 12 14z" fill="#4faa73"/>
+              <path d="M108 156h25M108 162h15" stroke="#6aa59a" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+            </g>
+            <ellipse cx="101" cy="187" rx="7" ry="6" fill="#f0b090"/>
+            <ellipse cx="141" cy="183" rx="7" ry="6" fill="#e8a888"/>
+            <path d="M95 184c3-3 8-3 11 0M96 189c3-2 7-2 10 0" fill="none" stroke="#d98f6f" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M136 180c3-3 8-3 11 0M137 185c3-2 7-2 10 0" fill="none" stroke="#d98f6f" stroke-width="1.4" stroke-linecap="round"/>
+          </g>
+
+          <!-- POSE B · register -->
+          <g class="ax-pose ax-pose-b">
+            <path d="M84 140c-14 12-16 30 0 38l16 3" fill="none" stroke="#3b7a5b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M156 140c14 12 14 28 0 36l-14 3" fill="none" stroke="#3b7a5b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+            <g transform="rotate(8 121 166)">
+              <rect x="98" y="137" width="46" height="58" rx="6.5" fill="#1e2a31"/>
+              <rect x="101.4" y="140.4" width="39.2" height="51.2" rx="4" fill="#2c4650"/>
+              <circle cx="121" cy="158" r="8" fill="#4faa73"/>
+              <path d="M117 158l3 3 6-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M108 174h25M108 180h15" stroke="#6aa59a" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+            </g>
+            <ellipse cx="101" cy="181" rx="7" ry="6" fill="#f0b090"/>
+            <ellipse cx="142" cy="179" rx="7" ry="6" fill="#e8a888"/>
+            <path d="M95 178c3-3 8-3 11 0M96 183c3-2 7-2 10 0" fill="none" stroke="#d98f6f" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M137 176c3-3 8-3 11 0M138 181c3-2 7-2 10 0" fill="none" stroke="#d98f6f" stroke-width="1.4" stroke-linecap="round"/>
+            <g class="ax-spark" fill="none" stroke="#7dc79a" stroke-width="2.4" stroke-linecap="round">
+              <path d="M174 50l-4 10M182 60l10-4M180 74l8 6"/>
+            </g>
+          </g>
+
+          <!-- POSE C · forgot -->
+          <g class="ax-pose ax-pose-c">
+            <path d="M84 140c-12 16-6 36 14 40l52 2" fill="none" stroke="#3b7a5b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M158 140c14 12 14 32-2 38-10 3-14-6-15-20l-1-38" fill="none" stroke="#3b7a5b" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M141 120l-1-8" stroke="#2f6a4e" stroke-width="15" stroke-linecap="round"/><ellipse cx="138" cy="101" rx="8.6" ry="9.6" fill="#f0b090" transform="rotate(-14 138 101)"/>
+            <path d="M132 94c3-2 7-2 10 0M133 99c3-2 7-2 10 0M134 104c2-1.4 5-1.4 8 0" fill="none" stroke="#d98f6f" stroke-width="1.5" stroke-linecap="round"/>
+            <g class="ax-bulb" transform="translate(178 38)">
+              <path d="M0-14c-8 0-14 6-14 14 0 6 3 9 6 13v5h16v-5c3-4 6-7 6-13 0-8-6-14-14-14z" fill="#fff6c9" stroke="#e1b44a" stroke-width="2.2" stroke-linejoin="round"/>
+              <path d="M-5 22h10" stroke="#e1b44a" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M-4 8c0-6 2-9 4-9s4 3 4 9" fill="none" stroke="#e1b44a" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M-24-4l-7-2M-20-18l-6-5M24-4l7-2M20-18l6-5M0-26v-8" fill="none" stroke="#e1b44a" stroke-width="2" stroke-linecap="round"/>
+            </g>
+          </g>
+        </g>
+        <defs><linearGradient id="axFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--bg);stop-opacity:0"/><stop offset="1" style="stop-color:var(--bg);stop-opacity:1"/></linearGradient></defs>
+        <rect x="0" y="180" width="240" height="21" fill="url(#axFade)"/>
+      </svg>
       </div>
-      <div class="auth-top-t"><span>N</span>abtex</div>
-      <div class="auth-top-s">سجّل دخولك للوصول لكامل الميزات</div>
+      <h2 class="authx-title" id="authx-title">مرحباً بك مجدداً</h2>
+      <p class="authx-sub" id="authx-sub">سجل دخولك للوصول إلى جميع مميزات نبتيكس</p>
     </div>
     <div class="auth-body">
       <div class="auth-tabs">
-        <button class="at on" id="at-l" onclick="swAuth('login')">دخول</button>
-        <button class="at" id="at-r" onclick="swAuth('reg')">حساب جديد</button>
+        <button class="at on" id="at-l" onclick="swAuth('login')">تسجيل الدخول</button>
+        <button class="at" id="at-r" onclick="swAuth('reg')">إنشاء حساب</button>
       </div>
       <form class="aform" id="af-l" onsubmit="hLogin(event)">
         <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
-        <div class="fg"><label>كلمة المرور</label><input type="password" required placeholder="••••••••"></div>
+        <div class="fg"><label>كلمة المرور</label><div class="authx-pw"><input type="password" required data-pw autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="أدخل كلمة المرور"><button type="button" class="authx-eye" onclick="authxTogglePw(this)" aria-label="إظهار كلمة المرور" aria-pressed="false"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 7.6C3.8 9.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></button></div></div>
         <div class="fp-link"><a href="#" onclick="event.preventDefault();showForgotPassword()">نسيت كلمة المرور؟</a></div>
         <button type="submit" class="btn-sub">تسجيل الدخول</button>
         <div class="adiv">أو</div>
         <button type="button" class="btn-goo" onclick="signInWithGoogle('login')">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
-          متابعة بـ Google
+          المتابعة باستخدام Google
         </button>
+        <p class="authx-alt">ليس لديك حساب؟ <a href="#" onclick="event.preventDefault();swAuth('reg')">إنشاء حساب</a></p>
       </form>
       <form class="aform" id="af-r" style="display:none" onsubmit="hReg(event)">
-        <div class="fg"><label>الاسم الكامل</label><input type="text" required minlength="3"></div>
-        <div class="fg"><label>البريد الإلكتروني</label><input type="email" required></div>
-        <div class="fg"><label>كلمة المرور</label><input type="password" required minlength="8" oninput="chkStr(this.value)"><div class="str-bar"><div class="str-f" id="str-f"></div></div></div>
-        <div class="fg"><label>تأكيد كلمة المرور</label><input type="password" required minlength="8"></div>
-        <div class="fg"><label>دورك</label><select><option>🌾 مزارع</option><option>👨‍🔬 خبير زراعي</option><option>🎓 طالب</option><option>🏢 شركة</option></select></div>
+        <div class="fg"><label>الاسم الكامل</label><input type="text" required minlength="3" placeholder="أدخل اسمك الكامل"></div>
+        <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
+        <div class="fg"><label>كلمة المرور</label><div class="authx-pw"><input type="password" required minlength="8" oninput="chkStr(this.value)" data-pw autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="أدخل كلمة المرور"><button type="button" class="authx-eye" onclick="authxTogglePw(this)" aria-label="إظهار كلمة المرور" aria-pressed="false"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 7.6C3.8 9.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></button></div><div class="str-bar"><div class="str-f" id="str-f"></div></div><div class="pwg" id="pwg" aria-hidden="true"><div class="pwg-in"><div class="pwg-box"><div class="pwg-t">لحماية حسابك، اجعل كلمة المرور:</div><ul class="pwg-l"><li data-r="len"><i class="pwg-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></i><span>8 أحرف على الأقل</span></li><li data-r="let"><i class="pwg-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></i><span>تحتوي على حروف إنجليزية (A-z)</span></li><li data-r="num"><i class="pwg-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></i><span>تحتوي على أرقام (0-9)</span></li><li data-r="sym"><i class="pwg-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></i><span>تحتوي على رمز خاص مثل ! @ #</span></li></ul></div></div></div></div>
+        <div class="fg"><label>تأكيد كلمة المرور</label><div class="authx-pw"><input type="password" required minlength="8" data-pw autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="أعد إدخال كلمة المرور"><button type="button" class="authx-eye" onclick="authxTogglePw(this)" aria-label="إظهار كلمة المرور" aria-pressed="false"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 7.6C3.8 9.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></button></div><div class="pwm" id="pwm" aria-hidden="true"><div class="pwm-in"><div class="pwm-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg><span>كلمتا المرور غير متطابقتين</span></div></div></div></div>
+        <!-- role select intentionally hidden: hReg() needs it; the option marked selected (طالب) is submitted -->
+        <div class="fg" style="display:none" aria-hidden="true"><label>دورك</label><select><option>🌾 مزارع</option><option>👨‍🔬 خبير زراعي</option><option selected>🎓 طالب</option><option>🏢 شركة</option></select></div>
         <button type="submit" class="btn-sub">إنشاء الحساب</button>
         <div class="adiv">أو</div>
         <button type="button" class="btn-goo" onclick="signInWithGoogle('reg')">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.7 30.1 0 24 0 14.6 0 6.7 5.6 2.9 13.8l7.7 6C12.5 13.4 17.8 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.4-4.1 7.1-10.1 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7L2.9 12.8C1.1 16.2 0 20 0 24s1.1 7.8 2.9 11.2l7.7-7z"/><path fill="#EA4335" d="M24 48c6.1 0 11.2-2 15-5.5l-7.6-5.9c-2 1.4-4.5 2.2-7.4 2.2-6.2 0-11.5-4.2-13.4-9.8l-7.7 6C6.7 42.4 14.6 48 24 48z"/></svg>
-          التسجيل بـ Google
+          المتابعة باستخدام Google
         </button>
+        <p class="authx-alt">لديك حساب بالفعل؟ <a href="#" onclick="event.preventDefault();swAuth('login')">تسجيل الدخول</a></p>
       </form>
       <form class="aform" id="af-fp" style="display:none" onsubmit="hForgotPassword(event)">
         <div class="fg"><label>البريد الإلكتروني</label><input type="email" required placeholder="your@email.com"></div>
         <button type="submit" class="btn-sub">إرسال رابط إعادة التعيين</button>
-        <div class="fp-back"><a href="#" onclick="event.preventDefault();backToLogin()">رجوع لتسجيل الدخول</a></div>
+        <div class="fp-back"><a href="#" onclick="event.preventDefault();backToLogin()">العودة لتسجيل الدخول</a></div>
       </form>
       <form class="aform" id="af-np" style="display:none" onsubmit="hResetPassword(event)">
-        <div class="fg"><label>كلمة المرور الجديدة</label><input type="password" required minlength="8" placeholder="••••••••"></div>
-        <div class="fg"><label>تأكيد كلمة المرور الجديدة</label><input type="password" required minlength="8" placeholder="••••••••"></div>
+        <div class="fg"><label>كلمة المرور الجديدة</label><div class="authx-pw"><input type="password" required minlength="8" data-pw autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="أدخل كلمة المرور الجديدة"><button type="button" class="authx-eye" onclick="authxTogglePw(this)" aria-label="إظهار كلمة المرور" aria-pressed="false"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 7.6C3.8 9.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></button></div></div>
+        <div class="fg"><label>تأكيد كلمة المرور الجديدة</label><div class="authx-pw"><input type="password" required minlength="8" data-pw autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="أعد إدخال كلمة المرور"><button type="button" class="authx-eye" onclick="authxTogglePw(this)" aria-label="إظهار كلمة المرور" aria-pressed="false"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 7.6C3.8 9.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg></button></div><div class="pwm" id="pwm-np" aria-hidden="true"><div class="pwm-in"><div class="pwm-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg><span>كلمتا المرور غير متطابقتين</span></div></div></div></div>
         <button type="submit" class="btn-sub">حفظ كلمة المرور الجديدة</button>
       </form>
     </div>
   </div>
 </div>
+
+<style id="authx-css">
+/* ═══ AUTH REDESIGN — presentation only (markup hooks: .authx-*, #auth-bg scope) ═══ */
+@keyframes authxSheet{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes authxIn{from{opacity:0;transform:translate3d(var(--dx,0px),var(--dy,10px),0)}to{opacity:1;transform:none}}
+@keyframes authxFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* shell */
+#auth-bg{padding:16px}
+#auth-bg .auth-box{max-width:420px;border-radius:28px;background:var(--bg);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;box-shadow:0 30px 80px -20px rgba(8,18,11,.45),0 0 0 1px var(--line);animation:authxSheet .38s var(--ease-out)}
+#auth-bg .auth-box::-webkit-scrollbar{display:none}
+
+/* header: illustration + title */
+#auth-bg .auth-top{background:none;padding:16px 24px 0;text-align:center;position:relative}
+#auth-bg .auth-close,#auth-bg .authx-back{position:absolute;top:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--bg3);border:1px solid var(--line);color:var(--slate);font-size:0;z-index:2;transition:background-color .2s ease,color .2s ease,transform .18s var(--ease-out)}
+#auth-bg .auth-close{left:14px}
+#auth-bg .authx-back{right:14px;display:none}
+#auth-bg .auth-box[data-v="fp"] .authx-back{display:grid}
+#auth-bg .auth-close:hover,#auth-bg .authx-back:hover{background:var(--line);color:var(--brand);transform:none}
+#auth-bg .auth-close:active,#auth-bg .authx-back:active{transform:scale(.92)}
+.authx-illus{height:clamp(88px,19vh,148px);height:clamp(88px,19dvh,148px);aspect-ratio:6/5;margin:0 auto;display:block}
+.authx-svg{display:block;width:100%;height:100%}
+.authx-title{font-family:var(--f-ui);font-size:clamp(22px,6.4vw,26px);font-weight:800;color:var(--ink);line-height:1.3;letter-spacing:0;margin:6px 0 0}
+.authx-sub{font-size:13.5px;line-height:1.7;color:var(--slate);margin:4px auto 0;max-width:300px}
+#auth-bg .auth-body{padding:14px 24px calc(22px + env(safe-area-inset-bottom,0px))}
+#auth-bg .aform{gap:14px}
+
+/* illustration states (same character, pose swaps by view) */
+.ax-blob{fill:#e4f1e8}
+[data-dark] .ax-blob{fill:rgba(27,107,58,.2)}
+[data-dark] .ax-leaves{opacity:.45}
+.ax-char{animation:authxFloat 3.8s ease-in-out infinite}
+.ax-pose,.ax-mouth-a,.ax-mouth-b,.ax-mouth-c,.ax-brow-t,.ax-brow-n{transition:opacity .3s ease}
+.ax-pose,.ax-mouth-a,.ax-mouth-b,.ax-mouth-c,.ax-brow-t{opacity:0}
+.auth-box:not([data-v]) .ax-pose-a,.auth-box:not([data-v]) .ax-mouth-a,
+.auth-box[data-v="login"] .ax-pose-a,.auth-box[data-v="login"] .ax-mouth-a,
+.auth-box[data-v="np"] .ax-pose-a,.auth-box[data-v="np"] .ax-mouth-a,
+.auth-box[data-v="reg"] .ax-pose-b,.auth-box[data-v="reg"] .ax-mouth-b,
+.auth-box[data-v="fp"] .ax-pose-c,.auth-box[data-v="fp"] .ax-mouth-c,.auth-box[data-v="fp"] .ax-brow-t{opacity:1}
+.auth-box[data-v="fp"] .ax-brow-n{opacity:0}
+
+/* segmented switch (sliding thumb, driven by data-v) */
+#auth-bg .auth-tabs{position:relative;height:48px;padding:4px;gap:0;margin-bottom:22px;border-radius:9999px;background:var(--bg3);border:1px solid var(--line)}
+#auth-bg .auth-tabs::before{content:"";position:absolute;top:4px;bottom:4px;right:4px;width:calc(50% - 4px);border-radius:9999px;background:var(--brand);box-shadow:0 6px 14px -6px rgba(27,107,58,.6);transition:transform .34s var(--ease-out)}
+#auth-bg .auth-box[data-v="reg"] .auth-tabs::before{transform:translateX(-100%)}
+#auth-bg .at{position:relative;z-index:1;padding:0;font-size:14px;font-weight:700;color:var(--slate);background:transparent;transition:color .25s ease}
+#auth-bg .at.on{background:transparent;box-shadow:none;color:#fff}
+#auth-bg .auth-box:not([data-v]) .at.on{background:var(--brand)}
+
+/* fields */
+#auth-bg .fg{gap:7px}
+#auth-bg .fg label{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none;transition:color .2s ease}
+#auth-bg .fg:focus-within label{color:var(--brand)}
+#auth-bg .fg input,#auth-bg .fg select{width:100%;height:50px;padding:0 14px;padding-right:46px;border-radius:16px;border:1px solid var(--line2);background-color:var(--card);background-repeat:no-repeat;background-position:right 15px center;background-size:20px;color:var(--ink);font-size:16px;font-weight:500;transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease}
+#auth-bg .fg input::placeholder{color:#8aa093;font-weight:400}
+#auth-bg .fg input:focus,#auth-bg .fg select:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(27,107,58,.12)}
+#auth-bg .fg input[type="email"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238aa497' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='3'/%3E%3Cpath d='M3 8l9 6 9-6'/%3E%3C/svg%3E")}
+#auth-bg .fg input[type="password"],#auth-bg .fg input[data-pw]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238aa497' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='3'/%3E%3Cpath d='M8 11V8a4 4 0 018 0v3'/%3E%3C/svg%3E")}
+#auth-bg .fg input[type="text"]:not([data-pw]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238aa497' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c1-4 4-6 8-6s7 2 8 6'/%3E%3C/svg%3E")}
+#auth-bg .fg .authx-pw input{padding-left:50px}
+#auth-bg .str-bar{height:3px;margin-top:0;background:var(--line)}
+/* register password: strength bar hidden, replaced by an animated rules guide (display only) */
+#auth-bg #af-r .str-bar{display:none}
+#auth-bg .pwg{display:grid;grid-template-rows:0fr;margin-top:-7px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:grid-template-rows .38s var(--ease-out),margin-top .38s var(--ease-out),opacity .28s ease,transform .38s var(--ease-out)}
+#auth-bg .pwg.on{grid-template-rows:1fr;margin-top:0;opacity:1;transform:none;pointer-events:auto}
+#auth-bg .pwg-in{min-height:0;overflow:hidden}
+#auth-bg .pwg-box{padding:11px 13px;border-radius:14px;background:var(--bg3);border:1px solid var(--line);transition:border-color .3s ease,box-shadow .3s ease}
+#auth-bg .pwg-box.all{border-color:var(--brand);animation:pwgGlow .7s ease-out 1}
+#auth-bg .pwg-t{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:8px}
+#auth-bg .pwg-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+#auth-bg .pwg-l li{display:flex;align-items:center;gap:9px;font-size:12.5px;line-height:1.5;color:var(--muted);transition:color .25s ease,transform .3s var(--ease-out)}
+#auth-bg .pwg-ck{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line2);color:#fff;transition:background-color .25s ease,border-color .25s ease}
+#auth-bg .pwg-ck svg{width:11px;height:11px;stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .3s ease .08s}
+#auth-bg .pwg-l li.ok{color:var(--ink)}
+#auth-bg .pwg-l li.ok .pwg-ck{background:var(--brand);border-color:var(--brand);animation:pwgPop .38s var(--ease-out)}
+#auth-bg .pwg-l li.ok .pwg-ck svg{stroke-dashoffset:0}
+@keyframes pwgPop{0%{transform:scale(.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes pwgGlow{0%{box-shadow:0 0 0 0 rgba(27,107,58,.35)}100%{box-shadow:0 0 0 8px rgba(27,107,58,0)}}
+@media (max-height:640px){#auth-bg .pwg{margin-top:-5px}#auth-bg .pwg.on{margin-top:0}}
+/* register confirm-password: mismatch feedback (display only) */
+#auth-bg .pwm{display:grid;grid-template-rows:0fr;margin-top:-7px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:grid-template-rows .34s var(--ease-out),margin-top .34s var(--ease-out),opacity .25s ease,transform .34s var(--ease-out)}
+#auth-bg .pwm.on{grid-template-rows:1fr;margin-top:0;opacity:1;transform:none}
+#auth-bg .pwm-in{min-height:0;overflow:hidden}
+#auth-bg .pwm-box{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:rgba(192,57,43,.09);border:1px solid rgba(192,57,43,.28);color:#c0392b;font-size:12.5px;font-weight:700;line-height:1.5}
+#auth-bg .pwm-box svg{flex:none;width:17px;height:17px}
+#auth-bg .pwm.on .pwm-box svg{animation:pwmPop .4s var(--ease-out)}
+#auth-bg .fg.pw-bad label,#auth-bg .fg.pw-bad:focus-within label{color:#c0392b}
+#auth-bg .fg.pw-bad input,#auth-bg .fg.pw-bad input:focus{border-color:#c0392b;box-shadow:0 0 0 4px rgba(192,57,43,.13)}
+#auth-bg .fg.pw-bad input[data-pw]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c0392b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='3'/%3E%3Cpath d='M8 11V8a4 4 0 018 0v3'/%3E%3C/svg%3E")}
+#auth-bg .fg.pw-bad input::placeholder{color:#d98a82}
+#auth-bg .authx-pw.pwm-shake{animation:pwmShake .45s cubic-bezier(.36,.07,.19,.97) 1}
+[data-dark] #auth-bg .pwm-box{color:#ff8a7a;background:rgba(255,120,100,.1);border-color:rgba(255,120,100,.3)}
+[data-dark] #auth-bg .fg.pw-bad label,[data-dark] #auth-bg .fg.pw-bad:focus-within label{color:#ff8a7a}
+[data-dark] #auth-bg .fg.pw-bad input,[data-dark] #auth-bg .fg.pw-bad input:focus{border-color:#ff8a7a;box-shadow:0 0 0 4px rgba(255,120,100,.16)}
+@keyframes pwmShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes pwmPop{0%{transform:scale(.5) rotate(-20deg)}60%{transform:scale(1.2) rotate(6deg)}100%{transform:none}}
+@media (max-height:640px){#auth-bg .pwm{margin-top:-5px}#auth-bg .pwm.on{margin-top:0}}
+/* ── auth ambient motion: "premium & alive" (pure CSS, decorative only, pointer-events:none) ──
+   halo + pollen are tied to the illustration box and fade to 0 at its bottom edge, so they blend with the
+   illustration's own axFade (no visible seam). Everything below is additive. */
+#auth-bg .authx-illus{position:relative}
+/* 1) living halo behind the illustration; hue eases when switching login <-> register */
+#auth-bg .authx-illus::before{content:"";position:absolute;z-index:-1;pointer-events:none;left:-70%;right:-70%;top:-55%;bottom:0;background:radial-gradient(44% 50% at 34% 52%,rgba(95,201,126,.52),rgba(95,201,126,0) 70%),radial-gradient(38% 46% at 68% 54%,rgba(233,196,106,.38),rgba(233,196,106,0) 72%);-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0,#000 55%,transparent 100%);transform-origin:50% 100%;filter:hue-rotate(0deg);will-change:transform,opacity;animation:pwlBreathe 7s ease-in-out infinite;transition:filter .9s ease}
+#auth-bg .auth-box[data-v="reg"] .authx-illus::before{filter:hue-rotate(-28deg) saturate(1.15)}
+/* 2) drifting pollen / fireflies: five sparse layers moving at different speeds, faded top & bottom */
+#auth-bg .authx-illus::after{content:"";position:absolute;z-index:-1;pointer-events:none;left:-80%;right:-80%;top:-40%;bottom:0;background:radial-gradient(circle at 27% 31%,rgba(45,154,88,.8) 0 1.6px,rgba(45,154,88,0) 2.6px) 0 0/163px 240px,radial-gradient(circle at 71% 62%,rgba(233,196,106,.9) 0 1.5px,rgba(233,196,106,0) 2.5px) 0 0/211px 160px,radial-gradient(circle at 44% 18%,rgba(95,201,126,.75) 0 1.2px,rgba(95,201,126,0) 2.1px) 0 0/127px 120px,radial-gradient(circle at 83% 40%,rgba(233,196,106,.8) 0 1.2px,rgba(233,196,106,0) 2.1px) 0 0/181px 240px,radial-gradient(circle at 12% 74%,rgba(45,154,88,.6) 0 1.3px,rgba(45,154,88,0) 2.3px) 0 0/139px 160px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 30%,#000 60%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 30%,#000 60%,transparent 100%);animation:pwlRise 18s linear infinite}
+/* 3) thin living accent line on the top edge of the card */
+#auth-bg .auth-box::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;z-index:3;pointer-events:none;background:linear-gradient(90deg,var(--brand-l),var(--brand-xl),#e9c46a,var(--brand-xl),var(--brand-l));background-size:200% 100%;animation:pwlLine 8s linear infinite}
+/* 4) soft light sweep across the primary button */
+#auth-bg .btn-sub{position:relative;overflow:hidden}
+#auth-bg .btn-sub::before{content:"";position:absolute;top:0;bottom:0;right:0;width:55%;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.3) 50%,rgba(255,255,255,0) 100%);transform:translateX(130%) skewX(-18deg);animation:pwlSheen 5s ease-in-out 1.4s infinite}
+#auth-bg .btn-sub:disabled::before{display:none}
+/* 5) desktop only in practice (on phones the card covers the screen): slow aurora behind the card */
+#auth-bg::after{content:"";position:absolute;inset:-30%;z-index:0;pointer-events:none;background:radial-gradient(34% 30% at 22% 28%,rgba(45,154,88,.34),rgba(45,154,88,0) 70%),radial-gradient(30% 28% at 80% 72%,rgba(233,196,106,.2),rgba(233,196,106,0) 70%),radial-gradient(28% 26% at 70% 18%,rgba(95,201,126,.22),rgba(95,201,126,0) 70%);will-change:transform;animation:pwlDrift 20s ease-in-out infinite alternate}
+@keyframes pwlBreathe{0%,100%{transform:translateX(0) scale(1);opacity:.85}50%{transform:translateX(8px) scale(1.1,1.12);opacity:1}}
+@keyframes pwlRise{from{background-position:0 0,0 0,0 0,0 0,0 0}to{background-position:0 -240px,0 -320px,0 -360px,0 -480px,0 -160px}}
+@keyframes pwlLine{from{background-position:0 0}to{background-position:200% 0}}
+@keyframes pwlSheen{0%{transform:translateX(130%) skewX(-18deg)}38%,100%{transform:translateX(-330%) skewX(-18deg)}}
+@keyframes pwlDrift{0%{transform:translate3d(-3%,-2%,0) scale(1)}100%{transform:translate3d(3%,3%,0) scale(1.12) rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){#auth-bg::after,#auth-bg .auth-box::before,#auth-bg .authx-illus::before,#auth-bg .authx-illus::after,#auth-bg .btn-sub::before{animation:none !important}}
+#af-r.aform{gap:12px}
+
+/* password eye */
+.authx-pw{position:relative;display:block}
+.authx-eye{position:absolute;top:50%;left:6px;width:38px;height:38px;margin-top:-19px;border-radius:50%;display:grid;place-items:center;color:#7d9487;transition:color .2s ease,background-color .2s ease,transform .18s var(--ease-out)}
+.authx-eye:hover{color:var(--brand);background:var(--bg3)}
+.authx-eye:active{transform:scale(.9)}
+.authx-eye svg{grid-area:1/1;width:20px;height:20px;transition:opacity .2s ease,transform .25s var(--ease-out)}
+.authx-eye .e-off{opacity:0;transform:scale(.7) rotate(-12deg)}
+.authx-eye.on{color:var(--brand)}
+.authx-eye.on .e-on{opacity:0;transform:scale(.7) rotate(12deg)}
+.authx-eye.on .e-off{opacity:1;transform:none}
+
+/* links */
+#auth-bg .fp-link{margin-top:-6px;text-align:right}
+#auth-bg .fp-link a,#auth-bg .fp-back a{display:inline-block;padding:6px 0;color:var(--brand);font-size:13px;font-weight:700;text-decoration:none}
+#auth-bg .fp-back{margin-top:2px}
+#auth-bg .fp-back a{display:inline-flex;align-items:center;gap:6px;padding:10px 12px}
+#auth-bg .fp-back a::before{content:"";width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+#auth-bg .authx-alt{text-align:center;font-size:14px;color:var(--slate);margin:2px 0 0}
+#auth-bg .authx-alt a{display:inline-block;padding:8px 4px;color:var(--brand);font-weight:800;text-decoration:none}
+
+/* primary CTA */
+#auth-bg .btn-sub{height:52px;padding:0 20px;margin-top:2px;border-radius:9999px;background:var(--brand);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 22px -10px rgba(27,107,58,.6);transition:transform .18s var(--ease-out),box-shadow .2s ease,background-color .2s ease,opacity .2s ease !important}
+#auth-bg .btn-sub:hover{background:var(--brand-d);transform:none;box-shadow:0 12px 24px -10px rgba(27,107,58,.65)}
+#auth-bg .btn-sub:active{transform:scale(.98);box-shadow:0 6px 14px -8px rgba(27,107,58,.6)}
+#auth-bg .btn-sub:disabled{opacity:.7;cursor:progress}
+#auth-bg .btn-sub::after{content:"";flex:none;width:20px;height:20px;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
+#auth-bg .btn-sub:disabled::after{display:none}
+#af-l .btn-sub{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E")}
+#af-r .btn-sub{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='4'/%3E%3Cpath d='M2 21c.8-4 3.5-6 7-6s6.2 2 7 6'/%3E%3Cpath d='M19 8v6M16 11h6'/%3E%3C/svg%3E")}
+#af-fp .btn-sub{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 3L10.5 13.5'/%3E%3Cpath d='M21 3l-6.5 18-4-7.5L3 9.5z'/%3E%3C/svg%3E")}
+#af-np .btn-sub{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E")}
+
+/* divider + Google */
+#auth-bg .adiv{gap:14px;margin:2px 0;font-size:13px;color:var(--muted)}
+#auth-bg .adiv::before,#auth-bg .adiv::after{background:var(--line2)}
+#auth-bg .btn-goo{height:50px;padding:0 16px;gap:10px;border-radius:9999px;background:var(--card);border:1px solid var(--line2);color:var(--ink);font-size:14.5px;font-weight:700;box-shadow:none;transition:transform .18s var(--ease-out),background-color .2s ease,border-color .2s ease !important}
+#auth-bg .btn-goo:hover{background:var(--bg2);border-color:var(--line2);transform:none;box-shadow:none}
+#auth-bg .btn-goo:active{transform:scale(.98)}
+#auth-bg .btn-goo svg{width:20px;height:20px;flex:none}
+
+/* keyboard focus */
+#auth-bg button:focus-visible,#auth-bg a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* entrance + view-swap motion (200–450ms, ease-out, no bounce) */
+.authx-illus{--i:0}.authx-title{--i:1}.authx-sub{--i:2}#auth-bg .auth-tabs{--i:3}
+#auth-bg .aform > .fg:nth-of-type(1){--i:4}#auth-bg .aform > .fg:nth-of-type(2){--i:5}
+#auth-bg .aform > .fg:nth-of-type(3){--i:6}#auth-bg .aform > .fg:nth-of-type(4){--i:7}
+#auth-bg .aform > .fg:nth-of-type(5){--i:8}
+#af-l{--cta:7}#af-r{--cta:8}#af-fp{--cta:5}#af-np{--cta:6}
+#auth-bg .fp-link{--i:6}
+#auth-bg .aform .btn-sub{--i:var(--cta)}
+#auth-bg .aform .adiv,#auth-bg .aform .btn-goo,#auth-bg .aform .authx-alt,#auth-bg .aform .fp-back{--i:calc(var(--cta) + 1)}
+#auth-bg .authx-enter .authx-illus,#auth-bg .authx-enter .authx-title,#auth-bg .authx-enter .authx-sub,#auth-bg .authx-enter .auth-tabs,#auth-bg .authx-enter .aform > *{--dy:12px;animation:authxIn .42s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--i,0) * 40ms)}
+#auth-bg .authx-swap .authx-title,#auth-bg .authx-swap .authx-sub,#auth-bg .authx-swap .aform > *{--dy:0px;animation:authxIn .34s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--i,0) * 28ms)}
+
+/* small screens: app-like full-screen sheet */
+@media (max-width:520px){
+  #auth-bg{padding:0;align-items:stretch}
+  #auth-bg .auth-box{max-width:none;max-height:none;height:100%;border-radius:0;box-shadow:none}
+  #auth-bg .auth-top{padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
+  #auth-bg .auth-close,#auth-bg .authx-back{top:calc(env(safe-area-inset-top,0px) + 12px)}
+  #auth-bg .auth-body{padding-left:20px;padding-right:20px}
+}
+@media (max-width:340px){
+  #auth-bg .auth-body{padding-left:16px;padding-right:16px}
+  .authx-title{font-size:21px}
+}
+@media (max-height:640px){
+  .authx-illus{height:clamp(72px,15vh,100px);height:clamp(72px,15dvh,100px)}
+  .authx-sub{font-size:13px;line-height:1.6}
+  #auth-bg .auth-tabs{height:44px;margin-bottom:14px}
+  #auth-bg .aform{gap:11px}
+  #auth-bg .fg{gap:5px}
+  #auth-bg .fg input,#auth-bg .fg select{height:46px}
+  #auth-bg .btn-sub{height:48px}
+  #auth-bg .btn-goo{height:46px}
+}
+
+/* reduced motion: nothing depends on animation */
+@media (prefers-reduced-motion:reduce){
+  #auth-bg,#auth-bg *,#auth-bg *::before,#auth-bg *::after{animation:none !important;transition-duration:.01ms !important}
+}
+</style>
+<script id="authx-js">
+/* Auth redesign — view sync + motion hooks only.
+   Does NOT touch auth logic: it observes which form the existing swAuth()/showForgotPassword()/
+   backToLogin()/showResetPasswordForm() functions display and mirrors it into the header. */
+(function(){
+  var bg=document.getElementById('auth-bg'); if(!bg) return;
+  var box=bg.querySelector('.auth-box'), tEl=document.getElementById('authx-title'), sEl=document.getElementById('authx-sub');
+  if(!box||!tEl||!sEl) return;
+  var COPY={
+    login:['مرحباً بك مجدداً','سجل دخولك للوصول إلى جميع مميزات نبتيكس'],
+    reg:['إنشاء حساب','ابدأ رحلتك على نبتيكس'],
+    fp:['استعادة كلمة المرور','أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور'],
+    np:['كلمة مرور جديدة','اختر كلمة مرور قوية لحسابك للمتابعة']
+  };
+  var view=null, wasOpen=false;
+  function shown(id){var f=document.getElementById(id);return !!f&&f.style.display==='flex';}
+  function current(){return shown('af-np')?'np':shown('af-fp')?'fp':shown('af-r')?'reg':'login';}
+  function play(cls){box.classList.remove('authx-enter','authx-swap');void box.offsetWidth;box.classList.add(cls);}
+  function mask(){
+    bg.querySelectorAll('input[data-pw]').forEach(function(i){
+      if(i.type!=='password') i.type='password';
+      var b=i.nextElementSibling;
+      if(b&&b.classList.contains('authx-eye')){b.classList.remove('on');b.setAttribute('aria-pressed','false');b.setAttribute('aria-label','إظهار كلمة المرور');}
+    });
+  }
+  function sync(){
+    var open=bg.classList.contains('on'), v=current(), changed=v!==view;
+    if(changed){
+      view=v; box.setAttribute('data-v',v);
+      tEl.textContent=COPY[v][0]; sEl.textContent=COPY[v][1];
+      box.style.setProperty('--dx',v==='login'?'16px':'-16px'); /* RTL: forward enters from the left */
+    }
+    if(open&&!wasOpen){box.style.setProperty('--dx','0px');play('authx-enter');}
+    else if(open&&changed){play('authx-swap');}
+    if(!open&&wasOpen) mask();
+    wasOpen=open;
+  }
+  var mo=new MutationObserver(sync);
+  mo.observe(bg,{attributes:true,attributeFilter:['class']});
+  ['af-l','af-r','af-fp','af-np'].forEach(function(id){
+    var f=document.getElementById(id); if(f) mo.observe(f,{attributes:true,attributeFilter:['style']});
+  });
+  sync();
+
+  /* show/hide password. The existing handlers query input[type="password"], so a revealed field is
+     switched back to type=password in the capture phase, before any onsubmit handler runs. */
+  window.authxTogglePw=function(btn){
+    var i=btn.previousElementSibling; if(!i) return;
+    var show=i.type==='password';
+    i.type=show?'text':'password';
+    btn.classList.toggle('on',show);
+    btn.setAttribute('aria-pressed',show?'true':'false');
+    btn.setAttribute('aria-label',show?'إخفاء كلمة المرور':'إظهار كلمة المرور');
+  };
+  document.addEventListener('submit',function(e){
+    var f=e.target;
+    if(f&&f.closest&&f.closest('#auth-bg')) mask();
+  },true);
+})();
+</script>
+<script id="pwg-js">
+/* Register password guide — presentation only. Reads the field value, never changes it, and does not
+   touch chkStr()/hReg()/signUpWithEmail(). Rules mirror the four checks chkStr() already uses. */
+(function(){
+  var form=document.getElementById('af-r'), g=document.getElementById('pwg');
+  if(!form||!g) return;
+  var inp=form.querySelector('input[data-pw]'); if(!inp) return;
+  var box=g.querySelector('.pwg-box'), items=g.querySelectorAll('li[data-r]'), focused=false;
+  var rules={
+    len:function(v){return v.length>=8;},
+    let:function(v){return /[A-Za-z]/.test(v);},
+    num:function(v){return /[0-9]/.test(v);},
+    sym:function(v){return /[^A-Za-z0-9]/.test(v);}
+  };
+  inp.setAttribute('aria-describedby','pwg');
+  function render(){
+    var v=inp.value, all=true;
+    items.forEach(function(li){
+      var ok=!!rules[li.getAttribute('data-r')](v);
+      li.classList.toggle('ok',ok); if(!ok) all=false;
+    });
+    box.classList.toggle('all',all&&v.length>0);
+    var open=focused||v.length>0;
+    g.classList.toggle('on',open); g.setAttribute('aria-hidden',open?'false':'true');
+  }
+  inp.addEventListener('input',render);
+  inp.addEventListener('change',render);
+  inp.addEventListener('focus',function(){focused=true;render();});
+  inp.addEventListener('blur',function(){focused=false;render();});
+  form.addEventListener('reset',function(){setTimeout(render,0);});
+  new MutationObserver(render).observe(form,{attributes:true,attributeFilter:['style']});
+  render();
+})();
+</script>
+<script id="pwm-js">
+/* Register confirm-password mismatch feedback — presentation only. Reads both values, never changes them,
+   never blocks submit (signUpWithEmail() still does its own comparison + toast). */
+(function(){
+  var form=document.getElementById('af-r'), m=document.getElementById('pwm');
+  if(!form||!m) return;
+  var ins=form.querySelectorAll('input[data-pw]'); if(ins.length<2) return;
+  var p=ins[0], c=ins[1], fg=c.closest('.fg'), wrap=c.closest('.authx-pw'), bad=false, typing=false;
+  if(!fg||!wrap) return;
+  c.setAttribute('aria-describedby','pwm');
+  function shake(){wrap.classList.remove('pwm-shake');void wrap.offsetWidth;wrap.classList.add('pwm-shake');}
+  wrap.addEventListener('animationend',function(){wrap.classList.remove('pwm-shake');});
+  function check(final){
+    var pv=p.value, cv=c.value;
+    /* while still typing, a confirm that is just the start of the password is not an error yet */
+    var wait=typing&&!final&&pv.indexOf(cv)===0;
+    var now=cv.length>0&&cv!==pv&&!wait;
+    if(now&&(!bad||final)) shake();
+    bad=now;
+    fg.classList.toggle('pw-bad',now);
+    m.classList.toggle('on',now); m.setAttribute('aria-hidden',now?'false':'true');
+    c.setAttribute('aria-invalid',now?'true':'false');
+  }
+  c.addEventListener('input',function(){check(false);});
+  c.addEventListener('change',function(){check(false);});
+  c.addEventListener('focus',function(){typing=true;check(false);});
+  c.addEventListener('blur',function(){typing=false;check(false);});
+  p.addEventListener('input',function(){check(false);});
+  form.addEventListener('submit',function(){typing=false;check(true);},true);
+  form.addEventListener('reset',function(){setTimeout(function(){check(false);},0);});
+  check(false);
+})();
+</script>
+<script id="pwm-np-js">
+/* Reset-password confirm mismatch feedback — presentation only (same behaviour as the register form).
+   Reads both values, never changes them, never blocks submit (applyNewPassword() still validates + toasts). */
+(function(){
+  var form=document.getElementById('af-np'), m=document.getElementById('pwm-np');
+  if(!form||!m) return;
+  var ins=form.querySelectorAll('input[data-pw]'); if(ins.length<2) return;
+  var p=ins[0], c=ins[1], fg=c.closest('.fg'), wrap=c.closest('.authx-pw'), bad=false, typing=false;
+  if(!fg||!wrap) return;
+  c.setAttribute('aria-describedby','pwm-np');
+  function shake(){wrap.classList.remove('pwm-shake');void wrap.offsetWidth;wrap.classList.add('pwm-shake');}
+  wrap.addEventListener('animationend',function(){wrap.classList.remove('pwm-shake');});
+  function check(final){
+    var pv=p.value, cv=c.value;
+    var wait=typing&&!final&&pv.indexOf(cv)===0;
+    var now=cv.length>0&&cv!==pv&&!wait;
+    if(now&&(!bad||final)) shake();
+    bad=now;
+    fg.classList.toggle('pw-bad',now);
+    m.classList.toggle('on',now); m.setAttribute('aria-hidden',now?'false':'true');
+    c.setAttribute('aria-invalid',now?'true':'false');
+  }
+  c.addEventListener('input',function(){check(false);});
+  c.addEventListener('change',function(){check(false);});
+  c.addEventListener('focus',function(){typing=true;check(false);});
+  c.addEventListener('blur',function(){typing=false;check(false);});
+  p.addEventListener('input',function(){check(false);});
+  form.addEventListener('submit',function(){typing=false;check(true);},true);
+  form.addEventListener('reset',function(){setTimeout(function(){check(false);},0);});
+  check(false);
+})();
+</script>
+
+<style id="pwsel-css">
+/* Auth inputs (login / register / forgot / reset) — make text selection visible. Presentation only.
+   1) ::selection was 10% green = invisible on every field, so a selected value looked untouched.
+   2) the global :focus-visible ring (2.5px outline) was painted over the iOS selection handles.
+   3) the field fill was fully opaque; iOS draws the selection handles/bars UNDER the card's scrolled
+      content, so an opaque fill hid them. A 60% fill is visually the same (card colour is almost the
+      page colour) but lets the handles show through. */
+#auth-bg .fg input::selection{background:rgba(27,107,58,.32);color:inherit}
+[data-dark] #auth-bg .fg input::selection{background:rgba(95,201,126,.4);color:inherit}
+#auth-bg .fg input:focus-visible{outline:none}
+#auth-bg .fg input{background-color:color-mix(in srgb,var(--card) 60%,transparent)}
+</style>
+
+<style id="authx-topline-css">
+/* Login / register card: remove the animated green accent strip on the card's top edge (presentation only). */
+#auth-bg .auth-box::before{display:none}
+</style>
+
+<style id="authx-illus-css">
+/* Login / register header illustration — colours/alphas only (same shapes, same animations). Presentation only.
+   Light: glow + disc were too faint and read as two detached stains -> stronger glow, a soft centre glow that
+          ties them to the character, a cleaner gold, and a thin ring so the disc is clearly separated.
+   Dark : unchanged look (calmer glow + lighter neutral disc); the centre glow and ring are switched off. */
+#auth-bg{--axh-g:rgba(52,176,96,.5);--axh-g0:rgba(52,176,96,0);--axh-y:rgba(250,200,100,.55);--axh-y0:rgba(250,200,100,0);--axh-c:rgba(70,190,115,.42);--axh-c0:rgba(70,190,115,0);--axh-blob:#cdeadb;--axh-ring:rgba(30,140,80,.22)}
+[data-dark] #auth-bg{--axh-g:rgba(95,201,126,.27);--axh-g0:rgba(95,201,126,0);--axh-y:rgba(233,196,106,.17);--axh-y0:rgba(233,196,106,0);--axh-c:rgba(95,201,126,0);--axh-c0:rgba(95,201,126,0);--axh-blob:rgba(206,236,220,.1);--axh-ring:rgba(206,236,220,0)}
+#auth-bg .authx-illus::before{background:radial-gradient(44% 50% at 34% 52%,var(--axh-g),var(--axh-g0) 70%),radial-gradient(38% 46% at 68% 54%,var(--axh-y),var(--axh-y0) 72%),radial-gradient(26% 42% at 50% 66%,var(--axh-c),var(--axh-c0) 70%)}
+#auth-bg .ax-blob{fill:var(--axh-blob);stroke:var(--axh-ring);stroke-width:1.2}
+</style>
 
 <!-- ══════════════════════════════════════════════════════════════
      🛒 AGRICULTURAL MARKETPLACE — INDEPENDENT MODULE PAGE
@@ -10006,6 +10546,10 @@ async function signInWithGoogle(intent) {
       await auth.signOut();
       showToast('فشل التسجيل: هذا الحساب مسجل بالفعل، سجّل الدخول بدلاً من ذلك', 'err');
       return;
+    }
+    if (isNewUser) {
+      // الدور الافتراضي لحسابات Google الجديدة: طالب (نفس التسجيل بالإيميل)
+      db.collection('users').doc(result.user.uid).set({ role: '🎓 طالب' }, { merge: true }).catch(console.error);
     }
     showToast(`مرحباً ${result.user.displayName || result.user.email}`, 'ok');
     closeAuth();
@@ -22712,6 +23256,30 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
   stroke-width:2.4;
   filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25));
 }
+</style>
+
+<style id="nb-logo-checkout">
+/* LOGO (الهيدر) — نفس لوجو صفحة الدفع (.nbco-brand): رمز النبتة بتدرّج أخضر من غير مربع خلفية.
+   نفس مسارات الـ SVG والتدرّج والسُمك النسبي والظل. حجم الصندوق 36px زي ما هو فمفيش حاجة بتتحرك.
+   اسم "Nabtex" ما اتغيّرش. للتراجع: امسح البلوك ده ورجّع الـ svg القديم جوه .logo-mark. */
+.logo-mark{background:none;box-shadow:none;border-radius:0}
+.logo-mark svg{width:28px;height:28px;fill:none;stroke-width:2.5;overflow:visible;filter:drop-shadow(0 1px 2px rgba(27,107,58,.25))}
+[data-dark] .logo-mark stop:first-child{stop-color:#6fd68f}
+[data-dark] .logo-mark stop:last-child{stop-color:#2f9d5a}
+</style>
+
+<style id="nb-logo-balance">
+/* ═══════════════════════════════════════════════════════════════
+   LOGO (الهيدر) — توازن حجم رمز النبتة مع كلمة Nabtex
+   إضافة فقط (override) — لا تغيير في الـ HTML أو الـ JS ولا في أي عنصر تاني.
+   الرمز: 28px → 26px (نفس الشكل والتدرّج والسُمك النسبي) والمسافة بينه وبين
+   الكلمة 10 → 6px، فيبان كوحدة واحدة مع Nabtex. محاذاة الحافة اليمنى ثابتة
+   وأماكن الأزرار المجاورة ما بتتحركش.
+   لتكبير/تصغير الرمز عدّل --nb-mark فقط. للتراجع: امسح البلوك ده.
+═══════════════════════════════════════════════════════════════ */
+.nav .logo{--nb-mark:26px;gap:6px}
+.nav .logo-mark{width:calc(var(--nb-mark) + 6px);height:calc(var(--nb-mark) + 6px)}
+.nav .logo-mark svg{width:var(--nb-mark);height:var(--nb-mark)}
 </style>
 
 </body>
