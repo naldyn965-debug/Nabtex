@@ -626,7 +626,6 @@ return new Promise(function(resolve){
 try{
 var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:null;
 if(!u||typeof db==='undefined'||!db){resolve();return;}
-try{var _pk='nb-acpull__'+u;if(localStorage.getItem('nb-pest-p__'+u)!==null&&Date.now()-(+localStorage.getItem(_pk)||0)<1800000){resolve();return}localStorage.setItem(_pk,String(Date.now()))}catch(e){}
 var cids=['pest','mol-bio','food-quality','ag-english','food-safety','glp','land-reclamation','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional','biofertilizers-professional'],pending=cids.length;
 function step(){pending--;if(pending<=0)resolve();}
 cids.forEach(function(cid){
@@ -856,18 +855,17 @@ function getW(){var u=uid();return DB().collection('xp_wallet').doc(u).get().the
 /* keeps the leaderboard name in step with the profile name: touches only nm on the user's own existing wallet doc, never xp */
 function syncName(){var u=uid(),D=DB();if(!u||!D)return Promise.resolve();
 return D.collection('xp_wallet').doc(u).get().then(function(s){var n=nm();if(!s.exists||s.data().nm===n)return;return s.ref.update({nm:n})}).catch(function(){})}
-var _nmc={},_bc=null;
+var _nmc={};
 function nm2(s){var p=String(s||'').trim().split(/\s+/),a=p[0]||'',b=p[1]?a+' '+p[1]:a;return a?(b.length<=20?b:a).slice(0,20):''}
-function board(x){
+function board(){
 var u=uid();
-if(_bc&&_bc.u===u&&_bc.x===x&&Date.now()-_bc.t<600000)return Promise.resolve(_bc.r);
 return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u,id:x.id});if(x.id===u&&v.nm!==nm())syncName()});
 /* older wallet docs hold only the first name: for the visible top 15, read first + second name from the public users/{uid} doc (read-only, cached per session) */
 return Promise.all(r.slice(0,15).map(function(x){
 if(x.me||x.nm.indexOf(' ')>-1)return;
 if(_nmc[x.id]!==undefined){if(_nmc[x.id])x.nm=_nmc[x.id];return}
 return DB().collection('users').doc(x.id).get().then(function(d){var n=d.exists?nm2(d.data().displayName||d.data().name):'';if(n.indexOf(x.nm)!==0)n='';_nmc[x.id]=n;if(n)x.nm=n},function(){})
-})).then(function(){_bc={u:u,x:x,t:Date.now(),r:r};return r})})}
+})).then(function(){return r})})}
 /* ── Enthusiasm streak: one automatic check-in per day (event daily_visit, 0 XP) + a +5 XP gift the student collects (daily_gift).
    Missed days are bridged automatically by "enthusiasm restores" (3 per calendar month); otherwise the streak restarts from 1. */
 var _vp=null,_vday=0,FO='M12 2c.5 3-1 4.5-2.5 6.3C8 10.1 6 12 6 15.2 6 18.6 8.7 22 12 22s6-3.4 6-6.8c0-2-.9-3.6-2-5-.3 1-.8 1.8-1.6 2.3C14.8 9.6 14.6 5.2 12 2z',FI='M12 22c-1.9 0-3.3-1.6-3.3-3.6 0-1.6 1-2.6 1.9-3.8.5-.7.9-1.5 1.1-2.5 1.6 1.5 3.6 3.4 3.6 6.1 0 2-1.4 3.8-3.3 3.8z';
@@ -949,7 +947,7 @@ return award('quiz_completed',{key:'qz_'+c+'_'+l,cid:c,lid:l,sc:sc}).then(functi
 course:function(c){c=sx(c);return award('course_completed',{key:'crs_'+c,cid:c}).then(paths)},
 render:function(id){
 var el=document.getElementById(id);if(!el||!uid()||!DB())return;css();
-visit().then(function(){return Promise.all([getS().catch(function(x){_err=_err||('read xp_streak - '+((x&&x.code)||'error'));return S0(uid())}),getG().catch(function(){return false}),getW()])}).then(function(r){var fe=document.getElementById('nbxp-fire');if(fe)fe.innerHTML=fireHTML(fmerge(r[0],r[1]));return Promise.all([r[2],board(r[2].xp)])}).then(function(r){el.innerHTML=view(r[0],r[1])}).catch(function(x){console.warn('[XP] profile',x);el.innerHTML=''})},
+visit().then(function(){return Promise.all([getS().catch(function(x){_err=_err||('read xp_streak - '+((x&&x.code)||'error'));return S0(uid())}),getG().catch(function(){return false}),getW()])}).then(function(r){var fe=document.getElementById('nbxp-fire');if(fe)fe.innerHTML=fireHTML(fmerge(r[0],r[1]));return Promise.all([r[2],board()])}).then(function(r){el.innerHTML=view(r[0],r[1])}).catch(function(x){console.warn('[XP] profile',x);el.innerHTML=''})},
 diag:function(btn){diag(btn)},
 retry:function(btn){if(btn)btn.disabled=true;_vp=null;_vday=0;_err='';NBXP.render('nbxp-card')},
 gift:function(btn){
