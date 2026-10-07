@@ -1179,7 +1179,7 @@ async function suggestHtml() {
   try {
     // جيب الحسابات + الحسابات اللي بتتابعها في نفس الوقت
     const [snap, followSnap] = await Promise.all([
-      db.collection('social_profiles').orderBy('followersCount','desc').get(),
+      db.collection('social_profiles').orderBy('followersCount','desc').limit(40).get(),
       S.uid ? db.collection('social_follows').where('followerUid','==',S.uid).get() : Promise.resolve({docs:[]})
     ]);
     // حدّث الـ followingSet من Firestore عشان يكون دايماً sync
