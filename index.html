@@ -9252,86 +9252,7 @@ body.modal-open { overflow: hidden; }
 </style>
 
 <div class="page" id="pg-academy">
-  <!-- ══════════════════════════════════════════
-       ACADEMY SOCIAL SECTION — نُقل من السوق الزراعي (المجتمع + صفحتي)
-  ══════════════════════════════════════════ -->
-  <div class="mkt-subnav" id="acad-social-subnav">
-    <div class="mkt-subnav-inner">
-      <button class="mkt-tab active" id="mkt-tab-acad-catalog" onclick="acShowCourses()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9 12 4l10 5-10 5L2 9Z"/><path d="M6 11.3v3.8c0 1.5 2.8 3 6 3s6-1.5 6-3v-3.8"/><path d="M22 9v6"/></svg>
-        الدورات
-      </button>
-      <button class="mkt-tab mkt-tab-social" id="mkt-tab-feed" onclick="acShowSocial('feed')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        المجتمع
-      </button>
-      <button class="mkt-tab mkt-tab-social" id="mkt-tab-profile-me" onclick="acShowSocial('profile-me')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        صفحتي
-      </button>
-    </div>
-  </div>
-
   <div id="acad-root"></div>
-
-  <div class="mkt-panel-container" id="acad-social-panels">
-
-  <!-- ══════════════════════════════════════════
-       SOCIAL PANELS — added by social module
-  ══════════════════════════════════════════ -->
-  <!-- PANEL: SOCIAL FEED -->
-  <div class="mkt-panel" id="mkt-panel-feed">
-    <div id="social-feed-root">
-      <!-- skeleton shown until social.js renders -->
-      <div style="padding:16px 14px 0;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;">
-        <div style="width:100px;height:18px;background:var(--line);border-radius:6px;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-        <div style="width:130px;height:30px;background:var(--line);border-radius:10px;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-      </div>
-      <div style="margin:13px 14px;padding:13px;background:var(--card);border-radius:var(--r3);border:1px solid var(--line);animation:skelPulse 1.4s ease-in-out infinite;">
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;"><div style="width:38px;height:38px;border-radius:50%;background:var(--line);flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px;"><div style="height:10px;background:var(--line);border-radius:5px;width:70%;"></div><div style="height:10px;background:var(--line);border-radius:5px;width:40%;"></div></div></div>
-        <div style="height:10px;background:var(--line);border-radius:5px;width:100%;margin-bottom:5px;"></div>
-        <div style="height:10px;background:var(--line);border-radius:5px;width:70%;"></div>
-        <div style="height:160px;background:var(--line);border-radius:var(--r2);margin-top:9px;"></div>
-      </div>
-      <div style="margin:0 14px 13px;padding:13px;background:var(--card);border-radius:var(--r3);border:1px solid var(--line);animation:skelPulse 1.4s ease-in-out infinite;">
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;"><div style="width:38px;height:38px;border-radius:50%;background:var(--line);flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px;"><div style="height:10px;background:var(--line);border-radius:5px;width:60%;"></div><div style="height:10px;background:var(--line);border-radius:5px;width:35%;"></div></div></div>
-        <div style="height:10px;background:var(--line);border-radius:5px;width:100%;margin-bottom:5px;"></div>
-        <div style="height:10px;background:var(--line);border-radius:5px;width:80%;"></div>
-      </div>
-    </div>
-  </div>
-  <!-- PANEL: USER PROFILE (self or other) -->
-  <div class="mkt-panel" id="mkt-panel-profile-me">
-    <div id="social-profile-root">
-      <!-- skeleton shown until social.js renders -->
-      <div style="width:100%;height:165px;background:linear-gradient(145deg,var(--brand-d),var(--brand-l));animation:skelPulse 1.4s ease-in-out infinite;"></div>
-      <div style="padding:0 16px 16px;background:var(--card);border-bottom:1px solid var(--line);">
-        <div style="display:flex;align-items:flex-end;gap:12px;margin-top:-44px;margin-bottom:11px;">
-          <div style="width:92px;height:92px;border-radius:50%;background:var(--line);border:3px solid #fff;flex-shrink:0;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-          <div style="flex:1;padding-bottom:6px;display:flex;flex-direction:column;gap:8px;">
-            <div style="width:140px;height:16px;background:var(--line);border-radius:6px;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-            <div style="width:90px;height:11px;background:var(--line);border-radius:5px;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-          </div>
-        </div>
-        <div style="height:11px;background:var(--line);border-radius:5px;width:85%;margin-bottom:7px;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-        <div style="height:11px;background:var(--line);border-radius:5px;width:65%;animation:skelPulse 1.4s ease-in-out infinite;"></div>
-      </div>
-    </div>
-  </div>
-  <!-- PANEL: FOLLOWERS LIST -->
-  <div class="mkt-panel" id="mkt-panel-followers">
-    <div id="social-followers-root"></div>
-  </div>
-  <!-- PANEL: FOLLOWING LIST -->
-  <div class="mkt-panel" id="mkt-panel-following">
-    <div id="social-following-root"></div>
-  </div>
-  <!-- PANEL: NOTIFICATIONS — نُقلت من تبويب إشعارات السوق الزراعي إلى صفحتي -->
-  <div class="mkt-panel" id="mkt-panel-notifications">
-    <div id="social-notifications-root"></div>
-  </div>
-
-  </div><!-- end acad-social-panels -->
 
   <script>
   /* ACADEMY SOCIAL BRIDGE — يعرض/يخفي جذر الأكاديمية (acad-root) عند التنقل
@@ -9344,12 +9265,6 @@ body.modal-open { overflow: hidden; }
     var homeTab=document.getElementById('mkt-tab-acad-catalog');
     if(homeTab)homeTab.classList.add('active');
     if(root)root.style.display='';
-  }
-  function acShowSocial(panel){
-    var root=document.getElementById('acad-root');
-    if(root)root.style.display='none';
-    if(panel==='feed')SOCIAL.showPanel('feed');
-    else SOCIAL.showMyProfile();
   }
   </script>
 
@@ -9400,27 +9315,6 @@ body.modal-open { overflow: hidden; }
         _origC.apply(this,arguments);
         fadeIn(root);
         setActiveTab('mkt-tab-acad-catalog');
-      };
-    }
-
-    /* ── Wrap acShowSocial ──────────────────────────────────── */
-    var _origS=window.acShowSocial;
-    if(typeof _origS==='function'){
-      window.acShowSocial=function(panel){
-        var args=arguments;
-        /* الـ active class */
-        setActiveTab(panel==='feed' ? 'mkt-tab-feed' : 'mkt-tab-profile-me');
-        /* لو الـ root ظاهر نخفيه أول */
-        if(root && root.style.display!=='none' && root.style.opacity!=='0'){
-          fadeOut(root,function(){
-            root.style.display='none';
-            root.style.opacity='';
-            root.style.transform='';
-            _origS.apply(window,args);
-          });
-        } else {
-          _origS.apply(window,args);
-        }
       };
     }
   })();
@@ -20874,9 +20768,6 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
 })();
 </script>
 <!-- ═══ /Nabtex Premium Checkout ═══════════════════════════════════════ -->
-
-<!-- SOCIAL MODULE — عدّل رقم v= مع كل تحديث لـ social.js عشان تضمن نسخة جديدة من أي كاش (Vercel/CDN) -->
-<script defer src="social.js?v=1"></script>
 
 <!-- ═══════════════════════════════════════════════════════════════
      PREMIUM UI/UX SYSTEM v3.0 — Nabtex
