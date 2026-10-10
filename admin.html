@@ -585,6 +585,24 @@ body[data-light] .date-clear-btn{color:#16a34a}
 body[data-light] #admin-bottom-nav::before{background:rgba(255,255,255,.85);
   box-shadow:0 16px 40px rgba(0,0,0,.12),0 4px 14px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.5)}
 body[data-light] #mkdt-delete-btn{color:#dc2626!important}
+/* ── Farm subscriptions (اشتراكات إدارة المزرعة) ── */
+.fsa-tabs{display:flex;gap:6px;margin-bottom:8px}
+.fsa-tab{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--border-md);background:transparent;color:var(--muted);font:700 11.5px inherit;font-family:inherit;cursor:pointer}
+.fsa-tab.on{background:var(--approved-bg);color:var(--emerald);border-color:var(--emerald)}
+.fsa-card{background:rgba(255,255,255,.022);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:7px;font-size:12px;line-height:1.7}
+.fsa-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.fsa-mail{font-weight:800;word-break:break-all}
+.fsa-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.fsa-badge.pending{background:var(--pending-bg);color:var(--pending)}
+.fsa-badge.approved{background:var(--approved-bg);color:var(--approved)}
+.fsa-badge.rejected{background:var(--rejected-bg);color:var(--rejected)}
+.fsa-meta{color:var(--muted);word-break:break-all}
+.fsa-actions{display:flex;gap:6px;margin-top:8px}
+.fsa-btn{flex:1;padding:7px;border-radius:9px;border:none;font:800 11.5px inherit;font-family:inherit;cursor:pointer;color:#04170a;background:var(--approved)}
+.fsa-btn.rej{background:var(--rejected);color:#fff}
+.fsa-empty{text-align:center;opacity:.45;font-size:12px;padding:8px 0}
+.fsa-audit{font-size:11px;color:var(--muted);border-top:1px dashed var(--border);padding:6px 0;line-height:1.7;word-break:break-all}
+body[data-light] .fsa-card{background:#f3faf4}
 </style>
 </head>
 <body data-atab-active="home">
@@ -670,6 +688,16 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
           <div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div>
         </div>
         <button class="broadcast-open-btn" onclick="openBroadcastModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><path d="M2.5 7.8h1.8l6.7-3.6v11.6L4.3 12.2H2.5a1 1 0 0 1-1-1V8.8a1 1 0 0 1 1-1z"/><path d="M14 7c1 .9 1 3.1 0 4"/><path d="M6.5 12.2v2.6a1 1 0 0 0 1 1h.6a1 1 0 0 0 1-1v-1.7"/></svg> إرسال إشعار</button>
+      </div>
+      <div class="sidebar-courses" data-atab="home" id="fsub-admin-block">
+        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M12 22V8"/><path d="M12 8c0-3 2-5 6-5 0 4-2 6-6 5z"/><path d="M12 12c0-2.5-1.8-4-5-4 0 3.2 1.8 5 5 4z"/></svg>اشتراكات إدارة المزرعة <span id="fsub-admin-count" class="fsa-badge pending" style="display:none"></span></div>
+        <div class="fsa-tabs">
+          <button class="fsa-tab on" data-fsf="pending" onclick="fsubAdminFilter('pending')">قيد المراجعة</button>
+          <button class="fsa-tab" data-fsf="all" onclick="fsubAdminFilter('all')">الكل</button>
+        </div>
+        <div id="fsub-admin-list"><div class="fsa-empty">جاري التحميل...</div></div>
+        <div class="courses-heading" style="padding-top:12px">سجل العمليات (Audit)</div>
+        <div id="fsub-admin-audit"><div class="fsa-empty">جاري التحميل...</div></div>
       </div>
       <div class="sidebar-courses" data-atab="profile">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
@@ -1034,6 +1062,7 @@ auth.onAuthStateChanged(async function(user) {
   startCourseConfigListener();
   startBroadcastLogListener();
   xpAdminLoad();
+  startFarmSubListeners();
 });
 
 function showAuth() {
@@ -2067,6 +2096,10 @@ async function confirmAction() {
       await doSuspend(pendingAction.docId, pendingAction.uid, pendingAction.courseId);
     } else if (pendingAction.type === 'pause-course') {
       await toggleCourse(pendingAction.cid, false);
+    } else if (pendingAction.type === 'fsub-approve') {
+      await doFarmSubAction('approve', pendingAction.docId, '');
+    } else if (pendingAction.type === 'fsub-reject') {
+      await doFarmSubAction('reject', pendingAction.docId, (document.getElementById('confirm-note').value || '').trim());
     } else if (pendingAction.type === 'send-notif') {
       await doSendBroadcast(pendingAction);
     } else if (pendingAction.type === 'settle-marketer') {
@@ -2534,6 +2567,127 @@ async function xpAdjust(uid) {
     console.warn(e);
     showToast(e.message === 'neg' ? 'التعديل يجعل الرصيد سالباً' : e.message === 'nowallet' ? 'لا يوجد حساب XP لهذا الطالب' : 'تعذر التعديل', 'err');
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   اشتراكات إدارة المزرعة — الاعتماد/الرفض بيتم عبر Edge Function موثوقة
+   (farm-subscription-admin) — مفيش كتابة مباشرة من المتصفح على تواريخ الاشتراك.
+   الدالة بتتحقق من Firebase ID Token + admins/{uid}، وبتحسب تاريخ الانتهاء (شهر ميلادي بتوقيت القاهرة)،
+   وبتمنع التفعيل المكرر، وبتكتب audit + إشعار للمستخدم في نفس الـ Transaction.
+   ══════════════════════════════════════════════════════════════ */
+const FARM_SUB_ADMIN_URL = 'https://uexnkbspbhgelfmmvgqq.supabase.co/functions/v1/farm-subscription-admin';
+const FSUB_PLAN_LABEL = { monthly: 'شهري', annual: 'سنوي' };
+let fsubAdminPays = [], fsubAdminFilterVal = 'pending', fsubAdminPaysUnsub = null, fsubAdminAuditUnsub = null;
+
+function fsubEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function fsubFmtTs(t) {
+  try { return t && t.toDate ? t.toDate().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo', dateStyle: 'medium', timeStyle: 'short' }) : '—'; } catch (e) { return '—'; }
+}
+function fsubFmtDay(t) {
+  try { return t && t.toDate ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(t.toDate()) : '—'; } catch (e) { return '—'; }
+}
+
+function startFarmSubListeners() {
+  if (fsubAdminPaysUnsub) { fsubAdminPaysUnsub(); fsubAdminPaysUnsub = null; }
+  if (fsubAdminAuditUnsub) { fsubAdminAuditUnsub(); fsubAdminAuditUnsub = null; }
+  fsubAdminPaysUnsub = db.collection('farm_subscription_payments').orderBy('createdAt', 'desc').limit(150)
+    .onSnapshot(function(snap) {
+      fsubAdminPays = snap.docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
+      renderFarmSubAdmin();
+    }, function(e) {
+      document.getElementById('fsub-admin-list').innerHTML = '<div class="fsa-empty">تعذّر التحميل: ' + fsubEsc(e.message) + '<br>(تأكد من نشر firestore.rules الجديدة)</div>';
+    });
+  fsubAdminAuditUnsub = db.collection('farm_subscription_audit').orderBy('at', 'desc').limit(10)
+    .onSnapshot(function(snap) {
+      const el = document.getElementById('fsub-admin-audit');
+      if (!snap.docs.length) { el.innerHTML = '<div class="fsa-empty">لا عمليات بعد</div>'; return; }
+      el.innerHTML = snap.docs.map(function(d) {
+        const a = d.data();
+        return '<div class="fsa-audit">' + (a.action === 'approve' ? '✅ قبول' : '❌ رفض') + ' — ' + fsubEsc(FSUB_PLAN_LABEL[a.plan] || a.plan || '') +
+          ' — ' + fsubFmtTs(a.at) + '<br>UID: ' + fsubEsc((a.uid || '').slice(0, 10)) + '… · بواسطة ' + fsubEsc(a.byEmail || (a.by || '').slice(0, 8)) +
+          (a.action === 'approve' && a.after ? '<br>ينتهي: ' + fsubFmtDay(a.after.paidUntil) + (a.stacking ? ' (تجديد متراكم)' : '') : '') +
+          (a.note ? '<br>ملاحظة: ' + fsubEsc(a.note) : '') + '</div>';
+      }).join('');
+    }, function() { document.getElementById('fsub-admin-audit').innerHTML = '<div class="fsa-empty">—</div>'; });
+}
+
+function fsubAdminFilter(f) {
+  fsubAdminFilterVal = f;
+  document.querySelectorAll('.fsa-tab').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-fsf') === f); });
+  renderFarmSubAdmin();
+}
+
+function renderFarmSubAdmin() {
+  const pend = fsubAdminPays.filter(function(p) { return p.status === 'pending'; });
+  const cnt = document.getElementById('fsub-admin-count');
+  cnt.textContent = pend.length; cnt.style.display = pend.length ? 'inline-block' : 'none';
+  const list = fsubAdminFilterVal === 'pending' ? pend : fsubAdminPays.slice(0, 60);
+  const host = document.getElementById('fsub-admin-list');
+  if (!list.length) { host.innerHTML = '<div class="fsa-empty">' + (fsubAdminFilterVal === 'pending' ? 'لا طلبات قيد المراجعة' : 'لا طلبات') + '</div>'; return; }
+  host.innerHTML = list.map(function(p) {
+    const st = p.status === 'approved' ? 'مقبول' : p.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة';
+    const method = p.paymentMethod === 'instapay' ? 'InstaPay' : 'فودافون كاش';
+    const id = fsubEsc(p._id);
+    let actions = '';
+    if (p.status === 'pending') actions = '<button class="fsa-btn" onclick="fsubAskApprove(\'' + id + '\')">قبول وتفعيل</button><button class="fsa-btn rej" onclick="fsubAskReject(\'' + id + '\')">رفض</button>';
+    else if (p.status === 'rejected') actions = '<button class="fsa-btn" onclick="fsubAskApprove(\'' + id + '\')">قبول (تجاوز الرفض)</button>';
+    return '<div class="fsa-card"><div class="fsa-top"><div class="fsa-mail">' + fsubEsc(p.email || p.uid) + '</div><span class="fsa-badge ' + fsubEsc(p.status) + '">' + st + '</span></div>' +
+      '<div>باقة <b>' + fsubEsc(FSUB_PLAN_LABEL[p.plan] || p.plan) + '</b> — ' + fsubEsc(p.amount) + ' ج — ' + method + '</div>' +
+      '<div class="fsa-meta">هاتف: ' + fsubEsc(p.phone) + ' · مرجع: ' + fsubEsc(p.transactionRef) + '</div>' +
+      '<div class="fsa-meta">' + fsubFmtTs(p.createdAt) + (p.status === 'approved' && p.periodEnd ? ' · ينتهي ' + fsubFmtDay(p.periodEnd) : '') + '</div>' +
+      (p.status === 'rejected' && p.rejectionNote ? '<div class="fsa-meta">السبب: ' + fsubEsc(p.rejectionNote) + '</div>' : '') +
+      (actions ? '<div class="fsa-actions">' + actions + '</div>' : '') + '</div>';
+  }).join('');
+}
+
+function fsubAskApprove(paymentId) {
+  const p = fsubAdminPays.find(function(x) { return x._id === paymentId; });
+  if (!p) return;
+  const dup = fsubAdminPays.some(function(x) { return x._id !== paymentId && x.status === 'approved' && x.refKey && x.refKey === p.refKey; });
+  pendingAction = { type: 'fsub-approve', docId: paymentId };
+  document.getElementById('confirm-ico').innerHTML   = IC3.check;
+  document.getElementById('confirm-title').textContent = 'تفعيل اشتراك إدارة المزرعة';
+  document.getElementById('confirm-msg').textContent   = 'باقة ' + (FSUB_PLAN_LABEL[p.plan] || p.plan) + ' (' + p.amount + ' جنيه) للحساب ' + (p.email || p.uid) +
+    '. التاريخ بيتحسب على السيرفر (شهر ميلادي بتوقيت القاهرة، ويتراكم لو الاشتراك لسه شغال). اتأكد إن التحويل وصل فعلًا بنفس المبلغ والمرجع.' +
+    (dup ? ' ⚠️ نفس المرجع اتقبل قبل كده في طلب تاني — السيرفر هيرفض.' : '');
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-price-wrap').style.display = 'none';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.check + ' قبول وتفعيل';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--approved)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+function fsubAskReject(paymentId) {
+  pendingAction = { type: 'fsub-reject', docId: paymentId };
+  document.getElementById('confirm-ico').innerHTML   = IC3.x;
+  document.getElementById('confirm-title').textContent = 'رفض طلب الاشتراك';
+  document.getElementById('confirm-msg').textContent   = 'هل تريد رفض هذا الطلب؟ سيصل المستخدم إشعار بالرفض والسبب.';
+  document.getElementById('confirm-note').style.display = 'block';
+  document.getElementById('confirm-note').value = '';
+  document.getElementById('confirm-price-wrap').style.display = 'none';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.x + ' رفض الطلب';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doFarmSubAction(action, paymentId, note) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('سجّل دخول الأدمن الأول');
+  const token = await user.getIdToken(true);
+  let res;
+  try {
+    res = await fetch(FARM_SUB_ADMIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: action, paymentId: paymentId, note: note || '' })
+    });
+  } catch (e) {
+    throw new Error('تعذّر الوصول لدالة farm-subscription-admin — اتأكد إنها منشورة (راجع FARM SUBSCRIPTIONS SETUP.md)');
+  }
+  const data = await res.json().catch(function() { return {}; });
+  if (!res.ok) throw new Error(data.message || data.error || ('HTTP ' + res.status));
+  showToast(action === 'approve' ? '✅ تم تفعيل الاشتراك — ينتهي ' + new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(data.periodEnd)) : '❌ تم رفض الطلب وإشعار المستخدم', 'ok');
+  return data;
 }
 
 </script>

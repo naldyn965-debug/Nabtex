@@ -14,6 +14,19 @@ service cloud.firestore {
       return isAuth() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    // ── FARM MANAGEMENT SUBSCRIPTIONS ───────────────────────────────────────
+    // farm_subscriptions/{uid} is the authoritative record. Clients can only create it ONCE
+    // (free trial: trialStartedAt is pinned to server time, trial = 7 days from then). Every other
+    // field (paidUntil, plan, lastPaymentId...) is written only by the farm-subscription-admin Edge
+    // Function through the Admin SDK, which bypasses these rules — no client write path exists.
+    function fsDoc(uid) { return /databases/$(database)/documents/farm_subscriptions/$(uid); }
+    function farmAccess() {
+      return isAuth() && exists(fsDoc(request.auth.uid)) && (
+        get(fsDoc(request.auth.uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(7, 'd') > request.time
+        || get(fsDoc(request.auth.uid)).data.get('paidUntil', timestamp.value(0)) > request.time);
+    }
+    function fsPrice(plan) { return plan == 'monthly' ? 149 : (plan == 'annual' ? 999 : -1); }
+
     // ── USERS: access fields (paidCourses / suspendedCourses) are no longer self-editable ──
     // Admin: unrestricted. Student: every other field stays freely writable, but paidCourses may grow by
     // exactly ONE course, and only in the same write that creates a brand-new reward_redemption event
@@ -42,20 +55,38 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── FARM DATA: owner-only (userId). Writes also require an active trial/paid subscription.
+    //    Reads stay owner-only with no subscription check, so data is NEVER lost or hidden from its owner on expiry.
     match /farms/{docId} {
-      allow read, write: if isAuth();
+      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid && farmAccess();
     }
 
     match /fields/{docId} {
-      allow read, write: if isAuth();
+      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid && farmAccess();
     }
 
     match /crops/{docId} {
-      allow read, write: if isAuth();
+      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid && farmAccess();
     }
 
     match /operations/{docId} {
-      allow read, write: if isAuth();
+      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid && farmAccess();
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid && farmAccess();
     }
 
     match /plants/{docId}   { allow read: if true; allow write: if false; }
@@ -366,8 +397,55 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Farm expenses (workers/fertilizers/pesticides/seeds/irrigation/otherExpenses): reads unchanged, writes need a subscription
     match /users/{uid}/{subcollection}/{docId} {
-      allow read, write: if isSelf(uid);
+      allow read:  if isSelf(uid);
+      allow write: if isSelf(uid) && farmAccess();
+    }
+
+    // ── FARM SUBSCRIPTIONS ──
+    match /farm_subscriptions/{uid} {
+      allow read:   if isSelf(uid) || isAdmin();
+      // one-time trial: create-only (a second set() is an update → denied), no delete, fixed key set
+      allow create: if isSelf(uid)
+                    && request.resource.data.keys().hasOnly(['uid', 'trialStartedAt', 'createdAt'])
+                    && request.resource.data.keys().hasAll(['uid', 'trialStartedAt', 'createdAt'])
+                    && request.resource.data.uid == uid
+                    && request.resource.data.trialStartedAt == request.time
+                    && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;   // Admin SDK (Edge Function) only
+    }
+
+    // Manual payment requests. Doc id = {uid}_{refKey}: the same reference can't be submitted twice by one user.
+    // Price is pinned by the rule (never taken from the client). Status can only start as 'pending';
+    // approve/reject happens exclusively in the Edge Function (no client update/delete).
+    match /farm_subscription_payments/{pid} {
+      allow read:   if (isAuth() && resource.data.uid == request.auth.uid) || isAdmin();
+      allow create: if isAuth()
+                    && request.resource.data.keys().hasOnly(['uid','email','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
+                    && request.resource.data.keys().hasAll(['uid','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.plan in ['monthly', 'annual']
+                    && request.resource.data.amount == fsPrice(request.resource.data.plan)
+                    && request.resource.data.currency == 'EGP'
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.matches('[0-9+]{10,15}')
+                    && request.resource.data.transactionRef is string
+                    && request.resource.data.transactionRef.matches('[A-Za-z0-9]{6,40}')
+                    && request.resource.data.refKey == request.resource.data.transactionRef.lower()
+                    && pid == request.auth.uid + '_' + request.resource.data.refKey
+                    && request.resource.data.paymentMethod in ['vodafone_cash', 'instapay']
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.get('email', '') is string
+                    && request.resource.data.get('email', '').size() <= 160;
+      allow update, delete: if false;
+    }
+
+    // Audit trail (written by the Edge Function; admin-read only)
+    match /farm_subscription_audit/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     match /{document=**} {
