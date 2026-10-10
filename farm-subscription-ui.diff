@@ -1,5 +1,5 @@
 --- /tmp/claude-0/-home-claude/608d306e-e6ba-5840-903f-d6431e9a8f90/scratchpad/orig/index.html	2026-10-10 18:53:50.396309742 +0300
-+++ index.html	2026-10-10 18:57:15.745809274 +0300
++++ index.html	2026-10-10 19:07:21.980947293 +0300
 @@ -16349,7 +16349,8 @@
      function fsubPlansHTML() {
        var m = FSUB_PLANS.monthly, a = FSUB_PLANS.annual;
@@ -10,7 +10,7 @@
          '<div class="fsub-plan' + (fsubUI.plan === 'monthly' ? ' on' : '') + '" data-plan="monthly" role="radio" tabindex="0" onclick="FarmSub.pick(\'monthly\')">' +
            '<div class="fsub-plan-name">شهري</div>' +
            '<div class="fsub-plan-price">' + m.price + ' <small>ج.م / شهر</small></div>' +
-@@ -16367,21 +16368,30 @@
+@@ -16367,24 +16368,39 @@
      function fsubPayFormHTML() {
        var price = FSUB_PLANS[fsubUI.plan].price;
        var isIP = fsubUI.method === 'instapay';
@@ -48,7 +48,324 @@
        '</div>';
      }
  
-@@ -16579,37 +16589,76 @@
++    function fsubCtaHTML() {
++      return '<button type="button" class="farm-btn-primary fsub-cta" id="fsub-cta" onclick="FarmSub.openPay()"><span>متابعة إلى الدفع</span>' +
++        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>' +
++        '<div class="fsub-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg><span>بياناتك آمنة ومشفرة</span></div>';
++    }
++
+     function fsubHead(title, sub) {
+       return '<div class="fsub-head"><div class="fsub-ico">' + FSUB_ICON + '</div><h2 class="fsub-title">' + title + '</h2><p class="fsub-sub">' + sub + '</p></div>';
+     }
+@@ -16405,7 +16421,7 @@
+       }
+       if (d.state === 'pending') {
+         head = fsubHead('طلب الدفع قيد المراجعة', 'هنفعّل اشتراكك فور التحقق من الدفع. بياناتك محفوظة بالكامل.');
+-        body = fsubPendingCardHTML(d.pending);
++        body = fsubPendingCardHTML(d.pending) + '<div class="fco-vars">' + fcoTimelineHTML() + '</div>';
+       } else {
+         if (d.state === 'expired') head = fsubHead('انتهى اشتراكك', 'بيانات مزرعتك محفوظة بالكامل — جدّد الاشتراك لتكمل من حيث توقفت.');
+         else if (d.state === 'rejected') head = fsubHead('تعذّر تفعيل طلبك الأخير', 'راجع بيانات الدفع وابعت طلبًا جديدًا.');
+@@ -16420,7 +16436,7 @@
+           body += '<button class="farm-btn-primary fsub-trial" id="fsub-trial" onclick="FarmSub.startTrial()">ابدأ التجربة المجانية — 7 أيام</button>' +
+                   '<div class="fsub-or"><span>تجربة واحدة لكل حساب — أو اشترك مباشرة</span></div>';
+         }
+-        body += fsubPlansHTML() + fsubPayFormHTML();
++        body += fsubPlansHTML() + fsubCtaHTML();
+       }
+       return '<div class="fsub-wrap"><div class="fsub-card">' + head + body +
+         '<button class="farm-back-btn fsub-back" onclick="showPage(\'home\')">← العودة للرئيسية</button></div></div>';
+@@ -16475,6 +16491,269 @@
+       });
+     }
+ 
++    /* ══ FARM CHECKOUT SHEET ═══════════════════════════════════════════════════
++       نفس رحلة ومظهر وصوت شاشة دفع الكورسات (.nbco-*): دفع ← تحقق ← بيانات ← استلام ← تفعيل.
++       طبقة عرض فقط: بتكتب نفس مستند farm_subscription_payments بنفس الحقول، والقواعد/السيرفر زي ما هم.
++       للتراجع: امسح الدوال fco* وارجع openPay للنسخة القديمة. ═══════════════════ */
++    var FCO_I = {
++      ck: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>',
++      x:  '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
++      bk: '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
++      fw: '<svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
++      sd: '<svg viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg>',
++      hm: '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z"/></svg>',
++      dc: '<svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 14l2 2 4-4"/></svg>',
++      cp: '<svg viewBox="0 0 24 24"><path d="M9 9h10v11H9zM5 15V4h10"/></svg>',
++      lk: '<svg viewBox="0 0 24 24"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg>',
++      inf:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
++    };
++    function fcoBrandSvg() {
++      return '<svg viewBox="2 4 20 20" aria-hidden="true"><defs><linearGradient id="fcoLg" x1="4" y1="5" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34a862"/><stop offset="1" stop-color="#0f552e"/></linearGradient></defs><g stroke="url(#fcoLg)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g></svg>';
++    }
++    function fcoSparks() { var h = ''; for (var i = 0; i < 8; i++) h += '<i style="--a:' + (i * 45) + 'deg;--c:' + (i % 2 ? '#e8a33d' : '#2d9a58') + '"></i>'; return h; }
++
++    /* ── صوت نجاح الدفع: نفس مولّد Web Audio بتاع الكورسات (يُفتح عند ضغطة المستخدم ويُشغَّل عند نجاح الإرسال فقط) ── */
++    var fcoAC = null;
++    function fcoSndUnlock() {
++      try {
++        var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
++        if (!fcoAC) fcoAC = new C();
++        if (fcoAC.state === 'suspended') { var r = fcoAC.resume(); if (r && r.catch) r.catch(function() {}); }
++        var u = fcoAC.createBufferSource(); u.buffer = fcoAC.createBuffer(1, 1, 22050); u.connect(fcoAC.destination); u.start(0);
++      } catch (e) {}
++    }
++    function fcoChime(c, t) {
++      var out = c.createGain(), lp = c.createBiquadFilter(), dl = c.createDelay(), fb = c.createGain(), wet = c.createGain();
++      out.gain.value = .2; lp.type = 'lowpass'; lp.frequency.value = 5500; dl.delayTime.value = .14; fb.gain.value = .3; wet.gain.value = .32;
++      out.connect(lp); lp.connect(c.destination); lp.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(c.destination);
++      [[1318.51, 0, .6], [1975.53, .12, 1.2]].forEach(function(n) {
++        [[1, 1], [2, .16], [3, .05]].forEach(function(h) {
++          var o = c.createOscillator(), g = c.createGain(), st = t + n[1], d = n[2] * (h[0] === 1 ? 1 : .5);
++          o.type = 'sine'; o.frequency.value = n[0] * h[0];
++          g.gain.setValueAtTime(.0001, st); g.gain.exponentialRampToValueAtTime(h[1], st + .01); g.gain.exponentialRampToValueAtTime(.0001, st + d);
++          o.connect(g); g.connect(out); o.start(st); o.stop(st + d + .05);
++        });
++      });
++      return [out, lp, dl, fb, wet];
++    }
++    function fcoSndSuccess() {
++      try {
++        if (!fcoAC) return; var ns = fcoChime(fcoAC, fcoAC.currentTime + .03);
++        setTimeout(function() { ns.forEach(function(n) { try { n.disconnect(); } catch (e) {} }); }, 4000);
++      } catch (e) {}
++    }
++
++    function fcoTimelineHTML(cur) {
++      return '<ul class="nbco-tl"><li class="done"><b>' + FCO_I.ck + '</b>تم إرسال الطلب</li><li class="cur"><b></b>جاري التحقق من الدفع</li><li><b></b>تفعيل الاشتراك</li></ul>';
++    }
++
++    function fcoHTML() {
++      var I = FCO_I;
++      return '<div class="nbco-top"><button type="button" class="nbco-ib" data-a="close" aria-label="إغلاق">' + I.x + '</button><div class="nbco-brand">' + fcoBrandSvg() + '<span>Nabtex</span></div><span style="width:38px"></span></div>' +
++      '<div class="nbco-prog" hidden></div>' +
++      '<section class="nbco-s" data-s="pay">' +
++        '<div class="nbco-course"><div class="nbco-cico">' + FSUB_ICON + '</div><div><h2 data-f="title"></h2><p data-f="sub"></p></div></div>' +
++        '<div class="nbco-price"><div><span class="nbco-amt" data-f="amt"></span><span class="nbco-cur">جنيه</span></div>' +
++          '<div class="nbco-oldw"><div class="fco-pls" role="radiogroup" aria-label="الباقة"><button type="button" class="fco-pl" data-a="p-monthly" data-f="plm" role="radio">شهري</button><button type="button" class="fco-pl" data-a="p-annual" data-f="pla" role="radio">سنوي</button></div><span class="nbco-off" data-f="off"></span></div></div>' +
++        '<div class="nbco-lbl">اختر وسيلة الدفع</div>' +
++        '<div class="nbco-tabs" data-f="tabs" data-m="vf" role="tablist">' +
++          '<button type="button" class="nbco-tab on" data-a="m-vf" role="tab" aria-selected="true"><i class="fsub-ml fsub-ml--vf"></i><span>Vodafone Cash</span></button>' +
++          '<button type="button" class="nbco-tab" data-a="m-ip" role="tab" aria-selected="false"><i class="fsub-ml fsub-ml--ip"></i><span>InstaPay</span></button></div>' +
++        '<div class="nbco-method nbco-pp" data-f="pvf"><div class="nbco-mi"><i class="fsub-ml fsub-ml--vf"></i></div><div><b>Vodafone Cash</b><span class="nbco-num" data-f="numvf"></span></div><button type="button" class="nbco-cp" data-a="copy">' + I.cp + '<span>نسخ</span></button><p class="nbco-hint">أرسل <b data-f="amt2"></b> جنيه إلى الرقم الموضح أعلاه.</p></div>' +
++        '<div class="nbco-method nbco-pp" data-f="pip" hidden><div class="nbco-mi"><i class="fsub-ml fsub-ml--ip"></i></div><div><b>InstaPay</b><span class="nbco-num" data-f="numip"></span></div><button type="button" class="nbco-cp" data-a="copy">' + I.cp + '<span>نسخ</span></button><p class="nbco-hint">أرسل <b data-f="amt3"></b> جنيه إلى الرقم المرتبط بحساب انستاباي الموضح أعلاه.</p></div>' +
++        '<div class="nbco-q">هل أرسلت المبلغ؟</div>' +
++        '<button type="button" class="nbco-btn p" data-a="sent"><span>نعم، تم التحويل</span>' + I.fw + '</button>' +
++        '<button type="button" class="nbco-btn s" data-a="no">لا، لم أرسل بعد</button>' +
++        '<div class="nbco-sec">' + I.lk + '<span>بياناتك آمنة ومشفرة</span></div></section>' +
++      '<section class="nbco-s" data-s="verify"><div class="nbco-stp">الخطوة 2 من 3</div><h2 class="nbco-h">تأكيد عملية التحويل</h2>' +
++        '<p class="nbco-p" data-f="vp"></p>' +
++        '<label class="nbco-fl" for="fco-from" data-f="vl"></label>' +
++        '<input class="nbco-in" id="fco-from" type="tel" inputmode="numeric" dir="ltr" autocomplete="tel" maxlength="16" placeholder="01012345678" enterkeyhint="next"><div class="nbco-em"></div>' +
++        '<div class="nbco-note">' + I.inf + '<span data-f="vn"></span></div>' +
++        '<button type="button" class="nbco-btn p" data-a="next"><span>متابعة</span>' + I.fw + '</button></section>' +
++      '<section class="nbco-s" data-s="data"><div class="nbco-stp">الخطوة 3 من 3</div><h2 class="nbco-h">رقم العملية</h2>' +
++        '<p class="nbco-p">اكتب رقم العملية (المرجع) الموجود في رسالة التحويل ليتم التحقق من الدفع وتفعيل الاشتراك.</p>' +
++        '<label class="nbco-fl" for="fco-ref">رقم العملية / المرجع</label>' +
++        '<input class="nbco-in" id="fco-ref" type="text" dir="ltr" autocomplete="off" maxlength="48" placeholder="حروف وأرقام فقط (6 على الأقل)" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send"><div class="nbco-em"></div>' +
++        '<div class="nbco-note">' + I.inf + '<span>الاشتراك بيتفعّل بعد تحقق الإدارة من الدفع.</span></div>' +
++        '<button type="button" class="nbco-btn p" data-a="send"><span>إرسال طلب التفعيل</span>' + I.sd + '</button></section>' +
++      '<section class="nbco-s nbco-center" data-s="received"><div class="nbco-ring">' + I.dc + '</div><h2 class="nbco-h">تم استلام طلبك</h2>' +
++        '<p class="nbco-p">جاري التحقق من عملية الدفع، وسيتم تفعيل الاشتراك بعد التأكد من التحويل.</p>' +
++        '<div class="nbco-ord" data-a="cord" hidden><small>رقم العملية</small><b data-f="ord"></b></div>' +
++        fcoTimelineHTML() +
++        '<button type="button" class="nbco-btn s" data-a="close">' + I.hm + '<span>العودة إلى مزرعتي</span></button>' +
++        '<div class="nbco-sec"><span>لو محصلش التفعيل فورًا، تواصل معنا عبر واتساب.</span></div></section>' +
++      '<section class="nbco-s nbco-center" data-s="active"><div class="nbco-ring ok">' + I.ck + fcoSparks() + '</div><h2 class="nbco-h">تم تفعيل الاشتراك بنجاح</h2>' +
++        '<p class="nbco-p">يمكنك الآن استخدام إدارة المزرعة بالكامل.</p>' +
++        '<button type="button" class="nbco-btn p" data-a="go"><span>الذهاب إلى مزرعتي</span>' + I.fw + '</button>' +
++        '<button type="button" class="nbco-btn s" data-a="close">' + I.hm + '<span>إغلاق</span></button></section>';
++    }
++
++    function fcoClose() {
++      var o = document.getElementById('fsub-co');
++      if (o && o._unwatch) o._unwatch();
++      if (o && o.parentNode) o.parentNode.removeChild(o);
++    }
++
++    function fcoOpen() {
++      if (document.getElementById('fsub-co')) return;
++      var u = uid();
++      if (!u) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
++      var I = FCO_I;
++      var ov = document.createElement('div');
++      ov.id = 'fsub-co'; ov.className = 'fco-ov';
++      ov.innerHTML = '<div class="fco-box"><div class="nbco" data-st="pay">' + fcoHTML() + '</div></div>';
++      document.body.appendChild(ov);
++
++      var root = ov.querySelector('.nbco');
++      var st = { s: 'pay', busy: false, m: fsubUI.method === 'instapay' ? 'ip' : 'vf', un: null, snd: 0, ref: '',
++                 base: (fsubMem.d && fsubMem.d.paidUntil) || 0 };
++      var Q = function(a) { return root.querySelector('[data-f=' + a + ']'); };
++      var secs = root.querySelectorAll('.nbco-s'), prog = root.querySelector('.nbco-prog'),
++          back = root.querySelector('.nbco-ib'),
++          fFrom = document.getElementById('fco-from'), fRef = document.getElementById('fco-ref');
++
++      function clr(inp) { inp.classList.remove('err'); if (inp.nextElementSibling) inp.nextElementSibling.textContent = ''; }
++      function bad(inp, msg) { inp.classList.remove('err'); void inp.offsetWidth; inp.classList.add('err'); inp.nextElementSibling.textContent = msg; try { inp.focus(); } catch (e) {} return false; }
++      [fFrom, fRef].forEach(function(f) { f.addEventListener('input', function() { clr(f); }); });
++
++      function progHTML(n) {
++        var L = ['الدفع', 'التحقق', 'البيانات'], h = '';
++        for (var i = 1; i <= 3; i++) {
++          h += '<div class="nbco-pn ' + (i < n ? 'd' : i === n ? 'c' : '') + '"><i>' + (i < n ? I.ck : i) + '</i><span>' + L[i - 1] + '</span></div>';
++          if (i < 3) h += '<div class="nbco-pl' + (i < n ? ' f' : '') + '"></div>';
++        }
++        return h;
++      }
++      function go(s) {
++        st.s = s; root.setAttribute('data-st', s);
++        for (var i = 0; i < secs.length; i++) secs[i].classList.toggle('on', secs[i].getAttribute('data-s') === s);
++        var n = s === 'verify' ? 2 : s === 'data' ? 3 : 0;
++        prog.hidden = !n; if (n) prog.innerHTML = progHTML(n);
++        back.innerHTML = s === 'pay' ? I.x : I.bk; back.setAttribute('data-a', s === 'pay' ? 'close' : 'back');
++        root.scrollTop = 0;
++      }
++      function busy(b) { st.busy = b; var c = root.querySelector('[data-a=send]'); c.disabled = b; c.classList.toggle('ld', b); back.disabled = b; }
++
++      function refresh() {
++        var pl = fsubUI.plan, p = FSUB_PLANS[pl], m = FSUB_PLANS.monthly, a = FSUB_PLANS.annual;
++        Q('title').textContent = 'إدارة المزرعة بالاشتراك';
++        Q('sub').textContent = pl === 'annual' ? 'اشتراك سنوي — ≈ ' + Math.round(a.price / 12) + ' ج.م شهريًا' : 'اشتراك شهري — يتجدد يدويًا كل شهر ميلادي';
++        Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
++        var off = Q('off'); off.hidden = pl !== 'annual'; off.textContent = 'وفّر ' + (m.price * 12 - a.price) + ' ج.م';
++        ['monthly', 'annual'].forEach(function(k) { var b = Q(k === 'monthly' ? 'plm' : 'pla'); b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
++        Q('numvf').textContent = FSUB_PAY.vcash; Q('numip').textContent = FSUB_PAY.instapay;
++      }
++      function setM(m) {
++        st.m = m === 'ip' ? 'ip' : 'vf'; var ip = st.m === 'ip';
++        fsubUI.method = ip ? 'instapay' : 'vodafone_cash';
++        var tb = Q('tabs'); tb.setAttribute('data-m', st.m);
++        [].forEach.call(tb.querySelectorAll('.nbco-tab'), function(b) { var on = b.getAttribute('data-a') === 'm-' + st.m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
++        Q('pvf').hidden = ip; Q('pip').hidden = !ip;
++        Q('vp').textContent = ip ? 'أدخل رقم الهاتف المرتبط بحساب انستاباي الذي أرسلت منه المبلغ.' : 'أدخل رقم Vodafone Cash الذي أرسلت منه المبلغ.';
++        Q('vl').textContent = ip ? 'رقم الهاتف المرتبط بحساب انستاباي' : 'رقم Vodafone Cash المرسل منه';
++        Q('vn').textContent = ip ? 'استخدم نفس الرقم المرتبط بالحساب الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.' : 'استخدم نفس الرقم الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.';
++      }
++      function setP(pl) {
++        if (!FSUB_PLANS[pl]) return;
++        if (window.FarmSub && window.FarmSub.pick) window.FarmSub.pick(pl); else fsubUI.plan = pl;
++        refresh();
++      }
++
++      function unwatch() { if (st.un) { try { st.un(); } catch (e) {} st.un = null; } }
++      ov._unwatch = unwatch;
++      function activate() { unwatch(); go('active'); }
++      function watch() {
++        unwatch();
++        try {
++          st.un = db.collection('farm_subscriptions').doc(u).onSnapshot(function(snap) {
++            var pu = fsubTs(snap.exists ? snap.data().paidUntil : null);
++            if (pu && pu > Date.now() && pu > st.base && document.getElementById('fsub-co')) activate();
++          }, function() {});
++        } catch (e) {}
++      }
++      function celebrate() {
++        if (!st.snd || Date.now() - st.snd > 20000) return; st.snd = 0;
++        fcoSndSuccess(); try { if (navigator.vibrate) navigator.vibrate([14, 50, 26]); } catch (e) {}
++        var rg = root.querySelector('[data-s=received] .nbco-ring'); if (rg) { rg.classList.remove('pop'); void rg.offsetWidth; rg.classList.add('pop'); }
++      }
++      function received(ref) {
++        st.ref = ref || '';
++        var o = Q('ord'); o.textContent = st.ref ? '#' + st.ref.toUpperCase() : ''; o.parentNode.hidden = !st.ref;
++        if (st.s !== 'active') go('received'); watch(); celebrate();
++      }
++
++      function send() {
++        var ref = fsubNormRef(fRef.value);
++        if (!/^[A-Za-z0-9]{6,40}$/.test(ref)) return bad(fRef, 'رقم العملية لازم يكون حروف وأرقام (من 6 إلى 40)');
++        var phone = fsubNormPhone(fFrom.value);
++        if (!/^[0-9+]{10,15}$/.test(phone)) { go('verify'); return bad(fFrom, 'برجاء إدخال رقم الهاتف المُحوَّل منه بشكل صحيح'); }
++        var plan = fsubUI.plan, method = fsubUI.method;
++        if (!FSUB_PLANS[plan]) return;
++        busy(true); st.snd = Date.now(); fcoSndUnlock();
++        Promise.resolve().then(function() {
++          var data = {
++            uid: u, email: (currentUser && currentUser.email) || '',
++            plan: plan, amount: FSUB_PLANS[plan].price, currency: 'EGP',   /* السيرفر/القواعد بتتحقق من السعر — ده للعرض فقط */
++            phone: phone, transactionRef: ref, refKey: ref.toLowerCase(),
++            paymentMethod: method, status: 'pending',
++            createdAt: firebase.firestore.FieldValue.serverTimestamp()
++          };
++          return db.collection('farm_subscription_payments').doc(u + '_' + data.refKey).set(data).then(function() { return data; });
++        }).then(function(data) {
++          /* existing admin push (fire-and-forget; never blocks the flow) */
++          try {
++            fetch(FSUB_PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
++              body: JSON.stringify({ courseLabel: 'اشتراك إدارة المزرعة — ' + FSUB_PLANS[plan].label, amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
++          } catch (e) {}
++          busy(false);
++          if (!document.getElementById('fsub-co')) return;
++          received(ref);
++          fsubAfterChange();   /* يحدّث الصفحة اللي ورا الشيت (حالة قيد المراجعة) */
++        }).catch(function(e) {
++          busy(false); st.snd = 0;
++          var msg = 'تعذّر إرسال الطلب — حاول مرة أخرى';
++          if (e && e.code === 'permission-denied') msg = 'رقم العملية ده اتبعت قبل كده، أو البيانات غير صحيحة';
++          else if (e && (e.code === 'unavailable' || e.code === 'network-request-failed')) msg = 'خطأ في الاتصال — تحقق من الإنترنت وأعد المحاولة';
++          bad(fRef, msg);
++        });
++      }
++
++      root.addEventListener('click', function(e) {
++        var t = e.target.closest('[data-a]'); if (!t || st.busy) return; var a = t.getAttribute('data-a');
++        if (a === 'close') fcoClose();
++        else if (a === 'back') go(st.s === 'data' ? 'verify' : 'pay');
++        else if (a === 'copy') {
++          var v = st.m === 'ip' ? FSUB_PAY.instapay : FSUB_PAY.vcash, c = t.querySelector('span');
++          if (navigator.clipboard) navigator.clipboard.writeText(v).catch(function() {});
++          else { try { var ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (x) {} }
++          c.textContent = 'تم النسخ'; t.classList.add('ok'); setTimeout(function() { c.textContent = 'نسخ'; t.classList.remove('ok'); }, 1800);
++        }
++        else if (a === 'cord') { if (navigator.clipboard) navigator.clipboard.writeText(st.ref).catch(function() {}); }
++        else if (a === 'm-vf' || a === 'm-ip') setM(a.slice(2));
++        else if (a === 'p-monthly' || a === 'p-annual') setP(a.slice(2));
++        else if (a === 'sent') { go('verify'); setTimeout(function() { try { fFrom.focus({ preventScroll: true }); } catch (x) {} }, 420); }
++        else if (a === 'no') { fcoClose(); farmToast('يمكنك العودة لإتمام الاشتراك بعد التحويل', 'info'); }
++        else if (a === 'next') {
++          var ph = fsubNormPhone(fFrom.value);
++          if (!ph) return bad(fFrom, st.m === 'ip' ? 'برجاء إدخال رقم الهاتف المرتبط بحساب انستاباي' : 'برجاء إدخال رقم Vodafone Cash الذي أرسلت منه المبلغ');
++          if (!/^[0-9+]{10,15}$/.test(ph)) return bad(fFrom, 'برجاء إدخال رقم هاتف صحيح (10 أرقام على الأقل)');
++          fFrom.value = ph; go('data'); setTimeout(function() { try { fRef.focus({ preventScroll: true }); } catch (x) {} }, 420);
++        }
++        else if (a === 'send') send();
++        else if (a === 'go') { fcoClose(); fsubAfterChange(); }
++      });
++      root.addEventListener('keydown', function(e) {
++        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return; e.preventDefault();
++        var b = root.querySelector('[data-a=' + (e.target === fFrom ? 'next' : 'send') + ']'); if (b) b.click();
++      });
++
++      refresh(); setM(st.m);
++      var pend = fsubMem.d && fsubMem.d.pending;
++      if (pend) { go('received'); var o = Q('ord'); var rk = pend.refKey || ''; o.textContent = rk ? '#' + rk.toUpperCase() : ''; o.parentNode.hidden = !rk; st.ref = rk; watch(); }
++      else go('pay');
++    }
++
+     window.FarmSub = {
+       pick: function(plan) {
+         if (!FSUB_PLANS[plan]) return;
+@@ -16500,18 +16779,7 @@
+         else { try { var ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); farmToast('تم نسخ الرقم', 'success'); } catch (e) {} }
+       },
+       retry: function() { renderFarmApp(); },
+-      openPay: function() {
+-        if (document.getElementById('fsub-overlay')) return;
+-        fsubLoad(false, function(d) {
+-          var o = document.createElement('div');
+-          o.id = 'fsub-overlay'; o.className = 'fsub-overlay';
+-          var inner = fsubPaywallHTML(Object.assign({}, d, { state: d.pending ? 'pending' : (d.rejected ? 'rejected' : 'none'), canStartTrial: false }));
+-          o.innerHTML = '<div class="fsub-overlay-in"><button type="button" class="fsub-x" aria-label="إغلاق" onclick="FarmSub.closePay()">×</button>' + inner + '</div>';
+-          o.querySelectorAll('.fsub-back').forEach(function(b) { b.setAttribute('onclick', 'FarmSub.closePay()'); b.textContent = 'إغلاق'; });
+-          document.body.appendChild(o);
+-          fsubUI.overlay = true;
+-        });
+-      },
++      openPay: function() { fcoOpen(); },   /* كان بيفتح overlay بالباقات + النموذج — دلوقتي بيفتح شيت الدفع بنفس رحلة الكورسات */
+       closePay: function() { fsubCloseOverlay(); },
+       startTrial: function() {
+         var u = uid();
+@@ -16579,37 +16847,76 @@
  
    <!-- ══ FARM SUBSCRIPTION CSS (fsub-*) — uses the site design tokens only ══ -->
    <style id="fsub-css">
@@ -69,10 +386,10 @@
 -  .fsub-trial { width:100%; justify-content:center; padding:13px 22px; }
 +  .fsub-lbl-h { font-size:13px; font-weight:800; color:var(--ink); line-height:1.5; margin:2px 0 -2px; }
 +  /* ── Primary buttons (trial + submit) — pill style shared with the course checkout ── */
-+  .fsub-card .fsub-trial, .fsub-card .fsub-submit { width:100%; height:54px; padding:0 22px; justify-content:center; gap:9px; border-radius:99px; font-size:15.5px; font-weight:800; background:linear-gradient(135deg,var(--brand),var(--brand-l)); box-shadow:0 10px 24px rgba(27,107,58,.28); }
++  .fsub-card .fsub-trial, .fsub-card .fsub-submit, .fsub-card .fsub-cta { width:100%; height:54px; padding:0 22px; justify-content:center; gap:9px; border-radius:99px; font-size:15.5px; font-weight:800; background:linear-gradient(135deg,var(--brand),var(--brand-l)); box-shadow:0 10px 24px rgba(27,107,58,.28); }
 +  .fsub-card .fsub-submit { margin-top:6px; }
-+  .fsub-card .fsub-trial::after, .fsub-card .fsub-submit::after,
-+  .fsub-card .fsub-trial:hover::after, .fsub-card .fsub-submit:hover::after { content:""; position:absolute; top:0; bottom:0; left:auto; right:-80px; width:60px; background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent); background-size:auto; background-position:0 0; transition:none; animation:fsubShine 3.2s infinite; pointer-events:none; }
++  .fsub-card .fsub-trial::after, .fsub-card .fsub-submit::after, .fsub-card .fsub-cta::after,
++  .fsub-card .fsub-trial:hover::after, .fsub-card .fsub-submit:hover::after, .fsub-card .fsub-cta:hover::after { content:""; position:absolute; top:0; bottom:0; left:auto; right:-80px; width:60px; background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent); background-size:auto; background-position:0 0; transition:none; animation:fsubShine 3.2s infinite; pointer-events:none; }
 +  .fsub-card .fsub-submit::before { content:""; order:1; width:18px; height:18px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 3L10 14M21 3l-7 18-4-7-7-4z'/%3E%3C/svg%3E") center/contain no-repeat; }
    .fsub-or { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; }
    .fsub-or::before, .fsub-or::after { content:''; flex:1; height:1px; background:var(--line); }
@@ -150,12 +467,31 @@
    .fsub-back { width:100%; margin-top:2px; }
    .fsub-note { font-size:12.5px; line-height:1.8; padding:10px 12px; border-radius:var(--r2,10px); border:1px solid var(--line); }
    .fsub-note--info { background:var(--brand-mist,#eef8f0); color:var(--slate); }
-@@ -16625,7 +16674,17 @@
+@@ -16625,7 +16932,36 @@
    .fsub-x { position:absolute; top:14px; inset-inline-end:16px; z-index:1; width:34px; height:34px; border-radius:50%; border:none; background:var(--card); color:var(--ink); font-size:22px; line-height:1; cursor:pointer; box-shadow:var(--s2); }
    [data-dark] .fsub-note--bad, [data-dark] .fsub-banner--bad { background:#3a1b19; border-color:#6b2c28; }
    [data-dark] .fsub-note--warn, [data-dark] .fsub-banner--warn { background:#3a2c10; color:#e5c27a; border-color:#6b5320; }
 -  @media (max-width:420px) { .fsub-card { padding:22px 14px 16px; } .fsub-plan-price { font-size:22px; } }
 +  @media (max-width:420px) { .fsub-card { padding:24px 14px 18px; } .fsub-plan-price { font-size:27px; } .fsub-total-r b { font-size:34px; } }
++
++  /* ══ Checkout sheet (fco-*) — يعيد استخدام .nbco-* بتاع شاشة الكورسات ══ */
++  .fco-ov { position:fixed; inset:0; z-index:100001; display:flex; align-items:flex-end; justify-content:center; background:rgba(8,22,14,.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:fcoFade .3s ease both; }
++  .fco-box { width:100%; max-width:440px; max-height:94vh; display:flex; flex-direction:column; background:#fff; border-radius:28px 28px 0 0; box-shadow:0 -12px 60px rgba(10,40,20,.2); overflow:hidden; animation:nbcoUp .5s cubic-bezier(.22,1,.36,1); }
++  @media (min-width:560px) { .fco-ov { align-items:center; padding:20px; } .fco-box { border-radius:28px; } }
++  @keyframes fcoFade { from { opacity:0; } to { opacity:1; } }
++  .fco-box .nbco-cico { color:var(--g); }
++  .fco-box .nbco-cico svg { font-size:30px; stroke-width:1.6; }
++  .fco-pls { display:flex; gap:3px; background:#eff4f1; border-radius:99px; padding:3px; }
++  .fco-pl { border:0; background:transparent; font:inherit; font-size:12.5px; font-weight:800; color:var(--mu); padding:6px 14px; border-radius:99px; cursor:pointer; transition:background .25s, color .25s, box-shadow .25s; }
++  .fco-pl.on { background:#fff; color:var(--g); box-shadow:0 2px 8px rgba(27,107,58,.16); }
++  .nbco-tab .fsub-ml { filter:grayscale(1); opacity:.55; transition:filter .3s, opacity .3s; }
++  .nbco-tab.on .fsub-ml { filter:none; opacity:1; }
++  .nbco-mi .fsub-ml--vf { width:30px; height:36px; }
++  .nbco-mi .fsub-ml--ip { width:36px; height:20px; }
++  .fco-vars { --g:#1B6B3A; --g2:#2d9a58; --gs:#eef7f1; --tx:#14261b; --mu:#6b7f72; --ln:#e5ede7; }
++  .fco-vars .nbco-tl { margin:0; }
++  [data-dark] .fco-vars { --g:#5fc97e; --gs:rgba(27,107,58,.14); --tx:#e2f0e6; --mu:#8ab89a; --ln:rgba(190,235,205,.14); }
++  [data-dark] .fco-vars .nbco-tl li.cur b { background:radial-gradient(circle,var(--g) 45%,transparent 47%); }
 +  @keyframes fsubIn { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
 +  @keyframes fsubPop { from { transform:scale(.96); } to { transform:none; } }
 +  @keyframes fsubShine { 0%,55% { right:-80px; } 100% { right:120%; } }
