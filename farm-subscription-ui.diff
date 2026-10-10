@@ -1,0 +1,171 @@
+--- /tmp/claude-0/-home-claude/608d306e-e6ba-5840-903f-d6431e9a8f90/scratchpad/orig/index.html	2026-10-10 18:53:50.396309742 +0300
++++ index.html	2026-10-10 18:57:15.745809274 +0300
+@@ -16349,7 +16349,8 @@
+     function fsubPlansHTML() {
+       var m = FSUB_PLANS.monthly, a = FSUB_PLANS.annual;
+       var save = m.price * 12 - a.price;
+-      return '<div class="fsub-plans" role="radiogroup" aria-label="الباقات">' +
++      return '<div class="fsub-lbl-h">اختر الباقة</div>' +
++        '<div class="fsub-plans" role="radiogroup" aria-label="الباقات">' +
+         '<div class="fsub-plan' + (fsubUI.plan === 'monthly' ? ' on' : '') + '" data-plan="monthly" role="radio" tabindex="0" onclick="FarmSub.pick(\'monthly\')">' +
+           '<div class="fsub-plan-name">شهري</div>' +
+           '<div class="fsub-plan-price">' + m.price + ' <small>ج.م / شهر</small></div>' +
+@@ -16367,21 +16368,30 @@
+     function fsubPayFormHTML() {
+       var price = FSUB_PLANS[fsubUI.plan].price;
+       var isIP = fsubUI.method === 'instapay';
++      var mk = isIP ? 'ip' : 'vf';
+       return '<div class="fsub-pay" id="fsub-pay">' +
+-        '<div class="fsub-methods">' +
+-          '<button type="button" class="fsub-method' + (!isIP ? ' on' : '') + '" onclick="FarmSub.method(\'vodafone_cash\')">فودافون كاش</button>' +
+-          '<button type="button" class="fsub-method' + (isIP ? ' on' : '') + '" onclick="FarmSub.method(\'instapay\')">InstaPay</button>' +
++        '<div class="fsub-total"><div class="fsub-total-l">المبلغ المطلوب تحويله</div>' +
++          '<div class="fsub-total-r"><b id="fsub-amount">' + price + '</b><span>جنيه</span></div></div>' +
++        '<div class="fsub-lbl-h">اختر وسيلة الدفع</div>' +
++        '<div class="fsub-methods" data-m="' + mk + '" role="tablist">' +
++          '<button type="button" class="fsub-method' + (!isIP ? ' on' : '') + '" role="tab" aria-selected="' + (!isIP) + '" onclick="FarmSub.method(\'vodafone_cash\')"><i class="fsub-ml fsub-ml--vf"></i><span>Vodafone Cash</span></button>' +
++          '<button type="button" class="fsub-method' + (isIP ? ' on' : '') + '" role="tab" aria-selected="' + isIP + '" onclick="FarmSub.method(\'instapay\')"><i class="fsub-ml fsub-ml--ip"></i><span>InstaPay</span></button>' +
+         '</div>' +
+-        '<div class="fsub-inst">حوّل <b id="fsub-amount">' + price + '</b> جنيه ' + (isIP ? 'عبر InstaPay على الرقم المرتبط:' : 'على رقم فودافون كاش:') +
+-          '<div class="fsub-num"><span id="fsub-num">' + (isIP ? FSUB_PAY.instapay : FSUB_PAY.vcash) + '</span>' +
+-          '<button type="button" class="fsub-copy" onclick="FarmSub.copy()">نسخ</button></div>' +
+-          'بعدها اكتب رقم العملية ورقم الهاتف اللي حوّلت منه. الاشتراك بيتفعّل بعد تحقق الإدارة من الدفع.' +
++        '<div class="fsub-inst">' +
++          '<div class="fsub-mrow"><span class="fsub-mi"><i class="fsub-ml fsub-ml--' + mk + '"></i></span>' +
++            '<div class="fsub-mt"><b>' + (isIP ? 'InstaPay' : 'Vodafone Cash') + '</b>' +
++              '<span class="fsub-num"><span id="fsub-num">' + (isIP ? FSUB_PAY.instapay : FSUB_PAY.vcash) + '</span></span></div>' +
++            '<button type="button" class="fsub-copy" onclick="FarmSub.copy()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9h10v11H9zM5 15V4h10"/></svg><span>نسخ</span></button></div>' +
++          '<p class="fsub-hint">' + (isIP ? 'حوّل المبلغ عبر InstaPay إلى الرقم المرتبط الموضح أعلاه.' : 'حوّل المبلغ إلى رقم فودافون كاش الموضح أعلاه.') + '</p>' +
+         '</div>' +
++        '<div class="fsub-tip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>' +
++          '<span>بعدها اكتب رقم العملية ورقم الهاتف اللي حوّلت منه. الاشتراك بيتفعّل بعد تحقق الإدارة من الدفع.</span></div>' +
+         '<label class="fsub-lbl" for="fsub-phone">رقم الهاتف المُحوَّل منه</label>' +
+         '<input class="fsub-inp" id="fsub-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="01XXXXXXXXX" dir="ltr">' +
+         '<label class="fsub-lbl" for="fsub-ref">رقم العملية / المرجع</label>' +
+         '<input class="fsub-inp" id="fsub-ref" type="text" autocomplete="off" maxlength="48" placeholder="حروف وأرقام فقط (6 على الأقل)" dir="ltr">' +
+         '<button type="button" class="farm-btn-primary fsub-submit" id="fsub-submit" onclick="FarmSub.pay()">إرسال طلب التفعيل</button>' +
++        '<div class="fsub-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg><span>بياناتك آمنة ومشفرة</span></div>' +
+       '</div>';
+     }
+ 
+@@ -16579,37 +16589,76 @@
+ 
+   <!-- ══ FARM SUBSCRIPTION CSS (fsub-*) — uses the site design tokens only ══ -->
+   <style id="fsub-css">
+-  .fsub-wrap { display:flex; justify-content:center; padding:24px 14px 64px; font-family:var(--f-ui); }
+-  .fsub-card { width:100%; max-width:520px; background:var(--card); border:1px solid var(--line); border-radius:var(--r4,24px); box-shadow:var(--s3); padding:26px 20px 20px; display:flex; flex-direction:column; gap:14px; }
++  /* ── Layout / card ── */
++  .fsub-wrap { display:flex; justify-content:center; padding:18px 14px calc(120px + env(safe-area-inset-bottom,0px)); font-family:var(--f-ui); }
++  .fsub-overlay .fsub-wrap { padding-bottom:40px; }
++  .fsub-card { width:100%; max-width:480px; background:var(--card); border:1px solid var(--line); border-radius:28px; box-shadow:var(--s3); padding:28px 20px 22px; display:flex; flex-direction:column; gap:14px; }
++  .fsub-card > *:not(.fsub-pay) { animation:fsubIn .55s cubic-bezier(.22,1,.36,1) backwards; }
++  .fsub-card > *:nth-child(2) { animation-delay:.05s; } .fsub-card > *:nth-child(3) { animation-delay:.1s; } .fsub-card > *:nth-child(4) { animation-delay:.15s; } .fsub-card > *:nth-child(n+5) { animation-delay:.2s; }
+   .fsub-head { text-align:center; }
+-  .fsub-ico { width:60px; height:60px; margin:0 auto 10px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--brand-mist,#eef8f0); color:var(--brand); }
+-  .fsub-title { margin:0 0 6px; font-size:20px; font-weight:800; color:var(--ink); }
++  .fsub-ico { width:72px; height:72px; margin:0 auto 14px; border-radius:24px; display:flex; align-items:center; justify-content:center; background:linear-gradient(145deg,#e6f5ec,#cfeadb); color:var(--brand); box-shadow:0 6px 18px rgba(27,107,58,.12); }
++  .fsub-title { margin:0 0 8px; font-size:22px; font-weight:900; line-height:1.4; color:var(--ink); }
+   .fsub-sub { margin:0; font-size:13px; line-height:1.8; color:var(--muted); }
+-  .fsub-trial { width:100%; justify-content:center; padding:13px 22px; }
++  .fsub-lbl-h { font-size:13px; font-weight:800; color:var(--ink); line-height:1.5; margin:2px 0 -2px; }
++  /* ── Primary buttons (trial + submit) — pill style shared with the course checkout ── */
++  .fsub-card .fsub-trial, .fsub-card .fsub-submit { width:100%; height:54px; padding:0 22px; justify-content:center; gap:9px; border-radius:99px; font-size:15.5px; font-weight:800; background:linear-gradient(135deg,var(--brand),var(--brand-l)); box-shadow:0 10px 24px rgba(27,107,58,.28); }
++  .fsub-card .fsub-submit { margin-top:6px; }
++  .fsub-card .fsub-trial::after, .fsub-card .fsub-submit::after,
++  .fsub-card .fsub-trial:hover::after, .fsub-card .fsub-submit:hover::after { content:""; position:absolute; top:0; bottom:0; left:auto; right:-80px; width:60px; background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent); background-size:auto; background-position:0 0; transition:none; animation:fsubShine 3.2s infinite; pointer-events:none; }
++  .fsub-card .fsub-submit::before { content:""; order:1; width:18px; height:18px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 3L10 14M21 3l-7 18-4-7-7-4z'/%3E%3C/svg%3E") center/contain no-repeat; }
+   .fsub-or { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; }
+   .fsub-or::before, .fsub-or::after { content:''; flex:1; height:1px; background:var(--line); }
+-  .fsub-plans { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+-  .fsub-plan { position:relative; border:2px solid var(--line); border-radius:var(--r3,16px); padding:16px 10px 12px; text-align:center; cursor:pointer; background:var(--bg2); transition:border-color .2s, box-shadow .2s, transform .2s; }
++  /* ── Plans ── */
++  .fsub-plans { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding-top:6px; }
++  .fsub-plan { position:relative; border:1.5px solid var(--line); border-radius:20px; padding:24px 10px 16px; text-align:center; cursor:pointer; background:var(--card); transition:border-color .25s, box-shadow .25s, background .25s, transform .15s; -webkit-tap-highlight-color:transparent; }
+   .fsub-plan:hover { border-color:var(--brand-l); }
+-  .fsub-plan.on { border-color:var(--brand); background:var(--brand-mist,#eef8f0); box-shadow:var(--sglow); }
+-  .fsub-plan-name { font-size:13px; font-weight:700; color:var(--slate); }
+-  .fsub-plan-price { font-size:26px; font-weight:800; color:var(--ink); line-height:1.3; }
+-  .fsub-plan-price small { font-size:11px; font-weight:600; color:var(--muted); }
+-  .fsub-plan-note { font-size:11px; color:var(--muted); margin-top:2px; }
+-  .fsub-badge { position:absolute; top:-10px; inset-inline-start:50%; transform:translateX(50%); background:var(--gold); color:#fff; font-size:10.5px; font-weight:800; padding:2px 10px; border-radius:var(--rpill,9999px); white-space:nowrap; }
+-  [dir="rtl"] .fsub-badge, .fsub-badge { inset-inline-start:auto; left:50%; right:auto; transform:translateX(-50%); }
+-  .fsub-pay { display:flex; flex-direction:column; gap:8px; }
+-  .fsub-methods { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+-  .fsub-method { padding:10px; border-radius:var(--r2,10px); border:1.5px solid var(--line); background:var(--bg2); color:var(--slate); font:700 13px var(--f-ui); cursor:pointer; }
+-  .fsub-method.on { border-color:var(--brand); color:var(--brand); background:var(--brand-mist,#eef8f0); }
+-  .fsub-inst { font-size:12.5px; line-height:1.9; color:var(--slate); background:var(--bg2); border:1px dashed var(--line2); border-radius:var(--r2,10px); padding:10px 12px; }
+-  .fsub-num { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; font-size:18px; font-weight:800; letter-spacing:1px; color:var(--ink); direction:ltr; }
+-  .fsub-copy { border:none; background:var(--brand); color:#fff; font:700 11.5px var(--f-ui); padding:5px 12px; border-radius:var(--rpill,9999px); cursor:pointer; }
+-  .fsub-lbl { font-size:12px; font-weight:700; color:var(--slate); margin-top:4px; }
++  .fsub-plan:active { transform:scale(.98); }
++  .fsub-plan::before { content:""; position:absolute; top:11px; right:11px; width:20px; height:20px; border-radius:50%; border:2px solid var(--line2); background:transparent center/12px no-repeat; transition:background-color .25s, border-color .25s; }
++  .fsub-plan.on { border-color:var(--brand); background:linear-gradient(135deg,var(--brand-mist),var(--card) 80%); box-shadow:0 8px 22px rgba(27,107,58,.14), 0 0 0 3px rgba(27,107,58,.10); }
++  .fsub-plan.on::before { border-color:var(--brand); background-color:var(--brand); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7'/%3E%3C/svg%3E"); }
++  .fsub-plan-name { font-size:14px; font-weight:800; color:var(--slate); }
++  .fsub-plan-price { font-size:32px; font-weight:900; color:var(--ink); line-height:1.3; letter-spacing:-.02em; }
++  .fsub-plan.on .fsub-plan-price { color:var(--brand); }
++  .fsub-plan-price small { font-size:11.5px; font-weight:700; color:var(--muted); letter-spacing:0; }
++  .fsub-plan-note { font-size:11.5px; color:var(--muted); margin-top:4px; }
++  .fsub-badge { position:absolute; top:-11px; left:50%; right:auto; inset-inline-start:auto; transform:translateX(-50%); background:linear-gradient(135deg,var(--gold),var(--gold-l)); color:#fff; font-size:11px; font-weight:800; padding:3px 12px; border-radius:var(--rpill,9999px); white-space:nowrap; box-shadow:0 3px 10px rgba(201,135,26,.3); }
++  /* ── Payment ── */
++  .fsub-pay { display:flex; flex-direction:column; gap:12px; }
++  .fsub-total { display:flex; flex-direction:row-reverse; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-radius:22px; background:linear-gradient(135deg,var(--brand-mist),var(--card) 70%); border:1px solid var(--line); box-shadow:0 6px 20px rgba(27,107,58,.07); }
++  .fsub-total-l { font-size:13px; font-weight:800; color:var(--slate); }
++  .fsub-total-r { display:flex; align-items:baseline; gap:6px; color:var(--brand); }
++  .fsub-total-r b { font-size:40px; font-weight:900; letter-spacing:-.02em; line-height:1; }
++  .fsub-total-r span { font-size:16px; font-weight:800; }
++  .fsub-pay > .fsub-lbl-h { margin:6px 0 -4px; }
++  .fsub-methods { display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--bg3); border-radius:20px; padding:5px; }
++  .fsub-method { height:50px; border:0; border-radius:15px; background:transparent; display:flex; align-items:center; justify-content:center; gap:9px; font:800 14px var(--f-ui); color:var(--muted); cursor:pointer; transition:color .25s, background .25s, box-shadow .25s, transform .15s; -webkit-tap-highlight-color:transparent; }
++  .fsub-method:active { transform:scale(.97); }
++  .fsub-method.on { background:var(--card); color:var(--ink); box-shadow:0 3px 12px rgba(27,107,58,.16); animation:fsubPop .3s cubic-bezier(.22,1,.36,1); }
++  .fsub-ml { display:inline-block; flex-shrink:0; background-repeat:no-repeat; background-position:center; background-size:contain; }
++  .fsub-ml--vf { width:20px; height:24px; background-image:url(data:image/png;base64,…); }
++  .fsub-ml--ip { width:48px; height:24px; background-image:url(data:image/png;base64,…); }
++  .fsub-method .fsub-ml { filter:grayscale(1); opacity:.55; transition:filter .3s, opacity .3s; }
++  .fsub-method.on .fsub-ml { filter:none; opacity:1; }
++  .fsub-inst { padding:14px 16px; border:1px solid var(--line); border-radius:20px; background:var(--bg2); animation:fsubIn .4s cubic-bezier(.22,1,.36,1) backwards; }
++  .fsub-mrow { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; }
++  .fsub-mi { width:46px; height:46px; border-radius:50%; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.08); display:grid; place-items:center; overflow:hidden; }
++  .fsub-mi .fsub-ml--vf { width:28px; height:34px; }
++  .fsub-mi .fsub-ml--ip { width:34px; height:20px; }
++  .fsub-mt b { display:block; font-size:14.5px; font-weight:800; color:var(--ink); }
++  .fsub-num { display:block; direction:ltr; text-align:right; margin-top:2px; font-size:18px; font-weight:800; letter-spacing:.04em; color:var(--ink); }
++  .fsub-copy { border:0; background:var(--brand-mist); color:var(--brand); font:800 12.5px var(--f-ui); padding:8px 14px; border-radius:99px; display:flex; gap:6px; align-items:center; cursor:pointer; transition:transform .15s; }
++  .fsub-copy:active { transform:scale(.95); }
++  .fsub-copy svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
++  .fsub-hint { margin:12px 0 0; padding-top:10px; border-top:1px dashed var(--line2); font-size:13px; line-height:1.7; color:var(--slate); }
++  .fsub-tip { display:flex; gap:9px; align-items:flex-start; background:var(--brand-mist); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.7; color:var(--slate); }
++  .fsub-tip svg { width:16px; height:16px; margin-top:2px; flex-shrink:0; fill:none; stroke:var(--brand); stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
++  .fsub-lbl { display:block; font-size:13px; font-weight:800; color:var(--ink); line-height:1.5; margin:6px 0 -2px; }
+   .fsub-opt { font-weight:500; color:var(--muted); }
+-  .fsub-inp { width:100%; box-sizing:border-box; padding:11px 12px; border-radius:var(--r2,10px); border:1.5px solid var(--line); background:var(--bg); color:var(--ink); font:600 14px var(--f-ui); }
+-  .fsub-inp:focus { outline:none; border-color:var(--brand); box-shadow:var(--sglow); }
+-  .fsub-submit { width:100%; justify-content:center; margin-top:6px; padding:13px 22px; }
++  .fsub-inp { width:100%; height:54px; box-sizing:border-box; padding:0 16px; border-radius:16px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font:600 16px var(--f-ui); text-align:right; transition:border-color .2s, box-shadow .2s; }
++  .fsub-inp::placeholder { color:var(--muted); opacity:.6; font-weight:500; }
++  .fsub-inp:focus { outline:none; border-color:var(--brand-l); box-shadow:0 0 0 4px rgba(45,154,88,.14); }
++  .fsub-sec { display:flex; justify-content:center; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--brand); text-align:center; }
++  .fsub-sec svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
+   .fsub-back { width:100%; margin-top:2px; }
+   .fsub-note { font-size:12.5px; line-height:1.8; padding:10px 12px; border-radius:var(--r2,10px); border:1px solid var(--line); }
+   .fsub-note--info { background:var(--brand-mist,#eef8f0); color:var(--slate); }
+@@ -16625,7 +16674,17 @@
+   .fsub-x { position:absolute; top:14px; inset-inline-end:16px; z-index:1; width:34px; height:34px; border-radius:50%; border:none; background:var(--card); color:var(--ink); font-size:22px; line-height:1; cursor:pointer; box-shadow:var(--s2); }
+   [data-dark] .fsub-note--bad, [data-dark] .fsub-banner--bad { background:#3a1b19; border-color:#6b2c28; }
+   [data-dark] .fsub-note--warn, [data-dark] .fsub-banner--warn { background:#3a2c10; color:#e5c27a; border-color:#6b5320; }
+-  @media (max-width:420px) { .fsub-card { padding:22px 14px 16px; } .fsub-plan-price { font-size:22px; } }
++  @media (max-width:420px) { .fsub-card { padding:24px 14px 18px; } .fsub-plan-price { font-size:27px; } .fsub-total-r b { font-size:34px; } }
++  @keyframes fsubIn { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
++  @keyframes fsubPop { from { transform:scale(.96); } to { transform:none; } }
++  @keyframes fsubShine { 0%,55% { right:-80px; } 100% { right:120%; } }
++  [data-dark] .fsub-ico { background:linear-gradient(145deg,rgba(27,107,58,.28),rgba(27,107,58,.12)); color:var(--brand-xl); box-shadow:none; }
++  [data-dark] .fsub-methods { background:var(--bg); }
++  [data-dark] .fsub-method.on { background:var(--bg3); color:var(--ink); box-shadow:0 0 0 1px var(--line2); }
++  [data-dark] .fsub-plan.on .fsub-plan-price, [data-dark] .fsub-total-r, [data-dark] .fsub-copy, [data-dark] .fsub-sec { color:var(--brand-xl); }
++  [data-dark] .fsub-tip svg { stroke:var(--brand-xl); }
++  [data-dark] .fsub-plan.on { box-shadow:0 0 0 3px rgba(27,107,58,.22); }
++  @media (prefers-reduced-motion:reduce) { .fsub-card *, .fsub-card > *, .fsub-inst, .fsub-method.on { animation:none !important; } }
+   </style>
+ 
+   <!-- ══ FARM SYSTEM CSS ══ -->
