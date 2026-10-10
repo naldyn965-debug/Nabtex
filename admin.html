@@ -744,10 +744,6 @@ body[data-light] .fsa-card{background:#f3faf4}
         <input class="broadcast-select" id="xp-q" placeholder="إيميل الطالب أو UID" style="margin-bottom:8px">
         <button class="broadcast-send-btn" onclick="xpLookup()">بحث عن طالب</button>
         <div id="xp-student" style="margin-top:10px"></div>
-        <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>المتصدرون (الكل)</div>
-        <div id="xp-top"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
-        <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>آخر معاملات XP</div>
-        <div id="xp-tx"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
         <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>سجل استبدال الكريدت</div>
         <div id="xp-rd"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
       </div>
@@ -1133,9 +1129,11 @@ async function doLogin() {
 
 async function doLogout() {
   if (paymentsUnsubscribe) { paymentsUnsubscribe(); paymentsUnsubscribe = null; }
+  _paymentsReady = false;
   if (studyingUnsubscribe) { studyingUnsubscribe(); studyingUnsubscribe = null; }
   if (usersUnsubscribe)       { usersUnsubscribe();       usersUnsubscribe       = null; }
   if (courseConfigUnsubscribe){ courseConfigUnsubscribe(); courseConfigUnsubscribe = null; }
+  try { localStorage.removeItem(STUDY_CACHE_KEY); } catch (e) {}
   await auth.signOut();
   allPayments    = [];
   studyingCounts = {};
@@ -1191,9 +1189,22 @@ async function enableAdminPaymentPush() {
 }
 
 /* ── Load Payments (real-time listener) ─────────── */
+var _paymentsReady = false; // true once the live listener delivered a snapshot (and hasn't errored)
 function loadPayments() {
+  // Listener already live → data is already current. Re-attaching would re-read the whole
+  // collection on every refresh click, so just re-render + top up the cheap studying delta.
+  if (paymentsUnsubscribe && _paymentsReady) {
+    updateStats();
+    buildDateNav(true);
+    renderList();
+    document.getElementById('last-refresh').innerHTML =
+      '<span class="live-dot"></span>مباشر — ' + new Date().toLocaleTimeString('ar-EG');
+    startStudyingListener();
+    return;
+  }
   // Tear down any previous listener first
   if (paymentsUnsubscribe) { paymentsUnsubscribe(); paymentsUnsubscribe = null; }
+  _paymentsReady = false;
 
   document.getElementById('payments-container').innerHTML =
     '<div class="loading-state"><div class="spinner"></div><div>جاري الاتصال...</div></div>';
@@ -1201,6 +1212,7 @@ function loadPayments() {
   paymentsUnsubscribe = db.collection('course_payments')
     .orderBy('createdAt', 'desc')
     .onSnapshot(function(snap) {
+      _paymentsReady = true;
       allPayments = snap.docs.map(function(d) {
         return Object.assign({ _id: d.id }, d.data());
       });
@@ -1211,6 +1223,7 @@ function loadPayments() {
       document.getElementById('last-refresh').innerHTML =
         '<span class="live-dot"></span>مباشر — ' + now.toLocaleTimeString('ar-EG');
     }, function(e) {
+      _paymentsReady = false;
       document.getElementById('payments-container').innerHTML =
         '<div class="empty-state"><div class="empty-ico">' + IC2.warn + '</div>' +
         '<div class="empty-title">خطأ في التحميل</div>' +
@@ -1695,11 +1708,36 @@ async function doDeleteMarketer(code, docIds) {
 }
 
 /* ── Studying Listener (academy_progress) ────────── */
+/* Read-cost fix: this used to be a live listener on the WHOLE collection — every doc was read on
+   each admin load, plus one read per student progress write while the panel was open.
+   Now: one full read, cached in localStorage; later loads (and the تحديث button) only fetch docs
+   whose updatedAt is newer than the last sync (1h overlap for client-clock skew). A "studying"
+   flag only ever turns on, so deltas are enough; a full re-read still happens every 24h. */
+var STUDY_CACHE_KEY = 'nb-admin-studying-v1';
+var STUDY_OVERLAP_MS = 3600000, STUDY_FULL_EVERY_MS = 86400000;
+var _studyingBusy = false;
 function startStudyingListener() {
-  if (studyingUnsubscribe) { studyingUnsubscribe(); studyingUnsubscribe = null; }
-  studyingUnsubscribe = db.collection('academy_progress')
-    .onSnapshot(function(snap) {
-      studyingCounts = {};
+  if (_studyingBusy) return;
+  var cache = null, uid = auth.currentUser && auth.currentUser.uid;
+  try {
+    cache = JSON.parse(localStorage.getItem(STUDY_CACHE_KEY) || 'null');
+    if (!cache || cache.u !== uid || !cache.s || typeof cache.t !== 'number' ||
+        typeof cache.f !== 'number' || Date.now() - cache.f > STUDY_FULL_EVERY_MS) cache = null;
+  } catch (e) { cache = null; }
+  if (cache) {
+    studyingCounts = {};
+    Object.keys(cache.s).forEach(function(cid) {
+      studyingCounts[cid] = {};
+      cache.s[cid].forEach(function(u) { studyingCounts[cid][u] = true; });
+    });
+    updateEnrollments();
+  }
+  function sync(useDelta) {
+    var started = Date.now();
+    var q = db.collection('academy_progress');
+    if (useDelta) q = q.where('updatedAt', '>', cache.t - STUDY_OVERLAP_MS);
+    return q.get().then(function(snap) {
+      if (!useDelta) studyingCounts = {};
       snap.docs.forEach(function(doc) {
         var data = doc.data();
         if (!data.courseId || !data.uid) return;
@@ -1710,27 +1748,58 @@ function startStudyingListener() {
           studyingCounts[data.courseId][data.uid] = true;
         }
       });
+      try {
+        var s = {};
+        Object.keys(studyingCounts).forEach(function(cid) { s[cid] = Object.keys(studyingCounts[cid]); });
+        localStorage.setItem(STUDY_CACHE_KEY, JSON.stringify({
+          u: uid, t: started, f: useDelta ? cache.f : started, s: s
+        }));
+      } catch (e) {}
       updateEnrollments();
-    }, function(e) { console.warn('academy_progress listener:', e.message); });
+    });
+  }
+  _studyingBusy = true;
+  sync(!!cache).catch(function(e) {
+    console.warn('academy_progress sync:', e.message);
+    if (cache) return sync(false); // delta query failed → one full read as fallback
+  }).catch(function(e) { console.warn('academy_progress sync (full):', e.message); })
+    .then(function() { _studyingBusy = false; });
 }
 
 /* ── Paid Courses Listener (users.paidCourses) ────── */
 function startPaidCoursesListener() {
   if (usersUnsubscribe) { usersUnsubscribe(); usersUnsubscribe = null; }
-  usersUnsubscribe = db.collection('users')
-    .onSnapshot(function(snap) {
-      paidCounts = {};
-      snap.docs.forEach(function(doc) {
-        var data = doc.data();
-        var uid  = doc.id;
-        if (!data.paidCourses || !Array.isArray(data.paidCourses)) return;
-        data.paidCourses.forEach(function(cid) {
+  // Read-cost fix: only users that hold a paid course are needed here, so query for them
+  // instead of listening to the whole `users` collection. array-contains-any is capped per
+  // query, so the course ids are split into chunks of 10 (no composite index needed).
+  var cids = Object.keys(COURSE_LABELS), chunks = [], ci;
+  for (ci = 0; ci < cids.length; ci += 10) chunks.push(cids.slice(ci, ci + 10));
+  var perChunk = chunks.map(function() { return {}; }); // chunk → { uid: paidCourses[] }
+  function rebuildPaid() {
+    paidCounts = {};
+    perChunk.forEach(function(m) {
+      Object.keys(m).forEach(function(uid) {
+        m[uid].forEach(function(cid) {
           if (!paidCounts[cid]) paidCounts[cid] = {};
           paidCounts[cid][uid] = true;
         });
       });
-      updateEnrollments();
-    }, function(e) { console.warn('users listener:', e.message); });
+    });
+    updateEnrollments();
+  }
+  var unsubs = chunks.map(function(chunk, idx) {
+    return db.collection('users')
+      .where('paidCourses', 'array-contains-any', chunk)
+      .onSnapshot(function(snap) {
+        perChunk[idx] = {};
+        snap.docs.forEach(function(doc) {
+          var pc = doc.data().paidCourses;
+          if (Array.isArray(pc)) perChunk[idx][doc.id] = pc;
+        });
+        rebuildPaid();
+      }, function(e) { console.warn('users listener:', e.message); });
+  });
+  usersUnsubscribe = function() { unsubs.forEach(function(u) { u(); }); };
 }
 
 /* ── Enrollments per Course (real-time) ─────────── */
@@ -2509,15 +2578,8 @@ function xpEvRows(snap) {
   }).join('');
 }
 function xpAdminLoad() {
-  db.collection('xp_events').orderBy('ts','desc').limit(80).get().then(function(s) { const docs = s.docs.filter(function(d) { return d.data().type !== 'daily_visit'; }).slice(0, 20); xpBox('xp-tx', xpEvRows({ empty: !docs.length, docs: docs })); }).catch(function(e) { xpBox('xp-tx', xpEmpty('تعذر التحميل')); console.warn(e); });
   const rq = db.collection('xp_events').where('type','==','reward_redemption');
   rq.orderBy('ts','desc').limit(15).get().catch(function() { return xpFallback(rq, 15); }).then(function(s) { xpBox('xp-rd', xpEvRows(s)); }).catch(function(e) { xpBox('xp-rd', xpEmpty('تعذر التحميل')); console.warn(e); });
-  db.collection('xp_wallet').orderBy('xp','desc').limit(10).get().then(function(s) {
-    xpBox('xp-top', s.empty ? xpEmpty('لا توجد بيانات') : s.docs.map(function(d, i) {
-      const w = d.data();
-      return '<div class="broadcast-log-item" style="cursor:pointer" onclick="xpLookup(\'' + xpEsc(d.id) + '\')">' + (i + 1) + '. ' + xpEsc(w.nm || 'طالب') + ' <span style="color:var(--emerald);float:left">' + w.xp + ' XP</span></div>';
-    }).join(''));
-  }).catch(function(e) { xpBox('xp-top', xpEmpty('تعذر التحميل')); console.warn(e); });
 }
 async function xpLookup(v) {
   const q = String(v || document.getElementById('xp-q').value || '').trim();
@@ -2562,7 +2624,7 @@ async function xpAdjust(uid) {
       tx.set(eR, { uid: uid, type: 'admin_adjustment', key: key, amt: amt, note: note, by: auth.currentUser.uid, ts: firebase.firestore.FieldValue.serverTimestamp() });
       tx.update(wR, { xp: xp, last: eid });
     });
-    showToast('تم التعديل وتسجيله', 'ok'); xpLookup(uid); xpAdminLoad();
+    showToast('تم التعديل وتسجيله', 'ok'); xpLookup(uid);
   } catch (e) {
     console.warn(e);
     showToast(e.message === 'neg' ? 'التعديل يجعل الرصيد سالباً' : e.message === 'nowallet' ? 'لا يوجد حساب XP لهذا الطالب' : 'تعذر التعديل', 'err');

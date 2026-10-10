@@ -812,7 +812,7 @@ else if(a.length)T(a.join(' · '),'ok')}
 /* Idempotent award: in-session guard + deterministic doc id + transactional "already exists" check. */
 function award(type,f){
 var p=_q.then(function(){return doAward(type,f)});_q=p.catch(function(){});
-return p.then(function(r){if(!r)return null;toast(r);return BONUS[type]?(LVU[type]?lvb(r.t).then(function(){return r}):r):follow(r.t).then(function(){return r})})}
+return p.then(function(r){if(!r)return null;_bc=null;toast(r);return BONUS[type]?(LVU[type]?lvb(r.t).then(function(){return r}):r):follow(r.t).then(function(){return r})})}
 function doAward(type,f){
 var u=uid(),D=DB();if(!u||!D)return Promise.resolve(null);
 var eid=u+'_'+f.key;if(_seen[eid])return Promise.resolve(null);_seen[eid]=1;
@@ -857,15 +857,18 @@ function syncName(){var u=uid(),D=DB();if(!u||!D)return Promise.resolve();
 return D.collection('xp_wallet').doc(u).get().then(function(s){var n=nm();if(!s.exists||s.data().nm===n)return;return s.ref.update({nm:n})}).catch(function(){})}
 var _nmc={};
 function nm2(s){var p=String(s||'').trim().split(/\s+/),a=p[0]||'',b=p[1]?a+' '+p[1]:a;return a?(b.length<=20?b:a).slice(0,20):''}
+/* read-cost: leaderboard = up to 50 wallet docs + 15 name lookups per profile open. Cached 5 min per user; dropped as soon as this user earns XP (see award). */
+var _bc=null;
 function board(){
 var u=uid();
+if(_bc&&_bc.u===u&&Date.now()-_bc.t<300000)return Promise.resolve(_bc.r);
 return DB().collection('xp_wallet').orderBy('xp','desc').limit(50).get().then(function(s){var r=[];s.forEach(function(x){var v=x.data();if(v.xp>0)r.push({nm:v.nm||'طالب',v:v.xp,me:x.id===u,id:x.id});if(x.id===u&&v.nm!==nm())syncName()});
 /* older wallet docs hold only the first name: for the visible top 15, read first + second name from the public users/{uid} doc (read-only, cached per session) */
 return Promise.all(r.slice(0,15).map(function(x){
 if(x.me||x.nm.indexOf(' ')>-1)return;
 if(_nmc[x.id]!==undefined){if(_nmc[x.id])x.nm=_nmc[x.id];return}
 return DB().collection('users').doc(x.id).get().then(function(d){var n=d.exists?nm2(d.data().displayName||d.data().name):'';if(n.indexOf(x.nm)!==0)n='';_nmc[x.id]=n;if(n)x.nm=n},function(){})
-})).then(function(){return r})})}
+})).then(function(){_bc={u:u,t:Date.now(),r:r};return r})})}
 /* ── Enthusiasm streak: one automatic check-in per day (event daily_visit, 0 XP) + a +5 XP gift the student collects (daily_gift).
    Missed days are bridged automatically by "enthusiasm restores" (3 per calendar month); otherwise the streak restarts from 1. */
 var _vp=null,_vday=0,FO='M12 2c.5 3-1 4.5-2.5 6.3C8 10.1 6 12 6 15.2 6 18.6 8.7 22 12 22s6-3.4 6-6.8c0-2-.9-3.6-2-5-.3 1-.8 1.8-1.6 2.3C14.8 9.6 14.6 5.2 12 2z',FI='M12 22c-1.9 0-3.3-1.6-3.3-3.6 0-1.6 1-2.6 1.9-3.8.5-.7.9-1.5 1.1-2.5 1.6 1.5 3.6 3.4 3.6 6.1 0 2-1.4 3.8-3.3 3.8z';
