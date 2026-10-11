@@ -13066,7 +13066,7 @@ document.addEventListener('click', e => {
           if (!db.objectStoreNames.contains('expenses')) {
             db.createObjectStore('expenses', { keyPath: 'key' });
           }
-          console.log('[Nabtex IDB] ✅ IndexedDB schema created v1');
+          console.log('[Nabtex IDB] IndexedDB schema created v1');
         };
         req.onsuccess = function(e) { _idb = e.target.result; _idbUid = currentUid; resolve(_idb); };
         req.onerror   = function(e) { console.warn('[Nabtex IDB] Open failed:', e); resolve(null); };
@@ -13152,7 +13152,7 @@ document.addEventListener('click', e => {
 
     // Initialize IDB on farm system load
     openIDB().then(function(db) {
-      console.log('[Nabtex IDB]', db ? '✅ IndexedDB ready' : '⚠️ Using localStorage fallback');
+      console.log('[Nabtex IDB]', db ? 'IndexedDB ready' : 'Using localStorage fallback');
     });
 
     /* ── User-scoped localStorage keys: prevents data cross-contamination in PWA ── */
@@ -13245,7 +13245,7 @@ document.addEventListener('click', e => {
         });
         var allPending = Object.values(allPendingMap);
         if (!allPending.length) return;
-        console.log('[Nabtex Farm] 🔄 Syncing ' + allPending.length + ' pending operations...');
+        console.log('[Nabtex Farm] Syncing ' + allPending.length + ' pending operations...');
         allPending.forEach(function(opData) {
           var pid = opData._pendingId;
           var cleanOp = Object.assign({}, opData);
@@ -13266,10 +13266,10 @@ document.addEventListener('click', e => {
               updated.unshift(Object.assign({}, cleanOp, { id: ref.id }));
               farmOpsCacheSave(updated);
               idbSet('farmData', 'ops', updated);
-              console.log('[Nabtex Farm] ✅ Synced pending op:', pid, '→', ref.id);
+              console.log('[Nabtex Farm] Synced pending op:', pid, '→', ref.id);
             })
             .catch(function(e) {
-              console.warn('[Nabtex Farm] ⚠️ Sync failed (will retry):', e.message);
+              console.warn('[Nabtex Farm] Sync failed (will retry):', e.message);
             });
         });
       });
@@ -13398,9 +13398,9 @@ document.addEventListener('click', e => {
     // Keep backward compat with showToast used elsewhere
     function showToast(msg) {
       var type = 'success';
-      if (msg.indexOf('⚠️') !== -1 || msg.indexOf('برجاء') !== -1) type = 'warning';
-      if (msg.indexOf('❌') !== -1 || msg.indexOf('خطأ') !== -1) type = 'error';
-      farmToast(msg.replace(/^[✅❌⚠️ℹ️]+\s*/,''), type);
+      if (msg.indexOf('\u26A0\uFE0F') !== -1 || msg.indexOf('برجاء') !== -1) type = 'warning';
+      if (msg.indexOf('\u274C') !== -1 || msg.indexOf('خطأ') !== -1) type = 'error';
+      farmToast(msg.replace(/^[\u2705\u274C\u26A0\uFE0F\u2139]+\s*/,''), type);
     }
 
     // ═══════════════════════════════════════════════════
@@ -13585,7 +13585,7 @@ document.addEventListener('click', e => {
       }).then(function() {
         /* Save fresh data for offline fallback */
         farmCacheSave({ farms: farmState.farms, fields: farmState.fields, crop: farmState.lastCropData });
-        console.log('[Nabtex Farm] ✅ Online — data cached for offline use');
+        console.log('[Nabtex Farm] Online — data cached for offline use');
       }).catch(function(e) {
         console.warn('[Nabtex Farm] Firestore failed, loading from cache:', e.message);
         /* Real network failure — try IDB first, then localStorage */
@@ -13603,7 +13603,7 @@ document.addEventListener('click', e => {
             }
             if (farmState.lastCropData) farmState.cropEditMode = false;
             farmShowOfflineBadge(true, cached.ts);
-            console.log('[Nabtex Farm] 📦 Loaded from', idbCached ? 'IndexedDB' : 'localStorage');
+            console.log('[Nabtex Farm] Loaded from', idbCached ? 'IndexedDB' : 'localStorage');
           } else {
             farmShowOfflineBadge(true, null);
           }
@@ -13679,7 +13679,7 @@ document.addEventListener('click', e => {
           /* Fallback to cached ops */
           var cached = farmOpsCacheLoad();
           if (cached) {
-            console.log('[Nabtex Farm] 📦 Using cached operations:', cached.ops.length);
+            console.log('[Nabtex Farm] Using cached operations:', cached.ops.length);
             return filterAndSort(cached.ops.slice());
           }
           return [];
@@ -13719,7 +13719,7 @@ document.addEventListener('click', e => {
       var fieldsCount = farmState.fields.length;
 
       if (!hasFarm) {
-        return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS 🌿',
+        return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS',
           '<div class="farm-empty-state">' +
           '<div class="farm-empty-lottie"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2C6.48 2 2 6.48 2 12"/><path d="M12 22V12"/><path d="M12 12C8 8 4 9 2 12"/><path d="M12 12c4-4 8-3 10 0"/><circle cx="12" cy="12" r="2"/></svg></div>' +
           '<h3>أهلاً! لنبدأ بإعداد مزرعتك</h3>' +
@@ -13748,7 +13748,7 @@ document.addEventListener('click', e => {
           '</div>' +
         '</div>';
 
-      return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS 🌿', statsHtml + quickHtml);
+      return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS', statsHtml + quickHtml);
     }
 
     function dStatCard(svg, label, value, color) {
@@ -13809,12 +13809,12 @@ document.addEventListener('click', e => {
         farmInfoContent =
           '<div class="setup-saved-view" id="farm-info-saved">' +
             '<div class="ssv-grid">' +
-              setupViewRow('🌾', 'اسم المزرعة',           f.name     || '—') +
-              setupViewRow('📐', 'المساحة',                (f.area    || '—') + ' فدان') +
-              setupViewRow('📍', 'الموقع',                 f.location || '—') +
-              setupViewRow('📞', 'التواصل',                f.phone    || '—') +
-              setupViewRow('💧', 'مصدر المياه',            f.waterSource || '—') +
-              setupViewRow('🌊', 'نظام الري',              f.irrSystem   || '—') +
+              setupViewRow('', 'اسم المزرعة',           f.name     || '—') +
+              setupViewRow('', 'المساحة',                (f.area    || '—') + ' فدان') +
+              setupViewRow('', 'الموقع',                 f.location || '—') +
+              setupViewRow('', 'التواصل',                f.phone    || '—') +
+              setupViewRow('', 'مصدر المياه',            f.waterSource || '—') +
+              setupViewRow('', 'نظام الري',              f.irrSystem   || '—') +
             '</div>' +
             '<button class="setup-edit-btn" onclick="FarmEditFarmInfo()">' +
               '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
@@ -13873,8 +13873,8 @@ document.addEventListener('click', e => {
             '</div>' +
             '<div class="farm-form-section-label">نوع الإكثار</div>' +
             '<div class="farm-radio-group" id="prop-type-group">' +
-              fRadio('prop-type','seeds',    'تقاوي (بذور)', '🌱', propChecked==='seeds') +
-              fRadio('prop-type','seedlings','شتلات',        '🌿', propChecked==='seedlings') +
+              fRadio('prop-type','seeds',    'تقاوي (بذور)', '', propChecked==='seeds') +
+              fRadio('prop-type','seedlings','شتلات',        '', propChecked==='seedlings') +
             '</div>' +
             '<div class="farm-form-grid" style="margin-top:16px">' +
               fField('crop-seed-company',  'شركة التقاوي / الشتلات', 'text', cd_edit.seedCompany  ||'', 'مثال: سينجنتا') +
@@ -13883,9 +13883,9 @@ document.addEventListener('click', e => {
             '</div>' +
             '<div class="farm-form-section-label">نظام الزراعة</div>' +
             '<div class="farm-radio-group" id="plant-sys-group">' +
-              fRadio('plant-sys','rows',      'خطوط',  '🌾', sysChecked==='rows') +
-              fRadio('plant-sys','beds',      'مصاطب', '🌿', sysChecked==='beds') +
-              fRadio('plant-sys','broadcast', 'نثر',   '🌱', sysChecked==='broadcast') +
+              fRadio('plant-sys','rows',      'خطوط',  '', sysChecked==='rows') +
+              fRadio('plant-sys','beds',      'مصاطب', '', sysChecked==='beds') +
+              fRadio('plant-sys','broadcast', 'نثر',   '', sysChecked==='broadcast') +
             '</div>' +
             '<div id="plant-spacing-rows" style="margin-top:16px;' + showRows + '">' +
               '<div class="farm-form-grid">' +
@@ -13920,12 +13920,12 @@ document.addEventListener('click', e => {
             formCardHeader('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V12"/><path d="M20 7c0 5-4 9-8 10C8 16 4 12 4 7a8 8 0 0 1 16 0z"/></svg>', 'بيانات المحصول') +
             '<div class="setup-saved-view">' +
               '<div class="ssv-grid">' +
-                setupViewRow('🌱','اسم المحصول',       cd.cropName     ||'—') +
-                setupViewRow('🌿','الصنف',              cd.cropVariety   ||'—') +
-                setupViewRow('🗓️','الموسم',             cd.season        ||'—') +
-                setupViewRow('📅','تاريخ الزراعة',     cd.plantDate     ||'—') +
-                setupViewRow('🌡️','درجة الحرارة',      (cd.dailyTemp||'—') + ' °م') +
-                setupViewRow('🌾','نظام الزراعة',      cd.plantingSystem||'—') +
+                setupViewRow('','اسم المحصول',       cd.cropName     ||'—') +
+                setupViewRow('','الصنف',              cd.cropVariety   ||'—') +
+                setupViewRow('','الموسم',             cd.season        ||'—') +
+                setupViewRow('','تاريخ الزراعة',     cd.plantDate     ||'—') +
+                setupViewRow('','درجة الحرارة',      (cd.dailyTemp||'—') + ' °م') +
+                setupViewRow('','نظام الزراعة',      cd.plantingSystem||'—') +
               '</div>' +
               '<button class="setup-edit-btn" onclick="FarmEditCrop()">' +
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
@@ -13941,7 +13941,7 @@ document.addEventListener('click', e => {
     // ── helpers for setup view rows ───────────────────
     function setupViewRow(icon, label, val) {
       return '<div class="ssv-row">' +
-        '<span class="ssv-icon">' + icon + '</span>' +
+        (icon ? '<span class="ssv-icon">' + icon + '</span>' : '') +
         '<span class="ssv-label">' + label + '</span>' +
         '<span class="ssv-val">' + val + '</span>' +
       '</div>';
@@ -13996,11 +13996,11 @@ document.addEventListener('click', e => {
         '<div class="farm-form-card log-header-card">' +
           '<div class="farm-form-grid farm-form-grid-3">' +
             '<div class="farm-fg">' +
-              '<label class="farm-label">📅 التاريخ</label>' +
+              '<label class="farm-label">التاريخ</label>' +
               '<input class="farm-input" id="op-date" type="date" value="' + today + '">' +
             '</div>' +
             '<div class="farm-fg">' +
-              '<label class="farm-label">🌾 الحقل</label>' +
+              '<label class="farm-label">الحقل</label>' +
               '<div class="farm-select-wrap">' +
                 '<select class="farm-input farm-select" id="op-field">' +
                   (fieldsOpts || '<option value="">— أضف حقلاً من الإعداد أولاً —</option>') +
@@ -14009,13 +14009,13 @@ document.addEventListener('click', e => {
               '</div>' +
             '</div>' +
           '</div>' +
-          fChips('op-crop-stage', '🌱 مرحلة النمو الحالية', [
-            {val:'إنبات',      icon:'🌱', label:'إنبات'},
-            {val:'نمو خضري',   icon:'🌿', label:'نمو خضري'},
-            {val:'تزهير',      icon:'🌸', label:'تزهير'},
-            {val:'عقد ثمار',   icon:'🍊', label:'عقد ثمار'},
-            {val:'نضج',        icon:'✨', label:'نضج'},
-            {val:'حصاد',       icon:'🌾', label:'حصاد'},
+          fChips('op-crop-stage', 'مرحلة النمو الحالية', [
+            {val:'إنبات',      icon:'', label:'إنبات'},
+            {val:'نمو خضري',   icon:'', label:'نمو خضري'},
+            {val:'تزهير',      icon:'', label:'تزهير'},
+            {val:'عقد ثمار',   icon:'', label:'عقد ثمار'},
+            {val:'نضج',        icon:'', label:'نضج'},
+            {val:'حصاد',       icon:'', label:'حصاد'},
           ], '', 'var(--brand)') +
         '</div>';
 
@@ -14026,11 +14026,11 @@ document.addEventListener('click', e => {
             '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
             'الري', '#3b82f6') +
           fChips('op-irr-method', 'طريقة الري', [
-            {val:'تنقيط',  icon:'💧', label:'تنقيط'},
-            {val:'رش',     icon:'🌧️', label:'رش'},
-            {val:'غمر',    icon:'🌊', label:'غمر'},
-            {val:'فرداني', icon:'🪣', label:'فرداني'},
-            {val:'خرطوم',  icon:'🔵', label:'خرطوم'},
+            {val:'تنقيط',  icon:'', label:'تنقيط'},
+            {val:'رش',     icon:'', label:'رش'},
+            {val:'غمر',    icon:'', label:'غمر'},
+            {val:'فرداني', icon:'', label:'فرداني'},
+            {val:'خرطوم',  icon:'', label:'خرطوم'},
           ], '', '#3b82f6') +
           '<div class="farm-form-grid farm-form-grid-3">' +
             fField('op-irr-times',  'عدد مرات الري',   'number', '0', '0') +
@@ -14050,18 +14050,18 @@ document.addEventListener('click', e => {
             fField('op-fert-company', 'الشركة المصنّعة', 'text', '', 'مثال: هيتا') +
           '</div>' +
           fChips('op-fert-type', 'شكل السماد', [
-            {val:'سائل',       icon:'🧪', label:'سائل'},
-            {val:'بودر',       icon:'🫙', label:'بودر'},
-            {val:'حبيبات',     icon:'🟡', label:'حبيبات'},
-            {val:'عضوي صلب',   icon:'🌿', label:'عضوي صلب'},
-            {val:'عضوي سائل',  icon:'🍵', label:'عضوي سائل'},
+            {val:'سائل',       icon:'', label:'سائل'},
+            {val:'بودر',       icon:'', label:'بودر'},
+            {val:'حبيبات',     icon:'', label:'حبيبات'},
+            {val:'عضوي صلب',   icon:'', label:'عضوي صلب'},
+            {val:'عضوي سائل',  icon:'', label:'عضوي سائل'},
           ], '', '#16a34a') +
           fChips('op-fert-method', 'طريقة الإضافة', [
-            {val:'مع مياه الري', icon:'💧', label:'مع الري'},
-            {val:'رش ورقي',      icon:'🌿', label:'رش ورقي'},
-            {val:'تنقيط',        icon:'⬇️', label:'تنقيط'},
-            {val:'يدوي',         icon:'🤲', label:'يدوي'},
-            {val:'آلة تسميد',   icon:'🚜', label:'آلة تسميد'},
+            {val:'مع مياه الري', icon:'', label:'مع الري'},
+            {val:'رش ورقي',      icon:'', label:'رش ورقي'},
+            {val:'تنقيط',        icon:'', label:'تنقيط'},
+            {val:'يدوي',         icon:'', label:'يدوي'},
+            {val:'آلة تسميد',   icon:'', label:'آلة تسميد'},
           ], '', '#16a34a') +
           '<div class="farm-form-grid farm-form-grid-3">' +
             fField('op-fert-n',       'نيتروجين N (كجم)',     'number', '0', '0') +
@@ -14084,12 +14084,12 @@ document.addEventListener('click', e => {
             fField('op-spray-company', 'الشركة',              'text', '', 'مثال: Syngenta') +
           '</div>' +
           fChips('op-spray-type', 'نوع المبيد', [
-            {val:'مبيد حشري',   icon:'🐛', label:'حشري'},
-            {val:'مبيد فطري',   icon:'🍄', label:'فطري'},
-            {val:'مبيد أكاروسي',icon:'🕷️', label:'أكاروسي'},
-            {val:'مبيد ديدان',  icon:'🪱', label:'ديدان'},
-            {val:'سماد ورقي',   icon:'🌿', label:'سماد ورقي'},
-            {val:'هرمون',       icon:'⚗️', label:'هرمون'},
+            {val:'مبيد حشري',   icon:'', label:'حشري'},
+            {val:'مبيد فطري',   icon:'', label:'فطري'},
+            {val:'مبيد أكاروسي',icon:'', label:'أكاروسي'},
+            {val:'مبيد ديدان',  icon:'', label:'ديدان'},
+            {val:'سماد ورقي',   icon:'', label:'سماد ورقي'},
+            {val:'هرمون',       icon:'', label:'هرمون'},
           ], '', '#a855f7') +
           '<div class="farm-form-grid">' +
             fField('op-spray-pest',  'الآفة / المشكلة المستهدفة', 'text',   '', 'مثال: عفن رمادي') +
@@ -14107,15 +14107,15 @@ document.addEventListener('click', e => {
             '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
             'العمليات الزراعية', '#d97706') +
           fChips('op-agri-type', 'نوع العملية', [
-            {val:'حرث',             icon:'🚜', label:'حرث'},
-            {val:'عزيق',            icon:'⛏️', label:'عزيق'},
-            {val:'تقليم',           icon:'✂️', label:'تقليم'},
-            {val:'إزالة حشائش',    icon:'🌾', label:'إزالة حشائش'},
-            {val:'تسوية أرض',      icon:'📐', label:'تسوية أرض'},
-            {val:'تدعيم نباتات',   icon:'🪴', label:'تدعيم'},
-            {val:'خدمة أرض',       icon:'🔧', label:'خدمة أرض'},
-            {val:'زراعة',           icon:'🌱', label:'زراعة'},
-            {val:'تطعيم',           icon:'🌿', label:'تطعيم'},
+            {val:'حرث',             icon:'', label:'حرث'},
+            {val:'عزيق',            icon:'', label:'عزيق'},
+            {val:'تقليم',           icon:'', label:'تقليم'},
+            {val:'إزالة حشائش',    icon:'', label:'إزالة حشائش'},
+            {val:'تسوية أرض',      icon:'', label:'تسوية أرض'},
+            {val:'تدعيم نباتات',   icon:'', label:'تدعيم'},
+            {val:'خدمة أرض',       icon:'', label:'خدمة أرض'},
+            {val:'زراعة',           icon:'', label:'زراعة'},
+            {val:'تطعيم',           icon:'', label:'تطعيم'},
           ], '', '#d97706') +
           '<div class="farm-form-grid">' +
             fField('op-labor',    'عدد العمال (عامل/يوم)', 'number', '0', '0') +
@@ -14145,7 +14145,7 @@ document.addEventListener('click', e => {
           '<label class="farm-harvest-toggle">' +
             '<input type="checkbox" id="is-harvest-day" onchange="toggleHarvestFields(this.checked)">' +
             '<span class="farm-toggle-track"><span class="farm-toggle-thumb"></span></span>' +
-            '<span class="farm-toggle-label">هذا يوم حصاد 🌾</span>' +
+            '<span class="farm-toggle-label">هذا يوم حصاد</span>' +
           '</label>' +
           '<div id="harvest-fields" style="display:none;margin-top:20px">' +
             '<div class="farm-form-grid farm-form-grid-3">' +
@@ -14153,11 +14153,11 @@ document.addEventListener('click', e => {
               fField('op-harvest-waste', 'الفاقد (%)',         'number', '0', '0') +
             '</div>' +
             fChips('op-harvest-qual', 'جودة الإنتاج', [
-              {val:'ممتازة',    icon:'⭐', label:'ممتازة'},
-              {val:'جيدة جداً', icon:'👍', label:'جيدة جداً'},
-              {val:'جيدة',      icon:'✅', label:'جيدة'},
-              {val:'مقبولة',    icon:'➖', label:'مقبولة'},
-              {val:'منخفضة',   icon:'⚠️', label:'منخفضة'},
+              {val:'ممتازة',    icon:'', label:'ممتازة'},
+              {val:'جيدة جداً', icon:'', label:'جيدة جداً'},
+              {val:'جيدة',      icon:'', label:'جيدة'},
+              {val:'مقبولة',    icon:'', label:'مقبولة'},
+              {val:'منخفضة',   icon:'', label:'منخفضة'},
             ], '', '#b45309') +
           '</div>' +
         '</div>';
@@ -14167,7 +14167,7 @@ document.addEventListener('click', e => {
         '<div class="farm-form-card">' +
           '<div id="op-success-banner" style="display:none;margin-bottom:16px;"></div>' +
           '<div class="farm-fg">' +
-            '<label class="farm-label">📝 ملاحظات إضافية</label>' +
+            '<label class="farm-label">ملاحظات إضافية</label>' +
             '<textarea class="farm-input farm-textarea" id="op-notes" placeholder="أي ملاحظات على حالة المحصول أو المزرعة..."></textarea>' +
           '</div>' +
           '<div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
@@ -14340,10 +14340,10 @@ document.addEventListener('click', e => {
                 if (d.spray_name && sprayNames.indexOf(d.spray_name)<0) sprayNames.push(d.spray_name);
                 if (d.is_harvest || d.harvest_qty) hasHarvest = true;
               });
-              if (hasIrr)       chips += '<span class="ar-chip ar-chip-blue">💧 ري</span>';
-              fertNames.forEach(function(n){ chips += '<span class="ar-chip ar-chip-green">🧪 '+n+'</span>'; });
-              sprayNames.forEach(function(n){ chips += '<span class="ar-chip ar-chip-purple">🌿 '+n+'</span>'; });
-              if (hasHarvest)   chips += '<span class="ar-chip ar-chip-gold">🌾 حصاد</span>';
+              if (hasIrr)       chips += '<span class="ar-chip ar-chip-blue">ري</span>';
+              fertNames.forEach(function(n){ chips += '<span class="ar-chip ar-chip-green">'+n+'</span>'; });
+              sprayNames.forEach(function(n){ chips += '<span class="ar-chip ar-chip-purple">'+n+'</span>'; });
+              if (hasHarvest)   chips += '<span class="ar-chip ar-chip-gold">حصاد</span>';
               // field names
               var fieldNames = [];
               dayOps.forEach(function(op){ var f=(op.data||{}).fieldName; if(f&&fieldNames.indexOf(f)<0) fieldNames.push(f); });
@@ -14521,7 +14521,7 @@ document.addEventListener('click', e => {
       prom.then(function(ref) {
         if (ref) { data.id = ref.id; farmState.currentFarm = data; }
         farmState.farmInfoEditMode = false;
-        farmToast('تم حفظ معلومات المزرعة بنجاح 🌾', 'success');
+        farmToast('تم حفظ معلومات المزرعة بنجاح', 'success');
         loadUserFarms().then(function() {
           /* Update offline cache after successful save */
           farmCacheSave({ farms: farmState.farms, fields: farmState.fields, crop: farmState.lastCropData });
@@ -14557,7 +14557,7 @@ document.addEventListener('click', e => {
         .then(function() {
           farmState.lastCropData = data;
           farmState.cropEditMode = false;
-          farmToast('تم حفظ بيانات المحصول بنجاح 🌱', 'success');
+          farmToast('تم حفظ بيانات المحصول بنجاح', 'success');
           /* Update offline cache */
           farmCacheSave({ farms: farmState.farms, fields: farmState.fields, crop: farmState.lastCropData });
           renderFarmView('setup');
@@ -14574,7 +14574,7 @@ document.addEventListener('click', e => {
         name: name, area: numVal('field-area'), soil: selVal('field-soil'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
-        farmToast('تم إضافة الحقل بنجاح ✅', 'success');
+        farmToast('تم إضافة الحقل بنجاح', 'success');
         loadUserFarms().then(function() { renderFarmView('setup'); });
       }).catch(function(e) { farmToast('خطأ: ' + e.message, 'error'); });
     };
@@ -14656,8 +14656,8 @@ document.addEventListener('click', e => {
       db.collection('operations').add(opData)
         .then(function(docRef) {
           var msg = isHarvest
-            ? 'تم تسجيل بيانات الحصاد بنجاح 🌾'
-            : 'تم حفظ العملية بنجاح ✅';
+            ? 'تم تسجيل بيانات الحصاد بنجاح'
+            : 'تم حفظ العملية بنجاح';
           farmToast(msg, 'success', 4000);
 
           // تحويل زر الحفظ لحالة النجاح
@@ -14697,7 +14697,7 @@ document.addEventListener('click', e => {
           var pid = pendingQueueAdd(opData);
           if (pid) {
             var pq = pendingQueueGet();
-            farmToast('📦 تم الحفظ محلياً (' + pq.length + ' عملية تنتظر المزامنة)', 'success', 5000);
+            farmToast('تم الحفظ محلياً (' + pq.length + ' عملية تنتظر المزامنة)', 'success', 5000);
             if (saveBtn) {
               saveBtn.disabled = false;
               saveBtn.style.background = '#d97706';
@@ -14820,7 +14820,7 @@ document.addEventListener('click', e => {
       var id = name + '-' + value;
       return '<label class="farm-radio-item" for="' + id + '">' +
         '<input type="radio" id="' + id + '" name="' + name + '" value="' + value + '"' + (checked?' checked':'') + '>' +
-        '<span class="fri-icon">' + icon + '</span>' +
+        (icon ? '<span class="fri-icon">' + icon + '</span>' : '') +
         '<span class="fri-label">' + label + '</span>' +
         '<span class="fri-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>' +
       '</label>';
@@ -14903,18 +14903,18 @@ document.addEventListener('click', e => {
     // ── Render main expenses page ──────────────────────
     function renderExpenses() {
       var tabs = [
-        { id:'workers',     icon:'👷', label:'العمالة' },
-        { id:'fertilizers', icon:'🧪', label:'الأسمدة' },
-        { id:'pesticides',  icon:'🌿', label:'المبيدات' },
-        { id:'seeds',       icon:'🌱', label:'التقاوي' },
-        { id:'irrigation',  icon:'💧', label:'الري' },
-        { id:'other',       icon:'📦', label:'مصروفات أخرى' },
+        { id:'workers',     icon:'', label:'العمالة' },
+        { id:'fertilizers', icon:'', label:'الأسمدة' },
+        { id:'pesticides',  icon:'', label:'المبيدات' },
+        { id:'seeds',       icon:'', label:'التقاوي' },
+        { id:'irrigation',  icon:'', label:'الري' },
+        { id:'other',       icon:'', label:'مصروفات أخرى' },
       ];
 
       var tabHtml = tabs.map(function(t) {
         var active = expState.tab === t.id ? ' exp-tab-active' : '';
         return '<button class="exp-tab' + active + '" onclick="ExpTab(\'' + t.id + '\')">' +
-          t.icon + ' ' + t.label +
+          t.label +
         '</button>';
       }).join('');
 
@@ -14924,7 +14924,7 @@ document.addEventListener('click', e => {
           '<div class="exp-tabs-row">' + tabHtml + '</div>' +
           '<div id="exp-panel" class="exp-panel"><div class="farm-loader" style="display:flex"><div class="farm-spinner"></div></div></div>' +
           '<div class="exp-analytics-section">' +
-            '<div class="exp-analytics-header"><span>📊 تحليل المصروفات</span>' +
+            '<div class="exp-analytics-header"><span>تحليل المصروفات</span>' +
               '<div class="exp-arch-tabs">' +
                 '<button class="exp-arch-tab' + (expState.archiveMode==='daily'?' exp-arch-active':'') + '" onclick="ExpArchMode(\'daily\')">يومي</button>' +
                 '<button class="exp-arch-tab' + (expState.archiveMode==='weekly'?' exp-arch-active':'') + '" onclick="ExpArchMode(\'weekly\')">أسبوعي</button>' +
@@ -14935,14 +14935,14 @@ document.addEventListener('click', e => {
           '</div>' +
           '<div class="exp-daily-log-section">' +
             '<div class="exp-daily-log-header">' +
-              '<span>📋 سجل المصروفات اليومي</span>' +
+              '<span>سجل المصروفات اليومي</span>' +
               '<span class="exp-daily-log-hint">اضغط على أي يوم لعرض التفاصيل</span>' +
             '</div>' +
             '<div id="exp-daily-log" class="exp-daily-log"><div class="farm-loader" style="display:flex"><div class="farm-spinner"></div></div></div>' +
           '</div>' +
         '</div>';
 
-      var html = viewWrap('expenses', 'إدارة المزرعة', '💰 نظام إدارة المصروفات الزراعية', body);
+      var html = viewWrap('expenses', 'إدارة المزرعة', 'نظام إدارة المصروفات الزراعية', body);
 
       // schedule data loads after render
       setTimeout(function() {
@@ -15043,7 +15043,7 @@ document.addEventListener('click', e => {
             renderExpPanel();
             loadExpAnalytics();
             renderExpDailyLog();
-            console.log('[Nabtex Farm] 📦 Expenses loaded from offline cache');
+            console.log('[Nabtex Farm] Expenses loaded from offline cache');
           }
         }
       }, 8000); /* 8s timeout — if Firestore never responds */
@@ -15061,7 +15061,7 @@ document.addEventListener('click', e => {
         '<div class="exp-sum-item"><span class="exp-sum-label">إجمالي التقاوي</span><span class="exp-sum-val" style="color:#3b82f6">' + EGP(totals.seeds) + '</span></div>' +
         '<div class="exp-sum-item"><span class="exp-sum-label">إجمالي الري</span><span class="exp-sum-val" style="color:#06b6d4">' + EGP(totals.irrigation) + '</span></div>' +
         '<div class="exp-sum-item"><span class="exp-sum-label">مصروفات أخرى</span><span class="exp-sum-val" style="color:#ef4444">' + EGP(totals.other) + '</span></div>' +
-        '<div class="exp-sum-total"><span>💰 الإجمالي الكلي</span><strong>' + EGP(totals.total) + '</strong></div>';
+        '<div class="exp-sum-total"><span>الإجمالي الكلي</span><strong>' + EGP(totals.total) + '</strong></div>';
     }
 
     function calcExpTotals(expenses) {
@@ -15133,7 +15133,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">👷 إضافة عامل</div>' +
+          '<div class="exp-form-title">إضافة عامل</div>' +
           '<div class="exp-form-grid">' +
             expFld('ew-name',  'اسم العامل',           'text',   '', 'مثال: أحمد محمد') +
             expSelectFld('ew-type', 'نوع العمل', ['حصاد','ري','تسميد','رش','حرث','زراعة','تقليم','تعبئة','نقل','صيانة','أخرى']) +
@@ -15145,7 +15145,7 @@ document.addEventListener('click', e => {
             expFld('ew-notes', 'ملاحظات', 'text', '', 'اختياري') +
           '</div>' +
           expCalcBar('ew-calc', 'إجمالي تكلفة العمالة', 0) +
-          '<button class="farm-btn-primary" onclick="saveWorker()">💾 حفظ العامل</button>' +
+          '<button class="farm-btn-primary" onclick="saveWorker()">حفظ العامل</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15189,7 +15189,7 @@ document.addEventListener('click', e => {
         days: days, daily: daily, total: days * daily,
         date: expVal('ew-date') || todayStr(), notes: expVal('ew-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات العامل ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ بيانات العامل','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15200,7 +15200,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">🧪 إضافة سماد</div>' +
+          '<div class="exp-form-title">إضافة سماد</div>' +
           '<div class="exp-form-grid">' +
             expFld('ef-name', 'اسم السماد',       'text',   '', 'مثال: نترات كالسيوم') +
             expSelectFld('ef-type', 'نوع السماد', ['آزوتي','فوسفوري','بوتاسي','مركب','عضوي','ميكروعناصر','أخرى']) +
@@ -15219,7 +15219,7 @@ document.addEventListener('click', e => {
             '<div class="exp-calc-row"><span>سعر الكجم</span><span id="ef-price-per-kg">0 جنيه</span></div>' +
           '</div>' +
           expCalcBar('ef-calc', 'إجمالي تكلفة السماد', 0) +
-          '<button class="farm-btn-primary" onclick="saveFertilizer()">💾 حفظ السماد</button>' +
+          '<button class="farm-btn-primary" onclick="saveFertilizer()">حفظ السماد</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15280,7 +15280,7 @@ document.addEventListener('click', e => {
         total: bags * bagPrice,
         date: expVal('ef-date') || todayStr(), notes: expVal('ef-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات السماد ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ بيانات السماد','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15291,7 +15291,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">🌿 إضافة مبيد</div>' +
+          '<div class="exp-form-title">إضافة مبيد</div>' +
           '<div class="exp-form-grid">' +
             expFld('ep-name', 'اسم المبيد', 'text', '', 'مثال: نحاس أكسيكلور') +
             expSelectFld('ep-type', 'نوع المبيد', ['حشري','فطري','علش','نيماتودا','حيوي','أخرى']) +
@@ -15309,7 +15309,7 @@ document.addEventListener('click', e => {
             '<div class="exp-calc-row"><span>إجمالي الكمية</span><span id="ep-total-qty">0 لتر/كجم</span></div>' +
           '</div>' +
           expCalcBar('ep-calc', 'إجمالي تكلفة المبيدات', 0) +
-          '<button class="farm-btn-primary" onclick="savePesticide()">💾 حفظ المبيد</button>' +
+          '<button class="farm-btn-primary" onclick="savePesticide()">حفظ المبيد</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15362,7 +15362,7 @@ document.addEventListener('click', e => {
         qty: cans * canSize, price: canPrice, total: cans * canPrice,
         date: expVal('ep-date') || todayStr(), notes: expVal('ep-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات المبيد ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ بيانات المبيد','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15373,7 +15373,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">🌱 إضافة تقاوي / شتلات</div>' +
+          '<div class="exp-form-title">إضافة تقاوي / شتلات</div>' +
           '<div class="exp-form-grid">' +
             expFld('es-name', 'اسم الصنف', 'text', '', 'مثال: برتقال فالنسيا') +
             expSelectFld('es-unit-type', 'وحدة القياس', ['كجم','شتلة','كيس','علبة','أخرى']) +
@@ -15388,7 +15388,7 @@ document.addEventListener('click', e => {
           '</div>' +
           expFld('es-notes', 'ملاحظات', 'text', '', 'اختياري') +
           expCalcBar('es-calc', 'إجمالي تكلفة التقاوي', 0) +
-          '<button class="farm-btn-primary" onclick="saveSeed()">💾 حفظ التقاوي</button>' +
+          '<button class="farm-btn-primary" onclick="saveSeed()">حفظ التقاوي</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15433,7 +15433,7 @@ document.addEventListener('click', e => {
         supplier: expVal('es-supplier'),
         date: expVal('es-date') || todayStr(), notes: expVal('es-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات التقاوي ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ بيانات التقاوي','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15444,7 +15444,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">💧 إضافة تكلفة ري</div>' +
+          '<div class="exp-form-title">إضافة تكلفة ري</div>' +
           '<div class="exp-form-grid">' +
             expSelectFld('ei-type', 'نوع الري', ['تنقيط','رش','غمر','فرداني','خرطوم','مقنن']) +
             expSelectFld('ei-source', 'مصدر الطاقة', ['كهرباء شبكة','كهرباء سولار','ديزل','بنزين','أخرى']) +
@@ -15463,7 +15463,7 @@ document.addEventListener('click', e => {
             '<div class="exp-calc-row"><span>تكلفة الوقود</span><span id="ei-fuel-cost">0 جنيه</span></div>' +
           '</div>' +
           expCalcBar('ei-calc', 'إجمالي تكلفة الري', 0) +
-          '<button class="farm-btn-primary" onclick="saveIrrigation()">💾 حفظ الري</button>' +
+          '<button class="farm-btn-primary" onclick="saveIrrigation()">حفظ الري</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15513,7 +15513,7 @@ document.addEventListener('click', e => {
         extraCost: extra, cost: cost,
         date: expVal('ei-date') || todayStr(), notes: expVal('ei-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات الري ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ بيانات الري','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15524,7 +15524,7 @@ document.addEventListener('click', e => {
 
       var form =
         '<div class="exp-form-card">' +
-          '<div class="exp-form-title">📦 إضافة مصروف آخر</div>' +
+          '<div class="exp-form-title">إضافة مصروف آخر</div>' +
           '<div class="exp-form-grid">' +
             expSelectFld('eo-cat', 'الفئة', ['نقل','صيانة','معدات','وقود','إيجار أرض','كهرباء','مياه','تحاليل تربة','شهادات','أخرى']) +
             expFld('eo-desc', 'الوصف', 'text', '', 'تفاصيل المصروف') +
@@ -15535,7 +15535,7 @@ document.addEventListener('click', e => {
           '</div>' +
           expFld('eo-notes', 'ملاحظات', 'text', '', 'اختياري') +
           expCalcBar('eo-calc', 'المبلغ المدخل', 0) +
-          '<button class="farm-btn-primary" onclick="saveOther()">💾 حفظ المصروف</button>' +
+          '<button class="farm-btn-primary" onclick="saveOther()">حفظ المصروف</button>' +
         '</div>';
 
       var tableHtml = rows.length
@@ -15573,7 +15573,7 @@ document.addEventListener('click', e => {
         desc: expVal('eo-desc'), amount: amount,
         date: expVal('eo-date') || todayStr(), notes: expVal('eo-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ المصروف ✅','success'); })
+      }).then(function(){ farmToast('تم حفظ المصروف','success'); })
         .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
     };
 
@@ -15705,12 +15705,12 @@ document.addEventListener('click', e => {
       if (!container) return;
       var all = [];
       var exp = expState.expenses;
-      (exp.workers||[]).forEach(function(r)     { all.push({ date:r.date||'—', type:'workers',     label:'👷 عمالة',        color:'#f59e0b', amt:parseFloat(r.total)||0, r:r }); });
-      (exp.fertilizers||[]).forEach(function(r) { all.push({ date:r.date||'—', type:'fertilizers', label:'🧪 أسمدة',        color:'#16a34a', amt:parseFloat(r.total)||0, r:r }); });
-      (exp.pesticides||[]).forEach(function(r)  { all.push({ date:r.date||'—', type:'pesticides',  label:'🌿 مبيدات',       color:'#a855f7', amt:parseFloat(r.total)||0, r:r }); });
-      (exp.seeds||[]).forEach(function(r)       { all.push({ date:r.date||'—', type:'seeds',       label:'🌱 تقاوي',        color:'#3b82f6', amt:parseFloat(r.total)||0, r:r }); });
-      (exp.irrigation||[]).forEach(function(r)  { all.push({ date:r.date||'—', type:'irrigation',  label:'💧 ري',           color:'#06b6d4', amt:parseFloat(r.cost)||0,  r:r }); });
-      (exp.other||[]).forEach(function(r)       { all.push({ date:r.date||'—', type:'other',       label:'📦 '+r.category, color:'#ef4444', amt:parseFloat(r.amount)||0, r:r }); });
+      (exp.workers||[]).forEach(function(r)     { all.push({ date:r.date||'—', type:'workers',     label:'عمالة',        color:'#f59e0b', amt:parseFloat(r.total)||0, r:r }); });
+      (exp.fertilizers||[]).forEach(function(r) { all.push({ date:r.date||'—', type:'fertilizers', label:'أسمدة',        color:'#16a34a', amt:parseFloat(r.total)||0, r:r }); });
+      (exp.pesticides||[]).forEach(function(r)  { all.push({ date:r.date||'—', type:'pesticides',  label:'مبيدات',       color:'#a855f7', amt:parseFloat(r.total)||0, r:r }); });
+      (exp.seeds||[]).forEach(function(r)       { all.push({ date:r.date||'—', type:'seeds',       label:'تقاوي',        color:'#3b82f6', amt:parseFloat(r.total)||0, r:r }); });
+      (exp.irrigation||[]).forEach(function(r)  { all.push({ date:r.date||'—', type:'irrigation',  label:'ري',           color:'#06b6d4', amt:parseFloat(r.cost)||0,  r:r }); });
+      (exp.other||[]).forEach(function(r)       { all.push({ date:r.date||'—', type:'other',       label:''+r.category, color:'#ef4444', amt:parseFloat(r.amount)||0, r:r }); });
 
       if (!all.length) {
         container.innerHTML = '<div class="exp-empty">لا توجد مصروفات مسجلة بعد</div>';
@@ -15793,12 +15793,12 @@ document.addEventListener('click', e => {
 
       var exp = expState.expenses;
       var cats = {
-        workers:     { label:'👷 عمالة',  color:'#f59e0b', total:0, items:[] },
-        fertilizers: { label:'🧪 أسمدة',  color:'#16a34a', total:0, items:[] },
-        pesticides:  { label:'🌿 مبيدات', color:'#a855f7', total:0, items:[] },
-        seeds:       { label:'🌱 تقاوي',  color:'#3b82f6', total:0, items:[] },
-        irrigation:  { label:'💧 ري',     color:'#06b6d4', total:0, items:[] },
-        other:       { label:'📦 أخرى',   color:'#ef4444', total:0, items:[] },
+        workers:     { label:'عمالة',  color:'#f59e0b', total:0, items:[] },
+        fertilizers: { label:'أسمدة',  color:'#16a34a', total:0, items:[] },
+        pesticides:  { label:'مبيدات', color:'#a855f7', total:0, items:[] },
+        seeds:       { label:'تقاوي',  color:'#3b82f6', total:0, items:[] },
+        irrigation:  { label:'ري',     color:'#06b6d4', total:0, items:[] },
+        other:       { label:'أخرى',   color:'#ef4444', total:0, items:[] },
       };
       function collect(arr, k, getAmt) {
         (arr||[]).forEach(function(r){
@@ -15830,10 +15830,10 @@ document.addEventListener('click', e => {
           '</button>' +
         '</div>';
 
-      if (!totalItems) return html + '<div class="ds-empty"><div>💰</div><div>لا توجد مصروفات لهذا اليوم</div></div>';
+      if (!totalItems) return html + '<div class="ds-empty"><div>لا توجد مصروفات لهذا اليوم</div></div>';
 
       // ── KPI cards
-      html += '<div class="ds-section-title">💰 أبواب المصروفات</div>';
+      html += '<div class="ds-section-title">أبواب المصروفات</div>';
       html += '<div class="ds-kpi-grid">';
       Object.keys(cats).forEach(function(k){
         var c=cats[k]; if (!c.total) return;
@@ -15850,7 +15850,7 @@ document.addEventListener('click', e => {
       // ── bar chart
       var maxCat = Object.keys(cats).reduce(function(m,k){ return Math.max(m,cats[k].total); },0);
       if (maxCat>0){
-        html += '<div class="ds-section-title">📊 مقارنة الأبواب</div>';
+        html += '<div class="ds-section-title">مقارنة الأبواب</div>';
         html += '<div style="padding:0 24px 16px;display:flex;flex-direction:column;gap:10px">';
         Object.keys(cats).forEach(function(k){
           var c=cats[k]; if(!c.total) return;
@@ -15867,7 +15867,7 @@ document.addEventListener('click', e => {
       }
 
       // ── detail cards per category
-      html += '<div class="ds-section-title">📋 تفاصيل البنود</div>';
+      html += '<div class="ds-section-title">تفاصيل البنود</div>';
       Object.keys(cats).forEach(function(k,ci){
         var c=cats[k]; if(!c.items.length) return;
         var icon=c.label.split(' ')[0], lbl=c.label.split(' ').slice(1).join(' ');
@@ -15879,20 +15879,20 @@ document.addEventListener('click', e => {
           '</div><div class="ds-op-detail-grid">';
         c.items.forEach(function(i){
           var r=i.r;
-          if (k==='workers')     { html+=dsDetailRow('👷',r.name||'عامل','أيام: '+(r.days||0)+' × '+EGP(r.daily||0)+' = '+EGP(r.total)); if(r.type) html+=dsDetailRow('🔧','نوع العمل',r.type); }
-          if (k==='fertilizers') { html+=dsDetailRow('🧪',r.name||'سماد','كمية: '+(r.qty||0)+' كجم × '+EGP(r.price)+' = '+EGP(r.total)); }
-          if (k==='pesticides')  { html+=dsDetailRow('🌿',r.name||'مبيد','كمية: '+(r.qty||0)+' × '+EGP(r.price)+' = '+EGP(r.total)); }
-          if (k==='seeds')       { html+=dsDetailRow('🌱',r.name||'تقاوي','كمية: '+(r.qty||0)+' × '+EGP(r.price)+' = '+EGP(r.total)); }
-          if (k==='irrigation')  { html+=dsDetailRow('💧',r.type||'ري','ساعات: '+(r.hours||0)+' — التكلفة: '+EGP(r.cost)); }
-          if (k==='other')       { html+=dsDetailRow('📦',r.category||'مصروف',(r.desc?r.desc+' — ':'')+EGP(r.amount)); }
-          if (r.notes)           html+=dsDetailRow('📝','ملاحظات',r.notes);
+          if (k==='workers')     { html+=dsDetailRow('',r.name||'عامل','أيام: '+(r.days||0)+' × '+EGP(r.daily||0)+' = '+EGP(r.total)); if(r.type) html+=dsDetailRow('','نوع العمل',r.type); }
+          if (k==='fertilizers') { html+=dsDetailRow('',r.name||'سماد','كمية: '+(r.qty||0)+' كجم × '+EGP(r.price)+' = '+EGP(r.total)); }
+          if (k==='pesticides')  { html+=dsDetailRow('',r.name||'مبيد','كمية: '+(r.qty||0)+' × '+EGP(r.price)+' = '+EGP(r.total)); }
+          if (k==='seeds')       { html+=dsDetailRow('',r.name||'تقاوي','كمية: '+(r.qty||0)+' × '+EGP(r.price)+' = '+EGP(r.total)); }
+          if (k==='irrigation')  { html+=dsDetailRow('',r.type||'ري','ساعات: '+(r.hours||0)+' — التكلفة: '+EGP(r.cost)); }
+          if (k==='other')       { html+=dsDetailRow('',r.category||'مصروف',(r.desc?r.desc+' — ':'')+EGP(r.amount)); }
+          if (r.notes)           html+=dsDetailRow('','ملاحظات',r.notes);
         });
         html += '</div></div>';
       });
 
       // ── grand total banner
       html += '<div style="margin:0 24px 12px;padding:16px 18px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.04));border:1.5px solid rgba(245,158,11,0.22);border-radius:var(--r2);display:flex;align-items:center;justify-content:space-between">' +
-        '<span style="font-size:13px;font-weight:700;color:var(--slate)">💰 إجمالي مصروفات اليوم</span>' +
+        '<span style="font-size:13px;font-weight:700;color:var(--slate)">إجمالي مصروفات اليوم</span>' +
         '<strong style="font-size:22px;font-weight:800;color:#f59e0b;font-variant-numeric:tabular-nums">'+EGP(grandTotal)+'</strong>' +
       '</div>';
 
@@ -16013,12 +16013,12 @@ document.addEventListener('click', e => {
       ops.forEach(function(op) {
         var od = op.data || {};
         Object.keys(T).forEach(function(k){ T[k] += num(od[k]||0); });
-        if (od.irr_method || od.irr_times)  activities.push({ icon:'💧', label:'ري',     detail: od.irr_method||(od.irr_times+' مرة'), color:'#3b82f6' });
-        if (od.fert_name)                    activities.push({ icon:'🧪', label:'تسميد', detail: od.fert_name,                          color:'#16a34a' });
-        if (od.spray_name)                   activities.push({ icon:'🌿', label:'رش',    detail: od.spray_name,                         color:'#a855f7' });
-        if (num(od.labor))                   activities.push({ icon:'👷', label:'عمالة', detail: od.labor+' عامل',                      color:'#f59e0b' });
-        if (num(od.harvest_qty))             activities.push({ icon:'🌾', label:'حصاد',  detail: od.harvest_qty+' طن',                  color:'#16a34a' });
-        if (od.notes)                        activities.push({ icon:'📝', label:'ملاحظة',detail: od.notes,                              color:'#64748b' });
+        if (od.irr_method || od.irr_times)  activities.push({ icon:'', label:'ري',     detail: od.irr_method||(od.irr_times+' مرة'), color:'#3b82f6' });
+        if (od.fert_name)                    activities.push({ icon:'', label:'تسميد', detail: od.fert_name,                          color:'#16a34a' });
+        if (od.spray_name)                   activities.push({ icon:'', label:'رش',    detail: od.spray_name,                         color:'#a855f7' });
+        if (num(od.labor))                   activities.push({ icon:'', label:'عمالة', detail: od.labor+' عامل',                      color:'#f59e0b' });
+        if (num(od.harvest_qty))             activities.push({ icon:'', label:'حصاد',  detail: od.harvest_qty+' طن',                  color:'#16a34a' });
+        if (od.notes)                        activities.push({ icon:'', label:'ملاحظة',detail: od.notes,                              color:'#64748b' });
       });
 
       // ─ header ─────────────────────────────────────
@@ -16035,16 +16035,16 @@ document.addEventListener('click', e => {
         '</div>';
 
       if (!ops.length) {
-        return html + '<div class="ds-empty"><div>📋</div><div>لا توجد عمليات مسجلة لهذا اليوم</div></div>';
+        return html + '<div class="ds-empty"><div>لا توجد عمليات مسجلة لهذا اليوم</div></div>';
       }
 
       // ─ activities ─────────────────────────────────
       if (activities.length) {
-        html += '<div class="ds-section-title">🗓️ ملخص الأنشطة</div>';
+        html += '<div class="ds-section-title">ملخص الأنشطة</div>';
         html += '<div class="ds-activities">';
         activities.forEach(function(a) {
           html += '<div class="ds-activity-pill" style="border-color:'+a.color+'33;background:'+a.color+'10">' +
-            '<span class="ds-act-icon">'+a.icon+'</span>' +
+            (a.icon ? '<span class="ds-act-icon">'+a.icon+'</span>' : '') +
             '<span class="ds-act-label" style="color:'+a.color+'">'+a.label+'</span>' +
             '<span class="ds-act-detail">'+a.detail+'</span>' +
           '</div>';
@@ -16054,29 +16054,29 @@ document.addEventListener('click', e => {
 
       // ─ KPIs ───────────────────────────────────────
       var kpis = [];
-      if (T.irr_times)   kpis.push(dsKpi('💧','مرات الري',    T.irr_times,  'مرة',  '#3b82f6'));
-      if (T.irr_amount)  kpis.push(dsKpi('🚿','كمية المياه',  T.irr_amount, 'م³',   '#3b82f6'));
-      if (T.irr_hours)   kpis.push(dsKpi('⏱️','ساعات الري',   T.irr_hours,  'ساعة', '#3b82f6'));
-      if (T.fert_n)      kpis.push(dsKpi('🧪','نيتروجين N',   T.fert_n,     'كجم',  '#16a34a'));
-      if (T.fert_p)      kpis.push(dsKpi('🧪','فوسفور P',     T.fert_p,     'كجم',  '#16a34a'));
-      if (T.fert_k)      kpis.push(dsKpi('🧪','بوتاسيوم K',   T.fert_k,     'كجم',  '#16a34a'));
-      if (T.fert_amount) kpis.push(dsKpi('⚖️','كمية السماد',  T.fert_amount,'كجم',  '#16a34a'));
-      if (T.spray_times) kpis.push(dsKpi('🌿','مرات الرش',    T.spray_times,'مرة',  '#a855f7'));
-      if (T.spray_water) kpis.push(dsKpi('💦','ماء الرش',     T.spray_water,'لتر',  '#a855f7'));
-      if (T.spray_area)  kpis.push(dsKpi('📐','مساحة الرش',   T.spray_area, 'فدان', '#a855f7'));
-      if (T.labor)       kpis.push(dsKpi('👷','العمال',       T.labor,      'عامل', '#f59e0b'));
-      if (T.machines)    kpis.push(dsKpi('🚜','الآلات',       T.machines,   'آلة',  '#f59e0b'));
-      if (T.temp)        kpis.push(dsKpi('🌡️','درجة الحرارة', T.temp,       '°م',   '#ef4444'));
-      if (T.humidity)    kpis.push(dsKpi('💧','الرطوبة',      T.humidity,   '%',    '#06b6d4'));
-      if (T.rain)        kpis.push(dsKpi('🌧️','الأمطار',      T.rain,       'مم',   '#06b6d4'));
-      if (T.harvest_qty) kpis.push(dsKpi('🌾','المحصود',      T.harvest_qty,'طن',   '#16a34a'));
+      if (T.irr_times)   kpis.push(dsKpi('','مرات الري',    T.irr_times,  'مرة',  '#3b82f6'));
+      if (T.irr_amount)  kpis.push(dsKpi('','كمية المياه',  T.irr_amount, 'م³',   '#3b82f6'));
+      if (T.irr_hours)   kpis.push(dsKpi('','ساعات الري',   T.irr_hours,  'ساعة', '#3b82f6'));
+      if (T.fert_n)      kpis.push(dsKpi('','نيتروجين N',   T.fert_n,     'كجم',  '#16a34a'));
+      if (T.fert_p)      kpis.push(dsKpi('','فوسفور P',     T.fert_p,     'كجم',  '#16a34a'));
+      if (T.fert_k)      kpis.push(dsKpi('','بوتاسيوم K',   T.fert_k,     'كجم',  '#16a34a'));
+      if (T.fert_amount) kpis.push(dsKpi('','كمية السماد',  T.fert_amount,'كجم',  '#16a34a'));
+      if (T.spray_times) kpis.push(dsKpi('','مرات الرش',    T.spray_times,'مرة',  '#a855f7'));
+      if (T.spray_water) kpis.push(dsKpi('','ماء الرش',     T.spray_water,'لتر',  '#a855f7'));
+      if (T.spray_area)  kpis.push(dsKpi('','مساحة الرش',   T.spray_area, 'فدان', '#a855f7'));
+      if (T.labor)       kpis.push(dsKpi('','العمال',       T.labor,      'عامل', '#f59e0b'));
+      if (T.machines)    kpis.push(dsKpi('','الآلات',       T.machines,   'آلة',  '#f59e0b'));
+      if (T.temp)        kpis.push(dsKpi('','درجة الحرارة', T.temp,       '°م',   '#ef4444'));
+      if (T.humidity)    kpis.push(dsKpi('','الرطوبة',      T.humidity,   '%',    '#06b6d4'));
+      if (T.rain)        kpis.push(dsKpi('','الأمطار',      T.rain,       'مم',   '#06b6d4'));
+      if (T.harvest_qty) kpis.push(dsKpi('','المحصود',      T.harvest_qty,'طن',   '#16a34a'));
       if (kpis.length) {
-        html += '<div class="ds-section-title">📊 أرقام اليوم</div>';
+        html += '<div class="ds-section-title">أرقام اليوم</div>';
         html += '<div class="ds-kpi-grid">' + kpis.join('') + '</div>';
       }
 
       // ─ per-operation cards ─────────────────────────
-      html += '<div class="ds-section-title">📋 تفاصيل العمليات</div>';
+      html += '<div class="ds-section-title">تفاصيل العمليات</div>';
       ops.forEach(function(op, idx) {
         var od = op.data || {};
         html += '<div class="ds-op-card" style="animation-delay:'+(idx*0.07)+'s">' +
@@ -16086,36 +16086,36 @@ document.addEventListener('click', e => {
             (od.cropStage ? '<span class="ds-op-card-stage">'+od.cropStage+'</span>' : '') +
           '</div>' +
           '<div class="ds-op-detail-grid">' +
-            (od.irr_method  ? dsDetailRow('💧','طريقة الري',    od.irr_method)            : '') +
-            (od.irr_times   ? dsDetailRow('🔁','مرات الري',     od.irr_times+' مرة')      : '') +
-            (od.irr_amount  ? dsDetailRow('📦','كمية المياه',   od.irr_amount+' م³')      : '') +
-            (od.irr_hours   ? dsDetailRow('⏱️','مدة الري',      od.irr_hours+' ساعة')     : '') +
-            (od.fert_name   ? dsDetailRow('🧪','السماد',        od.fert_name)              : '') +
-            (od.fert_company? dsDetailRow('🏭','الشركة',        od.fert_company)           : '') +
-            (od.fert_type   ? dsDetailRow('🔬','نوع السماد',    od.fert_type)              : '') +
-            (od.fert_method ? dsDetailRow('🔧','طريقة التسميد', od.fert_method)            : '') +
+            (od.irr_method  ? dsDetailRow('','طريقة الري',    od.irr_method)            : '') +
+            (od.irr_times   ? dsDetailRow('','مرات الري',     od.irr_times+' مرة')      : '') +
+            (od.irr_amount  ? dsDetailRow('','كمية المياه',   od.irr_amount+' م³')      : '') +
+            (od.irr_hours   ? dsDetailRow('','مدة الري',      od.irr_hours+' ساعة')     : '') +
+            (od.fert_name   ? dsDetailRow('','السماد',        od.fert_name)              : '') +
+            (od.fert_company? dsDetailRow('','الشركة',        od.fert_company)           : '') +
+            (od.fert_type   ? dsDetailRow('','نوع السماد',    od.fert_type)              : '') +
+            (od.fert_method ? dsDetailRow('','طريقة التسميد', od.fert_method)            : '') +
             (od.fert_n      ? dsDetailRow('N','نيتروجين',       od.fert_n+' كجم')         : '') +
             (od.fert_p      ? dsDetailRow('P','فوسفور',         od.fert_p+' كجم')         : '') +
             (od.fert_k      ? dsDetailRow('K','بوتاسيوم',       od.fert_k+' كجم')         : '') +
-            (od.fert_organic? dsDetailRow('🌿','عضوي',          od.fert_organic+' كجم')   : '') +
-            (od.fert_amount ? dsDetailRow('⚖️','الكمية الكلية', od.fert_amount+' كجم')    : '') +
-            (od.spray_name  ? dsDetailRow('🌿','المبيد',        od.spray_name)             : '') +
-            (od.spray_company?dsDetailRow('🏭','الشركة',        od.spray_company)          : '') +
-            (od.spray_type  ? dsDetailRow('🔬','نوع المبيد',    od.spray_type)             : '') +
-            (od.spray_pest  ? dsDetailRow('🐛','الآفة المستهدفة',od.spray_pest)            : '') +
-            (od.spray_conc  ? dsDetailRow('🧫','التركيز',       od.spray_conc+' سم³/100ل'): '') +
-            (od.spray_water ? dsDetailRow('💦','ماء الرش',      od.spray_water+' لتر')    : '') +
-            (od.spray_times ? dsDetailRow('🔁','مرات الرش',     od.spray_times+' مرة')    : '') +
-            (od.labor       ? dsDetailRow('👷','العمال',        od.labor+' عامل')          : '') +
-            (od.machines    ? dsDetailRow('🚜','الآلات',        od.machines)               : '') +
-            (od.temp        ? dsDetailRow('🌡️','الحرارة',       od.temp+' °م')            : '') +
-            (od.humidity    ? dsDetailRow('💧','الرطوبة',       od.humidity+'%')           : '') +
-            (od.rain        ? dsDetailRow('🌧️','الأمطار',       od.rain+' مم')            : '') +
-            (od.harvest_qty ? dsDetailRow('🌾','المحصود',       od.harvest_qty+' طن')     : '') +
-            (od.harvest_qual? dsDetailRow('⭐','الجودة',        od.harvest_qual)           : '') +
-            (od.harvest_waste?dsDetailRow('♻️','الفاقد',        od.harvest_waste+'%')     : '') +
+            (od.fert_organic? dsDetailRow('','عضوي',          od.fert_organic+' كجم')   : '') +
+            (od.fert_amount ? dsDetailRow('','الكمية الكلية', od.fert_amount+' كجم')    : '') +
+            (od.spray_name  ? dsDetailRow('','المبيد',        od.spray_name)             : '') +
+            (od.spray_company?dsDetailRow('','الشركة',        od.spray_company)          : '') +
+            (od.spray_type  ? dsDetailRow('','نوع المبيد',    od.spray_type)             : '') +
+            (od.spray_pest  ? dsDetailRow('','الآفة المستهدفة',od.spray_pest)            : '') +
+            (od.spray_conc  ? dsDetailRow('','التركيز',       od.spray_conc+' سم³/100ل'): '') +
+            (od.spray_water ? dsDetailRow('','ماء الرش',      od.spray_water+' لتر')    : '') +
+            (od.spray_times ? dsDetailRow('','مرات الرش',     od.spray_times+' مرة')    : '') +
+            (od.labor       ? dsDetailRow('','العمال',        od.labor+' عامل')          : '') +
+            (od.machines    ? dsDetailRow('','الآلات',        od.machines)               : '') +
+            (od.temp        ? dsDetailRow('','الحرارة',       od.temp+' °م')            : '') +
+            (od.humidity    ? dsDetailRow('','الرطوبة',       od.humidity+'%')           : '') +
+            (od.rain        ? dsDetailRow('','الأمطار',       od.rain+' مم')            : '') +
+            (od.harvest_qty ? dsDetailRow('','المحصود',       od.harvest_qty+' طن')     : '') +
+            (od.harvest_qual? dsDetailRow('','الجودة',        od.harvest_qual)           : '') +
+            (od.harvest_waste?dsDetailRow('','الفاقد',        od.harvest_waste+'%')     : '') +
           '</div>' +
-          (od.notes ? '<div class="ds-op-notes">📝 ' + od.notes + '</div>' : '') +
+          (od.notes ? '<div class="ds-op-notes">' + od.notes + '</div>' : '') +
         '</div>';
       });
 
@@ -16132,7 +16132,7 @@ document.addEventListener('click', e => {
 
         function dsKpi(icon, label, val, unit, color) {
       return '<div class="ds-kpi" style="border-color:'+color+'22;background:'+color+'0a">' +
-        '<span class="ds-kpi-icon">' + icon + '</span>' +
+        (icon ? '<span class="ds-kpi-icon">' + icon + '</span>' : '') +
         '<span class="ds-kpi-val" style="color:'+color+'">' + (val||0) + ' <small>' + unit + '</small></span>' +
         '<span class="ds-kpi-label">' + label + '</span>' +
       '</div>';
@@ -16140,7 +16140,7 @@ document.addEventListener('click', e => {
 
     function dsDetailRow(icon, label, val) {
       return '<div class="ds-detail-row">' +
-        '<span class="ds-dr-icon">' + icon + '</span>' +
+        (icon ? '<span class="ds-dr-icon">' + icon + '</span>' : '') +
         '<span class="ds-dr-label">' + label + '</span>' +
         '<span class="ds-dr-val">' + val + '</span>' +
       '</div>';
@@ -16152,7 +16152,7 @@ document.addEventListener('click', e => {
     window.addEventListener('online', function() {
       /* Network restored — sync pending ops FIRST, then reload data */
       if (!uid()) return;
-      console.log('[Nabtex Farm] 🟢 Connection restored — syncing pending ops...');
+      console.log('[Nabtex Farm] Connection restored — syncing pending ops...');
       setTimeout(function() {
         pendingQueueSync();
         setTimeout(function() {
@@ -16787,7 +16787,7 @@ document.addEventListener('click', e => {
           trialStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(function() {
-          farmToast('بدأت تجربتك المجانية لمدة 7 أيام 🌱', 'success');
+          farmToast('بدأت تجربتك المجانية لمدة 7 أيام', 'success');
         }).catch(function(e) {
           if (e && e.code === 'permission-denied') farmToast('التجربة المجانية متاحة مرة واحدة لكل حساب', 'warning');
           else farmToast('تعذّر بدء التجربة: ' + ((e && e.message) || ''), 'error');
@@ -17169,6 +17169,11 @@ document.addEventListener('click', e => {
     scrollbar-width: none;
   }
   .farm-top-nav::-webkit-scrollbar { display: none; }
+  /* لما التابات أعرض من الشاشة: justify-content:center كان بيقصّ أول تاب (لوحة التحكم) ومينفعش تسحب ليه.
+     بنخلي البداية flex-start ونوسّط بالـ auto margins — بتوسّط لما فيه مساحة وبتتلاشى لما التابات تزيد فيبقى الـ scroll سليم. */
+  .farm-top-nav { justify-content: flex-start; }
+  .farm-top-nav > :first-child { margin-inline-start: auto; }
+  .farm-top-nav > :last-child { margin-inline-end: auto; }
 
   /* ── Premium segmented nav pills — light & dark adaptive ── */
 
