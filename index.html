@@ -16347,22 +16347,24 @@ document.addEventListener('click', e => {
 
     // ── UI ─────────────────────────────────────────────
     var FSUB_ICON = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M12 8c0-3 2-5 6-5 0 4-2 6-6 5z"/><path d="M12 12c0-2.5-1.8-4-5-4 0 3.2 1.8 5 5 4z"/></svg>';
+    /* لوجو نبتيكس (نفس علامة الهيدر/اللودر) لرأس شاشة الاشتراك */
+    var FSUB_LOGO = '<svg width="38" height="38" viewBox="2 4 20 20" fill="none" stroke-width="2.2" aria-hidden="true"><defs><linearGradient id="fsubLogoLg" x1="4" y1="5" x2="20" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34a862"/><stop offset="1" stop-color="#0f552e"/></linearGradient></defs><g stroke="url(#fsubLogoLg)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g></svg>';
 
     function fsubPlansHTML() {
       var m = FSUB_PLANS.monthly, a = FSUB_PLANS.annual;
-      var save = m.price * 12 - a.price;
+      var full = m.price * 12, save = full - a.price;
       return '<div class="fsub-lbl-h">اختر الباقة</div>' +
         '<div class="fsub-plans" role="radiogroup" aria-label="الباقات">' +
         '<div class="fsub-plan' + (fsubUI.plan === 'monthly' ? ' on' : '') + '" data-plan="monthly" role="radio" tabindex="0" onclick="FarmSub.pick(\'monthly\')">' +
-          '<div class="fsub-plan-name">شهري</div>' +
+          '<div class="fsub-plan-name">الاشتراك الشهري</div>' +
           '<div class="fsub-plan-price">' + m.price + ' <small>ج.م / شهر</small></div>' +
-          '<div class="fsub-plan-note">يتجدد يدويًا كل شهر ميلادي</div>' +
+          '<div class="fsub-plan-note">تجديد شهري وفقًا لشروط الاشتراك.</div>' +
         '</div>' +
         '<div class="fsub-plan' + (fsubUI.plan === 'annual' ? ' on' : '') + '" data-plan="annual" role="radio" tabindex="0" onclick="FarmSub.pick(\'annual\')">' +
-          '<span class="fsub-badge">وفّر ' + save + ' ج.م</span>' +
-          '<div class="fsub-plan-name">سنوي</div>' +
-          '<div class="fsub-plan-price">' + a.price + ' <small>ج.م / 12 شهر</small></div>' +
-          '<div class="fsub-plan-note">≈ ' + Math.round(a.price / 12) + ' ج.م شهريًا</div>' +
+          '<span class="fsub-badge">أفضل توفير</span>' +
+          '<div class="fsub-plan-name">الاشتراك السنوي</div>' +
+          '<div class="fsub-plan-price">' + a.price + ' <small>ج.م / سنة</small></div>' +
+          '<div class="fsub-plan-note">' + (save > 0 ? 'بدلًا من ' + full.toLocaleString('en-US') + ' ج.م سنويًا — <b>وفّر ' + save + ' ج.م</b>' : '≈ ' + Math.round(a.price / 12) + ' ج.م شهريًا') + '</div>' +
         '</div>' +
       '</div>';
     }
@@ -16404,7 +16406,7 @@ document.addEventListener('click', e => {
     }
 
     function fsubHead(title, sub) {
-      return '<div class="fsub-head"><div class="fsub-ico">' + FSUB_ICON + '</div><h2 class="fsub-title">' + title + '</h2><p class="fsub-sub">' + sub + '</p></div>';
+      return '<div class="fsub-head"><div class="fsub-ico">' + FSUB_LOGO + '</div><h2 class="fsub-title">' + title + '</h2><p class="fsub-sub">' + sub + '</p></div>';
     }
 
     function fsubPendingCardHTML(p) {
@@ -16427,7 +16429,7 @@ document.addEventListener('click', e => {
       } else {
         if (d.state === 'expired') head = fsubHead('انتهى اشتراكك', 'بيانات مزرعتك محفوظة بالكامل — جدّد الاشتراك لتكمل من حيث توقفت.');
         else if (d.state === 'rejected') head = fsubHead('تعذّر تفعيل طلبك الأخير', 'راجع بيانات الدفع وابعت طلبًا جديدًا.');
-        else head = fsubHead('إدارة المزرعة بالاشتراك', 'مناسبة لمالكي المزارع والمهندسين الزراعيين ومديري المزارع — محاصيل وخضر وفاكهة.');
+        else head = fsubHead('اشترك في نظام إدارة المزرعة', 'مناسبة لمالكي المزارع والمهندسين الزراعيين ومديري المزارع — محاصيل وخضر وفاكهة.');
         if (d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) {
           body += '<div class="fsub-note fsub-note--bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         }
@@ -16892,19 +16894,19 @@ document.addEventListener('click', e => {
   .fsub-or { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; }
   .fsub-or::before, .fsub-or::after { content:''; flex:1; height:1px; background:var(--line); }
   /* ── Plans ── */
-  .fsub-plans { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding-top:6px; }
-  .fsub-plan { position:relative; border:1.5px solid var(--line); border-radius:20px; padding:24px 10px 16px; text-align:center; cursor:pointer; background:var(--card); transition:border-color .25s, box-shadow .25s, background .25s, transform .15s; -webkit-tap-highlight-color:transparent; }
+  .fsub-plans { display:grid; grid-template-columns:1fr; gap:14px; padding-top:4px; }
+  .fsub-plan { position:relative; direction:rtl; text-align:right; border:1.5px solid var(--line); border-radius:22px; padding:18px 20px 16px; cursor:pointer; background:var(--card); box-shadow:0 1px 2px rgba(20,40,28,.04), 0 8px 20px rgba(20,40,28,.05); transition:border-color .3s, box-shadow .3s, background .3s, transform .2s; -webkit-tap-highlight-color:transparent; }
   .fsub-plan:hover { border-color:var(--brand-l); }
-  .fsub-plan:active { transform:scale(.98); }
-  .fsub-plan::before { content:""; position:absolute; top:11px; right:11px; width:20px; height:20px; border-radius:50%; border:2px solid var(--line2); background:transparent center/12px no-repeat; transition:background-color .25s, border-color .25s; }
-  .fsub-plan.on { border-color:var(--brand); background:linear-gradient(135deg,var(--brand-mist),var(--card) 80%); box-shadow:0 8px 22px rgba(27,107,58,.14), 0 0 0 3px rgba(27,107,58,.10); }
+  .fsub-plan:active { transform:scale(.985); }
+  .fsub-plan::before { content:""; position:absolute; top:18px; right:20px; width:26px; height:26px; border-radius:50%; border:2px solid var(--line2); background:transparent center/14px no-repeat; transition:background-color .3s, border-color .3s; }
+  .fsub-plan.on { border-color:var(--brand); background:linear-gradient(135deg,var(--brand-mist),var(--card) 85%); box-shadow:0 12px 28px rgba(27,107,58,.16), 0 0 0 3px rgba(27,107,58,.09); }
   .fsub-plan.on::before { border-color:var(--brand); background-color:var(--brand); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7'/%3E%3C/svg%3E"); }
-  .fsub-plan-name { font-size:14px; font-weight:800; color:var(--slate); }
-  .fsub-plan-price { font-size:32px; font-weight:900; color:var(--ink); line-height:1.3; letter-spacing:-.02em; }
-  .fsub-plan.on .fsub-plan-price { color:var(--brand); }
-  .fsub-plan-price small { font-size:11.5px; font-weight:700; color:var(--muted); letter-spacing:0; }
-  .fsub-plan-note { font-size:11.5px; color:var(--muted); margin-top:4px; }
-  .fsub-badge { position:absolute; top:-11px; left:50%; right:auto; inset-inline-start:auto; transform:translateX(-50%); background:linear-gradient(135deg,var(--gold),var(--gold-l)); color:#fff; font-size:11px; font-weight:800; padding:3px 12px; border-radius:var(--rpill,9999px); white-space:nowrap; box-shadow:0 3px 10px rgba(201,135,26,.3); }
+  .fsub-plan-name { font-size:15.5px; font-weight:800; color:var(--ink); line-height:26px; padding-right:40px; }
+  .fsub-plan-price { font-size:36px; font-weight:900; color:var(--ink); line-height:1.2; letter-spacing:-.02em; margin-top:6px; padding-right:40px; }
+  .fsub-plan-price small { font-size:13px; font-weight:700; color:var(--muted); letter-spacing:0; }
+  .fsub-plan-note { font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.6; }
+  .fsub-plan-note b { color:var(--brand); font-weight:800; }
+  .fsub-badge { position:absolute; top:16px; left:16px; right:auto; transform:none; background:linear-gradient(135deg,var(--brand),var(--brand-l)); color:#fff; font-size:11.5px; font-weight:800; padding:5px 13px; border-radius:var(--rpill,9999px); white-space:nowrap; box-shadow:0 4px 12px rgba(27,107,58,.26); }
   /* ── Payment ── */
   .fsub-pay { display:flex; flex-direction:column; gap:12px; }
   .fsub-total { display:flex; flex-direction:row-reverse; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-radius:22px; background:linear-gradient(135deg,var(--brand-mist),var(--card) 70%); border:1px solid var(--line); box-shadow:0 6px 20px rgba(27,107,58,.07); }
@@ -16957,7 +16959,7 @@ document.addEventListener('click', e => {
   .fsub-x { position:absolute; top:14px; inset-inline-end:16px; z-index:1; width:34px; height:34px; border-radius:50%; border:none; background:var(--card); color:var(--ink); font-size:22px; line-height:1; cursor:pointer; box-shadow:var(--s2); }
   [data-dark] .fsub-note--bad, [data-dark] .fsub-banner--bad { background:#3a1b19; border-color:#6b2c28; }
   [data-dark] .fsub-note--warn, [data-dark] .fsub-banner--warn { background:#3a2c10; color:#e5c27a; border-color:#6b5320; }
-  @media (max-width:420px) { .fsub-card { padding:24px 14px 18px; } .fsub-plan-price { font-size:27px; } .fsub-total-r b { font-size:34px; } }
+  @media (max-width:420px) { .fsub-card { padding:24px 14px 18px; } .fsub-plan-price { font-size:32px; } .fsub-total-r b { font-size:34px; } }
 
   /* ══ Checkout sheet (fco-*) — يعيد استخدام .nbco-* بتاع شاشة الكورسات ══ */
   .fco-ov { position:fixed; inset:0; z-index:100001; display:flex; align-items:flex-end; justify-content:center; background:rgba(8,22,14,.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:fcoFade .3s ease both; }
@@ -16981,6 +16983,7 @@ document.addEventListener('click', e => {
   @keyframes fsubPop { from { transform:scale(.96); } to { transform:none; } }
   @keyframes fsubShine { 0%,55% { right:-80px; } 100% { right:120%; } }
   [data-dark] .fsub-ico { background:linear-gradient(145deg,rgba(27,107,58,.28),rgba(27,107,58,.12)); color:var(--brand-xl); box-shadow:none; }
+  [data-dark] .fsub-ico stop:first-child { stop-color:#6fd68f; } [data-dark] .fsub-ico stop:last-child { stop-color:#2f9d5a; }
   [data-dark] .fsub-methods { background:var(--bg); }
   [data-dark] .fsub-method.on { background:var(--bg3); color:var(--ink); box-shadow:0 0 0 1px var(--line2); }
   [data-dark] .fsub-plan.on .fsub-plan-price, [data-dark] .fsub-total-r, [data-dark] .fsub-copy, [data-dark] .fsub-sec { color:var(--brand-xl); }
