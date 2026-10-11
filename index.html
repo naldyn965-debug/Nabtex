@@ -16276,6 +16276,8 @@ document.addEventListener('click', e => {
     /* FARM-SUB-CORE:END */
 
     var FSUB_PAY = { vcash: '01095282573', instapay: '01095282573' }; /* ← نفس رقم الأكاديمي — عدّله هنا لو مختلف */
+    /* بيانات استلام InstaPay بنفس هيكل الكورسات (_MB_INSTAPAY_INFO): معرّف/موبايل/IBAN — اترك أي حقل فارغًا لإخفائه */
+    var FSUB_IP_INFO = { handle: '', mobile: FSUB_PAY.instapay, iban: '' };
     var FSUB_PUSH_URL = 'https://uexnkbspbhgelfmmvgqq.supabase.co/functions/v1/payment-request-push';
     var fsubMem = { uid: null, d: null, at: 0 };
     var fsubUI  = { plan: 'monthly', method: 'vodafone_cash', busy: false, overlay: false };
@@ -16560,7 +16562,7 @@ document.addEventListener('click', e => {
           '<button type="button" class="nbco-tab on" data-a="m-vf" role="tab" aria-selected="true"><i class="fsub-ml fsub-ml--vf"></i><span>Vodafone Cash</span></button>' +
           '<button type="button" class="nbco-tab" data-a="m-ip" role="tab" aria-selected="false"><i class="fsub-ml fsub-ml--ip"></i><span>InstaPay</span></button></div>' +
         '<div class="nbco-method nbco-pp" data-f="pvf"><div class="nbco-mi"><i class="fsub-ml fsub-ml--vf"></i></div><div><b>Vodafone Cash</b><span class="nbco-num" data-f="numvf"></span></div><button type="button" class="nbco-cp" data-a="copy">' + I.cp + '<span>نسخ</span></button><p class="nbco-hint">أرسل <b data-f="amt2"></b> جنيه إلى الرقم الموضح أعلاه.</p></div>' +
-        '<div class="nbco-method nbco-pp" data-f="pip" hidden><div class="nbco-mi"><i class="fsub-ml fsub-ml--ip"></i></div><div><b>InstaPay</b><span class="nbco-num" data-f="numip"></span></div><button type="button" class="nbco-cp" data-a="copy">' + I.cp + '<span>نسخ</span></button><p class="nbco-hint">أرسل <b data-f="amt3"></b> جنيه إلى الرقم المرتبط بحساب انستاباي الموضح أعلاه.</p></div>' +
+        '<div class="nbco-method nbco-pp" data-f="pip" hidden><div class="nbco-mi"><i class="fsub-ml fsub-ml--ip"></i></div><div><b>InstaPay</b></div><span></span><div data-f="ipr" style="display:contents"></div><p class="nbco-hint">أرسل <b data-f="amt3"></b> جنيه إلى حساب انستاباي الموضح أعلاه.</p></div>' +
         '<div class="nbco-q">هل أرسلت المبلغ؟</div>' +
         '<button type="button" class="nbco-btn p" data-a="sent"><span>نعم، تم التحويل</span>' + I.fw + '</button>' +
         '<button type="button" class="nbco-btn s" data-a="no">لا، لم أرسل بعد</button>' +
@@ -16617,6 +16619,17 @@ document.addEventListener('click', e => {
       function bad(inp, msg) { inp.classList.remove('err'); void inp.offsetWidth; inp.classList.add('err'); inp.nextElementSibling.textContent = msg; try { inp.focus(); } catch (e) {} return false; }
       [fFrom, fRef].forEach(function(f) { f.addEventListener('input', function() { clr(f); }); });
 
+      /* InstaPay: بنسجّل اسم الحساب (Username / IPA) في حقل phone زي الكورسات — regex لازم يطابق firestore.rules */
+      var IPA_RE = /^[A-Za-z0-9._@+-]{3,60}$/;
+      function ipa(s) { return fsubNormDigits(s).replace(/\s+/g, ''); }
+      function ipRows() {
+        var rows = [['معرّف InstaPay', FSUB_IP_INFO.handle], ['رقم الموبايل المرتبط', FSUB_IP_INFO.mobile], ['رقم الحساب (IBAN)', FSUB_IP_INFO.iban]], h = '';
+        rows.forEach(function(r) {
+          if (r[1]) h += '<div class="nbco-idrow"><div><small>' + fsubEsc(r[0]) + '</small><span class="nbco-num">' + fsubEsc(r[1]) + '</span></div><button type="button" class="nbco-cp" data-a="cpv" data-v="' + fsubEsc(r[1]) + '">' + I.cp + '<span>نسخ</span></button></div>';
+        });
+        Q('ipr').innerHTML = h || '<div class="nbco-ipmsg">تواصل مع الدعم للحصول على بيانات التحويل</div>';
+        Q('pip').querySelector('.nbco-hint').hidden = !h;
+      }
       function progHTML(n) {
         var L = ['الدفع', 'التحقق', 'البيانات'], h = '';
         for (var i = 1; i <= 3; i++) {
@@ -16642,7 +16655,7 @@ document.addEventListener('click', e => {
         Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
         var off = Q('off'); off.hidden = pl !== 'annual'; off.textContent = 'وفّر ' + (m.price * 12 - a.price) + ' ج.م';
         ['monthly', 'annual'].forEach(function(k) { var b = Q(k === 'monthly' ? 'plm' : 'pla'); b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
-        Q('numvf').textContent = FSUB_PAY.vcash; Q('numip').textContent = FSUB_PAY.instapay;
+        Q('numvf').textContent = FSUB_PAY.vcash; ipRows();
       }
       function setM(m) {
         st.m = m === 'ip' ? 'ip' : 'vf'; var ip = st.m === 'ip';
@@ -16650,9 +16663,14 @@ document.addEventListener('click', e => {
         var tb = Q('tabs'); tb.setAttribute('data-m', st.m);
         [].forEach.call(tb.querySelectorAll('.nbco-tab'), function(b) { var on = b.getAttribute('data-a') === 'm-' + st.m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
         Q('pvf').hidden = ip; Q('pip').hidden = !ip;
-        Q('vp').textContent = ip ? 'أدخل رقم الهاتف المرتبط بحساب انستاباي الذي أرسلت منه المبلغ.' : 'أدخل رقم Vodafone Cash الذي أرسلت منه المبلغ.';
-        Q('vl').textContent = ip ? 'رقم الهاتف المرتبط بحساب انستاباي' : 'رقم Vodafone Cash المرسل منه';
-        Q('vn').textContent = ip ? 'استخدم نفس الرقم المرتبط بالحساب الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.' : 'استخدم نفس الرقم الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.';
+        Q('vp').textContent = ip ? 'أدخل اسم حساب انستاباي (Username / IPA) الذي أرسلت منه المبلغ.' : 'أدخل رقم Vodafone Cash الذي أرسلت منه المبلغ.';
+        Q('vl').textContent = ip ? 'اسم حساب انستاباي المرسل منه' : 'رقم Vodafone Cash المرسل منه';
+        Q('vn').textContent = ip ? 'استخدم نفس الحساب الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.' : 'استخدم نفس الرقم الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.';
+        var f = fFrom;   /* حقل الإدخال: يوزر InstaPay (نص) أو رقم فودافون كاش (رقم) — زي الكورسات */
+        f.type = ip ? 'text' : 'tel'; f.setAttribute('inputmode', ip ? 'email' : 'numeric'); f.maxLength = ip ? 60 : 16;
+        f.setAttribute('autocomplete', ip ? 'off' : 'tel'); f.placeholder = ip ? 'example@instapay' : '01012345678';
+        f.setAttribute('autocapitalize', 'none'); f.setAttribute('autocorrect', 'off'); f.spellcheck = false;
+        f.value = ''; clr(f);
       }
       function setP(pl) {
         if (!FSUB_PLANS[pl]) return;
@@ -16686,8 +16704,8 @@ document.addEventListener('click', e => {
       function send() {
         var ref = fsubNormRef(fRef.value);
         if (!/^[A-Za-z0-9]{6,40}$/.test(ref)) return bad(fRef, 'رقم العملية لازم يكون حروف وأرقام (من 6 إلى 40)');
-        var phone = fsubNormPhone(fFrom.value);
-        if (!/^[0-9+]{10,15}$/.test(phone)) { go('verify'); return bad(fFrom, 'برجاء إدخال رقم الهاتف المُحوَّل منه بشكل صحيح'); }
+        var isIP = st.m === 'ip', phone = isIP ? ipa(fFrom.value) : fsubNormPhone(fFrom.value);
+        if (isIP ? !IPA_RE.test(phone) : !/^[0-9+]{10,15}$/.test(phone)) { go('verify'); return bad(fFrom, isIP ? 'برجاء إدخال اسم حساب انستاباي بشكل صحيح' : 'برجاء إدخال رقم الهاتف المُحوَّل منه بشكل صحيح'); }
         var plan = fsubUI.plan, method = fsubUI.method;
         if (!FSUB_PLANS[plan]) return;
         busy(true); st.snd = Date.now(); fcoSndUnlock();
@@ -16723,8 +16741,8 @@ document.addEventListener('click', e => {
         var t = e.target.closest('[data-a]'); if (!t || st.busy) return; var a = t.getAttribute('data-a');
         if (a === 'close') fcoClose();
         else if (a === 'back') go(st.s === 'data' ? 'verify' : 'pay');
-        else if (a === 'copy') {
-          var v = st.m === 'ip' ? FSUB_PAY.instapay : FSUB_PAY.vcash, c = t.querySelector('span');
+        else if (a === 'copy' || a === 'cpv') {
+          var v = a === 'cpv' ? t.getAttribute('data-v') : (st.m === 'ip' ? FSUB_PAY.instapay : FSUB_PAY.vcash), c = t.querySelector('span');
           if (navigator.clipboard) navigator.clipboard.writeText(v).catch(function() {});
           else { try { var ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (x) {} }
           c.textContent = 'تم النسخ'; t.classList.add('ok'); setTimeout(function() { c.textContent = 'نسخ'; t.classList.remove('ok'); }, 1800);
@@ -16735,6 +16753,13 @@ document.addEventListener('click', e => {
         else if (a === 'sent') { go('verify'); setTimeout(function() { try { fFrom.focus({ preventScroll: true }); } catch (x) {} }, 420); }
         else if (a === 'no') { fcoClose(); farmToast('يمكنك العودة لإتمام الاشتراك بعد التحويل', 'info'); }
         else if (a === 'next') {
+          if (st.m === 'ip') {
+            var iv = ipa(fFrom.value);
+            if (iv.length < 3) return bad(fFrom, 'برجاء إدخال اسم حساب انستاباي');
+            if (!IPA_RE.test(iv)) return bad(fFrom, 'اسم الحساب غير صحيح — حروف إنجليزية وأرقام و @ . _ - فقط، مثال: example@instapay');
+            fFrom.value = iv; go('data'); setTimeout(function() { try { fRef.focus({ preventScroll: true }); } catch (x) {} }, 420);
+            return;
+          }
           var ph = fsubNormPhone(fFrom.value);
           if (!ph) return bad(fFrom, st.m === 'ip' ? 'برجاء إدخال رقم الهاتف المرتبط بحساب انستاباي' : 'برجاء إدخال رقم Vodafone Cash الذي أرسلت منه المبلغ');
           if (!/^[0-9+]{10,15}$/.test(ph)) return bad(fFrom, 'برجاء إدخال رقم هاتف صحيح (10 أرقام على الأقل)');

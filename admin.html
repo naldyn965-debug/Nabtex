@@ -2695,7 +2695,7 @@ function renderFarmSubAdmin() {
     else if (p.status === 'rejected') actions = '<button class="fsa-btn" onclick="fsubAskApprove(\'' + id + '\')">قبول (تجاوز الرفض)</button>';
     return '<div class="fsa-card"><div class="fsa-top"><div class="fsa-mail">' + fsubEsc(p.email || p.uid) + '</div><span class="fsa-badge ' + fsubEsc(p.status) + '">' + st + '</span></div>' +
       '<div>باقة <b>' + fsubEsc(FSUB_PLAN_LABEL[p.plan] || p.plan) + '</b> — ' + fsubEsc(p.amount) + ' ج — ' + method + '</div>' +
-      '<div class="fsa-meta">هاتف: ' + fsubEsc(p.phone) + ' · مرجع: ' + fsubEsc(p.transactionRef) + '</div>' +
+      '<div class="fsa-meta">' + (p.paymentMethod === 'instapay' ? 'حساب InstaPay: ' : 'هاتف: ') + fsubEsc(p.phone) + ' · مرجع: ' + fsubEsc(p.transactionRef) + '</div>' +
       '<div class="fsa-meta">' + fsubFmtTs(p.createdAt) + (p.status === 'approved' && p.periodEnd ? ' · ينتهي ' + fsubFmtDay(p.periodEnd) : '') + '</div>' +
       (p.status === 'rejected' && p.rejectionNote ? '<div class="fsa-meta">السبب: ' + fsubEsc(p.rejectionNote) + '</div>' : '') +
       (actions ? '<div class="fsa-actions">' + actions + '</div>' : '') + '</div>';

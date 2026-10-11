@@ -429,7 +429,11 @@ service cloud.firestore {
                     && request.resource.data.amount == fsPrice(request.resource.data.plan)
                     && request.resource.data.currency == 'EGP'
                     && request.resource.data.phone is string
-                    && request.resource.data.phone.matches('[0-9+]{10,15}')
+                    // فودافون كاش: رقم الهاتف المُحوَّل منه — InstaPay: اسم الحساب (Username / IPA) زي دفع الكورسات
+                    && (
+                         (request.resource.data.paymentMethod == 'vodafone_cash' && request.resource.data.phone.matches('[0-9+]{10,15}'))
+                      || (request.resource.data.paymentMethod == 'instapay' && request.resource.data.phone.matches('[A-Za-z0-9._@+-]{3,60}'))
+                       )
                     && request.resource.data.transactionRef is string
                     && request.resource.data.transactionRef.matches('[A-Za-z0-9]{6,40}')
                     && request.resource.data.refKey == request.resource.data.transactionRef.lower()
