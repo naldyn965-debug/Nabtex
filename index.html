@@ -13478,8 +13478,8 @@ document.addEventListener('click', e => {
 
       var navHtml = navItems.map(function(n, i) {
         var active = farmState.currentView === n.view ? ' farm-nav-active' : '';
-        return '<button class="farm-nav-item' + active + '" onclick="FarmNav(\'' + n.view + '\')" style="animation-delay:' + (i * 0.06) + 's">' +
-          '<span class="farm-nav-icon">' + n.svg + '</span>' +
+        return '<button type="button"' + (active ? ' aria-current="page"' : '') + ' class="farm-nav-item' + active + '" onclick="FarmNav(\'' + n.view + '\')" style="animation-delay:' + (i * 0.06) + 's">' +
+          '<span class="farm-nav-icon" aria-hidden="true">' + n.svg + '</span>' +
           '<span class="farm-nav-label">' + n.label + '</span>' +
         '</button>';
       }).join('');
@@ -13495,7 +13495,7 @@ document.addEventListener('click', e => {
         '<div class="farm-topbar">' +
           '<button class="farm-home-btn" onclick="goBack()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button>' +
           '<div class="farm-topbar-divider"></div>' +
-          '<nav class="farm-top-nav">' + navHtml + '</nav>' +
+          '<nav class="farm-top-nav" aria-label="أقسام إدارة المزرعة">' + navHtml + '</nav>' +
         '</div>' +
         '<div id="fsub-banner-slot"></div>' +
         /* ══ CONTENT ══ */
@@ -13513,11 +13513,11 @@ document.addEventListener('click', e => {
   window.FarmNav = function(view) {
       farmState.currentView = view;
       // update active nav tab
-      document.querySelectorAll('.farm-nav-item').forEach(function(b) { b.classList.remove('farm-nav-active'); });
+      document.querySelectorAll('.farm-nav-item').forEach(function(b) { b.classList.remove('farm-nav-active'); b.removeAttribute('aria-current'); });
       var views = ['dashboard','setup','log','analytics','archive','expenses'];
       var btns  = document.querySelectorAll('.farm-nav-item');
       var idx   = views.indexOf(view);
-      if (btns[idx]) btns[idx].classList.add('farm-nav-active');
+      if (btns[idx]) { btns[idx].classList.add('farm-nav-active'); btns[idx].setAttribute('aria-current', 'page'); }
       // animate content out → in
       var mc = document.getElementById('farm-main-content');
       if (mc) {
@@ -13975,7 +13975,7 @@ document.addEventListener('click', e => {
             '<strong>' + (f.name||'حقل') + '</strong>' +
             '<small>' + (f.area||'—') + ' فدان' + (f.soil ? ' — تربة ' + f.soil : '') + '</small>' +
           '</div>' +
-          '<button class="field-del-btn" onclick="deleteField(\'' + f.id + '\')" title="حذف الحقل">' +
+          '<button class="field-del-btn" onclick="deleteField(\'' + f.id + '\')" title="حذف الحقل" aria-label="حذف الحقل">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
           '</button>' +
         '</div>';
@@ -13996,11 +13996,11 @@ document.addEventListener('click', e => {
         '<div class="farm-form-card log-header-card">' +
           '<div class="farm-form-grid farm-form-grid-3">' +
             '<div class="farm-fg">' +
-              '<label class="farm-label">التاريخ</label>' +
+              '<label class="farm-label" for="op-date">التاريخ</label>' +
               '<input class="farm-input" id="op-date" type="date" value="' + today + '">' +
             '</div>' +
             '<div class="farm-fg">' +
-              '<label class="farm-label">الحقل</label>' +
+              '<label class="farm-label" for="op-field">الحقل</label>' +
               '<div class="farm-select-wrap">' +
                 '<select class="farm-input farm-select" id="op-field">' +
                   (fieldsOpts || '<option value="">— أضف حقلاً من الإعداد أولاً —</option>') +
@@ -14787,7 +14787,7 @@ document.addEventListener('click', e => {
       var c = color || 'var(--brand)';
       var chipsHtml = opts.map(function(o, i) {
         var isFirst = (defaultVal ? o.val === defaultVal : i === 0);
-        return '<button type="button" class="fc-chip' + (isFirst ? ' fc-chip-active' : '') + '" ' +
+        return '<button type="button" aria-pressed="' + (isFirst ? 'true' : 'false') + '" class="fc-chip' + (isFirst ? ' fc-chip-active' : '') + '" ' +
           'data-val="' + o.val + '" ' +
           'style="' + (isFirst ? '--cc:' + c + ';border-color:' + c + ';background:' + c + '12;color:' + c : '') + '" ' +
           'onclick="fcChipSelect(this,\'' + id + '\',\'' + c + '\')">' +
@@ -14797,9 +14797,9 @@ document.addEventListener('click', e => {
       }).join('');
       var firstVal = defaultVal || opts[0].val;
       return '<div class="farm-fg farm-fg-chips">' +
-        '<label class="farm-label">' + label + '</label>' +
+        '<label class="farm-label" id="' + id + '-lbl">' + label + '</label>' +
         '<input type="hidden" id="' + id + '" value="' + firstVal + '">' +
-        '<div class="fc-chips-wrap">' + chipsHtml + '</div>' +
+        '<div class="fc-chips-wrap" role="group" aria-labelledby="' + id + '-lbl">' + chipsHtml + '</div>' +
       '</div>';
     }
 
@@ -14807,10 +14807,10 @@ document.addEventListener('click', e => {
       var wrap = btn.closest('.fc-chips-wrap');
       if (!wrap) return;
       wrap.querySelectorAll('.fc-chip').forEach(function(b) {
-        b.classList.remove('fc-chip-active');
+        b.classList.remove('fc-chip-active'); b.setAttribute('aria-pressed', 'false');
         b.style.cssText = '';
       });
-      btn.classList.add('fc-chip-active');
+      btn.classList.add('fc-chip-active'); btn.setAttribute('aria-pressed', 'true');
       btn.style.cssText = '--cc:' + color + ';border-color:' + color + ';background:' + color + '18;color:' + color;
       var hidden = document.getElementById(hiddenId);
       if (hidden) hidden.value = btn.dataset.val;
@@ -15117,11 +15117,11 @@ document.addEventListener('click', e => {
     }
 
     function expTable(cols, rows, totals) {
-      var thead = cols.map(function(c){ return '<th>' + c + '</th>'; }).join('');
+      var thead = cols.map(function(c){ return '<th scope="col">' + c + '</th>'; }).join('');
       var tbody = rows.join('');
       var tfoot = totals || '';
       return '<div class="exp-table-wrap"><table class="exp-table">' +
-        '<thead><tr>' + thead + '<th>إجراءات</th></tr></thead>' +
+        '<thead><tr>' + thead + '<th scope="col">إجراءات</th></tr></thead>' +
         '<tbody>' + tbody + tfoot + '</tbody>' +
       '</table></div>';
     }
@@ -15604,7 +15604,7 @@ document.addEventListener('click', e => {
     };
 
     function expActions(type, id) {
-      return '<button class="exp-del-btn" onclick="deleteExpenseRecord(\'' + type + '\',\'' + id + '\')" title="حذف">' +
+      return '<button class="exp-del-btn" onclick="deleteExpenseRecord(\'' + type + '\',\'' + id + '\')" title="حذف" aria-label="حذف السجل">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>' +
       '</button>';
     }
@@ -19008,6 +19008,92 @@ document.addEventListener('click', e => {
   }
 
   </style>
+
+<!-- ══ FARM OS — UI/UX POLISH (additive overrides only: look, structure, accessibility — no logic) ══ -->
+<style id="farm-ux-polish">
+/* 1) Layout — center the content column & balance the grids */
+#pg-farm .farm-view{margin-inline:auto}
+#pg-farm .farm-stats-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+#pg-farm .fsc-body{min-width:0}
+#pg-farm .fsc-value{overflow-wrap:anywhere}
+#pg-farm .farm-quick-btns{grid-template-columns:repeat(2,minmax(0,1fr))}
+#pg-farm .fqb-arrow{opacity:.45}
+#pg-farm .farm-quick-btn:hover .fqb-arrow{opacity:1}
+#pg-farm .analytics-tabs{flex-wrap:wrap}
+#pg-farm .ar-header{flex-wrap:wrap;gap:10px}
+
+/* 2) Arabic typography — letter-spacing breaks cursive joining; tight line-height clips diacritics */
+#pg-farm .farm-label,#pg-farm .fsc-label,#pg-farm .farm-form-section-label,#pg-farm .lsh-text,
+#pg-farm .farm-view-eyebrow,#pg-farm .farm-nav-item,#pg-farm .exp-sum-label,#pg-farm .exp-table thead th,
+#pg-farm .ar-card-label,#pg-farm .farm-name-badge-label{letter-spacing:0}
+#pg-farm .farm-view-title{letter-spacing:0;line-height:1.35}
+#pg-farm .farm-label{font-size:12.5px}
+#pg-farm .fsc-label,#pg-farm .exp-sum-label,#pg-farm .ar-card-label,#pg-farm .ar-card-unit{font-size:11.5px}
+#pg-farm .farm-form-section-label{font-size:12px}
+#pg-farm .lsh-text{font-size:13px}
+
+/* 3) Touch targets (≥40–44px) */
+#pg-farm .farm-input{min-height:44px}
+#pg-farm .farm-textarea{min-height:84px}
+#pg-farm .farm-btn-primary,#pg-farm .farm-btn-secondary{min-height:44px;justify-content:center}
+#pg-farm .fc-chip,#pg-farm .exp-tab,#pg-farm .an-tab,#pg-farm .exp-arch-tab{min-height:40px}
+#pg-farm .field-del-btn{min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+#pg-farm .exp-del-btn{min-width:40px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+.ds-close{width:40px;height:40px}
+
+/* 4) Focus — visible ring that keeps each control's own shape (global :focus-visible forces radius 6–8px) */
+#pg-farm .farm-input:focus,#pg-farm .farm-input:focus-visible{border-color:var(--brand);box-shadow:0 0 0 3px rgba(27,107,58,.3)}
+#pg-farm .farm-input:focus-visible{border-radius:10px}
+#pg-farm .farm-btn-primary:focus-visible,#pg-farm .farm-btn-secondary:focus-visible,#pg-farm .fc-chip:focus-visible,
+#pg-farm .an-tab:focus-visible,#pg-farm .exp-tab:focus-visible,#pg-farm .exp-arch-tab:focus-visible,
+#pg-farm .farm-home-btn:focus-visible{border-radius:100px}
+#pg-farm .farm-quick-btn:focus-visible{border-radius:13px}
+#pg-farm .farm-nav-item:focus-visible{border-radius:9px;outline-offset:-2px}
+
+/* 5) Radio cards & harvest toggle were display:none → unreachable by keyboard. Visually hidden, still focusable. */
+#pg-farm .farm-radio-item input[type="radio"],
+#pg-farm .farm-harvest-toggle input[type="checkbox"]{display:block;position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+#pg-farm .farm-harvest-toggle{position:relative}
+#pg-farm .farm-radio-item:has(input:focus-visible),
+#pg-farm .farm-harvest-toggle:has(input:focus-visible){outline:2.5px solid var(--brand);outline-offset:2px}
+
+/* 6) Selected chip — add a non-color cue (✓) */
+#pg-farm .fc-chip-active::before{content:"✓";font-weight:800;font-size:12px;line-height:1}
+
+/* 7) Dark-mode legibility for inactive tabs */
+[data-dark] #pg-farm .farm-nav-item{color:rgba(255,255,255,.68)}
+[data-dark] #pg-farm .farm-nav-item:hover{color:rgba(255,255,255,.92)}
+[data-dark] #pg-farm .farm-name-badge-label{opacity:1}
+
+/* 8) Phones / touch */
+#pg-farm .farm-top-nav{scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+#pg-farm .farm-nav-item{scroll-snap-align:center}
+@media (max-width:860px),(pointer:coarse){
+  #pg-farm .farm-top-nav{max-height:48px;padding:4px}
+  #pg-farm .farm-nav-item{height:40px;font-size:11.5px}
+  #pg-farm .farm-nav-icon{width:15px;height:15px}
+  #pg-farm .farm-home-btn{min-height:40px}
+}
+@media (max-width:860px){
+  #pg-farm input:not([type="checkbox"]):not([type="radio"]),#pg-farm select,#pg-farm textarea{font-size:16px}
+}
+@media (max-width:600px){
+  #pg-farm .farm-form-card{padding:18px 14px;border-radius:16px}
+  #pg-farm .farm-form-card-header{margin-bottom:16px}
+}
+@media (max-width:480px){
+  #pg-farm .farm-quick-btns{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  #pg-farm .exp-table{min-width:560px}
+}
+
+/* 9) Reduced motion — keep the loading spinner alive, calm everything else */
+@media (prefers-reduced-motion:reduce){
+  #pg-farm *,#pg-farm *::before,#pg-farm *::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+  #pg-farm .farm-spinner{animation-duration:1.4s !important;animation-iteration-count:infinite !important}
+}
+</style>
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — INSTALL SYSTEM v2 (Banner + Modal)
