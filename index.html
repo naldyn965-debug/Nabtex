@@ -13354,76 +13354,44 @@ document.addEventListener('click', e => {
     //  TOAST SYSTEM — احترافي
     // ═══════════════════════════════════════════════════
     function farmToast(msg, type, duration) {
+      /* نفس إشعارات الموقع (.toast: كبسولة داكنة + أيقونة + نفس الحركة والمكان) — بدل الكروت الملوّنة القديمة.
+         للتراجع: رجّع النسخة القديمة من الدالة (كروت ملوّنة بشريط تقدّم). الواجهة والاستدعاءات (msg, type, duration) زي ما هي. */
       type = type || 'success'; // success | error | warning | info
-      duration = duration || 3500;
+      var k = type === 'success' ? 'ok' : type === 'error' ? 'err' : 'inf';   // warning / info → inf زي الموقع
+      duration = duration || 3000;
 
       var container = document.getElementById('farm-toast-container');
       if (!container) {
         container = document.createElement('div');
         container.id = 'farm-toast-container';
-        container.style.cssText = 'position:fixed;top:80px;left:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+        container.style.cssText = 'position:fixed;top:82px;left:50%;transform:translateX(-50%);z-index:100002;display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:94vw;pointer-events:none;';
         document.body.appendChild(container);
       }
 
       var icons = {
-        success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
-        error:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-        warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-        info:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        ok:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" style="width:15px;height:15px"><polyline points="20 6 9 17 4 12"/></svg>',
+        err: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" style="width:15px;height:15px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+        inf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r=".5" fill="currentColor"/></svg>'
       };
+      var clean = String(msg == null ? '' : msg).replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}]+\s?/u, '');
 
-      var colors = {
-        success: { bg:'#f0fdf4', border:'#86efac', icon:'#16a34a', text:'#14532d', bar:'#22c55e' },
-        error:   { bg:'#fef2f2', border:'#fca5a5', icon:'#dc2626', text:'#7f1d1d', bar:'#ef4444' },
-        warning: { bg:'#fffbeb', border:'#fcd34d', icon:'#d97706', text:'#78350f', bar:'#f59e0b' },
-        info:    { bg:'#eff6ff', border:'#93c5fd', icon:'#2563eb', text:'#1e3a8a', bar:'#3b82f6' },
-      };
-
-      var c = colors[type];
       var t = document.createElement('div');
-      t.style.cssText = [
-        'display:flex;align-items:center;gap:12px;',
-        'padding:14px 18px;border-radius:12px;',
-        'background:' + c.bg + ';border:1.5px solid ' + c.border + ';',
-        'box-shadow:0 4px 24px rgba(0,0,0,0.12),0 1px 0 rgba(255,255,255,0.8) inset;',
-        'pointer-events:all;min-width:260px;max-width:360px;',
-        'position:relative;overflow:hidden;',
-        'transform:translateX(-110%);opacity:0;',
-        'transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s ease;',
-        'cursor:pointer;',
-      ].join('');
-
-      t.innerHTML =
-        '<div style="width:36px;height:36px;border-radius:9px;background:' + c.icon + '20;color:' + c.icon + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + icons[type] + '</div>' +
-        '<div style="flex:1;font-size:13px;font-weight:600;color:' + c.text + ';line-height:1.4;font-family:var(--f-ui);">' + msg + '</div>' +
-        '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:' + c.bar + ';transform-origin:left;animation:farmToastBar ' + duration + 'ms linear forwards;"></div>';
-
-      // Inject keyframe once
-      if (!document.getElementById('farm-toast-kf')) {
-        var s = document.createElement('style');
-        s.id = 'farm-toast-kf';
-        s.textContent = '@keyframes farmToastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}';
-        document.head.appendChild(s);
-      }
-
+      t.className = 'toast ' + k + (clean.length > 56 ? ' long' : '');
+      t.setAttribute('role', k === 'err' ? 'alert' : 'status');
+      var ic = document.createElement('span'); ic.className = 'toast-icon-wrap'; ic.innerHTML = icons[k];
+      var tx = document.createElement('span'); tx.textContent = clean;
+      t.appendChild(ic); t.appendChild(tx);
       t.onclick = function() { removeToast(t); };
       container.appendChild(t);
-
-      // Animate in
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          t.style.transform = 'translateX(0)';
-          t.style.opacity = '1';
-        });
-      });
 
       var timer = setTimeout(function() { removeToast(t); }, duration);
 
       function removeToast(el) {
         clearTimeout(timer);
-        el.style.transform = 'translateX(-110%)';
         el.style.opacity = '0';
-        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+        el.style.transform = 'translateY(-14px) scale(.9)';
+        el.style.transition = 'all .32s cubic-bezier(.4,0,1,1)';
+        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 320);
       }
     }
 
@@ -16556,7 +16524,7 @@ document.addEventListener('click', e => {
       return '<div class="nbco-top"><button type="button" class="nbco-ib" data-a="close" aria-label="إغلاق">' + I.x + '</button><div class="nbco-brand">' + fcoBrandSvg() + '<span>Nabtex</span></div><span style="width:38px"></span></div>' +
       '<div class="nbco-prog" hidden></div>' +
       '<section class="nbco-s" data-s="pay">' +
-        '<div class="nbco-course"><div class="nbco-cico">' + FSUB_ICON + '</div><div><h2 data-f="title"></h2><p data-f="sub"></p></div></div>' +
+        '<div class="nbco-course"><div class="nbco-cico">' + FSUB_LOGO.replace(/fsubLogoLg/g, 'fcoLogoLg') + '</div><div><h2 data-f="title"></h2><p data-f="sub"></p></div></div>' +
         '<div class="nbco-price"><div><span class="nbco-amt" data-f="amt"></span><span class="nbco-cur">جنيه</span></div>' +
           '<div class="nbco-oldw"><div class="fco-pls" role="radiogroup" aria-label="الباقة"><button type="button" class="fco-pl" data-a="p-monthly" data-f="plm" role="radio">شهري</button><button type="button" class="fco-pl" data-a="p-annual" data-f="pla" role="radio">سنوي</button></div><span class="nbco-off" data-f="off"></span></div></div>' +
         '<div class="nbco-lbl">اختر وسيلة الدفع</div>' +
@@ -16967,7 +16935,8 @@ document.addEventListener('click', e => {
   @media (min-width:560px) { .fco-ov { align-items:center; padding:20px; } .fco-box { border-radius:28px; } }
   @keyframes fcoFade { from { opacity:0; } to { opacity:1; } }
   .fco-box .nbco-cico { color:var(--g); }
-  .fco-box .nbco-cico svg { font-size:30px; stroke-width:1.6; }
+  .fco-box .nbco-cico svg { width:34px; height:34px; stroke-width:2.2; }
+  [data-dark] .fco-box .nbco-cico stop:first-child { stop-color:#6fd68f; } [data-dark] .fco-box .nbco-cico stop:last-child { stop-color:#2f9d5a; }
   .fco-pls { display:flex; gap:3px; background:#eff4f1; border-radius:99px; padding:3px; }
   .fco-pl { border:0; background:transparent; font:inherit; font-size:12.5px; font-weight:800; color:var(--mu); padding:6px 14px; border-radius:99px; cursor:pointer; transition:background .25s, color .25s, box-shadow .25s; }
   .fco-pl.on { background:#fff; color:var(--g); box-shadow:0 2px 8px rgba(27,107,58,.16); }
