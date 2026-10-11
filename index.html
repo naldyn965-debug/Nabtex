@@ -16922,6 +16922,11 @@ document.addEventListener('click', e => {
   .fsub-banner--warn { background:var(--gold-pale,#fff6e8); color:#8a5a0f; border-color:var(--gold-l); }
   .fsub-banner--bad  { background:#fdeceb; color:var(--red); border-color:#f3c3be; }
   .fsub-banner-btn { border:none; background:var(--brand); color:#fff; font:700 12px var(--f-ui); padding:6px 16px; border-radius:var(--rpill,9999px); cursor:pointer; }
+  /* البانر (تجربة / تجديد / مراجعة) بيتحط بين الـ topbar الثابت ومحتوى الصفحة، فكان بيبدأ من أول الشاشة ويتغطّى بالـ topbar.
+     بننزّله تحت الـ topbar بقدر ارتفاعه، ونقلّل الـ padding اللي كان محسوب أصلًا لارتفاع الـ topbar فوق المحتوى. */
+  #fsub-banner-slot:not(:empty) { padding-top: 62px; }
+  #fsub-banner-slot:not(:empty) + .farm-main { padding-top: 16px; }
+  @media (max-width: 860px) { #fsub-banner-slot:not(:empty) { padding-top: 56px; } }
   .fsub-overlay { position:fixed; inset:0; z-index:100000; background:rgba(8,20,12,.55); backdrop-filter:blur(4px); overflow-y:auto; }
   .fsub-overlay-in { position:relative; min-height:100%; }
   .fsub-x { position:absolute; top:14px; inset-inline-end:16px; z-index:1; width:34px; height:34px; border-radius:50%; border:none; background:var(--card); color:var(--ink); font-size:22px; line-height:1; cursor:pointer; box-shadow:var(--s2); }
