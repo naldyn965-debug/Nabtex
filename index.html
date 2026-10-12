@@ -13565,7 +13565,7 @@ document.addEventListener('click', e => {
       var curNav = navItems.filter(function(n) { return n.view === farmState.currentView; })[0];
       var curLabel = curNav ? curNav.label : navItems[0].label;
 
-      return '<div class="farm-shell">' +
+      return '<div class="farm-shell farm-enter">' +
         /* ══ DASHBOARD SIDEBAR (desktop: fixed column · phones: slide-in drawer) ══ */
         '<div class="farm-sbwrap">' +
           '<div class="farm-sb-backdrop" onclick="farmSbToggle(false)" aria-hidden="true"></div>' +
@@ -13706,6 +13706,12 @@ document.addEventListener('click', e => {
 
     function _doRenderFarmView(mc, view) {
       showFarmLoader(false);
+      /* دخول متدرّج: farm-enter يعيش أول رسم بس — أي إعادة رسم بعده بتتم بالـ fade العادي */
+      var shEnter = document.querySelector('#pg-farm .farm-shell');
+      if (shEnter) {
+        if (shEnter.getAttribute('data-fm-in')) shEnter.classList.remove('farm-enter');
+        else shEnter.setAttribute('data-fm-in', '1');
+      }
       var h = '';
       if      (view === 'dashboard') h = renderDashboard();
       else if (view === 'setup')     h = renderSetup();
@@ -20149,6 +20155,34 @@ document.addEventListener('click', e => {
 }
 @media (max-width:420px){
   #pg-farm .dash-quick-section .farm-quick-btns{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+<!-- ══ FARM OS — ENTRANCE (CSS-only: staggered, GPU-only opacity/transform; first open of the farm page) ══ -->
+<style id="farm-enter-anim">
+@keyframes fmRise{from{opacity:0;transform:translate3d(0,24px,0) scale(.98)}to{opacity:1;transform:none}}
+@keyframes fmPop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+@keyframes fmBar{from{opacity:0;transform:translate(-50%,-18px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:no-preference){
+  /* بدل fade واحد تقيل للصفحة كلها: كل عنصر يدخل لوحده بتدرّج */
+  #pg-farm .farm-shell.farm-enter #fv-dashboard.fade-in{animation:none}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:not(.farm-stats-grid),
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-stats-grid>*{animation:fmRise .75s cubic-bezier(.22,1,.36,1) backwards}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:nth-child(2){animation-delay:.08s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:nth-child(4){animation-delay:.42s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:nth-child(5){animation-delay:.5s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:nth-child(6){animation-delay:.58s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard>:nth-child(n+7){animation-delay:.64s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-stats-grid>:nth-child(1){animation-delay:.16s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-stats-grid>:nth-child(2){animation-delay:.24s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-stats-grid>:nth-child(3){animation-delay:.32s}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-stats-grid>:nth-child(4){animation-delay:.4s}
+  /* أيقونات الإجراءات السريعة: pop خفيف بعد دخول الكارت */
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-quick-btns>:nth-child(1) .fqb-icon-wrap{animation:fmPop .6s cubic-bezier(.34,1.56,.64,1) .62s backwards}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-quick-btns>:nth-child(2) .fqb-icon-wrap{animation:fmPop .6s cubic-bezier(.34,1.56,.64,1) .69s backwards}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-quick-btns>:nth-child(3) .fqb-icon-wrap{animation:fmPop .6s cubic-bezier(.34,1.56,.64,1) .76s backwards}
+  #pg-farm .farm-shell.farm-enter #fv-dashboard .farm-quick-btns>:nth-child(4) .fqb-icon-wrap{animation:fmPop .6s cubic-bezier(.34,1.56,.64,1) .83s backwards}
+  /* شريط القائمة (موبايل) ينزل بنعومة */
+  #pg-farm .farm-shell.farm-enter .farm-mbar{animation:fmBar .65s cubic-bezier(.22,1,.36,1) .05s backwards}
 }
 </style>
 <style id="fgr-css">
