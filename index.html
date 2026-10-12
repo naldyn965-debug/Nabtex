@@ -1830,6 +1830,24 @@ body.modal-open { overflow: hidden; }
 .fls-form .farm-input,.fls-form .farm-select{min-height:54px;font-size:16px}
 .fls-form .fls-nav{margin-top:14px}
 </style>
+<style id="fgd-css">
+/* ── Farm guide: ترقيم خطوات + إرشاد فوق كل عنصر (كل تابات إدارة المزرعة) — additive only ── */
+.fgd-step{display:flex;align-items:flex-start;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:18px;background:#eef7f1;border:1px solid #dcece1}
+.fgd-n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#1B6B3A;color:#fff;font-size:14px;font-weight:900;line-height:1}
+.fgd-b{flex:1;min-width:0}
+.fgd-t{font-size:14.5px;font-weight:800;color:#14261b;line-height:1.5}
+.fgd-d{margin-top:2px;font-size:12.5px;font-weight:600;color:#4b6053;line-height:1.75}
+.fgd-tip{display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:10px 12px;border-radius:14px;background:#f3fae3;border:1px solid #dfeeb9;font-size:13px;font-weight:600;line-height:1.75;color:#3d5a2a}
+.fgd-tip[hidden]{display:none}
+.fgd-tip svg{flex:none;width:17px;height:17px;margin-top:3px;fill:none;stroke:#5c8a1e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fgd-tip span{flex:1;min-width:0}
+[data-dark] .fgd-step{background:rgba(111,214,143,.1);border-color:#2c3f33}
+[data-dark] .fgd-n{background:#6fd68f;color:#0f2417}
+[data-dark] .fgd-t{color:#e8f2ec}
+[data-dark] .fgd-d{color:#a9bdb0}
+[data-dark] .fgd-tip{background:rgba(197,240,98,.08);border-color:#3a4a24;color:#cfe5a0}
+[data-dark] .fgd-tip svg{stroke:#c5f062}
+</style>
 </head>
 <body>
   <!-- Liquid Glass — hidden SVG refraction filters (feDisplacementMap + feSpecularLighting).
@@ -15016,6 +15034,7 @@ document.addEventListener('click', e => {
         var n = act.length;
         bar.querySelector('.fls-stp').innerHTML = state.op ? 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>' : 'الخطوة <b>1</b>';
         bar.querySelector('.fls-sec').textContent = cur.title;
+        try { fgdTip(bar, cur.isPick ? null : cur.el, !!cur.last); } catch (e) {}
         bar.querySelector('.fls-track i').style.width = (state.op ? Math.round(((idx + 1) / n) * 100) : 6) + '%';
         nav.querySelector('[data-a=prev]').hidden = idx === 0;
         nav.querySelector('[data-a=next]').hidden = !!cur.last || !!cur.isPick;   /* اختيار النوع بيكمّل بالضغط على العملية */
@@ -15151,6 +15170,7 @@ document.addEventListener('click', e => {
         var n = act.length;
         bar.querySelector('.fls-stp').innerHTML = 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>';
         bar.querySelector('.fls-sec').textContent = cur.last ? 'حفظ' : (cur.atom.title || cardTitle);
+        try { fgdTip(bar, cur.last ? null : cur.atom.el, !!cur.last); } catch (e) {}
         bar.querySelector('.fls-track i').style.width = Math.round(((idx + 1) / n) * 100) + '%';
         nav.querySelector('[data-a=prev]').hidden = idx === 0;
         nav.querySelector('[data-a=next]').hidden = !!cur.last;
@@ -15187,12 +15207,214 @@ document.addEventListener('click', e => {
       [].forEach.call(root.querySelectorAll('.farm-form-card, .exp-form-card'), flsCard);
     }
 
+    /* ═══════════════════════════════════════════════════
+       FARM GUIDE — خطوات مرتبة + إرشاد فوق كل عنصر في كل تابات إدارة المزرعة
+       إضافة فقط: بتضيف سطور إرشاد قبل العناصر الموجودة — من غير ما تغيّر أي ID أو دالة أو بيانات.
+       لإلغائها بالكامل: FARM_GUIDE = false
+       ═══════════════════════════════════════════════════ */
+    var FARM_GUIDE = true;
+    var FGD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>';
+    var FGD_TIPS = {
+      /* ── التسجيل اليومي ── */
+      'op-date': 'التاريخ بيتحدد تلقائي بتاريخ النهارده — غيّره بس لو بتسجّل عملية من يوم فات.',
+      'op-field': 'اختار الحقل اللي اتعملت فيه العملية. لو مفيش حقول، ضيفها الأول من «إعداد المزرعة».',
+      'op-crop-stage': 'اختار مرحلة نمو المحصول النهارده — بتتحفظ لباقي عمليات نفس اليوم.',
+      'op-irr-method': 'اختار الطريقة اللي رويت بيها النهارده.',
+      'op-irr-times': 'اكتب كام مرة رويت الحقل النهارده.',
+      'op-irr-amount': 'اكتب كمية المياه بالمتر المكعب (م³). لو مش عارفها بالظبط اكتب تقدير قريب.',
+      'op-irr-hours': 'اكتب إجمالي ساعات تشغيل الري.',
+      'op-fert-name': 'اكتب اسم السماد زي ما هو مكتوب على العبوة.',
+      'op-fert-company': 'اكتب اسم الشركة المصنّعة — بتلاقيه على العبوة.',
+      'op-fert-type': 'اختار شكل السماد (سائل، بودر، حبيبات...).',
+      'op-fert-method': 'اختار طريقة إضافة السماد.',
+      'op-fert-n': 'اكتب كمية النيتروجين (N) المضافة بالكيلو. لو السماد مفيهوش نيتروجين اكتب 0.',
+      'op-fert-p': 'اكتب كمية الفوسفور (P) المضافة بالكيلو. لو مفيش اكتب 0.',
+      'op-fert-k': 'اكتب كمية البوتاسيوم (K) المضافة بالكيلو. لو مفيش اكتب 0.',
+      'op-fert-organic': 'اكتب كمية السماد العضوي بالكيلو. لو ما استخدمتش اكتب 0.',
+      'op-fert-micro': 'اكتب كمية العناصر الصغرى بالجرام. لو ما استخدمتش اكتب 0.',
+      'op-fert-amount': 'اكتب الوزن الكلي للسماد اللي اتضاف بالكيلو.',
+      'op-spray-name': 'اكتب اسم المبيد أو المادة اللي رشّيتها زي ما هو على العبوة.',
+      'op-spray-company': 'اكتب اسم الشركة المنتجة — بتلاقيه على العبوة.',
+      'op-spray-type': 'اختار نوع المبيد حسب الآفة اللي بتقاومها.',
+      'op-spray-pest': 'اكتب الآفة أو المشكلة اللي رشّيت علشانها.',
+      'op-spray-conc': 'اكتب التركيز المستخدم (سم³ لكل 100 لتر ماء) زي ما هو في نشرة المبيد.',
+      'op-spray-water': 'اكتب كمية الماء الكلية اللي اتخلط بيها المبيد باللتر.',
+      'op-spray-area': 'اكتب المساحة اللي اترشّت بالفدان.',
+      'op-spray-times': 'اكتب عدد مرات الرش النهارده.',
+      'op-agri-type': 'اختار العملية الزراعية اللي اتعملت.',
+      'op-labor': 'اكتب عدد العمال اللي اشتغلوا في العملية دي (عامل/يوم).',
+      'op-machines': 'اكتب عدد الآلات المستخدمة (آلة/يوم). لو مفيش اكتب 0.',
+      'op-temp': 'اكتب درجة الحرارة النهارده بالدرجة المئوية.',
+      'op-humidity': 'اكتب نسبة الرطوبة النهارده (%).',
+      'op-rain': 'اكتب كمية الأمطار بالمم. لو مفيش مطر اكتب 0.',
+      'op-harvest-qty': 'اكتب كمية الإنتاج اللي اتحصدت بالطن.',
+      'op-harvest-waste': 'اكتب نسبة الفاقد من الإنتاج (%).',
+      'op-harvest-qual': 'اختار جودة المحصول اللي اتحصد.',
+      'op-notes': 'اكتب أي ملاحظة مهمة (اختياري)، وراجع اختياراتك، وبعدها اضغط «حفظ العملية».',
+      /* ── إعداد المزرعة ── */
+      'farm-name': 'اكتب اسم مزرعتك اللي هيظهر في كل الشاشات.',
+      'farm-area': 'اكتب المساحة الكلية للمزرعة بالفدان.',
+      'farm-location': 'اكتب المحافظة أو المنطقة اللي فيها المزرعة.',
+      'farm-phone': 'اختياري — رقم تقدر تتواصل عليه.',
+      'farm-water-source': 'اختار مصدر المياه الأساسي للمزرعة.',
+      'farm-irr-system': 'اختار نظام الري الرئيسي اللي بتستخدمه.',
+      'field-name': 'اكتب اسم الحقل بشكل يسهّل عليك تميّزه (مثال: الحقل الشمالي).',
+      'field-area': 'اكتب مساحة الحقل بالفدان.',
+      'field-soil': 'اختار نوع التربة في الحقل ده.',
+      'crop-name': 'اكتب اسم المحصول المزروع حاليًا.',
+      'crop-variety': 'اكتب الصنف المزروع (مثال: فالنسيا).',
+      'crop-season': 'اختار موسم الزراعة.',
+      'crop-stage': 'اختار مرحلة النمو اللي المحصول فيها حاليًا.',
+      'crop-plant-date': 'اختار تاريخ زراعة المحصول.',
+      'crop-temp': 'اكتب متوسط درجة الحرارة اليومية في منطقتك (°م).',
+      'prop-type': 'اختار هل المحصول اتزرع بتقاوي (بذور) ولا شتلات.',
+      'crop-seed-company': 'اكتب اسم شركة التقاوي أو الشتلات.',
+      'crop-seed-supplier': 'اكتب الجهة اللي اشتريت منها.',
+      'crop-seed-origin': 'اختياري — اكتب بلد المنشأ لو معروف.',
+      'plant-sys': 'اختار نظام الزراعة — على أساسه هتظهرلك حقول المسافات اللي بعده.',
+      'spacing-row-dist': 'اكتب المسافة بين الخطوط بالسنتيمتر.',
+      'spacing-plant-dist': 'اكتب المسافة بين النباتات بالسنتيمتر.',
+      'spacing-bed-width': 'اكتب عرض المصطبة بالسنتيمتر.',
+      'spacing-bed-dist': 'اكتب المسافة بين المصاطب بالسنتيمتر.',
+      'spacing-bed-plant': 'اكتب المسافة بين النباتات على المصطبة بالسنتيمتر.',
+      'spacing-seed-density': 'اكتب كثافة البذور بالكيلو للفدان.',
+      /* ── المصروفات ── */
+      'ew-name': 'اكتب اسم العامل.',
+      'ew-type': 'اختار نوع العمل اللي اشتغله.',
+      'ew-days': 'اكتب عدد أيام الشغل.',
+      'ew-daily': 'اكتب الأجرة اليومية بالجنيه.',
+      'ew-date': 'اختار تاريخ المصروف.',
+      'ew-notes': 'اختياري — أي ملاحظة على الشغل.',
+      'ef-name': 'اكتب اسم السماد.',
+      'ef-type': 'اختار نوع السماد.',
+      'ef-bags': 'اكتب عدد الشكاير اللي اشتريتها.',
+      'ef-bag-weight': 'اكتب وزن الشيكارة الواحدة بالكيلو.',
+      'ef-bag-price': 'اكتب سعر الشيكارة الواحدة بالجنيه.',
+      'ef-date': 'اختار تاريخ الشراء.',
+      'ef-notes': 'اختياري — أي ملاحظة على السماد.',
+      'ep-name': 'اكتب اسم المبيد.',
+      'ep-type': 'اختار نوع المبيد.',
+      'ep-cans': 'اكتب عدد العبوات اللي اشتريتها.',
+      'ep-can-size': 'اكتب حجم العبوة الواحدة (لتر أو كيلو).',
+      'ep-can-price': 'اكتب سعر العبوة الواحدة بالجنيه.',
+      'ep-date': 'اختار تاريخ الشراء.',
+      'ep-notes': 'اختياري — الآفة المستهدفة أو أي تعليمات.',
+      'es-name': 'اكتب اسم الصنف (مثال: برتقال فالنسيا).',
+      'es-unit-type': 'اختار وحدة القياس اللي اشتريت بيها.',
+      'es-qty': 'اكتب الكمية اللي اشتريتها.',
+      'es-price': 'اكتب سعر الوحدة الواحدة بالجنيه.',
+      'es-supplier': 'اختياري — اسم المورد أو الشركة.',
+      'es-date': 'اختار تاريخ الشراء.',
+      'es-notes': 'اختياري — أي ملاحظة.',
+      'ei-type': 'اختار نوع الري.',
+      'ei-source': 'اختار مصدر الطاقة المستخدمة في التشغيل.',
+      'ei-hours': 'اكتب عدد ساعات التشغيل.',
+      'ei-fuel-qty': 'اكتب كمية الوقود المستهلكة باللتر. لو مفيش اكتب 0.',
+      'ei-fuel-price': 'اكتب سعر لتر الوقود بالجنيه.',
+      'ei-extra': 'اكتب أي تكاليف إضافية بالجنيه. لو مفيش اكتب 0.',
+      'ei-date': 'اختار تاريخ المصروف.',
+      'ei-notes': 'اختياري — أي ملاحظة.',
+      'eo-cat': 'اختار فئة المصروف.',
+      'eo-desc': 'اكتب وصف مختصر للمصروف.',
+      'eo-amount': 'اكتب المبلغ بالجنيه.',
+      'eo-date': 'اختار تاريخ المصروف.',
+      'eo-notes': 'اختياري — أي ملاحظة.',
+      /* ── عامة ── */
+      '_last': 'راجع اللي دخلته، وبعدها اضغط زر الحفظ.',
+      '_select': 'اختار من القائمة.',
+      '_number': 'اكتب الرقم بالأرقام فقط. لو مفيش اكتب 0.',
+      '_date': 'اختار التاريخ.',
+      '_text': 'اكتب بإيجاز.',
+      '_chips': 'اختار الأنسب من الخيارات.',
+      '_radio': 'اختار واحد من الخيارات.'
+    };
+    function fgdTipText(el, last) {
+      var f = el ? el.querySelector('input[id], select[id], textarea[id]') : null;
+      var r = el ? el.querySelector('input[name]') : null;
+      if (f && FGD_TIPS[f.id]) return FGD_TIPS[f.id];
+      if (r && FGD_TIPS[r.name]) return FGD_TIPS[r.name];
+      if (last) return FGD_TIPS['_last'];
+      var g = f || r;
+      if (!g) return '';
+      if (g.tagName === 'SELECT') return FGD_TIPS['_select'];
+      if (g.tagName === 'TEXTAREA') return FGD_TIPS['_text'];
+      if (g.type === 'hidden') return FGD_TIPS['_chips'];
+      if (g.type === 'radio') return FGD_TIPS['_radio'];
+      if (g.type === 'number') return FGD_TIPS['_number'];
+      if (g.type === 'date') return FGD_TIPS['_date'];
+      return FGD_TIPS['_text'];
+    }
+    /* إرشاد فوق العنصر الظاهر في خطوة الإدخال (بيتحط جوه شريط الخطوات اللي فوق العنصر) */
+    function fgdTip(bar, el, last) {
+      if (!FARM_GUIDE || !bar) return;
+      var t = bar.querySelector('.fgd-tip');
+      if (!t) {
+        t = document.createElement('div');
+        t.className = 'fgd-tip';
+        t.setAttribute('role', 'note');
+        t.innerHTML = FGD_ICON + '<span></span>';
+        bar.appendChild(t);
+      }
+      var txt = fgdTipText(el, last);
+      t.hidden = !txt;
+      t.querySelector('span').textContent = txt;
+    }
+    /* خطوة مرقّمة + سطر إرشاد قبل قسم معيّن */
+    function fgdStep(before, n, title, desc) {
+      if (!before || !before.parentNode) return;
+      var pv = before.previousElementSibling;
+      if (pv && pv.getAttribute && pv.getAttribute('data-fgd')) return;
+      var d = document.createElement('div');
+      d.className = 'fgd-step';
+      d.setAttribute('data-fgd', '1');
+      d.setAttribute('role', 'note');
+      d.innerHTML = '<span class="fgd-n"></span><div class="fgd-b"><div class="fgd-t"></div><div class="fgd-d"></div></div>';
+      d.querySelector('.fgd-n').textContent = n;
+      d.querySelector('.fgd-t').textContent = title;
+      d.querySelector('.fgd-d').textContent = desc;
+      before.parentNode.insertBefore(d, before);
+    }
+    function fgdView(view) {
+      if (!FARM_GUIDE) return;
+      var root = document.getElementById('fv-' + view);
+      if (!root) return;
+      function q(sel) { return root.querySelector(sel); }
+      if (view === 'dashboard') {
+        var empty = q('.farm-empty-state');
+        if (empty) { fgdStep(empty, 1, 'ابدأ بإعداد مزرعتك', 'اضغط الزر وأدخل بيانات مزرعتك مرة واحدة، وبعدها تقدر تسجّل عملياتك ومصروفاتك.'); return; }
+        fgdStep(q('.farm-stats-grid'), 1, 'راجع ملخص مزرعتك', 'ده ملخص سريع لبيانات مزرعتك. لو فيه بيان ناقص أو غلط عدّله من «إعداد المزرعة».');
+        fgdStep(q('.dash-quick-section'), 2, 'اختار اللي عايز تعمله', 'ابدأ بتسجيل عمليات اليوم، وبعدها تابع التحليلات والأرشيف والمصروفات.');
+        fgdStep(q('.dash-about'), 3, 'اتعرّف على مميزات النظام', 'نبذة عن اللي تقدر تعمله وإزاي النظام بيفيدك في الإنتاج والتكاليف.');
+      } else if (view === 'setup') {
+        var cards = [].filter.call(root.children, function(c) { return c.classList && c.classList.contains('farm-form-card'); });
+        if (cards[0]) fgdStep(cards[0], 1,
+          cards[0].querySelector('#farm-info-saved') ? 'راجع بيانات مزرعتك' : 'بيانات المزرعة الأساسية',
+          cards[0].querySelector('#farm-info-saved') ? 'لو فيه حاجة محتاجة تتغيّر اضغط «تعديل معلومات المزرعة».' : 'اكتب اسم مزرعتك ومساحتها وموقعها ومصدر المياه، وبعدها احفظ — بتعملها مرة واحدة بس.');
+        if (cards[1]) fgdStep(cards[1], 2, 'حقول المزرعة', 'ضيف كل حقل لوحده باسمه ومساحته ونوع تربته. الحقول دي هي اللي بتختارها وإنت بتسجّل عملياتك اليومية.');
+        if (cards[2]) fgdStep(cards[2], 3,
+          cards[2].querySelector('.setup-saved-view') ? 'راجع بيانات المحصول' : 'بيانات المحصول',
+          cards[2].querySelector('.setup-saved-view') ? 'لو المحصول اتغيّر أو محتاج تعدّل حاجة اضغط «تعديل بيانات المحصول».' : 'سجّل المحصول المزروع حاليًا: اسمه وصنفه وموعد زراعته ونظام الزراعة.');
+      } else if (view === 'analytics') {
+        fgdStep(q('.analytics-tabs'), 1, 'اختار الفترة', 'يومي = النهارده فقط، أسبوعي = آخر 7 أيام، شهري = آخر 30 يوم.');
+        fgdStep(q('#analytics-content'), 2, 'اقرأ التقرير', 'التقرير بيتحدّث تلقائي حسب الفترة اللي اخترتها فوق.');
+      } else if (view === 'archive') {
+        fgdStep(q('#archive-months-grid'), 1, 'اختار الشهر', 'كل كارت فيه عدد العمليات المسجّلة في الشهر ده — اضغط عليه علشان تشوف تقريره الكامل.');
+      } else if (view === 'expenses') {
+        fgdStep(q('#exp-summary-bar'), 1, 'ملخص مصروفاتك', 'إجمالي كل فئة من المصروفات لحد دلوقتي.');
+        fgdStep(q('.exp-tabs-row'), 2, 'اختار نوع المصروف', 'اختار الفئة اللي عايز تسجّل فيها: عمالة، أسمدة، مبيدات، تقاوي، ري أو مصروفات أخرى.');
+        fgdStep(q('#exp-panel'), 3, 'سجّل المصروف', 'املا البيانات خطوة بخطوة وبعدها احفظ — هتلاقي المصروفات المسجّلة تحت الفورم.');
+        fgdStep(q('.exp-analytics-section'), 4, 'تابع تحليل المصروفات', 'اختار الفترة (يومي / أسبوعي / شهري) علشان تشوف توزيع مصروفاتك.');
+        fgdStep(q('.exp-daily-log-section'), 5, 'راجع سجل المصروفات اليومي', 'اضغط على أي يوم علشان تشوف تفاصيله.');
+      }
+    }
+
     function attachViewEvents(view) {
       if (view === 'analytics') loadAndRenderAnalytics(farmState.analyticsMode);
       if (view === 'archive')   loadArchiveMonths();
       if (view === 'setup')     setTimeout(attachSetupEvents, 50);
       if (view === 'setup' || view === 'expenses') { try { flsForms(document.getElementById('fv-' + view)); } catch (e) { console.warn('[Nabtex Farm] form steps:', e); } }
       if (view === 'log')       { try { flsInit(); } catch (e) { console.warn('[Nabtex Farm] log steps:', e); } }
+      try { fgdView(view); } catch (e) { console.warn('[Nabtex Farm] guide:', e); }
     }
 
     // ═══════════════════════════════════════════════════
