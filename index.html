@@ -13575,7 +13575,6 @@ document.addEventListener('click', e => {
                 '<span class="farm-sb-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/></svg></span>' +
                 '<span class="farm-sb-brand-t"><small>نبتيكس</small><strong>إدارة المزرعة</strong></span>' +
               '</div>' +
-              '<button type="button" class="farm-sb-back" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>رجوع</button>' +
               '<button type="button" class="farm-sb-close" onclick="farmSbToggle(false)" aria-label="إغلاق القائمة"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
             '</div>' +
             '<div class="farm-sb-panel">' +
@@ -13631,6 +13630,46 @@ document.addEventListener('click', e => {
       if (e.key === 'Escape') window.farmSbToggle(false);
   });
 
+  /* ── Farm menu bar: hides on scroll down, reappears on scroll up (phones/tablets only) ── */
+  (function() {
+      var lastY = 0, ticking = false, DELTA = 8, HIDE_AFTER = 80;
+      function curY(t) {
+          return (t === document || t === document.documentElement || t === document.body)
+              ? (window.pageYOffset || document.documentElement.scrollTop || 0)
+              : t.scrollTop;
+      }
+      function setHidden(bar, hide) {
+          if (bar.classList.contains('farm-mbar-hide') !== hide) bar.classList.toggle('farm-mbar-hide', hide);
+      }
+      function update(target) {
+          ticking = false;
+          var pg = document.getElementById('pg-farm');
+          if (!pg || !pg.classList.contains('active')) return;
+          var bar = pg.querySelector('.farm-mbar');
+          if (!bar) return;
+          var shell = pg.querySelector('.farm-shell');
+          if (shell && shell.classList.contains('farm-sb-open')) { setHidden(bar, false); return; }
+          var y = curY(target);
+          if (y < 0) y = 0;                                   /* iOS rubber-band at top */
+          if (y <= 10) { setHidden(bar, false); lastY = y; return; }
+          var el = (target === document) ? document.documentElement : target;
+          if (y + el.clientHeight > el.scrollHeight + 1) return;  /* rubber-band at bottom */
+          var d = y - lastY;
+          if (Math.abs(d) < DELTA) return;                    /* ignore jitter */
+          if (d > 0 && y > HIDE_AFTER) setHidden(bar, true);
+          else if (d < 0) setHidden(bar, false);
+          lastY = y;
+      }
+      document.addEventListener('scroll', function(e) {
+          var t = e.target;
+          /* react only to the page scroll or the farm content scroller — ignore drawer/modals/inner lists */
+          if (t !== document && !(t.classList && t.classList.contains('farm-main'))) return;
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(function() { update(t); });
+      }, { passive: true, capture: true });
+  })();
+
   window.FarmNav = function(view) {
       farmState.currentView = view;
       // update active nav tab
@@ -13675,6 +13714,16 @@ document.addEventListener('click', e => {
       else if (view === 'archive')   h = renderArchive();
       else if (view === 'expenses')  h = renderExpenses();
       mc.innerHTML = h;
+      /* زر رجوع لكل التابات ما عدا لوحة التحكم → يرجّع للوحة التحكم */
+      if (view !== 'dashboard') {
+        var tb = document.createElement('button');
+        tb.type = 'button';
+        tb.className = 'farm-tab-back';
+        tb.setAttribute('aria-label', 'الرجوع إلى لوحة التحكم');
+        tb.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>رجوع';
+        tb.addEventListener('click', function() { window.FarmNav('dashboard'); });
+        mc.insertBefore(tb, mc.firstChild);
+      }
       attachViewEvents(view);
     }
 
@@ -19827,6 +19876,12 @@ document.addEventListener('click', e => {
 }
 #pg-farm .farm-sb-back:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.34)}
 #pg-farm .farm-sb-back:focus-visible,#pg-farm .farm-sb-close:focus-visible{outline:2.5px solid var(--fsb-lime);outline-offset:2px;border-radius:999px}
+/* زر الرجوع داخل تابات إدارة المزرعة (مش في لوحة التحكم) */
+#pg-farm .farm-tab-back{display:flex;align-items:center;gap:8px;width:fit-content;min-height:40px;margin:0 0 14px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--brand);font:700 13px var(--f-ui);letter-spacing:0;cursor:pointer;box-shadow:var(--fsb-card-sh);transition:background .2s ease,transform .15s ease}
+#pg-farm .farm-tab-back:hover{background:var(--fsb-chip)}
+#pg-farm .farm-tab-back:active{transform:scale(.97)}
+#pg-farm .farm-tab-back:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+[data-dark] #pg-farm .farm-tab-back{color:var(--brand-xl,#5fc97e)}
 #pg-farm .farm-sb-close{display:none;position:absolute;top:14px;inset-inline-end:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;place-items:center}
 
 /* ── Nav panel (overlaps hero like the reference "Categories" card) ── */
@@ -19900,11 +19955,16 @@ document.addEventListener('click', e => {
   #pg-farm .farm-mbar-btn svg{color:var(--fsb-lime)}
   #pg-farm .farm-mbar-btn:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
   #pg-farm .farm-mbar-cur{flex:0 1 auto;min-width:0;padding-inline:2px 10px;font:800 14.5px/1.3 var(--f-ui);color:var(--ink);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* auto-hide on scroll down / reveal on scroll up (GPU-only: transform + opacity) */
+  #pg-farm .farm-mbar{transition:transform .32s cubic-bezier(.32,.72,0,1),opacity .24s ease,visibility 0s linear 0s;will-change:transform,opacity}
+  #pg-farm .farm-mbar.farm-mbar-hide{transform:translate(-50%,-150%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .32s cubic-bezier(.32,.72,0,1),opacity .24s ease,visibility 0s linear .32s}
 
   #pg-farm .farm-sb{
-    top:var(--fsb-top);bottom:0;inset-inline-start:0;width:min(86vw,330px);max-height:none;z-index:480;
-    border-radius:28px 0 0 28px;border-inline-end-width:0;padding-bottom:env(safe-area-inset-bottom,0px);
-    transform:translateX(104%);visibility:hidden;
+    top:calc(var(--fsb-top) + 12px);bottom:auto;inset-inline-start:12px;width:min(86vw,330px);
+    max-height:calc(100vh - var(--fsb-top) - 24px);max-height:calc(100dvh - var(--fsb-top) - 24px);z-index:480;
+    border-radius:28px;padding-bottom:0;
+    box-shadow:0 32px 64px -24px rgba(6,40,24,.6),0 10px 24px -12px rgba(6,40,24,.32);
+    transform:translateX(calc(104% + 24px));visibility:hidden;
     transition:transform .34s cubic-bezier(.32,.72,0,1),visibility 0s linear .34s;
   }
   #pg-farm .farm-shell.farm-sb-open .farm-sb{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.32,.72,0,1),visibility 0s}
@@ -19914,9 +19974,10 @@ document.addEventListener('click', e => {
     opacity:0;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s;
   }
   #pg-farm .farm-shell.farm-sb-open .farm-sb-backdrop{opacity:1;visibility:visible;transition:opacity .3s ease}
+  #pg-farm .farm-sb-backdrop{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 }
 @media (prefers-reduced-motion:reduce){
-  #pg-farm .farm-sb,#pg-farm .farm-sb-backdrop{transition-duration:.001ms !important}
+  #pg-farm .farm-sb,#pg-farm .farm-sb-backdrop,#pg-farm .farm-mbar{transition-duration:.001ms !important}
 }
 </style>
 
@@ -20035,6 +20096,8 @@ document.addEventListener('click', e => {
 
 /* ── Dashboard: features & benefits ── */
 #pg-farm .dash-about{margin-top:22px}
+/* فصل كارت خطوة 3 (fgd-step) عن كارت «إجراءات سريعة» اللي فوقه — نفس مسافة .dash-about */
+#pg-farm .dash-quick-section + .fgd-step{margin-top:22px}
 #pg-farm .dash-about-head{margin:0 4px 14px}
 #pg-farm .dash-about-head h3{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:var(--ink);line-height:1.4}
 #pg-farm .dash-about-head p{margin:0;font-size:13.5px;line-height:1.9;color:var(--slate)}
