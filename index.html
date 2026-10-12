@@ -13769,7 +13769,7 @@ document.addEventListener('click', e => {
       var fieldsCount = farmState.fields.length;
 
       if (!hasFarm) {
-        return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS',
+        return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في مزرعتك على نبتيكس',
           '<div class="farm-empty-state">' +
           '<div class="farm-empty-lottie"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2C6.48 2 2 6.48 2 12"/><path d="M12 22V12"/><path d="M12 12C8 8 4 9 2 12"/><path d="M12 12c4-4 8-3 10 0"/><circle cx="12" cy="12" r="2"/></svg></div>' +
           '<h3>أهلاً! لنبدأ بإعداد مزرعتك</h3>' +
@@ -13798,7 +13798,33 @@ document.addEventListener('click', e => {
           '</div>' +
         '</div>';
 
-      return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في Farm OS', statsHtml + quickHtml);
+      var aboutHtml =
+        '<section class="dash-about" aria-labelledby="dash-about-t">' +
+          '<div class="dash-about-head">' +
+            '<h3 id="dash-about-t">مميزات نظام إدارة المزرعة</h3>' +
+            '<p>كل ما تحتاجه لإدارة مزرعتك في مكان واحد: سجّل عملياتك، وتابع مصروفاتك، واتخذ قراراتك بناءً على أرقام حقيقية.</p>' +
+          '</div>' +
+          '<div class="dash-about-grid">' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div><h4>إعداد المزرعة والحقول</h4><p>سجّل بيانات مزرعتك وحقولها، المساحة ومصدر المياه ونظام الري، مرة واحدة وابدأ العمل عليها.</p></div>' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div><h4>تسجيل العمليات اليومية</h4><p>حرث وزراعة وري وتسميد ورش وتقليم وحصاد، كل عملية بتاريخها وحقلها ومرحلة نمو المحصول.</p></div>' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h4>حساب التكاليف</h4><p>العمالة والأسمدة والمبيدات والتقاوي والري ومصروفات أخرى، مع إجمالي فوري لكل فئة.</p></div>' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><h4>تحليلات وتقارير</h4><p>تقارير أسبوعية وشهرية تلخّص عملياتك وتوضّح أين يذهب مجهودك ومصروفاتك.</p></div>' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div><h4>أرشيف شهري منظم</h4><p>ارجع لأي شهر سابق واطّلع على ما تم فيه للمقارنة بين المواسم والتعلّم منها.</p></div>' +
+            '<div class="dab-card"><div class="dab-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><h4>يعمل مع ضعف الإنترنت</h4><p>العمليات التي تسجّلها بدون اتصال تُحفظ على جهازك وتتزامن عند عودة الإنترنت.</p></div>' +
+          '</div>' +
+          '<div class="dash-benefits">' +
+            '<div class="dab-benefit dab-benefit-prod">' +
+              '<h4>كيف يرفع إنتاجيتك؟</h4>' +
+              '<ul><li>سجلّ واضح لكل حقل يكشف التأخر أو التكرار في الري والتسميد والرش.</li><li>مقارنة الشهور والمواسم من الأرشيف لمعرفة ما نجح وتكراره.</li><li>توثيق مواعيد العمليات بدل الاعتماد على الذاكرة.</li></ul>' +
+            '</div>' +
+            '<div class="dab-benefit dab-benefit-cost">' +
+              '<h4>كيف يضبط تكاليفك؟</h4>' +
+              '<ul><li>تتبّع كل جنيه تصرفه على العمالة والأسمدة والمبيدات والتقاوي.</li><li>إجمالي فوري لكل فئة يوضّح البند الأكثر استنزافًا للميزانية.</li><li>أرقام جاهزة تساعدك على تقدير تكلفة الفدان وهامش ربحك.</li></ul>' +
+            '</div>' +
+          '</div>' +
+        '</section>';
+
+      return viewWrap('dashboard', 'لوحة التحكم', 'مرحباً بك في مزرعتك على نبتيكس', statsHtml + quickHtml + aboutHtml);
     }
 
     function dStatCard(svg, label, value, color) {
@@ -19395,6 +19421,42 @@ document.addEventListener('click', e => {
 /* ── Empty state ── */
 #pg-farm .farm-empty-state{padding:44px 24px;background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--fsb-card-sh)}
 #pg-farm .farm-empty-lottie{opacity:1}
+
+/* ── Dashboard: features & benefits ── */
+#pg-farm .dash-about{margin-top:22px}
+#pg-farm .dash-about-head{margin:0 4px 14px}
+#pg-farm .dash-about-head h3{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:var(--ink);line-height:1.4}
+#pg-farm .dash-about-head p{margin:0;font-size:13.5px;line-height:1.9;color:var(--slate)}
+#pg-farm .dash-about-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+#pg-farm .dab-card{padding:18px 16px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--fsb-card-sh)}
+#pg-farm .dab-ic{width:46px;height:46px;margin-bottom:12px;border-radius:50%;display:grid;place-items:center;background:var(--fsb-chip);color:var(--brand)}
+[data-dark] #pg-farm .dab-ic{color:var(--brand-xl,#5fc97e)}
+#pg-farm .dab-card h4{margin:0 0 6px;font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.4}
+#pg-farm .dab-card p{margin:0;font-size:12.5px;line-height:1.85;color:var(--slate)}
+#pg-farm .dash-benefits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#pg-farm .dab-benefit{padding:20px 20px 16px;border-radius:26px}
+#pg-farm .dab-benefit h4{margin:0 0 12px;font-size:1.02rem;font-weight:800;line-height:1.4}
+#pg-farm .dab-benefit ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+#pg-farm .dab-benefit li{position:relative;padding-inline-start:30px;font-size:13px;line-height:1.8}
+#pg-farm .dab-benefit li::before{
+  content:"";position:absolute;inset-inline-start:0;top:3px;width:20px;height:20px;border-radius:50%;
+  background:var(--fsb-lime) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306301d' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat;
+}
+#pg-farm .dab-benefit-prod{color:#fff;background:radial-gradient(120% 120% at 100% 0,rgba(184,245,69,.2),transparent 55%),linear-gradient(150deg,var(--fsb-g1),var(--fsb-g3));box-shadow:0 18px 36px -22px rgba(7,59,36,.7)}
+#pg-farm .dab-benefit-prod h4{color:#fff}
+#pg-farm .dab-benefit-prod li{color:rgba(255,255,255,.92)}
+#pg-farm .dab-benefit-cost{color:var(--ink);background:rgba(184,245,69,.2);border:1px solid rgba(150,210,40,.45)}
+#pg-farm .dab-benefit-cost h4{color:var(--ink)}
+#pg-farm .dab-benefit-cost li{color:var(--ink)}
+[data-dark] #pg-farm .dab-benefit-cost{background:rgba(184,245,69,.09);border-color:rgba(184,245,69,.28)}
+@media (max-width:860px){
+  #pg-farm .dash-about-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:620px){
+  #pg-farm .dash-about-grid,#pg-farm .dash-benefits{grid-template-columns:1fr}
+  #pg-farm .dab-card{display:grid;grid-template-columns:46px 1fr;column-gap:14px;align-items:start}
+  #pg-farm .dab-ic{grid-row:1 / span 2;margin-bottom:0}
+}
 
 /* ── Phones ── */
 @media (max-width:860px){
