@@ -1,0 +1,238 @@
+--- a/Nabtex-main/index.html	2026-10-12 00:04:54.034485602 +0000
++++ b/Nabtex-main/index.html	2026-10-12 00:04:54.036093475 +0000
+@@ -13490,17 +13490,38 @@
+ 
+       var farmName = farmState.currentFarm ? farmState.currentFarm.name : 'مزرعتي';
+ 
++      var curNav = navItems.filter(function(n) { return n.view === farmState.currentView; })[0];
++      var curLabel = curNav ? curNav.label : navItems[0].label;
++
+       return '<div class="farm-shell">' +
+-        /* ══ PREMIUM TOPBAR ══ */
+-        '<div class="farm-topbar">' +
+-          '<button class="farm-home-btn" onclick="goBack()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>رجوع</button>' +
+-          '<div class="farm-topbar-divider"></div>' +
+-          '<nav class="farm-top-nav" aria-label="أقسام إدارة المزرعة">' + navHtml + '</nav>' +
++        /* ══ DASHBOARD SIDEBAR (desktop: fixed column · phones: slide-in drawer) ══ */
++        '<div class="farm-sbwrap">' +
++          '<div class="farm-sb-backdrop" onclick="farmSbToggle(false)" aria-hidden="true"></div>' +
++          '<aside class="farm-sb" id="farm-sb" aria-label="القائمة الجانبية لإدارة المزرعة">' +
++            '<div class="farm-sb-hero">' +
++              '<div class="farm-sb-brand">' +
++                '<span class="farm-sb-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/></svg></span>' +
++                '<span class="farm-sb-brand-t"><small>نبتيكس</small><strong>إدارة المزرعة</strong></span>' +
++              '</div>' +
++              '<button type="button" class="farm-sb-back" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>رجوع</button>' +
++              '<button type="button" class="farm-sb-close" onclick="farmSbToggle(false)" aria-label="إغلاق القائمة"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
++            '</div>' +
++            '<div class="farm-sb-panel">' +
++              '<p class="farm-sb-label" id="farm-sb-lbl">الأقسام</p>' +
++              '<nav class="farm-sb-nav" aria-labelledby="farm-sb-lbl">' + navHtml + '</nav>' +
++            '</div>' +
++          '</aside>' +
+         '</div>' +
+-        '<div id="fsub-banner-slot"></div>' +
+-        /* ══ CONTENT ══ */
+-        '<div class="farm-main" id="farm-main-content">' +
+-          '<div class="farm-loader" id="farm-loader"><div class="farm-spinner"></div></div>' +
++        '<div class="farm-col">' +
++          '<div class="farm-mbar">' +
++            '<button type="button" class="farm-mbar-btn" id="farm-mbar-btn" aria-controls="farm-sb" aria-expanded="false" onclick="farmSbToggle()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M10 17h10"/></svg>القائمة</button>' +
++            '<span class="farm-mbar-cur" id="farm-mbar-cur" aria-live="polite">' + curLabel + '</span>' +
++          '</div>' +
++          '<div id="fsub-banner-slot"></div>' +
++          /* ══ CONTENT ══ */
++          '<div class="farm-main" id="farm-main-content">' +
++            '<div class="farm-loader" id="farm-loader"><div class="farm-spinner"></div></div>' +
++          '</div>' +
+         '</div>' +
+       '</div>';
+     }
+@@ -13510,6 +13531,34 @@
+     // ═══════════════════════════════════════════════════
+     window.closeUserDropdown = function() { var d=document.getElementById("userDropdown"); if(d)d.style.display="none"; };
+ 
++  /* ── Sidebar drawer (phones/tablets) — desktop keeps the sidebar always visible ── */
++  window.farmSbToggle = function(force) {
++      var shell = document.querySelector('#pg-farm .farm-shell');
++      if (!shell) return;
++      var isOpen = shell.classList.contains('farm-sb-open');
++      var open = (typeof force === 'boolean') ? force : !isOpen;
++      if (open === isOpen) return;
++      shell.classList.toggle('farm-sb-open', open);
++      var btn = document.getElementById('farm-mbar-btn');
++      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
++      var sb = document.getElementById('farm-sb');
++      if (open) {
++        var first = document.querySelector('#farm-sb .farm-nav-active') || document.querySelector('#farm-sb .farm-nav-item');
++        if (first) setTimeout(function() { try { first.focus(); } catch (e) {} }, 60);
++      } else if (btn && sb && sb.contains(document.activeElement)) {
++        try { btn.focus(); } catch (e) {}
++      }
++  };
++  function farmSbSync() {
++      var cur = document.querySelector('#farm-sb .farm-nav-active .farm-nav-label');
++      var out = document.getElementById('farm-mbar-cur');
++      if (cur && out) out.textContent = cur.textContent;
++      window.farmSbToggle(false);
++  }
++  document.addEventListener('keydown', function(e) {
++      if (e.key === 'Escape') window.farmSbToggle(false);
++  });
++
+   window.FarmNav = function(view) {
+       farmState.currentView = view;
+       // update active nav tab
+@@ -13518,6 +13567,7 @@
+       var btns  = document.querySelectorAll('.farm-nav-item');
+       var idx   = views.indexOf(view);
+       if (btns[idx]) { btns[idx].classList.add('farm-nav-active'); btns[idx].setAttribute('aria-current', 'page'); }
++      farmSbSync();
+       // animate content out → in
+       var mc = document.getElementById('farm-main-content');
+       if (mc) {
+@@ -19095,6 +19145,144 @@
+ }
+ </style>
+ 
++<!-- ══ FARM OS — DASHBOARD SIDEBAR (additive overrides: topbar → professional sidebar; no logic touched) ══ -->
++<style id="farm-sidebar-dashboard">
++/* tokens + fixed-positioning fix: .page{will-change:transform} traps position:fixed inside the page box → cancelled for the farm page only */
++#pg-farm{
++  --fsb-top:calc(64px + env(safe-area-inset-top,0px));
++  --fsb-w:272px;
++  --fsb-lime:#b8f545;
++  --fsb-g1:#0f6a43;--fsb-g2:#0a4f30;--fsb-g3:#073b24;
++  --fsb-ink:#06301d;
++  --fsb-chip:#e4f4ea;
++  will-change:auto;
++}
++[data-dark] #pg-farm{--fsb-chip:rgba(95,201,126,.14)}
++
++/* ── Layout: sidebar column + content column ── */
++#pg-farm .farm-shell{flex-direction:row;align-items:flex-start;gap:24px;padding:16px 24px 24px}
++#pg-farm .farm-sbwrap{flex:0 0 var(--fsb-w);width:var(--fsb-w);align-self:stretch}
++#pg-farm .farm-col{flex:1 1 0;min-width:0}
++#pg-farm .farm-col .farm-main{padding-top:16px;min-height:0}
++#pg-farm .farm-col #fsub-banner-slot:not(:empty){padding-top:0}
++#pg-farm .farm-col .fsub-banner{margin-inline:0}
++
++/* ── Sidebar card ── */
++#pg-farm .farm-sb{
++  position:fixed;top:calc(var(--fsb-top) + 16px);inset-inline-start:24px;
++  width:var(--fsb-w);max-height:calc(100vh - var(--fsb-top) - 32px);max-height:calc(100dvh - var(--fsb-top) - 32px);
++  display:flex;flex-direction:column;overflow:hidden;z-index:30;
++  background:var(--card);border:1px solid var(--line);border-radius:28px;
++  box-shadow:0 18px 44px -22px rgba(8,50,30,.45),0 2px 8px rgba(8,50,30,.06);
++}
++#pg-farm .farm-sb-hero{
++  position:relative;flex:none;padding:20px 18px 42px;color:#fff;
++  background:radial-gradient(120% 90% at 100% 0,rgba(184,245,69,.2),transparent 55%),linear-gradient(160deg,var(--fsb-g1),var(--fsb-g2) 58%,var(--fsb-g3));
++}
++#pg-farm .farm-sb-brand{display:flex;align-items:center;gap:12px;padding-inline-end:44px}
++#pg-farm .farm-sb-mark{width:46px;height:46px;flex:none;border-radius:15px;display:grid;place-items:center;color:var(--fsb-lime);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
++#pg-farm .farm-sb-brand-t{display:flex;flex-direction:column;gap:2px;min-width:0}
++#pg-farm .farm-sb-brand-t small{font:600 12px/1.4 var(--f-ui);color:rgba(255,255,255,.75);letter-spacing:0}
++#pg-farm .farm-sb-brand-t strong{font:800 17px/1.35 var(--f-ui);color:#fff;letter-spacing:0}
++#pg-farm .farm-sb-back{
++  margin-top:16px;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;
++  border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);
++  color:#fff;font:700 13px var(--f-ui);letter-spacing:0;cursor:pointer;transition:background .2s ease,border-color .2s ease;
++}
++#pg-farm .farm-sb-back:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.34)}
++#pg-farm .farm-sb-back:focus-visible,#pg-farm .farm-sb-close:focus-visible{outline:2.5px solid var(--fsb-lime);outline-offset:2px;border-radius:999px}
++#pg-farm .farm-sb-close{display:none;position:absolute;top:14px;inset-inline-end:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;place-items:center}
++
++/* ── Nav panel (overlaps hero like the reference "Categories" card) ── */
++#pg-farm .farm-sb-panel{
++  position:relative;flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
++  margin:-24px 10px 10px;padding:14px 8px 8px;
++  background:var(--card);border:1px solid var(--line);border-radius:24px;
++  box-shadow:0 10px 28px -14px rgba(8,50,30,.35);
++}
++#pg-farm .farm-sb-label{margin:0 10px 8px;font:800 12.5px/1.4 var(--f-ui);color:var(--muted);letter-spacing:0}
++#pg-farm .farm-sb-nav{display:flex;flex-direction:column;gap:4px}
++
++#pg-farm .farm-sb .farm-nav-item{
++  position:relative;display:flex;flex-direction:row;align-items:center;gap:12px;width:100%;min-width:0;height:auto;min-height:52px;
++  padding-block:6px;padding-inline-start:8px;padding-inline-end:12px;
++  border-radius:18px;border:1px solid transparent;background:transparent;box-shadow:none;
++  color:var(--ink);font:700 14px/1.3 var(--f-ui);letter-spacing:0;text-align:start;overflow:visible;
++}
++#pg-farm .farm-sb .farm-nav-item::before{display:none}
++#pg-farm .farm-sb .farm-nav-item:hover{background:var(--bg2);border-color:transparent;color:var(--ink)}
++#pg-farm .farm-sb .farm-nav-icon{width:38px;height:38px;flex:none;border-radius:50%;background:var(--fsb-chip);color:var(--brand);opacity:1;transition:background .2s ease,color .2s ease,transform .25s cubic-bezier(.34,1.56,.64,1)}
++#pg-farm .farm-sb .farm-nav-icon svg{width:18px;height:18px}
++#pg-farm .farm-sb .farm-nav-label{flex:1;min-width:0;font-size:14px;line-height:1.3;opacity:1}
++#pg-farm .farm-sb .farm-nav-item::after{
++  content:"";position:static;inset:auto;flex:none;width:16px;height:16px;border-radius:0;pointer-events:none;
++  background:currentColor;opacity:.35;box-shadow:none;
++  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
++          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
++}
++#pg-farm .farm-sb .farm-nav-item.farm-nav-active{
++  background:var(--fsb-lime) !important;color:var(--fsb-ink) !important;border-color:transparent !important;
++  box-shadow:0 10px 20px -12px rgba(120,190,20,.95) !important;
++}
++#pg-farm .farm-sb .farm-nav-item.farm-nav-active .farm-nav-icon{background:var(--fsb-g2);color:var(--fsb-lime);transform:none}
++#pg-farm .farm-sb .farm-nav-item.farm-nav-active::after{opacity:.75}
++#pg-farm .farm-sb .farm-nav-item:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px;border-radius:18px}
++[data-dark] #pg-farm .farm-sb .farm-nav-item{color:rgba(255,255,255,.88)}
++[data-dark] #pg-farm .farm-sb .farm-nav-item:hover{color:#fff}
++[data-dark] #pg-farm .farm-sb .farm-nav-item:focus-visible{outline-color:var(--brand-xl,#5fc97e)}
++[data-dark] #pg-farm .farm-sb .farm-nav-icon{color:var(--brand-xl,#5fc97e)}
++[data-dark] #pg-farm .farm-sb{box-shadow:0 18px 44px -20px rgba(0,0,0,.65)}
++
++/* ── Mobile bar (only on phones/tablets) ── */
++#pg-farm .farm-mbar{display:none}
++#pg-farm .farm-sb-backdrop{display:none}
++
++@media (max-width:1100px) and (min-width:861px){
++  #pg-farm{--fsb-w:236px}
++  #pg-farm .farm-shell{gap:16px;padding-inline:16px}
++  #pg-farm .farm-sb{inset-inline-start:16px}
++}
++
++/* ── ≤860px: sidebar becomes a slide-in drawer ── */
++@media (max-width:860px){
++  #pg-farm .farm-shell{display:block;padding:0}
++  #pg-farm .farm-sbwrap{width:0;height:0;flex:none}
++  #pg-farm .farm-col{padding-top:72px}
++  #pg-farm .farm-col .farm-main{padding-top:12px}
++  #pg-farm .farm-col .fsub-banner{margin-inline:12px}
++
++  #pg-farm .farm-mbar{
++    display:flex;align-items:center;gap:10px;position:fixed;top:calc(var(--fsb-top) + 8px);inset-inline:12px;z-index:30;
++    min-height:56px;padding:6px;border-radius:20px;background:var(--card);border:1px solid var(--line);
++    box-shadow:0 10px 26px -14px rgba(8,50,30,.45);
++  }
++  #pg-farm .farm-mbar-btn{
++    flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:15px;border:0;
++    background:linear-gradient(160deg,var(--fsb-g1),var(--fsb-g3));color:#fff;font:700 13px var(--f-ui);letter-spacing:0;cursor:pointer;
++  }
++  #pg-farm .farm-mbar-btn svg{color:var(--fsb-lime)}
++  #pg-farm .farm-mbar-btn:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
++  #pg-farm .farm-mbar-cur{flex:1;min-width:0;padding-inline:4px;font:800 14.5px/1.3 var(--f-ui);color:var(--ink);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++
++  #pg-farm .farm-sb{
++    top:var(--fsb-top);bottom:0;inset-inline-start:0;width:min(86vw,330px);max-height:none;z-index:480;
++    border-radius:28px 0 0 28px;border-inline-end-width:0;padding-bottom:env(safe-area-inset-bottom,0px);
++    transform:translateX(104%);visibility:hidden;
++    transition:transform .34s cubic-bezier(.32,.72,0,1),visibility 0s linear .34s;
++  }
++  #pg-farm .farm-shell.farm-sb-open .farm-sb{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.32,.72,0,1),visibility 0s}
++  #pg-farm .farm-sb-close{display:grid}
++  #pg-farm .farm-sb-backdrop{
++    display:block;position:fixed;inset:var(--fsb-top) 0 0 0;z-index:470;background:rgba(6,28,16,.5);
++    opacity:0;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s;
++  }
++  #pg-farm .farm-shell.farm-sb-open .farm-sb-backdrop{opacity:1;visibility:visible;transition:opacity .3s ease}
++}
++@media (prefers-reduced-motion:reduce){
++  #pg-farm .farm-sb,#pg-farm .farm-sb-backdrop{transition-duration:.001ms !important}
++}
++</style>
++
+ <!-- ═══════════════════════════════════════════════════════
+      PWA — INSTALL SYSTEM v2 (Banner + Modal)
+      Additive only — zero impact on existing functions
