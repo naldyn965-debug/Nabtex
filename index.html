@@ -19182,6 +19182,7 @@ document.addEventListener('click', e => {
   --fsb-ink:#06301d;
   --fsb-chip:#e4f4ea;
   will-change:auto;
+  padding-top:0; /* standalone/PWA rule added env(safe-area-inset-top) a 2nd time (body already includes it) */
 }
 [data-dark] #pg-farm{--fsb-chip:rgba(95,201,126,.14)}
 
@@ -19273,8 +19274,8 @@ document.addEventListener('click', e => {
 @media (max-width:860px){
   #pg-farm .farm-shell{display:block;padding:0}
   #pg-farm .farm-sbwrap{width:0;height:0;flex:none}
-  #pg-farm .farm-col{padding-top:72px}
-  #pg-farm .farm-col .farm-main{padding-top:12px}
+  #pg-farm .farm-col{padding-top:66px}
+  #pg-farm .farm-col .farm-main{padding-top:14px}
   #pg-farm .farm-col .fsub-banner{margin-inline:12px}
 
   #pg-farm .farm-mbar{
