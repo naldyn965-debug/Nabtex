@@ -1806,6 +1806,17 @@ body.modal-open { overflow: hidden; }
 [data-dark] .fls-stp b{color:#6fd68f}
 [data-dark] .fls-track{background:#24352b}
 [data-dark] .fls-btn.s{background:#1b2a21;color:#e8f2ec;border-color:#2c3f33}
+.fls-pq{font-size:21px;font-weight:900;line-height:1.4;margin:0 0 6px;color:var(--fltx)}
+.fls-pp{margin:0 0 16px;font-size:13.5px;line-height:1.7;color:#4b6053}
+.fls-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fls-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:92px;padding:14px 8px;border-radius:20px;border:1.5px solid var(--flln);background:#fbfdfc;font:inherit;font-size:14px;font-weight:800;color:var(--fltx);cursor:pointer;transition:transform .15s,border-color .2s,background .2s,box-shadow .2s}
+.fls-opt:active{transform:scale(.96)}
+.fls-opt.on{border-color:var(--oc);background:color-mix(in srgb,var(--oc) 9%,#fff);box-shadow:0 6px 18px color-mix(in srgb,var(--oc) 18%,transparent)}
+.fls-oi{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--oc) 12%,#fff);color:var(--oc)}
+.fls-oi svg{width:22px;height:22px}
+[data-dark] .fls-pq{color:#e8f2ec}[data-dark] .fls-pp{color:#a9bdb0}
+[data-dark] .fls-opt{background:#1b2a21;border-color:#2c3f33;color:#e8f2ec}
+[data-dark] .fls-opt.on{background:color-mix(in srgb,var(--oc) 16%,#1b2a21)}
 </style>
 </head>
 <body>
@@ -14835,9 +14846,10 @@ document.addEventListener('click', e => {
     //  ATTACH VIEW EVENTS
     // ═══════════════════════════════════════════════════
     /* ═══════════════════════════════════════════════════
-       DAILY LOG — إدخال بالتتابع (نفس أسلوب شاشة الدفع)
-       إضافة فقط: بتعرض نفس الحقول الموجودة (نفس الـ IDs ونفس saveOperation)
-       حقل واحد في كل خطوة. لإلغائها وإرجاع العرض القديم: FARM_LOG_STEPS = false
+       DAILY LOG — كل عملية لوحدها + إدخال بالتتابع (نفس أسلوب شاشة الدفع)
+       إضافة فقط: بتعرض نفس الحقول الموجودة (نفس الـ IDs ونفس saveOperation).
+       المستخدم يختار نوع العملية الأول، وبعدها يدخل بياناتها فقط حقل بحقل، وتتحفظ لوحدها.
+       لإلغائها وإرجاع الفورم القديم: FARM_LOG_STEPS = false
        ═══════════════════════════════════════════════════ */
     var FARM_LOG_STEPS = true;
     function flsInit() {
@@ -14847,16 +14859,36 @@ document.addEventListener('click', e => {
       var cards = [].slice.call(view.querySelectorAll('.farm-form-card'));
       if (!cards.length) return;
 
+      /* نوع العملية ← الكارت بتاعها (نفس الكروت الموجودة في renderLogForm) */
+      var OPS = [
+        { key: 'irr',     sel: '.prem-card-blue'   },
+        { key: 'fert',    sel: '.prem-card-green'  },
+        { key: 'spray',   sel: '.prem-card-purple' },
+        { key: 'agri',    sel: '.prem-card-amber'  },
+        { key: 'env',     sel: '.prem-card-cyan'   },
+        { key: 'harvest', sel: '#harvest-section'  }
+      ];
+      var opCard = {}, cardOp = [];
+      OPS.forEach(function(o) {
+        var c = view.querySelector(o.sel);
+        if (c) { opCard[o.key] = c; cardOp.push({ card: c, key: o.key }); }
+      });
+      function opOf(card) { for (var i = 0; i < cardOp.length; i++) if (cardOp[i].card === card) return cardOp[i].key; return null; }
+
+      var state = { op: null };
       var units = [];
+      var notesCard = null;
+
       cards.forEach(function(card) {
-        if (card.querySelector('#op-notes')) { units.push({ el: card, card: card, title: 'ملاحظات وحفظ', last: true }); return; }
+        if (card.querySelector('#op-notes')) { notesCard = card; units.push({ el: card, card: card, title: 'ملاحظات وحفظ', last: true }); return; }
+        var op = opOf(card);
         var lsh = card.querySelector('.lsh-text');
-        var title = lsh ? lsh.textContent : (card.classList.contains('log-header-card') ? 'البيانات الأساسية' : 'بيانات العملية');
+        var title = lsh ? lsh.textContent : 'البيانات الأساسية';
         [].forEach.call(card.querySelectorAll('.farm-fg, .farm-harvest-toggle'), function(el) {
-          units.push({ el: el, card: card, title: title });
+          units.push({ el: el, card: card, title: title, op: op, skip: el.classList.contains('farm-harvest-toggle') });
         });
       });
-      if (!units.length) return;
+      if (!units.length || !notesCard) return;
 
       view.setAttribute('data-fls', '1');
       view.classList.add('fls-on');
@@ -14864,26 +14896,71 @@ document.addEventListener('click', e => {
       var ARR_B = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
       var ARR_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
 
+      /* خطوة اختيار نوع العملية */
+      var pick = document.createElement('div');
+      pick.className = 'farm-form-card fls-pick';
+      var ph = '<div class="fls-pq">ما العملية التي تريد تسجيلها؟</div><p class="fls-pp">كل عملية بتتسجل لوحدها — اختار نوعها وبعدها أدخل بياناتها.</p><div class="fls-opts">';
+      OPS.forEach(function(o) {
+        var c = opCard[o.key]; if (!c) return;
+        var t = c.querySelector('.log-section-title');
+        var col = t ? (t.style.getPropertyValue('--lsh-color') || '#16a34a') : '#16a34a';
+        var ico = c.querySelector('.lsh-icon-wrap');
+        var lbl = c.querySelector('.lsh-text');
+        ph += '<button type="button" class="fls-opt" data-op="' + o.key + '" style="--oc:' + col + '" aria-pressed="false">' +
+              '<span class="fls-oi">' + (ico ? ico.innerHTML : '') + '</span><span class="fls-ol">' + (lbl ? lbl.textContent : o.key) + '</span></button>';
+      });
+      pick.innerHTML = ph + '</div>';
+
       var bar = document.createElement('div');
       bar.className = 'fls-bar';
       bar.innerHTML = '<div class="fls-top"><span class="fls-stp"></span><span class="fls-sec"></span></div><div class="fls-track"><i></i></div>';
       view.insertBefore(bar, cards[0]);
+      view.insertBefore(pick, cards[0]);
 
       var nav = document.createElement('div');
       nav.className = 'fls-nav';
       nav.innerHTML = '<button type="button" class="fls-btn s" data-a="prev">' + ARR_B + '<span>السابق</span></button>' +
                       '<button type="button" class="fls-btn p" data-a="next"><span>متابعة</span>' + ARR_F + '</button>';
-      cards[cards.length - 1].parentNode.insertBefore(nav, cards[cards.length - 1].nextSibling);
+      notesCard.parentNode.insertBefore(nav, notesCard.nextSibling);
+
+      units.unshift({ el: pick, card: pick, title: 'نوع العملية', isPick: true });
+      cards.unshift(pick);
 
       var idx = 0;
       function isActive(u) {
-        if (u.el.closest && u.el.closest('#harvest-fields')) {
-          var cb = document.getElementById('is-harvest-day');
-          return !!(cb && cb.checked);
-        }
+        if (u.skip) return false;
+        if (u.op) return u.op === state.op;
         return true;
       }
       function actives() { return units.filter(isActive); }
+
+      /* تجهيز العملية المختارة: نفّع اختيارات الـ chips لو كانت اتفرّغت، وحدّد يوم الحصاد */
+      function applyOp(op) {
+        state.op = op;
+        var cb = document.getElementById('is-harvest-day');
+        if (cb) { cb.checked = (op === 'harvest'); if (typeof toggleHarvestFields === 'function') toggleHarvestFields(cb.checked); }
+        var c = opCard[op];
+        if (c) [].forEach.call(c.querySelectorAll('input[type=hidden]'), function(h) {
+          if (!h.value) { var f = c.querySelector('.fc-chips-wrap[aria-labelledby="' + h.id + '-lbl"] .fc-chip'); if (f) h.value = f.getAttribute('data-val') || ''; }
+        });
+        [].forEach.call(pick.querySelectorAll('.fls-opt'), function(b) {
+          var on = b.getAttribute('data-op') === op; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+        });
+      }
+
+      /* قبل الحفظ: فضّي بيانات العمليات التانية عشان السجل يبقى للعملية المختارة بس */
+      function neutralize() {
+        cardOp.forEach(function(co) {
+          if (co.key === state.op) return;
+          [].forEach.call(co.card.querySelectorAll('input'), function(i) {
+            if (i.type === 'checkbox') { i.checked = false; return; }
+            if (i.type === 'number') { i.value = (i.id === 'op-temp' || i.id === 'op-humidity') ? '' : '0'; return; }
+            i.value = '';
+          });
+        });
+        var cb = document.getElementById('is-harvest-day');
+        if (cb) cb.checked = (state.op === 'harvest');
+      }
 
       function render(focus) {
         var act = actives();
@@ -14896,11 +14973,11 @@ document.addEventListener('click', e => {
         cur.card.classList.remove('fls-in'); void cur.card.offsetWidth; cur.card.classList.add('fls-in');
 
         var n = act.length;
-        bar.querySelector('.fls-stp').innerHTML = 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>';
+        bar.querySelector('.fls-stp').innerHTML = state.op ? 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>' : 'الخطوة <b>1</b>';
         bar.querySelector('.fls-sec').textContent = cur.title;
-        bar.querySelector('.fls-track i').style.width = Math.round(((idx + 1) / n) * 100) + '%';
+        bar.querySelector('.fls-track i').style.width = (state.op ? Math.round(((idx + 1) / n) * 100) : 6) + '%';
         nav.querySelector('[data-a=prev]').hidden = idx === 0;
-        nav.querySelector('[data-a=next]').hidden = !!cur.last;
+        nav.querySelector('[data-a=next]').hidden = !!cur.last || !!cur.isPick;   /* اختيار النوع بيكمّل بالضغط على العملية */
         nav.hidden = false;
 
         if (focus) {
@@ -14915,13 +14992,18 @@ document.addEventListener('click', e => {
 
       function next() {
         var act = actives(), cur = act[idx];
-        /* نفس فكرة خطوات الدفع: التحقق قبل المتابعة — الحقل مطلوب أصلاً في saveOperation */
+        if (cur.isPick) return;
         var fe = cur.el.querySelector('#op-field');
         if (fe && !fe.value) { if (typeof farmToast === 'function') farmToast('برجاء اختيار الحقل أولاً', 'warning'); return; }
         if (idx < act.length - 1) { idx++; render(true); }
       }
       function prev() { if (idx > 0) { idx--; render(true); } }
 
+      pick.addEventListener('click', function(e) {
+        var b = e.target.closest('.fls-opt'); if (!b) return;
+        applyOp(b.getAttribute('data-op'));
+        idx = 1; render(true);
+      });
       nav.addEventListener('click', function(e) {
         var b = e.target.closest('[data-a]'); if (!b) return;
         if (b.getAttribute('data-a') === 'next') next(); else prev();
@@ -14932,9 +15014,10 @@ document.addEventListener('click', e => {
         if (!t || t.tagName !== 'INPUT' || t.type === 'checkbox' || t.type === 'hidden') return;
         e.preventDefault(); next();
       });
-      view.addEventListener('change', function(e) {
-        if (e.target && e.target.id === 'is-harvest-day') render(false);
-      });
+      /* capture: يشتغل قبل onclick="saveOperation()" بتاع الزر من غير ما نعدّل الدالة */
+      view.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.farm-save-btn')) neutralize();
+      }, true);
 
       render(false);
     }
