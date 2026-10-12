@@ -1776,6 +1776,37 @@ body.modal-open { overflow: hidden; }
   ]
 }
 </script>
+<style id="fls-css">
+/* ── Farm daily-log: sequential step entry (same look & flow as the checkout .nbco) — additive only ── */
+.fls-h{display:none!important}
+#fv-log[data-fls]{--flg:#1B6B3A;--flg2:#2d9a58;--fltx:#14261b;--flmu:#6b7f72;--flln:#e5ede7}
+.fls-bar{margin:0 0 14px}
+.fls-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}
+.fls-stp{font-size:13px;font-weight:700;color:var(--flmu)}
+.fls-stp b{color:var(--flg);font-weight:900}
+.fls-sec{font-size:12.5px;font-weight:800;color:var(--flg);background:#eef7f1;padding:4px 11px;border-radius:99px}
+.fls-track{height:6px;border-radius:99px;background:#e3eae5;overflow:hidden}
+.fls-track i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--flg),var(--flg2));transition:width .45s cubic-bezier(.22,1,.36,1);margin-inline-start:auto}
+.fls-nav{display:flex;gap:10px;margin-top:14px}
+.fls-nav[hidden]{display:none}
+.fls-btn{flex:1;height:54px;border-radius:99px;font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;border:1.5px solid transparent;transition:transform .15s,opacity .2s}
+.fls-btn:active{transform:scale(.975)}
+.fls-btn[hidden]{display:none}
+.fls-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.fls-btn.p{background:linear-gradient(135deg,var(--flg),var(--flg2));color:#fff;box-shadow:0 10px 24px rgba(27,107,58,.28);flex:2}
+.fls-btn.s{background:#fff;color:var(--fltx);border-color:#d9e3dc}
+.fls-on .farm-form-grid>.farm-fg:not(.fls-h){grid-column:1/-1}
+.fls-on .farm-form-card #harvest-fields{margin-top:0!important}
+.fls-on .farm-input,.fls-on .farm-select{min-height:54px;font-size:16px}
+@media (prefers-reduced-motion:no-preference){
+  .fls-in{animation:flsIn .45s cubic-bezier(.22,1,.36,1) both}
+  @keyframes flsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
+[data-dark] .fls-sec{background:rgba(111,214,143,.12);color:#6fd68f}
+[data-dark] .fls-stp b{color:#6fd68f}
+[data-dark] .fls-track{background:#24352b}
+[data-dark] .fls-btn.s{background:#1b2a21;color:#e8f2ec;border-color:#2c3f33}
+</style>
 </head>
 <body>
   <!-- Liquid Glass — hidden SVG refraction filters (feDisplacementMap + feSpecularLighting).
@@ -14803,10 +14834,116 @@ document.addEventListener('click', e => {
     // ═══════════════════════════════════════════════════
     //  ATTACH VIEW EVENTS
     // ═══════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════
+       DAILY LOG — إدخال بالتتابع (نفس أسلوب شاشة الدفع)
+       إضافة فقط: بتعرض نفس الحقول الموجودة (نفس الـ IDs ونفس saveOperation)
+       حقل واحد في كل خطوة. لإلغائها وإرجاع العرض القديم: FARM_LOG_STEPS = false
+       ═══════════════════════════════════════════════════ */
+    var FARM_LOG_STEPS = true;
+    function flsInit() {
+      if (!FARM_LOG_STEPS) return;
+      var view = document.getElementById('fv-log');
+      if (!view || view.getAttribute('data-fls')) return;
+      var cards = [].slice.call(view.querySelectorAll('.farm-form-card'));
+      if (!cards.length) return;
+
+      var units = [];
+      cards.forEach(function(card) {
+        if (card.querySelector('#op-notes')) { units.push({ el: card, card: card, title: 'ملاحظات وحفظ', last: true }); return; }
+        var lsh = card.querySelector('.lsh-text');
+        var title = lsh ? lsh.textContent : (card.classList.contains('log-header-card') ? 'البيانات الأساسية' : 'بيانات العملية');
+        [].forEach.call(card.querySelectorAll('.farm-fg, .farm-harvest-toggle'), function(el) {
+          units.push({ el: el, card: card, title: title });
+        });
+      });
+      if (!units.length) return;
+
+      view.setAttribute('data-fls', '1');
+      view.classList.add('fls-on');
+
+      var ARR_B = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+      var ARR_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+
+      var bar = document.createElement('div');
+      bar.className = 'fls-bar';
+      bar.innerHTML = '<div class="fls-top"><span class="fls-stp"></span><span class="fls-sec"></span></div><div class="fls-track"><i></i></div>';
+      view.insertBefore(bar, cards[0]);
+
+      var nav = document.createElement('div');
+      nav.className = 'fls-nav';
+      nav.innerHTML = '<button type="button" class="fls-btn s" data-a="prev">' + ARR_B + '<span>السابق</span></button>' +
+                      '<button type="button" class="fls-btn p" data-a="next"><span>متابعة</span>' + ARR_F + '</button>';
+      cards[cards.length - 1].parentNode.insertBefore(nav, cards[cards.length - 1].nextSibling);
+
+      var idx = 0;
+      function isActive(u) {
+        if (u.el.closest && u.el.closest('#harvest-fields')) {
+          var cb = document.getElementById('is-harvest-day');
+          return !!(cb && cb.checked);
+        }
+        return true;
+      }
+      function actives() { return units.filter(isActive); }
+
+      function render(focus) {
+        var act = actives();
+        if (idx > act.length - 1) idx = act.length - 1;
+        if (idx < 0) idx = 0;
+        units.forEach(function(u) { u.el.classList.add('fls-h'); });
+        cards.forEach(function(c) { c.classList.add('fls-h'); });
+        var cur = act[idx];
+        cur.el.classList.remove('fls-h'); cur.card.classList.remove('fls-h');
+        cur.card.classList.remove('fls-in'); void cur.card.offsetWidth; cur.card.classList.add('fls-in');
+
+        var n = act.length;
+        bar.querySelector('.fls-stp').innerHTML = 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>';
+        bar.querySelector('.fls-sec').textContent = cur.title;
+        bar.querySelector('.fls-track i').style.width = Math.round(((idx + 1) / n) * 100) + '%';
+        nav.querySelector('[data-a=prev]').hidden = idx === 0;
+        nav.querySelector('[data-a=next]').hidden = !!cur.last;
+        nav.hidden = false;
+
+        if (focus) {
+          setTimeout(function() {
+            var f = cur.el.querySelector('input:not([type=hidden]):not([type=checkbox]), select, textarea');
+            if (!f) return;
+            try { f.focus({ preventScroll: true }); if (f.type === 'number' && f.select) f.select(); } catch (e) {}
+          }, 120);
+        }
+        try { bar.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {}
+      }
+
+      function next() {
+        var act = actives(), cur = act[idx];
+        /* نفس فكرة خطوات الدفع: التحقق قبل المتابعة — الحقل مطلوب أصلاً في saveOperation */
+        var fe = cur.el.querySelector('#op-field');
+        if (fe && !fe.value) { if (typeof farmToast === 'function') farmToast('برجاء اختيار الحقل أولاً', 'warning'); return; }
+        if (idx < act.length - 1) { idx++; render(true); }
+      }
+      function prev() { if (idx > 0) { idx--; render(true); } }
+
+      nav.addEventListener('click', function(e) {
+        var b = e.target.closest('[data-a]'); if (!b) return;
+        if (b.getAttribute('data-a') === 'next') next(); else prev();
+      });
+      view.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        var t = e.target;
+        if (!t || t.tagName !== 'INPUT' || t.type === 'checkbox' || t.type === 'hidden') return;
+        e.preventDefault(); next();
+      });
+      view.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'is-harvest-day') render(false);
+      });
+
+      render(false);
+    }
+
     function attachViewEvents(view) {
       if (view === 'analytics') loadAndRenderAnalytics(farmState.analyticsMode);
       if (view === 'archive')   loadArchiveMonths();
       if (view === 'setup')     setTimeout(attachSetupEvents, 50);
+      if (view === 'log')       { try { flsInit(); } catch (e) { console.warn('[Nabtex Farm] log steps:', e); } }
     }
 
     // ═══════════════════════════════════════════════════
