@@ -20088,6 +20088,80 @@ document.addEventListener('click', e => {
   #pg-farm .dash-quick-section .farm-quick-btns{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
+<style id="fgr-css">
+/* ── Farm premium gradients: فصل وتوازن بصري بين العمليات وكل كارت فيه حقول — CSS فقط، additive ── */
+/* 1) ألوان كل كارت (--pc أساسي / --pc2 فاتح / --pcr RGB) */
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card){--pc:#1B6B3A;--pc2:#34a265;--pcr:27,107,58;position:relative;overflow:hidden;margin-bottom:22px;border:1px solid rgba(var(--pcr),.18);background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pcr),.14) 0%,rgba(var(--pcr),0) 62%),linear-gradient(180deg,rgba(var(--pcr),.06) 0%,var(--card) 48%);box-shadow:0 18px 38px -26px rgba(var(--pcr),.6),0 2px 6px rgba(var(--pcr),.07)}
+#pg-farm #farm-main-content .prem-card-blue{--pc:#3b82f6;--pc2:#7cb0fb;--pcr:59,130,246}
+#pg-farm #farm-main-content .prem-card-green{--pc:#16a34a;--pc2:#4ade80;--pcr:22,163,74}
+#pg-farm #farm-main-content .prem-card-purple{--pc:#9333ea;--pc2:#c084fc;--pcr:147,51,234}
+#pg-farm #farm-main-content .prem-card-amber{--pc:#d97706;--pc2:#fbbf24;--pcr:217,119,6}
+#pg-farm #farm-main-content .prem-card-cyan{--pc:#0891b2;--pc2:#22d3ee;--pcr:8,145,178}
+#pg-farm #farm-main-content .prem-card-harvest{--pc:#b45309;--pc2:#f59e0b;--pcr:180,83,9}
+#pg-farm #farm-main-content .farm-form-card:has(#fields-list){--pc:#0d9488;--pc2:#2dd4bf;--pcr:13,148,136}
+#pg-farm #farm-main-content .farm-form-card:has(#prop-type-group),#pg-farm #farm-main-content #fv-setup .farm-form-card:not(:has(#fields-list)):not(:has(#farm-info-fields)):not(:has(#farm-info-saved)){--pc:#65a30d;--pc2:#a3e635;--pcr:101,163,13}
+#pg-farm #farm-main-content .farm-form-card:has(#op-notes){--pc:#475569;--pc2:#94a3b8;--pcr:71,85,105}
+#pg-farm #farm-main-content .exp-form-card:has(#ew-name){--pc:#d97706;--pc2:#fbbf24;--pcr:217,119,6}
+#pg-farm #farm-main-content .exp-form-card:has(#ef-name){--pc:#16a34a;--pc2:#4ade80;--pcr:22,163,74}
+#pg-farm #farm-main-content .exp-form-card:has(#ep-name){--pc:#9333ea;--pc2:#c084fc;--pcr:147,51,234}
+#pg-farm #farm-main-content .exp-form-card:has(#es-name){--pc:#65a30d;--pc2:#a3e635;--pcr:101,163,13}
+#pg-farm #farm-main-content .exp-form-card:has(#ei-type){--pc:#3b82f6;--pc2:#7cb0fb;--pcr:59,130,246}
+#pg-farm #farm-main-content .exp-form-card:has(#eo-cat){--pc:#475569;--pc2:#94a3b8;--pcr:71,85,105}
+/* 2) شريط لوني علوي لكل عملية */
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card)::before{content:'';display:block;position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,rgba(var(--pcr),0),var(--pc) 20%,var(--pc2) 80%,rgba(var(--pcr),0));opacity:1;pointer-events:none}
+/* 3) أيقونات العناوين بتدرّج + خط فاصل متدرّج */
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) :is(.fch-icon,.lsh-icon-wrap){background:linear-gradient(135deg,var(--pc),var(--pc2)) !important;color:#fff !important;box-shadow:0 8px 16px -8px rgba(var(--pcr),.75),0 1px 0 rgba(255,255,255,.35) inset}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .lsh-text{color:color-mix(in srgb,var(--pc) 72%,var(--ink));font-size:13px}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .lsh-line{height:2px;border-radius:2px;background:linear-gradient(to left,rgba(var(--pcr),.38),rgba(var(--pcr),0))}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-form-card-header,#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .exp-form-title{border-bottom:1px solid transparent;border-image:linear-gradient(to left,rgba(var(--pcr),.4),rgba(var(--pcr),0)) 1;margin-bottom:22px}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .exp-form-title{color:color-mix(in srgb,var(--pc) 72%,var(--ink))}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-form-section-label{color:color-mix(in srgb,var(--pc) 65%,var(--muted))}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-form-section-label::after{height:2px;border-radius:2px;background:linear-gradient(to left,rgba(var(--pcr),.35),rgba(var(--pcr),0))}
+/* 4) تنفّس الحقول: مسافات أوسع + فصل مجموعات الاختيارات */
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) :is(.farm-form-grid,.exp-form-grid){gap:18px 16px;margin-bottom:20px}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-fg{gap:8px}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-label{font-size:12.5px;font-weight:800;color:color-mix(in srgb,var(--pc) 45%,var(--ink))}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-fg-chips{margin:2px 0 18px;padding:14px;border-radius:20px;background:linear-gradient(160deg,rgba(var(--pcr),.09),rgba(var(--pcr),.02));border:1px dashed rgba(var(--pcr),.26)}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .fc-chips-wrap{gap:10px}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .fc-chip:not(.fc-chip-active){background:var(--card);border-color:rgba(var(--pcr),.24)}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-radio-item:not(:has(input:checked)){background:var(--card);border-color:rgba(var(--pcr),.22)}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .field-item{background:linear-gradient(135deg,rgba(var(--pcr),.08),var(--card));border:1px solid rgba(var(--pcr),.16)}
+/* 5) الحقول نفسها: أبيض صافي فوق خلفية متدرّجة = تباين واضح */
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input{background:var(--card);border:1.5px solid rgba(var(--pcr),.22);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 6px 12px -10px rgba(var(--pcr),.55)}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input:hover:not(:focus){border-color:rgba(var(--pcr),.45)}
+#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input:focus,#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input:focus-visible{border-color:var(--pc);background:var(--card);box-shadow:0 0 0 4px rgba(var(--pcr),.16),0 10px 20px -12px rgba(var(--pcr),.65)}
+/* 6) شريط الخطوات + زر المتابعة بتدرّج لون العملية */
+#pg-farm #farm-main-content .fls-bar{padding:14px 16px 16px;border-radius:22px;border:1px solid rgba(var(--pcr,27,107,58),.16);background:linear-gradient(135deg,rgba(var(--pcr,27,107,58),.12),rgba(184,245,69,.10) 60%,var(--card));box-shadow:0 14px 30px -24px rgba(var(--pcr,27,107,58),.6)}
+#pg-farm #farm-main-content .fls-sec{background:linear-gradient(135deg,rgba(var(--pcr,27,107,58),.18),rgba(var(--pcr,27,107,58),.06));color:color-mix(in srgb,var(--pc,#1B6B3A) 75%,var(--ink))}
+#pg-farm #farm-main-content .fls-track i{background:linear-gradient(90deg,var(--pc,#1B6B3A),var(--pc2,#2d9a58))}
+#pg-farm #farm-main-content .fls-btn.p{background:linear-gradient(135deg,var(--pc,#1B6B3A),var(--pc2,#2d9a58));box-shadow:0 12px 26px -12px rgba(var(--pcr,27,107,58),.8)}
+#pg-farm #farm-main-content .fls-opt{background:linear-gradient(160deg,color-mix(in srgb,var(--oc) 11%,var(--card)),var(--card) 70%)}
+#pg-farm #farm-main-content .fls-opt.on{background:linear-gradient(160deg,color-mix(in srgb,var(--oc) 20%,var(--card)),color-mix(in srgb,var(--oc) 6%,var(--card)));border-color:var(--oc)}
+#pg-farm #farm-main-content .fgd-step{background:linear-gradient(135deg,rgba(27,107,58,.10),rgba(184,245,69,.12));border-color:rgba(27,107,58,.16)}
+#pg-farm #farm-main-content .fgd-n{background:linear-gradient(135deg,#1B6B3A,#34a265);box-shadow:0 8px 14px -8px rgba(27,107,58,.8)}
+#pg-farm #farm-main-content .fgd-tip{background:linear-gradient(135deg,#f3fae3,#fcfef4)}
+/* لون الشريط/الزر في التسجيل اليومي حسب العملية الظاهرة */
+#pg-farm #farm-main-content #fv-log:has(.prem-card-blue:not(.fls-h)){--pc:#3b82f6;--pc2:#7cb0fb;--pcr:59,130,246}
+#pg-farm #farm-main-content #fv-log:has(.prem-card-green:not(.fls-h)){--pc:#16a34a;--pc2:#4ade80;--pcr:22,163,74}
+#pg-farm #farm-main-content #fv-log:has(.prem-card-purple:not(.fls-h)){--pc:#9333ea;--pc2:#c084fc;--pcr:147,51,234}
+#pg-farm #farm-main-content #fv-log:has(.prem-card-amber:not(.fls-h)){--pc:#d97706;--pc2:#fbbf24;--pcr:217,119,6}
+#pg-farm #farm-main-content #fv-log:has(.prem-card-cyan:not(.fls-h)){--pc:#0891b2;--pc2:#22d3ee;--pcr:8,145,178}
+#pg-farm #farm-main-content #fv-log:has(.prem-card-harvest:not(.fls-h)){--pc:#b45309;--pc2:#f59e0b;--pcr:180,83,9}
+/* 7) الوضع الداكن */
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card){border-color:rgba(var(--pcr),.3);background:radial-gradient(120% 70% at 100% 0%,rgba(var(--pcr),.22) 0%,rgba(var(--pcr),0) 62%),linear-gradient(180deg,rgba(var(--pcr),.10) 0%,var(--card) 52%);box-shadow:0 18px 38px -24px rgba(0,0,0,.75),0 0 0 1px rgba(var(--pcr),.06) inset}
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input{background:rgba(0,0,0,.24);border-color:rgba(var(--pcr),.34);box-shadow:none}
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input:focus,[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-input:focus-visible{background:rgba(0,0,0,.32);border-color:var(--pc2)}
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .fc-chip:not(.fc-chip-active),[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-radio-item:not(:has(input:checked)){background:rgba(0,0,0,.22)}
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-fg-chips{background:linear-gradient(160deg,rgba(var(--pcr),.16),rgba(var(--pcr),.04));border-color:rgba(var(--pcr),.34)}
+[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .farm-label,[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .lsh-text,[data-dark] #pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) .exp-form-title{color:color-mix(in srgb,var(--pc2) 70%,var(--ink))}
+[data-dark] #pg-farm #farm-main-content .fls-bar{background:linear-gradient(135deg,rgba(var(--pcr,27,107,58),.2),rgba(184,245,69,.05) 60%,var(--card));border-color:rgba(var(--pcr,27,107,58),.34)}
+[data-dark] #pg-farm #farm-main-content .fls-opt{background:linear-gradient(160deg,color-mix(in srgb,var(--oc) 18%,#1b2a21),#1b2a21 70%)}
+[data-dark] #pg-farm #farm-main-content .fls-opt.on{background:linear-gradient(160deg,color-mix(in srgb,var(--oc) 28%,#1b2a21),color-mix(in srgb,var(--oc) 10%,#1b2a21))}
+[data-dark] #pg-farm #farm-main-content .fgd-step{background:linear-gradient(135deg,rgba(111,214,143,.14),rgba(197,240,98,.05));border-color:#2c3f33}
+[data-dark] #pg-farm #farm-main-content .fgd-n{background:linear-gradient(135deg,#6fd68f,#c5f062)}
+[data-dark] #pg-farm #farm-main-content .fgd-tip{background:rgba(197,240,98,.08)}
+@media (max-width:600px){#pg-farm #farm-main-content :is(.farm-form-card,.exp-form-card) :is(.farm-form-grid,.exp-form-grid){gap:16px 12px}}
+</style>
 
 <!-- ═══════════════════════════════════════════════════════
      PWA — INSTALL SYSTEM v2 (Banner + Modal)
