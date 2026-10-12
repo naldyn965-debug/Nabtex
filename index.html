@@ -1817,6 +1817,18 @@ body.modal-open { overflow: hidden; }
 [data-dark] .fls-pq{color:#e8f2ec}[data-dark] .fls-pp{color:#a9bdb0}
 [data-dark] .fls-opt{background:#1b2a21;border-color:#2c3f33;color:#e8f2ec}
 [data-dark] .fls-opt.on{background:color-mix(in srgb,var(--oc) 16%,#1b2a21)}
+.fls-ctx{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 8px 8px 14px;border-radius:14px;background:#eef7f1;font-size:12.5px;font-weight:700;color:var(--flg)}
+.fls-ctx[hidden]{display:none}
+.fls-ctx span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fls-ctx button{border:0;background:#fff;color:var(--flg);font:inherit;font-size:12.5px;font-weight:800;padding:6px 14px;border-radius:99px;cursor:pointer}
+[data-dark] .fls-ctx{background:rgba(111,214,143,.12);color:#6fd68f}[data-dark] .fls-ctx button{background:#1b2a21;color:#6fd68f}
+.fls-form{--flg:#1B6B3A;--flg2:#2d9a58;--fltx:#14261b;--flmu:#6b7f72;--flln:#e5ede7}
+.fls-form .farm-form-grid>.farm-fg:not(.fls-h),.fls-form .exp-form-grid>.farm-fg:not(.fls-h){grid-column:1/-1}
+.fls-form .farm-form-grid:not(:has(>.farm-fg:not(.fls-h))),.fls-form .exp-form-grid:not(:has(>.farm-fg:not(.fls-h))){display:none}
+.fls-form [id^="plant-spacing-"]{margin-top:0!important}
+.fls-form [id^="plant-spacing-"]:not(:has(.farm-fg:not(.fls-h))){display:none!important}
+.fls-form .farm-input,.fls-form .farm-select{min-height:54px;font-size:16px}
+.fls-form .fls-nav{margin-top:14px}
 </style>
 </head>
 <body>
@@ -14852,6 +14864,16 @@ document.addEventListener('click', e => {
        لإلغائها وإرجاع الفورم القديم: FARM_LOG_STEPS = false
        ═══════════════════════════════════════════════════ */
     var FARM_LOG_STEPS = true;
+    /* اليوم / الحقل / المرحلة بتتحدد مرة واحدة وتتستخدم لكل عمليات نفس اليوم (بتتصفّر تلقائيًا مع يوم جديد) */
+    var farmLogCtx = null;
+    function flsCtxLoad() {
+      try {
+        var c = farmLogCtx || JSON.parse(localStorage.getItem('nbx_farm_logctx') || 'null');
+        if (c && c.day === todayStr() && c.uid === uid() && c.date && c.field) { farmLogCtx = c; return c; }
+      } catch (e) {}
+      return null;
+    }
+    function flsCtxSave(c) { farmLogCtx = c; try { localStorage.setItem('nbx_farm_logctx', JSON.stringify(c)); } catch (e) {} }
     function flsInit() {
       if (!FARM_LOG_STEPS) return;
       var view = document.getElementById('fv-log');
@@ -14875,7 +14897,7 @@ document.addEventListener('click', e => {
       });
       function opOf(card) { for (var i = 0; i < cardOp.length; i++) if (cardOp[i].card === card) return cardOp[i].key; return null; }
 
-      var state = { op: null };
+      var state = { op: null, edit: false };
       var units = [];
       var notesCard = null;
 
@@ -14885,13 +14907,26 @@ document.addEventListener('click', e => {
         var lsh = card.querySelector('.lsh-text');
         var title = lsh ? lsh.textContent : 'البيانات الأساسية';
         [].forEach.call(card.querySelectorAll('.farm-fg, .farm-harvest-toggle'), function(el) {
-          units.push({ el: el, card: card, title: title, op: op, skip: el.classList.contains('farm-harvest-toggle') });
+          var kind = el.querySelector('#op-date') ? 'date' : el.querySelector('#op-field') ? 'field' : el.querySelector('#op-crop-stage') ? 'stage' : null;
+          units.push({ el: el, card: card, title: title, op: op, kind: kind, skip: el.classList.contains('farm-harvest-toggle') });
         });
       });
       if (!units.length || !notesCard) return;
 
       view.setAttribute('data-fls', '1');
       view.classList.add('fls-on');
+
+      /* السياق المحفوظ لنفس اليوم: نطبّقه على الحقول ونتخطى خطواته */
+      var fe0 = document.getElementById('op-field');
+      var fieldCount = fe0 ? [].filter.call(fe0.options, function(o) { return o.value; }).length : 0;
+      var ctx = flsCtxLoad();
+      if (ctx && !(fe0 && [].some.call(fe0.options, function(o) { return o.value === ctx.field; }))) ctx = null;
+      if (ctx) {
+        fe0.value = ctx.field;
+        var dEl = document.getElementById('op-date'); if (dEl) dEl.value = ctx.date;
+        var chip = [].filter.call(view.querySelectorAll('#op-crop-stage-lbl ~ .fc-chips-wrap .fc-chip'), function(b) { return b.getAttribute('data-val') === ctx.stage; })[0];
+        if (chip && typeof fcChipSelect === 'function') fcChipSelect(chip, 'op-crop-stage', 'var(--brand)');
+      }
 
       var ARR_B = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
       var ARR_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
@@ -14913,7 +14948,7 @@ document.addEventListener('click', e => {
 
       var bar = document.createElement('div');
       bar.className = 'fls-bar';
-      bar.innerHTML = '<div class="fls-top"><span class="fls-stp"></span><span class="fls-sec"></span></div><div class="fls-track"><i></i></div>';
+      bar.innerHTML = '<div class="fls-top"><span class="fls-stp"></span><span class="fls-sec"></span></div><div class="fls-track"><i></i></div><div class="fls-ctx" hidden><span></span><button type="button" data-a="ctx">تغيير</button></div>';
       view.insertBefore(bar, cards[0]);
       view.insertBefore(pick, cards[0]);
 
@@ -14929,6 +14964,12 @@ document.addEventListener('click', e => {
       var idx = 0;
       function isActive(u) {
         if (u.skip) return false;
+        if (u.kind) {
+          if (state.edit) return true;
+          if (u.kind === 'date') return false;                 /* التاريخ تلقائي = النهارده */
+          if (u.kind === 'field') return !ctx && fieldCount !== 1;
+          return !ctx;                                         /* المرحلة */
+        }
         if (u.op) return u.op === state.op;
         return true;
       }
@@ -14979,6 +15020,11 @@ document.addEventListener('click', e => {
         nav.querySelector('[data-a=prev]').hidden = idx === 0;
         nav.querySelector('[data-a=next]').hidden = !!cur.last || !!cur.isPick;   /* اختيار النوع بيكمّل بالضغط على العملية */
         nav.hidden = false;
+        var cx = bar.querySelector('.fls-ctx'), fe = document.getElementById('op-field'), de = document.getElementById('op-date');
+        cx.hidden = !(state.op && !cur.kind && !cur.isPick);
+        if (!cx.hidden) cx.querySelector('span').textContent = (de ? de.value : '') +
+          (fe && fe.selectedIndex >= 0 && fe.value ? ' · ' + fe.options[fe.selectedIndex].text : '') +
+          ' · ' + selVal('op-crop-stage');
 
         if (focus) {
           setTimeout(function() {
@@ -14999,6 +15045,13 @@ document.addEventListener('click', e => {
       }
       function prev() { if (idx > 0) { idx--; render(true); } }
 
+      bar.addEventListener('click', function(e) {
+        if (!e.target.closest('[data-a=ctx]')) return;
+        state.edit = true;
+        var act = actives(), k = 0;
+        for (var i = 0; i < act.length; i++) if (act[i].kind) { k = i; break; }
+        idx = k; render(true);
+      });
       pick.addEventListener('click', function(e) {
         var b = e.target.closest('.fls-opt'); if (!b) return;
         applyOp(b.getAttribute('data-op'));
@@ -15016,16 +15069,129 @@ document.addEventListener('click', e => {
       });
       /* capture: يشتغل قبل onclick="saveOperation()" بتاع الزر من غير ما نعدّل الدالة */
       view.addEventListener('click', function(e) {
-        if (e.target.closest && e.target.closest('.farm-save-btn')) neutralize();
+        if (e.target.closest && e.target.closest('.farm-save-btn')) {
+          var f1 = document.getElementById('op-field');
+          if (f1 && f1.value) flsCtxSave({ uid: uid(), day: todayStr(), date: val('op-date') || todayStr(), field: f1.value, stage: selVal('op-crop-stage') });
+          neutralize();
+        }
       }, true);
 
       render(false);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       باقي التابات (الإعداد + المصروفات): نفس نظام الخطوات — كل كارت فورم بيتملى حقل بحقل.
+       إضافة فقط: بتعرض نفس الحقول والأزرار الموجودة (نفس الـ IDs ونفس دوال الحفظ).
+       ═══════════════════════════════════════════════════ */
+    function flsCard(card) {
+      if (!card || card.getAttribute('data-fls-card')) return;
+      var atoms = [];
+      var nodes = card.querySelectorAll('.farm-fg, .farm-radio-group');
+      for (var i = 0; i < nodes.length; i++) {
+        var n = nodes[i];
+        if (n.parentNode && n.parentNode.closest && n.parentNode.closest('.farm-fg, .farm-radio-group') && card.contains(n.parentNode.closest('.farm-fg, .farm-radio-group'))) continue;
+        var lab = null, title = '';
+        if (n.classList.contains('farm-radio-group')) {
+          var pv = n.previousElementSibling;
+          if (pv && pv.classList.contains('farm-form-section-label')) { lab = pv; title = pv.textContent; }
+        } else {
+          var l = n.querySelector('.farm-label'); title = l ? l.textContent : '';
+        }
+        var sp = n.closest('[id^="plant-spacing-"]');
+        atoms.push({ el: n, lab: lab, title: title, spacing: sp ? sp.id.replace('plant-spacing-', '') : null });
+      }
+      if (!atoms.length) return;
+      var finals = [].filter.call(card.children, function(c) {
+        return c.matches('.setup-action-row, .exp-calc-bar, .exp-calc-preview, button');
+      });
+
+      card.setAttribute('data-fls-card', '1');
+      card.classList.add('fls-form');
+
+      var hd = card.querySelector('.farm-form-title, .exp-form-title');
+      var cardTitle = hd ? hd.textContent : 'البيانات';
+      var ARR_B = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+      var ARR_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+
+      var bar = document.createElement('div');
+      bar.className = 'fls-bar';
+      bar.innerHTML = '<div class="fls-top"><span class="fls-stp"></span><span class="fls-sec"></span></div><div class="fls-track"><i></i></div>';
+      var hdWrap = card.querySelector('.farm-form-card-header') || hd;
+      if (hdWrap && hdWrap.parentNode === card) card.insertBefore(bar, hdWrap.nextSibling); else card.insertBefore(bar, card.firstChild);
+
+      var nav = document.createElement('div');
+      nav.className = 'fls-nav';
+      nav.innerHTML = '<button type="button" class="fls-btn s" data-a="prev">' + ARR_B + '<span>السابق</span></button>' +
+                      '<button type="button" class="fls-btn p" data-a="next"><span>متابعة</span>' + ARR_F + '</button>';
+      card.appendChild(nav);
+
+      var units = atoms.map(function(a) { return { atom: a }; });
+      units.push({ last: true });
+      var idx = 0;
+
+      function sysVal() { var r = card.querySelector('input[name="plant-sys"]:checked'); return r ? r.value : null; }
+      function isActive(u) {
+        if (u.last) return true;
+        return !u.atom.spacing || u.atom.spacing === sysVal();     /* حقول المسافات حسب نظام الزراعة المختار */
+      }
+      function actives() { return units.filter(isActive); }
+
+      function render(focus) {
+        var act = actives();
+        if (idx > act.length - 1) idx = act.length - 1;
+        if (idx < 0) idx = 0;
+        atoms.forEach(function(a) { a.el.classList.add('fls-h'); if (a.lab) a.lab.classList.add('fls-h'); });
+        finals.forEach(function(f) { f.classList.add('fls-h'); });
+        var cur = act[idx], shown;
+        if (cur.last) { finals.forEach(function(f) { f.classList.remove('fls-h'); }); shown = null; }
+        else { cur.atom.el.classList.remove('fls-h'); if (cur.atom.lab) cur.atom.lab.classList.remove('fls-h'); shown = cur.atom.el; }
+        var target = shown || finals[0];
+        if (target) { target.classList.remove('fls-in'); void target.offsetWidth; target.classList.add('fls-in'); }
+
+        var n = act.length;
+        bar.querySelector('.fls-stp').innerHTML = 'الخطوة <b>' + (idx + 1) + '</b> من <b>' + n + '</b>';
+        bar.querySelector('.fls-sec').textContent = cur.last ? 'حفظ' : (cur.atom.title || cardTitle);
+        bar.querySelector('.fls-track i').style.width = Math.round(((idx + 1) / n) * 100) + '%';
+        nav.querySelector('[data-a=prev]').hidden = idx === 0;
+        nav.querySelector('[data-a=next]').hidden = !!cur.last;
+
+        if (focus && shown) {
+          setTimeout(function() {
+            var f = shown.querySelector('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea');
+            if (!f) return;
+            try { f.focus({ preventScroll: true }); if (f.type === 'number' && f.select) f.select(); } catch (e) {}
+          }, 120);
+        }
+        if (focus) { try { bar.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }
+      }
+      function next() { var act = actives(); if (idx < act.length - 1) { idx++; render(true); } }
+      function prev() { if (idx > 0) { idx--; render(true); } }
+
+      nav.addEventListener('click', function(e) {
+        var b = e.target.closest('[data-a]'); if (!b) return;
+        if (b.getAttribute('data-a') === 'next') next(); else prev();
+      });
+      card.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        var t = e.target;
+        if (!t || t.tagName !== 'INPUT' || t.type === 'checkbox' || t.type === 'radio' || t.type === 'hidden') return;
+        e.preventDefault(); next();
+      });
+      card.addEventListener('change', function(e) {
+        if (e.target && e.target.name === 'plant-sys') render(false);
+      });
+      render(false);
+    }
+    function flsForms(root) {
+      if (!FARM_LOG_STEPS || !root) return;
+      [].forEach.call(root.querySelectorAll('.farm-form-card, .exp-form-card'), flsCard);
     }
 
     function attachViewEvents(view) {
       if (view === 'analytics') loadAndRenderAnalytics(farmState.analyticsMode);
       if (view === 'archive')   loadArchiveMonths();
       if (view === 'setup')     setTimeout(attachSetupEvents, 50);
+      if (view === 'setup' || view === 'expenses') { try { flsForms(document.getElementById('fv-' + view)); } catch (e) { console.warn('[Nabtex Farm] form steps:', e); } }
       if (view === 'log')       { try { flsInit(); } catch (e) { console.warn('[Nabtex Farm] log steps:', e); } }
     }
 
@@ -15384,6 +15550,7 @@ document.addEventListener('click', e => {
         case 'irrigation':  panel.innerHTML = renderIrrigationPanel();  break;
         case 'other':       panel.innerHTML = renderOtherPanel();       break;
       }
+      try { flsForms(panel); } catch (e) { console.warn('[Nabtex Farm] form steps:', e); }
     }
 
     // ─── WORKERS PANEL ────────────────────────────────
