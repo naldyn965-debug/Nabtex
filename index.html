@@ -15485,6 +15485,154 @@ document.addEventListener('click', e => {
       }
     }
 
+    /* ═══════════════════════════════════════════════════
+       مركز القرار — إضافة فقط (لوحة التحكم)
+       • ملخص مزرعتك: آخر عملية / عمليات آخر 7 أيام / مصروفات آخر 7 أيام — كل صف بيفتح الشاشة بتاعته
+       • المزارع اللي سجّل 3 عمليات أو أكتر: بنشيل خطوات الإرشاد ونطوي قسم «المميزات» (متاح بضغطة)
+       • NbFarmGo(op, stype): زر من كارت الطقس يفتح تسجيل العملية (ري/رش) جاهزة — نفس الـ IDs ونفس saveOperation
+       القراءة من الكاش المحلي أولًا، وتحديث واحد من Firestore كل 10 دقايق أو بعد حفظ عملية جديدة.
+       للتراجع: امسح البلوك ده وسطر hubView جوه attachViewEvents وبلوك nb-farm-hub (style).
+       ═══════════════════════════════════════════════════ */
+    var hubMemo = { at: 0, uid: null, ops: null };
+    var hubDirty = true;
+    var hubPending = null;
+    (function () {
+      var so = window.saveOperation;
+      if (typeof so === 'function') window.saveOperation = function () { hubDirty = true; return so.apply(this, arguments); };
+    })();
+
+    function hubSorted(ops) { return (ops || []).slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }); }
+    function hubOps(cb) {
+      var u = uid(); if (!u) return;
+      if (hubMemo.uid === u && hubMemo.ops && !hubDirty && (Date.now() - hubMemo.at) < 600000) { cb(hubMemo.ops); return; }
+      var c = farmOpsCacheLoad();
+      if (c && c.ops) cb(hubSorted(c.ops));
+      loadOperations().then(function (ops) {
+        hubMemo = { at: Date.now(), uid: u, ops: ops || [] };
+        hubDirty = false;
+        cb(hubMemo.ops);
+      }).catch(function () {});
+    }
+    function hubKind(d) {
+      d = d || {};
+      if (d.is_harvest) return 'حصاد';
+      if (num(d.spray_times) > 0 || num(d.spray_water) > 0 || d.spray_name) return 'رش';
+      if (num(d.irr_times) > 0 || num(d.irr_amount) > 0 || num(d.irr_hours) > 0) return 'ري';
+      if (num(d.fert_amount) > 0 || num(d.fert_n) > 0 || num(d.fert_p) > 0 || num(d.fert_k) > 0 || num(d.fert_organic) > 0 || d.fert_name) return 'تسميد';
+      if (d.agri_type) return d.agri_type;
+      return 'عملية';
+    }
+    function hubAgo(d) {
+      if (!d) return '';
+      var n = Math.round((new Date(todayStr() + 'T00:00:00') - new Date(d + 'T00:00:00')) / 86400000);
+      if (isNaN(n)) return '';
+      if (n <= 0) return 'اليوم';
+      if (n === 1) return 'أمس';
+      if (n === 2) return 'من يومين';
+      return n <= 10 ? 'من ' + n + ' أيام' : 'من ' + n + ' يوم';
+    }
+    function hubCnt(n) { return n === 0 ? 'لا عمليات' : n === 1 ? 'عملية واحدة' : n === 2 ? 'عمليتان' : n <= 10 ? n + ' عمليات' : n + ' عملية'; }
+    function hubExpWeek() {
+      var src = (expState.expenses && Object.keys(expState.expenses).length) ? expState.expenses : null;
+      if (!src) { var c = expCacheLoad(); src = c && c.expenses ? c.expenses : null; }
+      if (!src) return null;
+      var t = new Date(), s = new Date(t); s.setDate(s.getDate() - 6);
+      var a = dateStr(s), b = dateStr(t), tot = 0, any = false;
+      [['workers', 'total'], ['fertilizers', 'total'], ['pesticides', 'total'], ['seeds', 'total'], ['irrigation', 'cost'], ['other', 'amount']].forEach(function (p) {
+        (src[p[0]] || []).forEach(function (r) { var d = r.date || ''; if (d >= a && d <= b) { tot += parseFloat(r[p[1]]) || 0; any = true; } });
+      });
+      return { total: tot, any: any };
+    }
+    function hubRowHtml(go, color, rgb, svg, label, id) {
+      return '<button type="button" class="dh-row" id="' + id + '" data-go="' + go + '" style="--dhc:' + color + ';--dhb:' + rgb + '">' +
+        '<span class="dh-ic" aria-hidden="true">' + svg + '</span>' +
+        '<span class="dh-b"><span class="dh-l">' + label + '</span><span class="dh-v">…</span></span>' +
+        '<svg class="dh-ch" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>';
+    }
+    function hubShell() {
+      var I = function (d) { return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+      return '<div class="dash-hub-t">ملخص مزرعتك</div>' +
+        hubRowHtml('archive', '#16a34a', '22,163,74', I('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'), 'آخر عملية', 'dh-last') +
+        hubRowHtml('analytics-w', '#2563eb', '37,99,235', I('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'), 'آخر 7 أيام', 'dh-week') +
+        hubRowHtml('expenses', '#a855f7', '168,85,247', I('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'), 'مصروفات آخر 7 أيام', 'dh-exp');
+    }
+    function hubSet(root, id, text, go) {
+      var r = root.querySelector('#' + id); if (!r) return;
+      r.querySelector('.dh-v').textContent = text;
+      if (go) r.setAttribute('data-go', go);
+    }
+    function hubFill(root, ops) {
+      ops = ops || [];
+      var last = ops[0];
+      hubSet(root, 'dh-last',
+        last ? hubKind(last.data) + ((last.data && last.data.fieldName) ? ' · ' + last.data.fieldName : '') + ' · ' + hubAgo(last.date) : 'لسه ما سجّلتش أي عملية',
+        last ? 'archive' : 'log');
+      var s = new Date(); s.setDate(s.getDate() - 6);
+      var a = dateStr(s), b = todayStr();
+      var wk = ops.filter(function (o) { var d = o.date || ''; return d >= a && d <= b; });
+      hubSet(root, 'dh-week', hubCnt(wk.length));
+      hubFillExp(root);
+    }
+    function hubFillExp(root) {
+      var ex = hubExpWeek();
+      hubSet(root, 'dh-exp', ex ? (ex.any ? EGP(ex.total) : 'لا مصروفات مسجّلة') : 'افتح المصروفات لعرض الملخص');
+    }
+    function hubExperienced(root) {
+      [].forEach.call(root.querySelectorAll('.fgd-step'), function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+      var ab = root.querySelector('.dash-about');
+      if (ab && ab.parentNode && !ab.parentNode.classList.contains('dash-fold')) {
+        var d = document.createElement('details');
+        d.className = 'dash-fold';
+        d.innerHTML = '<summary>مميزات نظام إدارة المزرعة</summary>';
+        ab.parentNode.insertBefore(d, ab);
+        d.appendChild(ab);
+      }
+    }
+    function hubApplyLog(p) {
+      var root = document.getElementById('fv-log'); if (!root) return;
+      if (p.op === 'spray' && p.stype) {
+        var chip = [].filter.call(root.querySelectorAll('.fc-chips-wrap[aria-labelledby="op-spray-type-lbl"] .fc-chip'), function (b) { return b.getAttribute('data-val') === p.stype; })[0];
+        if (chip) chip.click();
+      }
+      var ob = root.querySelector('.fls-opt[data-op="' + p.op + '"]');
+      if (ob) { ob.click(); return; }
+      var card = root.querySelector(p.op === 'spray' ? '.prem-card-purple' : '.prem-card-blue');
+      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'start' });
+    }
+    window.NbFarmGo = function (op, stype) {
+      if (op !== 'irr' && op !== 'spray') return;
+      hubPending = { op: op, stype: stype || '' };
+      FarmNav('log');
+    };
+    function hubView(view) {
+      if (view === 'log') {
+        if (hubPending) { var p = hubPending; hubPending = null; hubApplyLog(p); }
+        return;
+      }
+      if (view !== 'dashboard') return;
+      var root = document.getElementById('fv-dashboard');
+      var grid = root && root.querySelector('.farm-stats-grid');
+      if (!grid || root.querySelector('#dash-hub')) return;
+      var sec = document.createElement('section');
+      sec.className = 'dash-hub'; sec.id = 'dash-hub'; sec.setAttribute('aria-label', 'ملخص مزرعتك');
+      sec.innerHTML = hubShell();
+      grid.insertAdjacentElement('afterend', sec);
+      sec.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.dh-row') : null;
+        if (!b || !sec.contains(b)) return;
+        var g = b.getAttribute('data-go');
+        if (g === 'analytics-w') { farmState.analyticsMode = 'weekly'; g = 'analytics'; }
+        FarmNav(g);
+      });
+      hubFillExp(sec);
+      hubOps(function (ops) {
+        if (!sec.isConnected) return;
+        hubFill(sec, ops);
+        if (ops.length >= 3) hubExperienced(root);
+      });
+    }
+
     function attachViewEvents(view) {
       if (view === 'analytics') loadAndRenderAnalytics(farmState.analyticsMode);
       if (view === 'archive')   loadArchiveMonths();
@@ -15492,6 +15640,7 @@ document.addEventListener('click', e => {
       if (view === 'setup' || view === 'expenses') { try { flsForms(document.getElementById('fv-' + view)); } catch (e) { console.warn('[Nabtex Farm] form steps:', e); } }
       if (view === 'log')       { try { flsInit(); } catch (e) { console.warn('[Nabtex Farm] log steps:', e); } }
       try { fgdView(view); } catch (e) { console.warn('[Nabtex Farm] guide:', e); }
+      try { hubView(view); } catch (e) { console.warn('[Nabtex Farm] hub:', e); }
     }
 
     // ═══════════════════════════════════════════════════
@@ -25456,6 +25605,21 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 .nbfw-tb{font-family:inherit;font-size:12px;font-weight:700;line-height:1.4;padding:6px 12px;min-height:32px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2);cursor:pointer}
 .nbfw-tb.on{color:#9333ea;border-color:#9333ea;background:rgba(147,51,234,.1)}
 [data-dark] .nbfw-tb.on{color:#c084fc;border-color:#c084fc}
+.nbfw-sum{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:12px;outline-offset:4px}
+.nbfw-sum:focus-visible{outline:2.5px solid var(--brand)}
+.nbfw-sb{flex:1;min-width:0}
+.nbfw-chev{flex:none;display:grid;place-items:center;width:30px;height:30px;color:var(--muted);transition:transform .22s ease}
+.nbfw[data-open="1"] .nbfw-chev{transform:rotate(180deg)}
+.nbfw-sl{margin-top:3px;font-size:12px;line-height:1.8;color:var(--muted)}
+.nbfw-sp{opacity:.55}
+.nbfw-d{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--nt);margin-inline-end:5px}
+.nbfw[data-open="0"] .nbfw-body,.nbfw[data-open="0"] .nbfw-hs{display:none}
+.nbfw[data-open="1"] .nbfw-sl{display:none}
+.nbfw[data-open="1"] .nbfw-body{animation:nbfwIn .22s ease-out both}
+@keyframes nbfwIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nbfw[data-open="1"] .nbfw-body{animation:none}.nbfw-chev{transition:none}}
+.nbfw-go{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 14px;min-height:38px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2);font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbfw-go:active{transform:scale(.97)}
 .nbfw-note{margin:0 0 14px}
 @media (max-width:480px){.nbfw{padding:14px;border-radius:16px}.nbfw-m{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
@@ -25845,6 +26009,25 @@ function row(tone, icon, title, text, extra){
 function mi(label, val){ return '<div class="nbfw-mi"><div class="nbfw-ml">' + label + '</div><div class="nbfw-mv">' + val + '</div></div>'; }
 function hm(ts){ var d = new Date(ts); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 
+/* كارت مختصر: الهيدر بيتحوّل لشريط ملخص (الرش/الري/أهم تنبيه) والتفاصيل بتتفتح بضغطة — الحالة محفوظة على الجهاز */
+function nbfwOpen(){ return sGet('nbfw:open') === '1'; }
+function nbfwApply(card){
+  var o = nbfwOpen(); card.setAttribute('data-open', o ? '1' : '0');
+  var b = card.querySelector('.nbfw-sum'); if(b) b.setAttribute('aria-expanded', o ? 'true' : 'false');
+}
+function nbfwToggle(card){ sSet('nbfw:open', nbfwOpen() ? '0' : '1'); nbfwApply(card); }
+function dot(tone){ return '<i class="nbfw-d nbfw-t-' + tone + '"></i>'; }
+function sumLine(a){
+  var p = [];
+  if(a.alerts.length) p.push(dot(a.alerts[0].tone) + esc(a.alerts[0].title) + (a.alerts.length > 1 ? ' (+' + (a.alerts.length - 1) + ')' : ''));
+  p.push(dot(a.spray.tone) + 'الرش: ' + esc(a.spray.title));
+  p.push(dot(a.irr.tone) + 'الري: ' + esc(a.irr.title));
+  return '<div class="nbfw-sl">' + p.join('<span class="nbfw-sp"> · </span>') + '</div>';
+}
+function goBtn(op, st, label){
+  return '<button type="button" class="nbfw-go" data-go="' + op + '" data-st="' + esc(st || '') + '">' + label +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>';
+}
 function sprayPick(cur){
   var h = '<div class="nbfw-ty" role="group" aria-label="نوع الرش"><span class="nbfw-tl">نوع الرش:</span>';
   SPRAY_TYPES.forEach(function(o){
@@ -25855,8 +26038,9 @@ function sprayPick(cur){
 }
 function cardHtml(res){
   var a = res.a, n = a.now, t = a.today;
-  var h = '<div class="nbfw-h"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div><div class="nbfw-ht">الطقس وقرار الري</div>' +
-    '<div class="nbfw-hs">حسب موقع مزرعتك: ' + esc(res.ctx.place) + (res.stale ? ' · بيانات محفوظة (قد لا تكون محدّثة)' : ' · آخر تحديث ' + hm(res.ts)) + '</div></div></div>';
+  var h = '<div class="nbfw-h nbfw-sum" role="button" tabindex="0" aria-expanded="' + (nbfwOpen() ? 'true' : 'false') + '"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div class="nbfw-sb"><div class="nbfw-ht">الطقس وقرار الري</div>' +
+    '<div class="nbfw-hs">حسب موقع مزرعتك: ' + esc(res.ctx.place) + (res.stale ? ' · بيانات محفوظة (قد لا تكون محدّثة)' : ' · آخر تحديث ' + hm(res.ts)) + '</div>' + sumLine(a) + '</div>' +
+    '<span class="nbfw-chev" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="nbfw-body">';
   if(a.alerts.length){
     a.alerts.forEach(function(x){ h += row(x.tone, x.icon, x.title, x.text); });
   } else {
@@ -25871,13 +26055,15 @@ function cardHtml(res){
   '</div>';
   h += '<div class="nbfw-sec">قراراتك اليوم</div>';
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
+  h += goBtn('irr', '', 'سجّل ري');
   h += sprayPick(a.stype);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
+  if(a.spray.tone !== 'danger') h += goBtn('spray', a.stype, 'سجّل رش');
   h += '<div class="nbfw-f">توقيت الرش ومحاذيره مبنية على توصيات وزارة الزراعة واستصلاح الأراضي والمعمل المركزي للمناخ الزراعي (مركز البحوث الزراعية)، والحدود الرقمية للرياح والحرارة تقديرية.</div>';
   h += res.ctx.pin
     ? '<div class="nbfw-f">إرشادات مبنية على توقعات الطقس لنقطة مزرعتك المحددة على الخريطة، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>'
     : '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. حدّد موقع مزرعتك على الخريطة من «إعداد المزرعة» لنتائج أدق.</div>';
-  return h;
+  return h + '</div>';
 }
 function hintHtml(res){
   var m = res.err === 'noloc' ? 'أضف موقع المزرعة (المحافظة) من «إعداد المزرعة» لتفعيل تنبيهات الطقس وقرار الري.'
@@ -25900,22 +26086,31 @@ window.NbFarmWx = function(view, mc, st){
       var card = document.createElement('section');
       card.className = 'nbfw';
       card.setAttribute('aria-live', 'polite');
+      card.setAttribute('data-open', nbfwOpen() ? '1' : '0');
       card.innerHTML = '<div class="nbfw-h"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div><div class="nbfw-ht">الطقس وقرار الري</div></div></div><div class="nbfw-sk">جارٍ تحميل طقس موقع مزرعتك...</div>';
       grid.insertAdjacentElement('afterend', card);
       card.addEventListener('click', function(ev){
         try{
+          var sm = ev.target && ev.target.closest ? ev.target.closest('.nbfw-sum') : null;
+          if(sm && card.contains(sm)){ nbfwToggle(card); return; }
+          var gb = ev.target && ev.target.closest ? ev.target.closest('.nbfw-go') : null;
+          if(gb && card.contains(gb)){ if(window.NbFarmGo) window.NbFarmGo(gb.getAttribute('data-go'), gb.getAttribute('data-st') || ''); return; }
           var b = ev.target && ev.target.closest ? ev.target.closest('.nbfw-tb') : null;
           if(!b || !card.contains(b) || !card._res) return;
           var t = stNorm(b.getAttribute('data-st') || '');
           sSet('nbfw:stype', t);
           card._res.a = assess(card._res.data, farm, card._res.ts, t);
-          card.innerHTML = cardHtml(card._res);
+          card.innerHTML = cardHtml(card._res); nbfwApply(card);
         }catch(e){ console.warn('[Nabtex Farm] weather:', e); }
+      });
+      card.addEventListener('keydown', function(ev){
+        var sm = ev.target && ev.target.closest ? ev.target.closest('.nbfw-sum') : null;
+        if(sm && (ev.key === 'Enter' || ev.key === ' ')){ ev.preventDefault(); nbfwToggle(card); }
       });
       load(farm, stNorm(sGet('nbfw:stype') || '')).then(function(res){
         if(!card.isConnected) return;
         if(!res.err) card._res = res;
-        card.innerHTML = res.err ? hintHtml(res) : cardHtml(res);
+        card.innerHTML = res.err ? hintHtml(res) : cardHtml(res); nbfwApply(card);
       }).catch(function(e){ console.warn('[Nabtex Farm] weather:', e); if(card.isConnected) card.parentNode.removeChild(card); });
       return;
     }
@@ -25954,6 +26149,32 @@ window.NbFarmWx.assess = assess;
 window.NbFarmWx.locate = locate;
 })();
 </script>
+
+<style id="nb-farm-hub">
+/* ═══════════════════════════════════════════════════════════════
+   مركز القرار (لوحة التحكم): ملخص المزرعة + قسم المميزات المطوي
+   إضافة فقط: كل الكلاسات بادئة بـ dash-hub / dh- / dash-fold. للتراجع: امسح هذا البلوك وبلوك hub في FarmSystem وسطر hubView في attachViewEvents.
+═══════════════════════════════════════════════════════════════ */
+.dash-hub{margin:0 0 20px;padding:4px 14px;border:1px solid var(--line2);border-radius:18px;background:var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
+.dash-hub-t{padding:12px 2px 6px;font-size:12px;font-weight:800;color:var(--muted)}
+.dh-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 2px;background:none;border:0;border-top:1px solid var(--line2);font-family:inherit;text-align:start;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dash-hub-t + .dh-row{border-top:0}
+.dh-row:active{opacity:.7}
+.dh-row:focus-visible{outline:2.5px solid var(--brand);outline-offset:-2px;border-radius:12px}
+.dh-ic{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:var(--dhc,#16a34a);background:rgba(var(--dhb,22,163,74),.12)}
+.dh-b{flex:1;min-width:0}
+.dh-l,.dh-v{display:block}
+.dh-l{font-size:11.5px;line-height:1.5;color:var(--muted)}
+.dh-v{font-size:14px;font-weight:800;line-height:1.6;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-ch{flex:none;color:var(--muted);opacity:.7}
+.dash-fold{margin:22px 0 0;border:1px solid var(--line2);border-radius:16px;background:var(--card);overflow:hidden}
+.dash-fold>summary{display:flex;align-items:center;justify-content:space-between;min-height:50px;padding:12px 16px;list-style:none;cursor:pointer;font-size:13.5px;font-weight:800;color:var(--ink);-webkit-tap-highlight-color:transparent}
+.dash-fold>summary::-webkit-details-marker{display:none}
+.dash-fold>summary::after{content:'';width:8px;height:8px;margin-inline-start:10px;border-inline-end:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s ease}
+.dash-fold[open]>summary::after{transform:rotate(-135deg)}
+#pg-farm .dash-fold .dash-about{margin-top:0;padding:4px 14px 14px}
+@media (prefers-reduced-motion:reduce){.dash-fold>summary::after{transition:none}}
+</style>
 
 <style id="nb-farm-loc">
 /* ═══════════════════════════════════════════════════════════════
