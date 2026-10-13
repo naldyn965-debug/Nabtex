@@ -25451,6 +25451,11 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 .nbfw-f{margin-top:12px;font-size:11px;line-height:1.8;color:var(--muted)}
 .nbfw-f a{color:inherit;text-decoration:underline}
 .nbfw-sk{padding:10px 0 2px;font-size:12.5px;line-height:1.8;color:var(--muted)}
+.nbfw-ty{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}
+.nbfw-tl{font-size:11.5px;font-weight:700;color:var(--muted);margin-inline-end:2px}
+.nbfw-tb{font-family:inherit;font-size:12px;font-weight:700;line-height:1.4;padding:6px 12px;min-height:32px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2);cursor:pointer}
+.nbfw-tb.on{color:#9333ea;border-color:#9333ea;background:rgba(147,51,234,.1)}
+[data-dark] .nbfw-tb.on{color:#c084fc;border-color:#c084fc}
 .nbfw-note{margin:0 0 14px}
 @media (max-width:480px){.nbfw{padding:14px;border-radius:16px}.nbfw-m{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
@@ -25469,6 +25474,27 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 var TTL = 30*60*1000, STALE_MAX = 12*3600*1000, TMO = 8000;
 /* عتبات التنبيه (°م / كم/س / مم) — عدّلها من هنا فقط */
 var TH = { frostD:2, frostW:4, heatW:36, heatD:38, sprayWind:20, sprayWindW:15, sprayGust:30, sprayGustW:25, rainHold:5, windAlert:25, gustAlert:40, etHigh:7.5, etLow:2.5 };
+/* نوع الرش — الاختلاف بين الأنواع مبني على توصيات رسمية منشورة فقط:
+   • المعمل المركزي للمناخ الزراعي (مركز البحوث الزراعية): الامتناع عن رش المبيدات (خاصة الجهازية) والتعفير بالكبريت أثناء الموجات الحارة،
+     والامتناع عن منظمات ومحفزات النمو أثناءها؛ والرش الورقي (اليوريا) صباحًا باكرًا أو نهاية اليوم لتجنب احتراق الأوراق.
+   • وزارة الزراعة (لجنة مبيدات الآفات): إيقاف الرش وقت المطر والرياح وظهيرة الحر، وعدم الرش ليلًا؛ المفضّل بعد تطاير الندى (9–11 ص) ومن 3 م قبل الغروب.
+   • مركز معلومات تغير المناخ (وزارة الزراعة): إيقاف الرش والتسميد الورقي أثناء نشاط الرياح وتجنب الظهيرة.
+   الجهات الرسمية دي بتدّي توصيات وصفية بدون أرقام؛ فحدود الرياح والحرارة والمطر الرقمية في TH تقديرية (عدّلها من هنا فقط) ومش بتتغيّر بنوع الرش. */
+var SPRAY_TYPES = [
+  { v:'', l:'عام' }, { v:'مبيد حشري', l:'حشري' }, { v:'مبيد فطري', l:'فطري' }, { v:'مبيد أكاروسي', l:'أكاروسي' },
+  { v:'مبيد ديدان', l:'ديدان' }, { v:'سماد ورقي', l:'سماد ورقي' }, { v:'هرمون', l:'هرمون' }
+];
+var WAVE_PEST = 'موجة حر — يوصي المعمل المركزي للمناخ الزراعي بالامتناع عن رش المبيدات (خاصة الجهازية) والتعفير بالكبريت خلالها';
+var SPRAY_PROF = {
+  'مبيد حشري':   { wave:'warn', waveWhy:WAVE_PEST },
+  'مبيد فطري':   { wave:'warn', waveWhy:WAVE_PEST },
+  'مبيد أكاروسي':{ wave:'warn', waveWhy:WAVE_PEST },
+  'مبيد ديدان':  { wave:'warn', waveWhy:WAVE_PEST },
+  'سماد ورقي':   { wave:'warn', waveWhy:'موجة حر — الرش الورقي في الصباح الباكر أو نهاية اليوم فقط لتجنب احتراق الأوراق' },
+  'هرمون':       { wave:'bad',  waveWhy:'موجة حر — يوصي المعمل المركزي للمناخ الزراعي بالامتناع عن منظمات ومحفزات النمو خلالها' }
+};
+function stNorm(t){ for(var q = 0; q < SPRAY_TYPES.length; q++){ if(SPRAY_TYPES[q].v === t) return t; } return ''; }
+function sprayProf(t){ return SPRAY_PROF[stNorm(t)] || {}; }
 var mem = {}, inflight = {}, coolUntil = 0;
 
 function sGet(k){ if(mem[k]) return mem[k]; try{ var v = localStorage.getItem(k); if(v){ v = JSON.parse(v); mem[k] = v; return v; } }catch(e){} return null; }
@@ -25586,7 +25612,7 @@ function pinned(farm){
   return (typeof la === 'number' && typeof lo === 'number' && isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180)
     ? { lat:la, lon:lo, place:'الموقع المحدد على الخريطة', pin:true } : null;
 }
-function load(farm){
+function load(farm, stype){
   var loc = String(farm.location || '').trim(), pin = pinned(farm);
   if(!loc && !pin) return Promise.resolve({ err:'noloc' });
   var c0 = pin || locate(loc);
@@ -25595,7 +25621,7 @@ function load(farm){
     return getWx(c).then(function(w){
       if(!w) return { err:'net' };
       if(w.rate) return { err:'rate' };
-      return { ctx:c, data:w.data, ts:w.ts, stale:w.stale, a:assess(w.data, farm, w.ts) };
+      return { ctx:c, data:w.data, ts:w.ts, stale:w.stale, a:assess(w.data, farm, w.ts, stype) };
     });
   });
 }
@@ -25652,7 +25678,7 @@ function peakWin(H, date, from, thr){
   return a < 0 ? '' : ' (تتركز من ' + hour12(parseInt(H.time[a].substr(11,2), 10)) + ' إلى ' + hour12((parseInt(H.time[b].substr(11,2), 10) + 1) % 24) + ')';
 }
 
-function assess(d, farm, ts){
+function assess(d, farm, ts, stype){
   var H = d.hourly, D = d.daily, c = d.current || {};
   var age = ageOf(d, ts), fresh = age < 40*60*1000;
   var i = nowIdx(d, age), nowT = H.time[i], todayStr = String(nowT).substr(0,10);
@@ -25718,12 +25744,13 @@ function assess(d, farm, ts){
     });
   }
 
-  /* قبل الرش: نافذة 6 ساعات */
+  /* قبل الرش: نافذة 6 ساعات — العتبات حسب نوع المادة (sprayProf) */
+  var P = sprayProf(stype);
   var w6 = mx(seg(H.wind_speed_10m, i, 7)) || 0, g6 = mx(seg(H.wind_gusts_10m, i, 7)) || 0;
   var p6 = mx(seg(H.precipitation_probability, i, 7)) || 0, rr6 = sm(seg(H.precipitation, i, 7));
   var bad = [], warn = [];
-  if(w6 >= TH.sprayWind || g6 >= TH.sprayGust) bad.push('الرياح ' + r0(w6) + ' كم/س (هبّات ' + r0(g6) + ') — تطيّر الرذاذ خارج الهدف');
-  else if(w6 >= TH.sprayWindW || g6 >= TH.sprayGustW) warn.push('رياح متوسطة ' + r0(w6) + ' كم/س — اقترب بالفوهة من النبات وتجنّب الرذاذ الناعم');
+  if(w6 >= TH.sprayWind || g6 >= TH.sprayGust) bad.push('ذروة الرياح المتوقعة خلال 6 ساعات ' + r0(w6) + ' كم/س (هبّات ' + r0(g6) + ')' + (wind != null ? ' والآن ' + r0(wind) + ' كم/س' : '') + ' — تطيّر الرذاذ خارج الهدف');
+  else if(w6 >= TH.sprayWindW || g6 >= TH.sprayGustW) warn.push('رياح متوسطة متوقعة خلال 6 ساعات (حتى ' + r0(w6) + ' كم/س) — اقترب بالفوهة من النبات وتجنّب الرذاذ الناعم');
   if(p6 >= 50 || rr6 >= 0.5) bad.push('احتمال مطر ' + r0(p6) + '% خلال 6 ساعات — قد يغسل المبيد');
   else if(p6 >= 30) warn.push('احتمال مطر ' + r0(p6) + '% خلال 6 ساعات');
   if(temp != null && temp <= 3) bad.push('حرارة ' + r0(temp) + '° — خطر تجمّد الرذاذ على الأوراق');
@@ -25737,16 +25764,23 @@ function assess(d, farm, ts){
     else if(dT < 2) warn.push('رطوبة عالية جدًا (ΔT ' + r1(dT) + '°) — الرذاذ يجف ببطء وقد يسيل عن الأوراق');
   }
   if(wind != null && wind < 3) warn.push('الهواء شبه ساكن (' + r0(wind) + ' كم/س) — خطر انعكاس حراري يبقي الرذاذ الناعم معلّقًا ويحمله بعيدًا');
+  /* موجة حر اليوم (نفس تعريف تنبيه «موجة حر» أعلاه) — توصيات المعمل المركزي للمناخ الزراعي حسب نوع الرش */
+  if(P.wave && hot && (hotDays >= 2 || hotMax >= 40) && tmaxE[0] != null && tmaxE[0] >= TH.heatD){
+    (P.wave === 'bad' ? bad : warn).push(P.waveWhy);
+  }
   var sLevel = bad.length ? 'bad' : (warn.length ? 'warn' : 'ok');
-  var sText = bad.length ? bad.join(' · ') : (warn.length ? warn.join(' · ') : 'رياح ' + r0(w6) + ' كم/س ولا مطر متوقع خلال 6 ساعات.' + (dT != null ? ' فرق الحرارة ΔT ' + r0(dT) + '° (المثالي 2–8°).' : ''));
+  var sText = bad.length ? bad.join(' · ') : (warn.length ? warn.join(' · ') : 'أقصى رياح متوقعة خلال 6 ساعات ' + r0(w6) + ' كم/س ولا مطر متوقع.' + (dT != null ? ' فرق الحرارة ΔT ' + r0(dT) + '° (المثالي 2–8°).' : ''));
   if(sLevel !== 'ok'){
     for(var k = i + 1; k < Math.min(i + 37, H.time.length); k++){
       var hh = parseInt(H.time[k].substr(11,2), 10);
-      if(hh < 5 || hh > 19) continue;
+      /* وزارة الزراعة: لا رش ليلًا ولا وقت الظهيرة — نهار فقط (is_day من الخادم، وإلا 5 ص–7 م) وبدون 12–2 ظهرًا */
+      var dayK = H.is_day ? H.is_day[k] : null;
+      if(dayK != null ? dayK !== 1 : (hh < 5 || hh > 19)) continue;
+      if(hh >= 12 && hh <= 14) continue;
       var tt = H.temperature_2m[k], ww = H.wind_speed_10m[k], gg = H.wind_gusts_10m[k];
       if(tt == null || ww == null || gg == null) continue;
       var rhk = H.relative_humidity_2m ? H.relative_humidity_2m[k] : null, dTk = deltaT(tt, rhk);
-      if(ww < 15 && gg < 25 && tt >= 5 && tt <= 32 && ww >= 3 && (dTk == null || (dTk >= 2 && dTk <= 8)) &&
+      if(ww < TH.sprayWindW && gg < TH.sprayGustW && tt >= 5 && tt <= 32 && ww >= 3 && (dTk == null || (dTk >= 2 && dTk <= 8)) &&
          (mx(seg(H.precipitation_probability, k, 4)) || 0) < 30 && sm(seg(H.precipitation, k, 4)) < 0.2){
         sText += '. أقرب وقت مناسب: ' + dayWord(dayDiff(H.time[k], nowT)) + ' ' + hour12(hh) + '.';
         break;
@@ -25774,7 +25808,7 @@ function assess(d, farm, ts){
   if(rainSure){
     irr = { tone:'info', title:'أجّل الري', text:(rainPast ? 'هطل اليوم نحو ' + r1(rainMm) + ' مم' : 'أمطار متوقعة ' + r1(rainMm) + ' مم ' + dayWord(rainDay)) + (rainP != null ? ' (احتمال ' + r0(rainP) + '%)' : '') + '. افحص رطوبة التربة في منطقة الجذور ولا تروِ إلا إذا جفّت.' };
   } else if(sprinkler && (w6 >= TH.sprayWind || g6 >= TH.sprayGust)){
-    irr = { tone:'warn', title:'أجّل الري بالرش', text:'الرياح ' + r0(w6) + ' كم/س تُخلّ بانتظام توزيع المياه وتزيد الفاقد بالانجراف والتبخر. اروِ في فترة أهدأ.' };
+    irr = { tone:'warn', title:'أجّل الري بالرش', text:'الرياح المتوقعة (حتى ' + r0(w6) + ' كم/س خلال 6 ساعات) تُخلّ بانتظام توزيع المياه وتزيد الفاقد بالانجراف والتبخر. اروِ في فترة أهدأ.' };
   } else if(frost){
     irr = { tone:'warn', title:'خطر صقيع — نسّق الري', text:'إن احتاجت التربة ريًّا فليكن خفيفًا في وقت متأخر من النهار قبل الليلة الباردة (التربة الرطبة تختزن الحرارة وتُطلقها ليلًا). تجنّب الري ليلًا أو فجرًا، وتجنّبه كليًا إن كانت التربة مشبعة.' };
   } else if(hot && hot.level === 'danger'){
@@ -25790,7 +25824,7 @@ function assess(d, farm, ts){
   return {
     now: { temp:temp, wind:wind, gust:gust, hum:hum },
     today: { max: tmax[0], min: D.temperature_2m_min ? D.temperature_2m_min[0] : null, rain: rainT, et0: et0 },
-    alerts: alerts, spray: spray, irr: irr, frost: frost, hot: hot
+    alerts: alerts, spray: spray, irr: irr, frost: frost, hot: hot, stype: stNorm(stype)
   };
 }
 
@@ -25811,6 +25845,14 @@ function row(tone, icon, title, text, extra){
 function mi(label, val){ return '<div class="nbfw-mi"><div class="nbfw-ml">' + label + '</div><div class="nbfw-mv">' + val + '</div></div>'; }
 function hm(ts){ var d = new Date(ts); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 
+function sprayPick(cur){
+  var h = '<div class="nbfw-ty" role="group" aria-label="نوع الرش"><span class="nbfw-tl">نوع الرش:</span>';
+  SPRAY_TYPES.forEach(function(o){
+    var on = o.v === cur;
+    h += '<button type="button" class="nbfw-tb' + (on ? ' on' : '') + '" data-st="' + esc(o.v) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(o.l) + '</button>';
+  });
+  return h + '</div>';
+}
 function cardHtml(res){
   var a = res.a, n = a.now, t = a.today;
   var h = '<div class="nbfw-h"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div><div class="nbfw-ht">الطقس وقرار الري</div>' +
@@ -25822,14 +25864,16 @@ function cardHtml(res){
   }
   h += '<div class="nbfw-m">' +
     mi('الآن', n.temp != null ? r0(n.temp) + '°<small> م</small>' : '—') +
-    mi('الرياح', n.wind != null ? r0(n.wind) + '<small> كم/س</small>' : '—') +
+    mi('الرياح الآن', n.wind != null ? r0(n.wind) + '<small> كم/س</small>' : '—') +
     mi('الرطوبة', n.hum != null ? r0(n.hum) + '<small>%</small>' : '—') +
     mi('عظمى / صغرى', (t.max != null ? r0(t.max) : '—') + '° / ' + (t.min != null ? r0(t.min) : '—') + '°') +
     mi('مطر اليوم', (t.rain != null ? r1(t.rain) : '0') + '<small> مم</small>') +
   '</div>';
   h += '<div class="nbfw-sec">قراراتك اليوم</div>';
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
+  h += sprayPick(a.stype);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
+  h += '<div class="nbfw-f">توقيت الرش ومحاذيره مبنية على توصيات وزارة الزراعة واستصلاح الأراضي والمعمل المركزي للمناخ الزراعي (مركز البحوث الزراعية)، والحدود الرقمية للرياح والحرارة تقديرية.</div>';
   h += res.ctx.pin
     ? '<div class="nbfw-f">إرشادات مبنية على توقعات الطقس لنقطة مزرعتك المحددة على الخريطة، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>'
     : '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. حدّد موقع مزرعتك على الخريطة من «إعداد المزرعة» لنتائج أدق.</div>';
@@ -25858,8 +25902,19 @@ window.NbFarmWx = function(view, mc, st){
       card.setAttribute('aria-live', 'polite');
       card.innerHTML = '<div class="nbfw-h"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div><div class="nbfw-ht">الطقس وقرار الري</div></div></div><div class="nbfw-sk">جارٍ تحميل طقس موقع مزرعتك...</div>';
       grid.insertAdjacentElement('afterend', card);
-      load(farm).then(function(res){
+      card.addEventListener('click', function(ev){
+        try{
+          var b = ev.target && ev.target.closest ? ev.target.closest('.nbfw-tb') : null;
+          if(!b || !card.contains(b) || !card._res) return;
+          var t = stNorm(b.getAttribute('data-st') || '');
+          sSet('nbfw:stype', t);
+          card._res.a = assess(card._res.data, farm, card._res.ts, t);
+          card.innerHTML = cardHtml(card._res);
+        }catch(e){ console.warn('[Nabtex Farm] weather:', e); }
+      });
+      load(farm, stNorm(sGet('nbfw:stype') || '')).then(function(res){
         if(!card.isConnected) return;
+        if(!res.err) card._res = res;
         card.innerHTML = res.err ? hintHtml(res) : cardHtml(res);
       }).catch(function(e){ console.warn('[Nabtex Farm] weather:', e); if(card.isConnected) card.parentNode.removeChild(card); });
       return;
@@ -25868,7 +25923,8 @@ window.NbFarmWx = function(view, mc, st){
     /* تسجيل عملية: ملاحظة صغيرة جوه كارت الري وكارت الرش */
     var lv = mc.querySelector('#fv-log');
     if(!lv || lv.querySelector('.nbfw-note')) return;
-    load(farm).then(function(res){
+    var tEl = lv.querySelector('#op-spray-type');
+    load(farm, tEl ? stNorm(tEl.value) : '').then(function(res){
       if(res.err || !lv.isConnected || lv.querySelector('.nbfw-note')) return;
       var a = res.a;
       function put(sel, html){
@@ -25877,6 +25933,20 @@ window.NbFarmWx = function(view, mc, st){
       }
       put('.prem-card-blue',   row(a.irr.tone,   'drop',  'قرار الري اليوم: ' + a.irr.title, a.irr.text,     'nbfw-note'));
       put('.prem-card-purple', row(a.spray.tone, 'spray', 'قبل الرش: ' + a.spray.title,      a.spray.text,   'nbfw-note'));
+      var sc = lv.querySelector('.prem-card-purple');
+      if(sc && !sc._nbfwBound && sc.querySelector('#op-spray-type')){
+        sc._nbfwBound = true;
+        sc.addEventListener('click', function(ev){
+          try{
+            var b = ev.target && ev.target.closest ? ev.target.closest('.fc-chip') : null;
+            var n = sc.querySelector('.nbfw-note');
+            if(!b || !sc.contains(b) || !n) return;
+            var t = stNorm(b.getAttribute('data-val') || ''), a2 = assess(res.data, farm, res.ts, t);
+            sSet('nbfw:stype', t);
+            n.outerHTML = row(a2.spray.tone, 'spray', 'قبل الرش: ' + a2.spray.title, a2.spray.text, 'nbfw-note');
+          }catch(e){ console.warn('[Nabtex Farm] weather:', e); }
+        });
+      }
     }).catch(function(e){ console.warn('[Nabtex Farm] weather:', e); });
   }catch(e){ console.warn('[Nabtex Farm] weather:', e); }
 };
