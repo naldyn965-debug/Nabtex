@@ -14004,7 +14004,7 @@ document.addEventListener('click', e => {
         // ─ Edit mode: show form fields
         farmInfoContent =
           '<div class="farm-form-grid" id="farm-info-fields">' +
-            fField('farm-name',     'اسم المزرعة',           'text',   f.name||'',        'مثال: مزرعة النيل') +
+            fField('farm-name',     'اسم المزرعة (مطلوب)',           'text',   f.name||'',        'مثال: مزرعة النيل') +
             fField('farm-area',     'المساحة الكلية (فدان)', 'number', f.area||'',        'مثال: 50') +
             fField('farm-location', 'الموقع / المحافظة',    'text',   f.location||'',    'مثال: الفيوم') +
             fField('farm-phone',    'رقم التواصل',           'text',   f.phone||'',       'اختياري') +
@@ -14012,10 +14012,10 @@ document.addEventListener('click', e => {
           (window.NbFarmLoc ? window.NbFarmLoc.row(f) : '') +
           '<div class="farm-form-grid">' +
             fSelect('farm-water-source', 'مصدر المياه', f.waterSource||'', [
-              'نهر النيل','ترعة رئيسية','ترعة فرعية','بئر جوفية','محطة رفع','مياه مطرية','خزان مياه'
+              '','نهر النيل','ترعة رئيسية','ترعة فرعية','بئر جوفية','محطة رفع','مياه مطرية','خزان مياه'
             ]) +
             fSelect('farm-irr-system', 'نظام الري الرئيسي', f.irrSystem||'', [
-              'تنقيط','رش','غمر','فرداني','خرطوم','سطحي مطور'
+              '','تنقيط','رش','غمر','فرداني','خرطوم','سطحي مطور'
             ]) +
           '</div>' +
           '<div class="setup-action-row">' +
@@ -14031,7 +14031,7 @@ document.addEventListener('click', e => {
           '<div class="setup-saved-view" id="farm-info-saved">' +
             '<div class="ssv-grid">' +
               setupViewRow('', 'اسم المزرعة',           f.name     || '—') +
-              setupViewRow('', 'المساحة',                (f.area    || '—') + ' فدان') +
+              setupViewRow('', 'المساحة',                (f.area ? f.area + ' فدان' : '—')) +
               setupViewRow('', 'الموقع',                 f.location || '—') +
               (typeof f.lat === 'number' && typeof f.lon === 'number' ? setupViewRow('', 'موقع الطقس', 'محدد على الخريطة') : '') +
               setupViewRow('', 'التواصل',                f.phone    || '—') +
@@ -14057,9 +14057,9 @@ document.addEventListener('click', e => {
           '<div id="fields-list">' + renderFieldsList(fields) + '</div>' +
           '<div class="farm-form-section-label">إضافة حقل جديد</div>' +
           '<div class="farm-form-grid">' +
-            fField('field-name', 'اسم الحقل', 'text', '', 'مثال: الحقل الشمالي') +
+            fField('field-name', 'اسم الحقل (مطلوب)', 'text', '', 'مثال: الحقل الشمالي') +
             fField('field-area', 'مساحة الحقل (فدان)', 'number', '', 'مثال: 10') +
-            fSelect('field-soil', 'نوع التربة', '', ['طمي','رملي','طيني','طمي رملي','طيني ثقيل','صفراء','سوداء']) +
+            fSelect('field-soil', 'نوع التربة', '', ['','طمي','رملي','طيني','طمي رملي','طيني ثقيل','صفراء','سوداء']) +
           '</div>' +
           '<button class="farm-btn-secondary" onclick="addField()">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
@@ -14084,17 +14084,17 @@ document.addEventListener('click', e => {
             formCardHeader('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V12"/><path d="M20 7c0 5-4 9-8 10C8 16 4 12 4 7a8 8 0 0 1 16 0z"/></svg>',
               isEditingExisting ? 'تعديل بيانات المحصول' : 'بيانات المحصول') +
             '<div class="farm-form-grid">' +
-              fField('crop-name',    'اسم المحصول',               'text',   cd_edit.cropName    ||'', 'مثال: برتقال بلدي') +
+              fField('crop-name',    'اسم المحصول (مطلوب)',               'text',   cd_edit.cropName    ||'', 'مثال: برتقال بلدي') +
               fField('crop-variety', 'الصنف المزروع',             'text',   cd_edit.cropVariety ||'', 'مثال: فالنسيا') +
-              fSelect('crop-season', 'الموسم',                    cd_edit.season  ||'', ['صيف','شتاء','ربيع','خريف','موسمان']) +
-              fSelect('crop-stage',  'مرحلة الزراعة الحالية',     cd_edit.stage   ||'', ['إنبات','نمو خضري','تزهير','عقد ثمار','نضج','حصاد','راحة']) +
+              fSelect('crop-season', 'الموسم',                    cd_edit.season  ||'', ['','صيف','شتاء','ربيع','خريف','موسمان']) +
+              fSelect('crop-stage',  'مرحلة الزراعة الحالية',     cd_edit.stage   ||'', ['','إنبات','نمو خضري','تزهير','عقد ثمار','نضج','حصاد','راحة']) +
             '</div>' +
             '<div class="farm-form-grid">' +
               fField('crop-plant-date', 'تاريخ الزراعة',              'date',   cd_edit.plantDate ||'', '') +
-              fField('crop-temp',       'درجة الحرارة اليومية (°م)', 'number', cd_edit.dailyTemp ||'', 'مثال: 28') +
+              fField('crop-temp',       'متوسط درجة الحرارة في منطقتك (°م) — اختياري', 'number', cd_edit.dailyTemp ||'', 'مثال: 28') +
             '</div>' +
-            '<div class="farm-form-section-label">نوع الإكثار</div>' +
-            '<div class="farm-radio-group" id="prop-type-group">' +
+            '<div class="farm-form-section-label" id="prop-type-lbl">نوع الإكثار</div>' +
+            '<div class="farm-radio-group" id="prop-type-group" role="radiogroup" aria-labelledby="prop-type-lbl">' +
               fRadio('prop-type','seeds',    'تقاوي (بذور)', '', propChecked==='seeds') +
               fRadio('prop-type','seedlings','شتلات',        '', propChecked==='seedlings') +
             '</div>' +
@@ -14103,8 +14103,8 @@ document.addEventListener('click', e => {
               fField('crop-seed-supplier', 'الجهة الموردة',           'text', cd_edit.seedSupplier ||'', 'مثال: محل أبو الهنا') +
               fField('crop-seed-origin',   'بلد المنشأ (اختياري)',    'text', cd_edit.seedOrigin   ||'', 'مثال: هولندا') +
             '</div>' +
-            '<div class="farm-form-section-label">نظام الزراعة</div>' +
-            '<div class="farm-radio-group" id="plant-sys-group">' +
+            '<div class="farm-form-section-label" id="plant-sys-lbl">نظام الزراعة</div>' +
+            '<div class="farm-radio-group" id="plant-sys-group" role="radiogroup" aria-labelledby="plant-sys-lbl">' +
               fRadio('plant-sys','rows',      'خطوط',  '', sysChecked==='rows') +
               fRadio('plant-sys','beds',      'مصاطب', '', sysChecked==='beds') +
               fRadio('plant-sys','broadcast', 'نثر',   '', sysChecked==='broadcast') +
@@ -14145,9 +14145,10 @@ document.addEventListener('click', e => {
                 setupViewRow('','اسم المحصول',       cd.cropName     ||'—') +
                 setupViewRow('','الصنف',              cd.cropVariety   ||'—') +
                 setupViewRow('','الموسم',             cd.season        ||'—') +
+                setupViewRow('','المرحلة الحالية',   cd.stage         ||'—') +
                 setupViewRow('','تاريخ الزراعة',     cd.plantDate     ||'—') +
-                setupViewRow('','درجة الحرارة',      (cd.dailyTemp||'—') + ' °م') +
-                setupViewRow('','نظام الزراعة',      cd.plantingSystem||'—') +
+                setupViewRow('','متوسط الحرارة',      (cd.dailyTemp ? cd.dailyTemp + ' °م' : '—')) +
+                setupViewRow('','نظام الزراعة',      ({rows:'خطوط', beds:'مصاطب', broadcast:'نثر'}[cd.plantingSystem] || cd.plantingSystem || '—')) +
               '</div>' +
               '<button class="setup-edit-btn" onclick="FarmEditCrop()">' +
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
@@ -14416,6 +14417,19 @@ document.addEventListener('click', e => {
 
     // ── Planting system toggle
     function attachSetupEvents() {
+      /* إمكانية الوصول: كيبورد الموبايل المناسب (أرقام/تليفون) + السماح بالكسور (2.5 فدان) + تعليم الحقول المطلوبة */
+      var _sr = document.getElementById('fv-setup');
+      if (_sr) {
+        [].forEach.call(_sr.querySelectorAll('input[type="number"]'), function(n) {
+          n.setAttribute('step', 'any'); n.setAttribute('inputmode', 'decimal');
+          if (n.id !== 'crop-temp') n.setAttribute('min', '0');
+        });
+        var _ph = document.getElementById('farm-phone');
+        if (_ph) { _ph.setAttribute('type', 'tel'); _ph.setAttribute('inputmode', 'tel'); _ph.setAttribute('autocomplete', 'tel'); }
+        ['farm-name', 'field-name', 'crop-name'].forEach(function(id) {
+          var el = document.getElementById(id); if (el) el.setAttribute('aria-required', 'true');
+        });
+      }
       var radios = document.querySelectorAll('input[name="plant-sys"]');
       radios.forEach(function(r) {
         r.addEventListener('change', function() {
@@ -14727,10 +14741,25 @@ document.addEventListener('click', e => {
     // ═══════════════════════════════════════════════════
     //  SAVE OPERATIONS
     // ═══════════════════════════════════════════════════
+    /* حقل مطلوب فاضي: افتح خطوته (لو الـ wizard مخبّيه)، ركّز عليه، وعلّمه aria-invalid لحد ما المستخدم يكتب */
+    function farmInvalid(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      try {
+        var card = el.closest('.fls-form');
+        if (card && card._flsGo) card._flsGo(el);
+        el.setAttribute('aria-invalid', 'true');
+        el.addEventListener('input', function onIn() { el.removeAttribute('aria-invalid'); el.removeEventListener('input', onIn); });
+        setTimeout(function() { try { el.focus(); } catch (e) {} }, 160);
+      } catch (e) {}
+    }
+
     window.saveFarmSetup = function() {
       if (!uid()) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
       var name = val('farm-name');
-      if (!name) { farmToast('برجاء إدخال اسم المزرعة', 'warning'); return; }
+      if (!name) { farmToast('برجاء إدخال اسم المزرعة', 'warning'); farmInvalid('farm-name'); return; }
+      var _sb = document.getElementById('btn-save-farm');   /* منع الضغط المزدوج (النت الضعيف) */
+      if (_sb) { _sb.disabled = true; _sb.setAttribute('aria-busy', 'true'); }
       var data = {
         userId: uid(), name: name, area: numVal('farm-area'),
         location: val('farm-location'), phone: val('farm-phone'),
@@ -14752,13 +14781,15 @@ document.addEventListener('click', e => {
           farmCacheSave({ farms: farmState.farms, fields: farmState.fields, crop: farmState.lastCropData });
           renderFarmView('setup');
         });
-      }).catch(function(e) { farmToast('خطأ في الحفظ: ' + e.message, 'error'); });
+      }).catch(function(e) { if (_sb) { _sb.disabled = false; _sb.removeAttribute('aria-busy'); } farmToast('خطأ في الحفظ: ' + e.message, 'error'); });
     };
 
     window.saveCropData = function() {
       if (!uid()) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
       var cropName = val('crop-name');
-      if (!cropName) { farmToast('برجاء إدخال اسم المحصول', 'warning'); return; }
+      if (!cropName) { farmToast('برجاء إدخال اسم المحصول', 'warning'); farmInvalid('crop-name'); return; }
+      var _cb = document.querySelector('.farm-btn-primary[onclick="saveCropData()"]');   /* منع الضغط المزدوج */
+      if (_cb) { _cb.disabled = true; _cb.setAttribute('aria-busy', 'true'); }
       var propType = document.querySelector('input[name="prop-type"]:checked');
       var plantSys = document.querySelector('input[name="plant-sys"]:checked');
       var data = {
@@ -14787,13 +14818,15 @@ document.addEventListener('click', e => {
           farmCacheSave({ farms: farmState.farms, fields: farmState.fields, crop: farmState.lastCropData });
           renderFarmView('setup');
         })
-        .catch(function(e) { farmToast('خطأ: ' + e.message, 'error'); });
+        .catch(function(e) { if (_cb) { _cb.disabled = false; _cb.removeAttribute('aria-busy'); } farmToast('خطأ: ' + e.message, 'error'); });
     };
 
     window.addField = function() {
       if (!uid()) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
       var name = val('field-name');
-      if (!name) { farmToast('برجاء إدخال اسم الحقل', 'warning'); return; }
+      if (!name) { farmToast('برجاء إدخال اسم الحقل', 'warning'); farmInvalid('field-name'); return; }
+      var _ab = document.querySelector('.farm-btn-secondary[onclick="addField()"]');   /* منع إضافة الحقل مرتين */
+      if (_ab) { _ab.disabled = true; _ab.setAttribute('aria-busy', 'true'); }
       db.collection('fields').add({
         userId: uid(), farmId: farmState.currentFarm ? farmState.currentFarm.id : '',
         name: name, area: numVal('field-area'), soil: selVal('field-soil'),
@@ -14801,12 +14834,13 @@ document.addEventListener('click', e => {
       }).then(function() {
         farmToast('تم إضافة الحقل بنجاح', 'success');
         loadUserFarms().then(function() { renderFarmView('setup'); });
-      }).catch(function(e) { farmToast('خطأ: ' + e.message, 'error'); });
+      }).catch(function(e) { if (_ab) { _ab.disabled = false; _ab.removeAttribute('aria-busy'); } farmToast('خطأ: ' + e.message, 'error'); });
     };
 
     window.deleteField = function(id) {
       if (!uid() || !id) return;
-      if (!confirm('هل تريد حذف هذا الحقل نهائياً؟')) return;
+      var _fd = (farmState.fields || []).filter(function(x) { return x.id === id; })[0];
+      if (!confirm('هل تريد حذف حقل «' + ((_fd && _fd.name) || 'بدون اسم') + '» نهائياً؟')) return;
       db.collection('fields').doc(id).delete()
         .then(function() {
           farmToast('تم حذف الحقل', 'info');
@@ -15277,6 +15311,13 @@ document.addEventListener('click', e => {
       card.addEventListener('change', function(e) {
         if (e.target && e.target.name === 'plant-sys') render(false);
       });
+      card._flsGo = function(t) {
+        var act = actives();
+        for (var k = 0; k < act.length; k++) {
+          if (!act[k].last && act[k].atom.el.contains(t)) { idx = k; render(true); return true; }
+        }
+        return false;
+      };
       render(false);
     }
     function flsForms(root) {
@@ -15675,12 +15716,13 @@ document.addEventListener('click', e => {
     function fField(id, label, type, val_, ph) {
       return '<div class="farm-fg">' +
         '<label class="farm-label" for="' + id + '">' + label + '</label>' +
-        '<input class="farm-input" id="' + id + '" type="' + type + '" value="' + (val_||'') + '" placeholder="' + (ph||'') + '">' +
+        '<input class="farm-input" id="' + id + '" type="' + type + '" value="' + String(val_||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') + '" placeholder="' + (ph||'') + '">' +
       '</div>';
     }
 
     function fSelect(id, label, val_, opts) {
       var optHtml = opts.map(function(o) {
+        if (o === '') return '<option value=""' + (!val_ ? ' selected' : '') + '>— اختر —</option>';
         return '<option value="' + o + '"' + (o === val_ ? ' selected' : '') + '>' + o + '</option>';
       }).join('');
       return '<div class="farm-fg">' +
@@ -20004,6 +20046,10 @@ document.addEventListener('click', e => {
   #pg-farm *,#pg-farm *::before,#pg-farm *::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
   #pg-farm .farm-spinner{animation-duration:1.4s !important;animation-iteration-count:infinite !important}
 }
+
+/* 10) Setup — required-field cue (with focus + toast) and disabled state while saving */
+#pg-farm #farm-main-content .farm-input[aria-invalid="true"]{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,.18) !important}
+#pg-farm .farm-btn-secondary:disabled{opacity:.6;cursor:not-allowed}
 </style>
 
 <!-- ══ FARM OS — DASHBOARD SIDEBAR (additive overrides: topbar → professional sidebar; no logic touched) ══ -->
@@ -26236,7 +26282,7 @@ window.NbFarmWx.locate = locate;
 (function(){
 'use strict';
 var LF = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.';
-var cur = null, dirty = false, map = null, prevOv = '';
+var cur = null, dirty = false, map = null, prevOv = '', prevFoc = null;
 
 function isN(n){ return typeof n === 'number' && isFinite(n); }
 function valid(la, lo){ return isN(la) && isN(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180; }
@@ -26441,15 +26487,27 @@ function close(){
   var m = document.getElementById('nbfl-modal'); if(m && m.parentNode) m.parentNode.removeChild(m);
   document.body.style.overflow = prevOv;
   document.removeEventListener('keydown', onKey);
+  var _pf = prevFoc; prevFoc = null;   /* رجّع التركيز لزرار الفتح (بعد ما paint() يعيد رسمه) */
+  setTimeout(function(){ var t = (_pf && _pf.id) ? document.getElementById(_pf.id) : _pf; try{ if(t && t.focus) t.focus(); }catch(e){} }, 0);
 }
-function onKey(e){ if(e.key === 'Escape') close(); }
+function onKey(e){
+  if(e.key === 'Escape'){ close(); return; }
+  if(e.key !== 'Tab') return;
+  var m = document.getElementById('nbfl-modal'); if(!m) return;
+  var f = [].filter.call(m.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])'), function(n){ return n.offsetParent !== null; });
+  if(!f.length) return;
+  var a = document.activeElement, first = f[0], last = f[f.length - 1];
+  if(!m.contains(a)){ e.preventDefault(); first.focus(); }
+  else if(e.shiftKey && (a === first || a === m.querySelector('.nbfl-sheet'))){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && a === last){ e.preventDefault(); first.focus(); }
+}
 
 function open(){
   if(document.getElementById('nbfl-modal')) return;
   var m = document.createElement('div');
-  m.id = 'nbfl-modal'; m.className = 'nbfl-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+  m.id = 'nbfl-modal'; m.className = 'nbfl-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-labelledby', 'nbfl-ttl');
   m.innerHTML = '<div class="nbfl-sheet">' +
-    '<div class="nbfl-top"><div class="nbfl-title">حدد موقع مزرعتك على الخريطة</div>' +
+    '<div class="nbfl-top"><div class="nbfl-title" id="nbfl-ttl">حدد موقع مزرعتك على الخريطة</div>' +
     '<div class="nbfl-sub">اضغط على مكان المزرعة أو اسحب الدبوس. قرّب الخريطة لتحديد أدق.</div></div>' +
     '<div class="nbfl-map" id="nbfl-map"><div class="nbfl-load" id="nbfl-load">جارٍ تحميل الخريطة...</div></div>' +
     '<div class="nbfl-bar"><button type="button" class="farm-btn-primary nbfl-ok" id="nbfl-ok" disabled>تأكيد الموقع</button>' +
@@ -26458,6 +26516,9 @@ function open(){
   prevOv = document.body.style.overflow; document.body.style.overflow = 'hidden';
   document.addEventListener('keydown', onKey);
   document.getElementById('nbfl-cancel').onclick = close;
+  prevFoc = document.activeElement;
+  var _sh = m.querySelector('.nbfl-sheet');
+  if(_sh){ _sh.setAttribute('tabindex', '-1'); try{ _sh.focus({ preventScroll:true }); }catch(e){} }
 
   loadLeaflet().then(function(){
     var box = document.getElementById('nbfl-map'); if(!box) return; /* اتقفلت قبل التحميل */
