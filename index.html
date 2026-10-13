@@ -16405,13 +16405,15 @@ document.addEventListener('click', e => {
       if (!name)  { farmToast('برجاء إدخال اسم العامل','warning');    return; }
       if (!days)  { farmToast('برجاء إدخال عدد الأيام','warning');    return; }
       if (!daily) { farmToast('برجاء إدخال الأجرة اليومية','warning'); return; }
-      expCol('workers').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), name: name, type: typeEl ? typeEl.value : '',
         days: days, daily: daily, total: days * daily,
         date: expVal('ew-date') || todayStr(), notes: expVal('ew-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات العامل','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('workers').add(__rec).then(function(ref){ farmToast('تم حفظ بيانات العامل','success'); expSaveDone('workers', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
 
     // ─── 2. FERTILIZERS ─────────────────────────────────────
@@ -16493,7 +16495,8 @@ document.addEventListener('click', e => {
       if (!name)     { farmToast('برجاء إدخال اسم السماد','warning');      return; }
       if (!bags)     { farmToast('برجاء إدخال عدد الشكاير','warning');     return; }
       if (!bagPrice) { farmToast('برجاء إدخال سعر الشيكارة','warning');   return; }
-      expCol('fertilizers').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), name: name, type: typeEl ? typeEl.value : '',
         bags: bags, bagWeight: bagWt, bagPrice: bagPrice,
         qty: bags * bagWt,          // total kg (for analytics)
@@ -16501,8 +16504,9 @@ document.addEventListener('click', e => {
         total: bags * bagPrice,
         date: expVal('ef-date') || todayStr(), notes: expVal('ef-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات السماد','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('fertilizers').add(__rec).then(function(ref){ farmToast('تم حفظ بيانات السماد','success'); expSaveDone('fertilizers', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
 
     // ─── 3. PESTICIDES ──────────────────────────────────────
@@ -16577,14 +16581,16 @@ document.addEventListener('click', e => {
       if (!name)     { farmToast('برجاء إدخال اسم المبيد','warning');    return; }
       if (!cans)     { farmToast('برجاء إدخال عدد العبوات','warning');   return; }
       if (!canPrice) { farmToast('برجاء إدخال سعر العبوة','warning');   return; }
-      expCol('pesticides').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), name: name, type: typeEl ? typeEl.value : '',
         cans: cans, canSize: canSize, canPrice: canPrice,
         qty: cans * canSize, price: canPrice, total: cans * canPrice,
         date: expVal('ep-date') || todayStr(), notes: expVal('ep-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات المبيد','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('pesticides').add(__rec).then(function(ref){ farmToast('تم حفظ بيانات المبيد','success'); expSaveDone('pesticides', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
 
     // ─── 4. SEEDS ───────────────────────────────────────────
@@ -16648,14 +16654,16 @@ document.addEventListener('click', e => {
       if (!name)  { farmToast('برجاء إدخال اسم الصنف','warning');    return; }
       if (!qty)   { farmToast('برجاء إدخال الكمية','warning');        return; }
       if (!price) { farmToast('برجاء إدخال سعر الوحدة','warning');   return; }
-      expCol('seeds').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), name: name, unitType: utEl ? utEl.value : 'وحدة',
         qty: qty, price: price, total: qty * price,
         supplier: expVal('es-supplier'),
         date: expVal('es-date') || todayStr(), notes: expVal('es-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات التقاوي','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('seeds').add(__rec).then(function(ref){ farmToast('تم حفظ بيانات التقاوي','success'); expSaveDone('seeds', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
 
     // ─── 5. IRRIGATION ──────────────────────────────────────
@@ -16728,14 +16736,16 @@ document.addEventListener('click', e => {
       var extra    = expNum('ei-extra');
       var cost     = fuelQty * fuelP + extra;
       if (!typeEl || !typeEl.value) { farmToast('برجاء اختيار نوع الري','warning'); return; }
-      expCol('irrigation').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), type: typeEl.value, source: sourceEl ? sourceEl.value : '',
         hours: expNum('ei-hours'), fuelQty: fuelQty, fuelPrice: fuelP,
         extraCost: extra, cost: cost,
         date: expVal('ei-date') || todayStr(), notes: expVal('ei-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ بيانات الري','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('irrigation').add(__rec).then(function(ref){ farmToast('تم حفظ بيانات الري','success'); expSaveDone('irrigation', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
 
     // ─── 6. OTHER ───────────────────────────────────────────
@@ -16789,14 +16799,47 @@ document.addEventListener('click', e => {
       var amount = expNum('eo-amount');
       var catEl  = document.getElementById('eo-cat');
       if (!amount) { farmToast('برجاء إدخال المبلغ','warning'); return; }
-      expCol('other').add({
+      var __btn = expSaveBegin(); if (!__btn) return;
+      var __rec = {
         userId: uid(), category: catEl ? catEl.value : 'أخرى',
         desc: expVal('eo-desc'), amount: amount,
         date: expVal('eo-date') || todayStr(), notes: expVal('eo-notes'),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ farmToast('تم حفظ المصروف','success'); })
-        .catch(function(e){ farmToast('خطأ: '+e.message,'error'); });
+      };
+      expCol('other').add(__rec).then(function(ref){ farmToast('تم حفظ المصروف','success'); expSaveDone('other', ref, __rec); })
+        .catch(function(e){ expSaveFail(__btn); farmToast('خطأ: '+e.message,'error'); });
     };
+
+    /* ─── حفظ المصروف: حماية من التسجيل المزدوج + تفريغ الفورم بعد النجاح ───
+       • زر الحفظ بيتقفل («جاري الحفظ…») من أول ضغطة لحد ما العملية تخلص — الضغطة التانية ما بتسجّلش حاجة.
+       • بعد النجاح: السجل بيتضاف للقوائم محليًا والفورم بيرجع فاضي من الخطوة الأولى، والملخص والجدول والتحليل بيتحدّثوا فورًا.
+       • لو حصل خطأ: الزر بيرجع يشتغل والبيانات اللي اتكتبت زي ما هي.
+       للتراجع: رجّع .add({...}).then(toast).catch(toast) في دوال save* وامسح الدوال الثلاثة دي. */
+    function expSaveBegin() {
+      var b = document.querySelector('#exp-panel .exp-form-card .farm-btn-primary');
+      if (!b) return true;
+      if (b.disabled) return null;
+      b.disabled = true; b.setAttribute('aria-busy', 'true');
+      b.setAttribute('data-lbl', b.textContent); b.textContent = 'جاري الحفظ…';
+      setTimeout(function() { if (b.isConnected && b.disabled && b.getAttribute('aria-busy')) b.textContent = 'جاري الحفظ… في انتظار الاتصال'; }, 8000);
+      return b;
+    }
+    function expSaveFail(b) {
+      if (!b || b === true) return;
+      b.disabled = false; b.removeAttribute('aria-busy');
+      b.textContent = b.getAttribute('data-lbl') || b.textContent;
+    }
+    function expSaveDone(type, ref, rec) {
+      try {
+        var r = Object.assign({}, rec, { _id: ref && ref.id });
+        delete r.createdAt;
+        if (!expState.expenses[type]) expState.expenses[type] = [];
+        expState.expenses[type].unshift(r);
+        expCacheSave(expState.expenses);
+        nbfdMemo.at = 0;   /* لوحة التحكم تجيب المصروفات من جديد */
+        renderExpSummaryBar(); renderExpPanel(); loadExpAnalytics(); renderExpDailyLog();
+      } catch (e) { console.warn('[Nabtex Farm] expense refresh:', e); }
+    }
 
     // ─── shared live-calc helper ─────────────────────────────
     function expLiveCalc(fieldIds, calcId, fn) {
