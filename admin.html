@@ -607,15 +607,11 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
 .fsa-empty{text-align:center;opacity:.45;font-size:12px;padding:8px 0}
 .fsa-audit{font-size:11px;color:var(--muted);border-top:1px dashed var(--border);padding:6px 0;line-height:1.7;word-break:break-all}
 body[data-light] .fsa-card{background:#f3faf4}
-/* ── Farm registry (سجل المزارع) ── */
+/* ── Farm registry PDF (سجل المزارع) ── */
 .fr-sum{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.7}
-.fr-tabs{display:flex;gap:6px;margin-bottom:8px}
-.fr-tab{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--border-md);background:transparent;color:var(--muted);font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer}
-.fr-tab.on{background:var(--approved-bg);color:var(--emerald);border-color:var(--emerald)}
-.fr-search{width:100%;padding:8px 10px;margin-bottom:8px;border-radius:9px;border:1px solid var(--border-md);background:transparent;color:inherit;font-size:12px;font-weight:600;font-family:inherit;outline:none}
-.fr-search:focus{border-color:var(--emerald)}
-.fr-exp{width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid var(--emerald);background:var(--approved-bg);color:var(--emerald);font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
-.fsa-badge.fr-none{background:rgba(148,163,184,.15);color:var(--muted)}
+.fr-exp{width:100%;margin-top:6px;padding:9px;border-radius:9px;border:1px solid var(--emerald);background:var(--approved-bg);color:var(--emerald);font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
+.fr-exp[disabled]{opacity:.6;cursor:wait}
+.fr-alt{background:transparent;border-color:var(--border-md);color:var(--muted)}
 </style>
 </head>
 <body data-atab-active="home">
@@ -717,15 +713,14 @@ body[data-light] .fsa-card{background:#f3faf4}
         <div id="fsub-admin-audit"><div class="fsa-empty">جاري التحميل...</div></div>
       </div>
       <div class="sidebar-courses" data-atab="home" id="freg-block">
-        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>سجل المزارع <span id="freg-count" class="fsa-badge approved" style="display:none"></span></div>
-        <div class="fr-sum" id="freg-sum">جاري التحميل...</div>
-        <div class="fr-tabs">
-          <button class="fr-tab on" data-frf="all" onclick="fregFilter('all')">كل المزارع</button>
-          <button class="fr-tab" data-frf="active" onclick="fregFilter('active')">النشطة فقط</button>
+        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>سجل المزارع</div>
+        <div class="fr-sum">ملف PDF منظم بكل المزارع وتفاصيلها، والنشطة منها في أول الملف. البيانات بتتقرأ مرة واحدة بس وقت الضغط (مفيش تحديث لحظي).</div>
+        <button class="fr-exp" id="freg-btn" onclick="fregBuildPdf()">تجهيز ملف PDF للمزارع</button>
+        <div id="freg-out" style="display:none">
+          <div class="fr-sum" id="freg-res" style="margin-top:8px"></div>
+          <button class="fr-exp" onclick="fregShare()">حفظ / مشاركة الملف</button>
+          <button class="fr-exp fr-alt" onclick="fregOpen()">فتح الملف</button>
         </div>
-        <input class="fr-search" id="freg-q" type="search" placeholder="بحث بالاسم أو المحافظة أو المالك..." oninput="renderFarmRegistry()" autocomplete="off">
-        <div id="freg-list"><div class="fsa-empty">جاري التحميل...</div></div>
-        <button class="fr-exp" onclick="fregExportCsv()">تحميل ملف المزارع (Excel)</button>
       </div>
       <div class="sidebar-courses" data-atab="profile">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
@@ -1088,7 +1083,6 @@ auth.onAuthStateChanged(async function(user) {
   xpAdminLoad();
   startFarmSubListeners();
   startFarmsCountListener();
-  startFarmRegistryListeners();
 });
 
 function showAuth() {
@@ -2795,132 +2789,202 @@ async function doFarmSubAction(action, paymentId, note) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   سجل المزارع — قراءة فقط (مفيش أي كتابة على Firestore من هنا).
-   بيعرض كل مزرعة بتفاصيلها + صاحبها + حالة اشتراكه، ويقدر يصدّر الكل كملف CSV يفتح في Excel.
+   سجل المزارع (PDF) — قراءة فقط ومرة واحدة وقت الضغط (get() مش onSnapshot) عشان استهلاك القراءات.
+   القراءات لكل ضغطة = عدد المزارع + عدد مستندات farm_subscriptions + عدد أصحاب المزارع (users).
    "نشطة" = نفس شرط farmAccess() في firestore.rules: اشتراك مدفوع لسه ما انتهاش، أو تجربة الـ 7 أيام شغالة.
+   الصفحات بتتفرد كـ HTML وبتتحوّل لصور داخل PDF (html2canvas + jsPDF بتتحمّل من cdnjs وقت الاستخدام بس)
+   عشان المتصفح هو اللي بيشكّل الحروف العربية صح.
    ══════════════════════════════════════════════════════════════ */
 const FREG_TRIAL_MS = 7 * 86400000;
-let fregFarms = [], fregSubs = {}, fregUsers = {}, fregFilterVal = 'all', fregSubsOk = true;
-let fregFarmsUnsub = null, fregSubsUnsub = null;
+const FREG_H2C_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+const FREG_JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+const FREG_PW = 1123, FREG_PH = 794;   // A4 landscape @96dpi
+let fregBusy = false, fregPdfBlob = null, fregPdfName = '';
 
 function fregMs(t) { try { return t && t.toMillis ? t.toMillis() : 0; } catch (e) { return 0; } }
 function fregDay(ms) { return ms ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(ms)) : '—'; }
 
-function fregStatus(uid) {
-  const s = fregSubs[uid], now = Date.now();
-  if (!s) return { key: 'none', label: 'بدون اشتراك', end: 0 };
-  const paid = fregMs(s.paidUntil), ts = fregMs(s.trialStartedAt), trial = ts ? ts + FREG_TRIAL_MS : 0;
+function fregStatus(sub) {
+  const now = Date.now();
+  if (!sub) return { key: 'none', label: 'بدون اشتراك', end: 0 };
+  const paid = fregMs(sub.paidUntil), t0 = fregMs(sub.trialStartedAt), trial = t0 ? t0 + FREG_TRIAL_MS : 0;
   if (paid > now) return { key: 'active', label: 'نشطة (مدفوعة)', end: paid };
   if (trial > now) return { key: 'trial', label: 'نشطة (تجربة)', end: trial };
   return { key: 'expired', label: 'منتهية', end: Math.max(paid, trial) };
 }
-function fregIsActive(st) { return st.key === 'active' || st.key === 'trial'; }
 
-function startFarmRegistryListeners() {
-  if (fregFarmsUnsub) { fregFarmsUnsub(); fregFarmsUnsub = null; }
-  if (fregSubsUnsub) { fregSubsUnsub(); fregSubsUnsub = null; }
-  fregFarmsUnsub = db.collection('farms').onSnapshot(function(snap) {
-    fregFarms = snap.docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
-    fregLoadOwners();
-    renderFarmRegistry();
-  }, function(e) {
-    document.getElementById('freg-sum').textContent = '—';
-    document.getElementById('freg-list').innerHTML = '<div class="fsa-empty">تعذّر التحميل: ' + fsubEsc(e.message) + '<br>(تأكد من نشر firestore.rules الجديدة)</div>';
-  });
-  fregSubsUnsub = db.collection('farm_subscriptions').onSnapshot(function(snap) {
-    const m = {};
-    snap.docs.forEach(function(d) { m[d.id] = d.data(); });
-    fregSubs = m; fregSubsOk = true;
-    renderFarmRegistry();
-  }, function(e) {
-    console.warn('farm registry subs listener:', e.message);
-    fregSubsOk = false;
-    renderFarmRegistry();
+function fregLoadScript(url, ok) {
+  return new Promise(function(resolve, reject) {
+    if (ok()) { resolve(); return; }
+    const sc = document.createElement('script');
+    sc.src = url;
+    sc.onload = function() { ok() ? resolve() : reject(new Error('مكتبة PDF مش شغالة')); };
+    sc.onerror = function() { reject(new Error('تعذّر تحميل مكتبة PDF — اتأكد من الإنترنت')); };
+    document.head.appendChild(sc);
   });
 }
 
-/* بيانات صاحب المزرعة (الاسم/الإيميل) من users — بتتجاب مرة واحدة لكل مالك */
-function fregLoadOwners() {
-  const need = [];
-  fregFarms.forEach(function(f) { if (f.userId && !(f.userId in fregUsers) && need.indexOf(f.userId) < 0) need.push(f.userId); });
-  if (!need.length) return;
-  need.forEach(function(id) { fregUsers[id] = null; });
-  Promise.all(need.map(function(id) {
+/* قراءة واحدة: farms + farm_subscriptions + بيانات أصحاب المزارع */
+async function fregFetch() {
+  const res = await Promise.all([db.collection('farms').get(), db.collection('farm_subscriptions').get()]);
+  const farms = res[0].docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
+  const subs = {};
+  res[1].docs.forEach(function(d) { subs[d.id] = d.data(); });
+  const ids = [];
+  farms.forEach(function(f) { if (f.userId && ids.indexOf(f.userId) < 0) ids.push(f.userId); });
+  const users = {};
+  await Promise.all(ids.map(function(id) {
     return db.collection('users').doc(id).get()
-      .then(function(d) { fregUsers[id] = d.exists ? d.data() : {}; })
-      .catch(function() { fregUsers[id] = {}; });
-  })).then(renderFarmRegistry);
-}
-
-function fregFilter(f) {
-  fregFilterVal = f;
-  document.querySelectorAll('.fr-tab').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-frf') === f); });
-  renderFarmRegistry();
-}
-
-function fregRows() {
-  const rank = { active: 0, trial: 1, expired: 2, none: 3 };
-  return fregFarms.map(function(f) { return { f: f, u: fregUsers[f.userId] || {}, st: fregStatus(f.userId) }; })
-    .sort(function(a, b) {
-      return (rank[a.st.key] - rank[b.st.key]) || (fregMs(b.f.createdAt) - fregMs(a.f.createdAt));
-    });
-}
-
-function renderFarmRegistry() {
-  const listEl = document.getElementById('freg-list');
-  if (!listEl) return;
-  const all = fregRows();
-  const activeN = all.filter(function(r) { return fregIsActive(r.st); }).length;
-  const cnt = document.getElementById('freg-count');
-  cnt.textContent = activeN; cnt.style.display = all.length ? 'inline-block' : 'none';
-  document.getElementById('freg-sum').innerHTML = 'إجمالي المزارع: <b>' + all.length + '</b> · النشطة: <b>' + activeN + '</b>' +
-    (fregSubsOk ? '' : '<br>⚠️ تعذّر تحميل الاشتراكات — حالة النشاط غير دقيقة');
-  const q = (document.getElementById('freg-q').value || '').trim().toLowerCase();
-  const rows = all.filter(function(r) {
-    if (fregFilterVal === 'active' && !fregIsActive(r.st)) return false;
-    if (!q) return true;
-    return [r.f.name, r.f.location, r.f.phone, r.f.waterSource, r.f.irrSystem, r.u.name, r.u.email, r.f.userId].join(' ').toLowerCase().indexOf(q) > -1;
-  });
-  if (!rows.length) { listEl.innerHTML = '<div class="fsa-empty">' + (all.length ? 'لا نتائج' : 'لا مزارع مسجّلة') + '</div>'; return; }
-  const dash = function(v) { return (v === 0 || v) ? fsubEsc(v) : '—'; };
-  listEl.innerHTML = rows.slice(0, 60).map(function(r) {
-    const f = r.f, u = r.u, st = r.st;
-    const cls = st.key === 'active' ? 'approved' : st.key === 'trial' ? 'pending' : st.key === 'expired' ? 'rejected' : 'fr-none';
-    return '<div class="fsa-card"><div class="fsa-top"><div class="fsa-mail">' + fsubEsc(f.name || 'مزرعة بدون اسم') + '</div><span class="fsa-badge ' + cls + '">' + st.label + '</span></div>' +
-      '<div>الموقع: <b>' + dash(f.location) + '</b> · المساحة: <b>' + dash(f.area) + '</b> فدان</div>' +
-      '<div class="fsa-meta">مصدر المياه: ' + dash(f.waterSource) + ' · نظام الري: ' + dash(f.irrSystem) + '</div>' +
-      '<div class="fsa-meta">هاتف: ' + dash(f.phone) + '</div>' +
-      '<div class="fsa-meta">المالك: ' + dash(u.name) + ' — ' + dash(u.email) + '</div>' +
-      '<div class="fsa-meta">الاشتراك: ' + st.label + (st.end ? (st.key === 'expired' ? ' · انتهى ' : ' · ينتهي ') + fregDay(st.end) : '') + '</div>' +
-      '<div class="fsa-meta">أُنشئت: ' + fsubFmtDay(f.createdAt) + ' · آخر تحديث: ' + fsubFmtDay(f.updatedAt) + '</div></div>';
-  }).join('') + (rows.length > 60 ? '<div class="fsa-empty">معروض أول 60 من ' + rows.length + ' — استخدم البحث أو حمّل الملف الكامل</div>' : '');
-}
-
-function fregCsvCell(v, asText) {
-  let t = (v === 0 || v) ? String(v) : '';
-  if (/^[=@]/.test(t) || /^[+\-][^\d\s]/.test(t)) t = "'" + t;   // حماية من CSV formula injection
-  if (asText && t) t = '\t' + t;                                     // يحافظ على الصفر في أول أرقام الهواتف في Excel
-  return '"' + t.replace(/"/g, '""') + '"';
-}
-
-function fregExportCsv() {
-  const rows = fregRows();
-  if (!rows.length) { showToast('لا توجد مزارع للتصدير', 'err'); return; }
-  const head = ['اسم المزرعة', 'الموقع / المحافظة', 'المساحة (فدان)', 'مصدر المياه', 'نظام الري', 'رقم التواصل',
-    'اسم المالك', 'إيميل المالك', 'UID المالك', 'حالة الاشتراك', 'نشطة؟', 'تاريخ انتهاء الاشتراك/التجربة', 'تاريخ الإنشاء', 'آخر تحديث', 'معرّف المزرعة'];
-  const lines = [head.map(function(h) { return fregCsvCell(h); }).join(',')].concat(rows.map(function(r) {
-    const f = r.f, u = r.u, st = r.st;
-    return [fregCsvCell(f.name), fregCsvCell(f.location), fregCsvCell(f.area), fregCsvCell(f.waterSource), fregCsvCell(f.irrSystem), fregCsvCell(f.phone, true),
-      fregCsvCell(u.name), fregCsvCell(u.email), fregCsvCell(f.userId), fregCsvCell(st.label), fregCsvCell(fregIsActive(st) ? 'نعم' : 'لا'),
-      fregCsvCell(st.end ? fregDay(st.end) : ''), fregCsvCell(fsubFmtDay(f.createdAt)), fregCsvCell(fsubFmtDay(f.updatedAt)), fregCsvCell(f._id)].join(',');
+      .then(function(d) { users[id] = d.exists ? d.data() : {}; })
+      .catch(function() { users[id] = {}; });
   }));
-  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  return { farms: farms, subs: subs, users: users, reads: res[0].size + res[1].size + ids.length };
+}
+
+/* ترتيب وتقسيم: النشطة (مدفوعة ثم تجربة) في الأول، وبعدها باقي المزارع — كل مجموعة أبجديًا */
+function fregPrepare(d) {
+  const rank = { active: 0, trial: 1, expired: 2, none: 3 };
+  const rows = d.farms.map(function(f) { return { f: f, u: d.users[f.userId] || {}, st: fregStatus(d.subs[f.userId]) }; });
+  const cmp = function(a, b) { return (rank[a.st.key] - rank[b.st.key]) || String(a.f.name || '').localeCompare(String(b.f.name || ''), 'ar'); };
+  const isAct = function(r) { return r.st.key === 'active' || r.st.key === 'trial'; };
+  const cnt = { total: rows.length, active: 0, trial: 0, expired: 0, none: 0 };
+  rows.forEach(function(r) { cnt[r.st.key]++; });
+  return { active: rows.filter(isAct).sort(cmp), other: rows.filter(function(r) { return !isAct(r); }).sort(cmp), cnt: cnt };
+}
+
+const FREG_CSS = '.fpdf-root{position:absolute;left:-10000px;top:0;width:' + FREG_PW + 'px;direction:rtl}' +
+  '.fpdf-page,.fpdf-page *{box-sizing:border-box;margin:0;padding:0}' +
+  '.fpdf-page{position:relative;width:' + FREG_PW + 'px;height:' + FREG_PH + 'px;padding:26px 32px 46px;background:#fff;color:#14231a;direction:rtl;text-align:right;font-family:"Segoe UI",system-ui,-apple-system,"Noto Naskh Arabic",sans-serif;line-height:1.5;overflow:hidden}' +
+  '.fpdf-head{display:flex;justify-content:space-between;align-items:center;background:#14532d;color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:12px}' +
+  '.fpdf-title{font-size:22px;font-weight:800}.fpdf-sub{font-size:11.5px;opacity:.85;margin-top:2px}' +
+  '.fpdf-date{font-size:11.5px;direction:ltr;text-align:left}' +
+  '.fpdf-stats{display:flex;gap:8px;margin-bottom:12px}' +
+  '.fpdf-stat{flex:1;border:1px solid #cfe3d3;background:#f3faf4;border-radius:9px;padding:7px 10px}' +
+  '.fpdf-stat b{display:block;font-size:20px;line-height:1.3;color:#14532d}.fpdf-stat span{font-size:11px;color:#4b5f52}' +
+  '.fpdf-sec{font-size:14px;font-weight:800;color:#14532d;margin-bottom:6px;padding-right:8px;border-right:4px solid #22c55e}' +
+  '.fpdf-t{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}' +
+  '.fpdf-t th{background:#e4f1e7;color:#14532d;font-weight:800;padding:6px;border:1px solid #cfe3d3;text-align:right}' +
+  '.fpdf-t td{padding:5px 6px;border:1px solid #dde8df;vertical-align:top;overflow-wrap:anywhere;text-align:right;background:#fff}' +
+  '.fpdf-t tbody tr:nth-child(even) td{background:#f7faf7}' +
+  '.fpdf-em{display:block;direction:ltr;text-align:right;font-size:10px;color:#475569}' +
+  '.fpdf-s-active{color:#15803d;font-weight:800}.fpdf-s-trial{color:#b45309;font-weight:800}.fpdf-s-expired{color:#b91c1c;font-weight:800}.fpdf-s-none{color:#64748b;font-weight:700}' +
+  '.fpdf-foot{position:absolute;left:32px;right:32px;bottom:14px;display:flex;justify-content:space-between;font-size:10px;color:#64748b;border-top:1px solid #dde8df;padding-top:5px}';
+
+const FREG_COLS = [['#', 34], ['اسم المزرعة', 150], ['الموقع / المحافظة', 100], ['المساحة (فدان)', 70], ['مصدر المياه', 95], ['نظام الري', 85], ['رقم التواصل', 105], ['المالك', 200], ['الاشتراك', 130], ['تاريخ الإنشاء', 90]];
+
+function fregRowHtml(r, n) {
+  const f = r.f, u = r.u, st = r.st;
+  const v = function(x) { return (x === 0 || x) ? fsubEsc(x) : '—'; };
+  let owner;
+  if (u.name || u.email) owner = '<b>' + v(u.name) + '</b>' + (u.email ? '<span class="fpdf-em">' + fsubEsc(u.email) + '</span>' : '');
+  else owner = '<span class="fpdf-em">UID: ' + fsubEsc(f.userId || '—') + '</span>';
+  return '<tr><td>' + n + '</td><td><b>' + (f.name ? fsubEsc(f.name) : 'بدون اسم') + '</b></td><td>' + v(f.location) + '</td><td>' + v(f.area) + '</td><td>' + v(f.waterSource) +
+    '</td><td>' + v(f.irrSystem) + '</td><td><span class="fpdf-em">' + (f.phone ? fsubEsc(f.phone) : '—') + '</span></td><td>' + owner +
+    '</td><td><span class="fpdf-s-' + st.key + '">' + st.label + '</span>' + (st.end ? '<br>' + (st.key === 'expired' ? 'انتهى ' : 'حتى ') + fregDay(st.end) : '') +
+    '</td><td>' + fsubFmtDay(f.createdAt) + '</td></tr>';
+}
+
+/* بيبني صفحات الـ PDF كعناصر HTML ويقيس الارتفاع الفعلي عشان يقسّم الصفوف على الصفحات */
+function fregBuildPages(prep) {
+  if (!document.getElementById('freg-pdf-css')) {
+    const st = document.createElement('style'); st.id = 'freg-pdf-css'; st.textContent = FREG_CSS; document.head.appendChild(st);
+  }
+  const old = document.getElementById('freg-pdf-root'); if (old) old.remove();
+  const root = document.createElement('div'); root.className = 'fpdf-root'; root.id = 'freg-pdf-root'; document.body.appendChild(root);
+  const pages = [], c = prep.cnt;
+  const stamp = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+  const headHtml = '<div class="fpdf-head"><div><div class="fpdf-title">سجل المزارع</div><div class="fpdf-sub">نبتيكس أكاديمي — نظام إدارة المزرعة</div></div><div class="fpdf-date">' + stamp + '</div></div>' +
+    '<div class="fpdf-stats">' + [['إجمالي المزارع', c.total], ['نشطة (مدفوعة)', c.active], ['نشطة (تجربة)', c.trial], ['منتهية', c.expired], ['بدون اشتراك', c.none]].map(function(x) {
+      return '<div class="fpdf-stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('') + '</div>';
+  const colgroup = '<colgroup>' + FREG_COLS.map(function(x) { return '<col style="width:' + x[1] + 'px">'; }).join('') + '</colgroup>';
+  const thead = '<thead><tr>' + FREG_COLS.map(function(x) { return '<th>' + x[0] + '</th>'; }).join('') + '</tr></thead>';
+  function newPage(title, first) {
+    const pg = document.createElement('div'); pg.className = 'fpdf-page';
+    pg.innerHTML = (first ? headHtml : '') + '<div class="fpdf-sec">' + title + '</div><table class="fpdf-t">' + colgroup + thead + '<tbody></tbody></table>' +
+      '<div class="fpdf-foot"><span>نبتيكس أكاديمي — سجل المزارع</span><span class="fpdf-pn"></span></div>';
+    root.appendChild(pg); pages.push(pg); return pg;
+  }
+  const fits = function(pg) { return pg.querySelector('table').getBoundingClientRect().bottom - pg.getBoundingClientRect().top <= FREG_PH - 50; };
+  function addSection(title, rows, first) {
+    let pg = newPage(title + ' (' + rows.length + ')', first);
+    if (!rows.length) { pg.querySelector('tbody').innerHTML = '<tr><td colspan="' + FREG_COLS.length + '" style="text-align:center;color:#64748b">لا توجد مزارع</td></tr>'; return; }
+    rows.forEach(function(r, i) {
+      const tb = pg.querySelector('tbody');
+      tb.insertAdjacentHTML('beforeend', fregRowHtml(r, i + 1));
+      if (!fits(pg) && tb.children.length > 1) {
+        const last = tb.lastElementChild; last.remove();
+        pg = newPage(title + ' (تابع)', false);
+        pg.querySelector('tbody').appendChild(last);
+      }
+    });
+  }
+  addSection('المزارع النشطة', prep.active, true);
+  addSection('باقي المزارع (منتهية / بدون اشتراك)', prep.other, false);
+  pages.forEach(function(pg, i) { pg.querySelector('.fpdf-pn').textContent = 'صفحة ' + (i + 1) + ' من ' + pages.length; });
+  return { root: root, pages: pages };
+}
+
+async function fregBuildPdf() {
+  if (fregBusy) return;
+  fregBusy = true;
+  const btn = document.getElementById('freg-btn'), out = document.getElementById('freg-out');
+  const label = btn.textContent;
+  btn.disabled = true; out.style.display = 'none'; fregPdfBlob = null;
+  let built = null;
+  try {
+    btn.textContent = 'جاري تحميل مكتبة PDF...';
+    await Promise.all([fregLoadScript(FREG_H2C_URL, function() { return !!window.html2canvas; }), fregLoadScript(FREG_JSPDF_URL, function() { return !!(window.jspdf && window.jspdf.jsPDF); })]);
+    btn.textContent = 'جاري قراءة بيانات المزارع...';
+    const data = await fregFetch();
+    if (!data.farms.length) { showToast('لا توجد مزارع مسجّلة', 'err'); return; }
+    if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
+    built = fregBuildPages(fregPrepare(data));
+    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+    for (let i = 0; i < built.pages.length; i++) {
+      btn.textContent = 'جاري إنشاء الملف... ' + (i + 1) + '/' + built.pages.length;
+      const pg = built.pages[i];
+      built.root.textContent = ''; built.root.appendChild(pg);   // صفحة واحدة في كل مرة عند أول الـ root
+      const canvas = await window.html2canvas(pg, {
+        scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: FREG_PW, windowHeight: FREG_PH,
+        onclone: function(d) {
+          ['app-screen', 'auth-screen'].forEach(function(id) { const e = d.getElementById(id); if (e) e.style.display = 'none'; });
+          const r = d.getElementById('freg-pdf-root'); if (r) { r.style.left = '0'; r.style.top = '0'; }
+        }
+      });
+      if (i) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210);
+    }
+    fregPdfBlob = pdf.output('blob');
+    fregPdfName = 'nabtex-farms-' + fregDay(Date.now()) + '.pdf';
+    const prep = fregPrepare(data);
+    document.getElementById('freg-res').innerHTML = 'الملف جاهز: <b>' + built.pages.length + '</b> صفحة · <b>' + data.farms.length + '</b> مزرعة (النشطة: <b>' + (prep.cnt.active + prep.cnt.trial) + '</b>)<br>القراءات المستهلكة: ' + data.reads;
+    out.style.display = 'block';
+  } catch (e) {
+    showToast('تعذّر إنشاء الملف: ' + ((e && e.message) || e), 'err');
+  } finally {
+    if (built) built.root.remove();
+    btn.disabled = false; btn.textContent = label; fregBusy = false;
+  }
+}
+
+async function fregShare() {
+  if (!fregPdfBlob) return;
+  try {
+    const file = new File([fregPdfBlob], fregPdfName, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'سجل مزارع نبتيكس' }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(fregPdfBlob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'nabtex-farms-' + fregDay(Date.now()) + '.csv';
+  a.href = url; a.download = fregPdfName;
   document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
-  showToast('تم تحميل ملف المزارع (' + rows.length + ')', 'ok');
+  setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
+}
+
+function fregOpen() {
+  if (!fregPdfBlob) return;
+  const url = URL.createObjectURL(fregPdfBlob);
+  if (!window.open(url, '_blank')) showToast('المتصفح منع فتح الملف — استخدم زر «حفظ / مشاركة الملف»', 'err');
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
 }
 
 </script>
