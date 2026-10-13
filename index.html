@@ -14107,20 +14107,20 @@ document.addEventListener('click', e => {
             '</div>' +
             '<div id="plant-spacing-rows" style="margin-top:16px;' + showRows + '">' +
               '<div class="farm-form-grid">' +
-                fField('spacing-row-dist',   'المسافة بين الخطوط (سم)',   'number', cd_edit.spacingRowDist   ||'', '0') +
-                fField('spacing-plant-dist', 'المسافة بين النباتات (سم)', 'number', cd_edit.spacingPlantDist ||'', '0') +
+                fField('spacing-row-dist',   'المسافة بين الخطوط (سم)',   'number', cd_edit.spacingRowDist   ||'', '') +
+                fField('spacing-plant-dist', 'المسافة بين النباتات (سم)', 'number', cd_edit.spacingPlantDist ||'', '') +
               '</div>' +
             '</div>' +
             '<div id="plant-spacing-beds" style="margin-top:16px;' + showBeds + '">' +
               '<div class="farm-form-grid">' +
-                fField('spacing-bed-width', 'عرض المصطبة (سم)',          'number', cd_edit.spacingBedWidth ||'', '0') +
-                fField('spacing-bed-dist',  'المسافة بين المصاطب (سم)', 'number', cd_edit.spacingBedDist  ||'', '0') +
-                fField('spacing-bed-plant', 'المسافة بين النباتات (سم)','number', cd_edit.spacingBedPlant ||'', '0') +
+                fField('spacing-bed-width', 'عرض المصطبة (سم)',          'number', cd_edit.spacingBedWidth ||'', '') +
+                fField('spacing-bed-dist',  'المسافة بين المصاطب (سم)', 'number', cd_edit.spacingBedDist  ||'', '') +
+                fField('spacing-bed-plant', 'المسافة بين النباتات (سم)','number', cd_edit.spacingBedPlant ||'', '') +
               '</div>' +
             '</div>' +
             '<div id="plant-spacing-broadcast" style="margin-top:16px;' + showBcast + '">' +
               '<div class="farm-form-grid">' +
-                fField('spacing-seed-density', 'كثافة البذور (كجم/فدان)', 'number', cd_edit.spacingSeedDensity||'', '0') +
+                fField('spacing-seed-density', 'كثافة البذور (كجم/فدان)', 'number', cd_edit.spacingSeedDensity||'', '') +
               '</div>' +
             '</div>' +
             '<div class="setup-action-row" style="margin-top:20px">' +
@@ -14251,9 +14251,9 @@ document.addEventListener('click', e => {
             {val:'خرطوم',  icon:'', label:'خرطوم'},
           ], '', '#3b82f6') +
           '<div class="farm-form-grid farm-form-grid-3">' +
-            fField('op-irr-times',  'عدد مرات الري',   'number', '0', '0') +
-            fField('op-irr-amount', 'كمية المياه (م³)', 'number', '0', '0') +
-            fField('op-irr-hours',  'مدة الري (ساعة)',  'number', '0', '0') +
+            fField('op-irr-times',  'عدد مرات الري',   'number', '', '') +
+            fField('op-irr-amount', 'كمية المياه (م³)', 'number', '', '') +
+            fField('op-irr-hours',  'مدة الري (ساعة)',  'number', '', '') +
           '</div>' +
         '</div>';
 
@@ -14282,12 +14282,12 @@ document.addEventListener('click', e => {
             {val:'آلة تسميد',   icon:'', label:'آلة تسميد'},
           ], '', '#16a34a') +
           '<div class="farm-form-grid farm-form-grid-3">' +
-            fField('op-fert-n',       'نيتروجين N (كجم)',     'number', '0', '0') +
-            fField('op-fert-p',       'فوسفور P (كجم)',        'number', '0', '0') +
-            fField('op-fert-k',       'بوتاسيوم K (كجم)',     'number', '0', '0') +
-            fField('op-fert-organic', 'عضوي (كجم)',            'number', '0', '0') +
-            fField('op-fert-micro',   'عناصر صغرى (جم)',      'number', '0', '0') +
-            fField('op-fert-amount',  'الكمية الإجمالية (كجم)', 'number', '0', '0') +
+            fField('op-fert-n',       'نيتروجين N (كجم)',     'number', '', '') +
+            fField('op-fert-p',       'فوسفور P (كجم)',        'number', '', '') +
+            fField('op-fert-k',       'بوتاسيوم K (كجم)',     'number', '', '') +
+            fField('op-fert-organic', 'عضوي (كجم)',            'number', '', '') +
+            fField('op-fert-micro',   'عناصر صغرى (جم)',      'number', '', '') +
+            fField('op-fert-amount',  'الكمية الإجمالية (كجم)', 'number', '', '') +
           '</div>' +
         '</div>';
 
@@ -14311,10 +14311,10 @@ document.addEventListener('click', e => {
           ], '', '#a855f7') +
           '<div class="farm-form-grid">' +
             fField('op-spray-pest',  'الآفة / المشكلة المستهدفة', 'text',   '', 'مثال: عفن رمادي') +
-            fField('op-spray-conc',  'التركيز (سم³/100لتر)',      'number', '0', '0') +
-            fField('op-spray-water', 'كمية الماء (لتر)',           'number', '0', '0') +
-            fField('op-spray-area',  'المساحة المرشوشة (فدان)',   'number', '0', '0') +
-            fField('op-spray-times', 'عدد مرات الرش',             'number', '0', '0') +
+            fField('op-spray-conc',  'التركيز (سم³/100لتر)',      'number', '', '') +
+            fField('op-spray-water', 'كمية الماء (لتر)',           'number', '', '') +
+            fField('op-spray-area',  'المساحة المرشوشة (فدان)',   'number', '', '') +
+            fField('op-spray-times', 'عدد مرات الرش',             'number', '', '') +
           '</div>' +
         '</div>';
 
@@ -14336,8 +14336,8 @@ document.addEventListener('click', e => {
             {val:'تطعيم',           icon:'', label:'تطعيم'},
           ], '', '#d97706') +
           '<div class="farm-form-grid">' +
-            fField('op-labor',    'عدد العمال (عامل/يوم)', 'number', '0', '0') +
-            fField('op-machines', 'عدد الآلات (آلة/يوم)',  'number', '0', '0') +
+            fField('op-labor',    'عدد العمال (عامل/يوم)', 'number', '', '') +
+            fField('op-machines', 'عدد الآلات (آلة/يوم)',  'number', '', '') +
           '</div>' +
         '</div>';
 
@@ -14350,7 +14350,7 @@ document.addEventListener('click', e => {
           '<div class="farm-form-grid farm-form-grid-3">' +
             fField('op-temp',     'درجة الحرارة (°م)', 'number', '', '28') +
             fField('op-humidity', 'الرطوبة (%)',        'number', '', '60') +
-            fField('op-rain',     'هطول الأمطار (مم)', 'number', '0', '0') +
+            fField('op-rain',     'هطول الأمطار (مم)', 'number', '', '') +
           '</div>' +
         '</div>';
 
@@ -14367,8 +14367,8 @@ document.addEventListener('click', e => {
           '</label>' +
           '<div id="harvest-fields" style="display:none;margin-top:20px">' +
             '<div class="farm-form-grid farm-form-grid-3">' +
-              fField('op-harvest-qty',   'كمية الإنتاج (طن)', 'number', '0', '0') +
-              fField('op-harvest-waste', 'الفاقد (%)',         'number', '0', '0') +
+              fField('op-harvest-qty',   'كمية الإنتاج (طن)', 'number', '', '') +
+              fField('op-harvest-waste', 'الفاقد (%)',         'number', '', '') +
             '</div>' +
             fChips('op-harvest-qual', 'جودة الإنتاج', [
               {val:'ممتازة',    icon:'', label:'ممتازة'},
@@ -15083,7 +15083,7 @@ document.addEventListener('click', e => {
           if (co.key === state.op) return;
           [].forEach.call(co.card.querySelectorAll('input'), function(i) {
             if (i.type === 'checkbox') { i.checked = false; return; }
-            if (i.type === 'number') { i.value = (i.id === 'op-temp' || i.id === 'op-humidity') ? '' : '0'; return; }
+            if (i.type === 'number') { i.value = ''; return; }
             i.value = '';
           });
         });
@@ -15892,8 +15892,8 @@ document.addEventListener('click', e => {
           '<div class="exp-form-grid">' +
             expFld('ew-name',  'اسم العامل',           'text',   '', 'مثال: أحمد محمد') +
             expSelectFld('ew-type', 'نوع العمل', ['حصاد','ري','تسميد','رش','حرث','زراعة','تقليم','تعبئة','نقل','صيانة','أخرى']) +
-            expFld('ew-days',  'عدد الأيام',            'number', '', '1') +
-            expFld('ew-daily', 'الأجرة اليومية (جنيه)', 'number', '', '0') +
+            expFld('ew-days',  'عدد الأيام',            'number', '', '') +
+            expFld('ew-daily', 'الأجرة اليومية (جنيه)', 'number', '', '') +
           '</div>' +
           '<div class="exp-form-grid">' +
             expFld('ew-date',  'التاريخ', 'date', '', '') +
@@ -15961,9 +15961,9 @@ document.addEventListener('click', e => {
             expSelectFld('ef-type', 'نوع السماد', ['آزوتي','فوسفوري','بوتاسي','مركب','عضوي','ميكروعناصر','أخرى']) +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('ef-bags',       'عدد الشكاير',         'number', '', '0') +
+            expFld('ef-bags',       'عدد الشكاير',         'number', '', '') +
             expFld('ef-bag-weight', 'وزن الشيكارة (كجم)',  'number', '', '50') +
-            expFld('ef-bag-price',  'سعر الشيكارة (جنيه)', 'number', '', '0') +
+            expFld('ef-bag-price',  'سعر الشيكارة (جنيه)', 'number', '', '') +
           '</div>' +
           '<div class="exp-form-grid">' +
             expFld('ef-date',  'التاريخ', 'date', '', '') +
@@ -16052,9 +16052,9 @@ document.addEventListener('click', e => {
             expSelectFld('ep-type', 'نوع المبيد', ['حشري','فطري','علش','نيماتودا','حيوي','أخرى']) +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('ep-cans',       'عدد العبوات',         'number', '', '0') +
-            expFld('ep-can-size',   'حجم العبوة (لتر/كجم)', 'number', '', '1') +
-            expFld('ep-can-price',  'سعر العبوة (جنيه)',   'number', '', '0') +
+            expFld('ep-cans',       'عدد العبوات',         'number', '', '') +
+            expFld('ep-can-size',   'حجم العبوة (لتر/كجم)', 'number', '', '') +
+            expFld('ep-can-price',  'سعر العبوة (جنيه)',   'number', '', '') +
           '</div>' +
           '<div class="exp-form-grid">' +
             expFld('ep-date',  'التاريخ', 'date', '', '') +
@@ -16134,8 +16134,8 @@ document.addEventListener('click', e => {
             expSelectFld('es-unit-type', 'وحدة القياس', ['كجم','شتلة','كيس','علبة','أخرى']) +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('es-qty',   'الكمية',             'number', '', '0') +
-            expFld('es-price', 'سعر الوحدة (جنيه)', 'number', '', '0') +
+            expFld('es-qty',   'الكمية',             'number', '', '') +
+            expFld('es-price', 'سعر الوحدة (جنيه)', 'number', '', '') +
           '</div>' +
           '<div class="exp-form-grid">' +
             expFld('es-supplier', 'المورد / الشركة', 'text', '', 'اختياري') +
@@ -16205,12 +16205,12 @@ document.addEventListener('click', e => {
             expSelectFld('ei-source', 'مصدر الطاقة', ['كهرباء شبكة','كهرباء سولار','ديزل','بنزين','أخرى']) +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('ei-hours',     'ساعات التشغيل', 'number', '', '0') +
-            expFld('ei-fuel-qty',  'كمية الوقود (لتر)', 'number', '', '0') +
-            expFld('ei-fuel-price','سعر اللتر (جنيه)',  'number', '', '0') +
+            expFld('ei-hours',     'ساعات التشغيل', 'number', '', '') +
+            expFld('ei-fuel-qty',  'كمية الوقود (لتر)', 'number', '', '') +
+            expFld('ei-fuel-price','سعر اللتر (جنيه)',  'number', '', '') +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('ei-extra', 'تكاليف إضافية (جنيه)', 'number', '', '0') +
+            expFld('ei-extra', 'تكاليف إضافية (جنيه)', 'number', '', '') +
             expFld('ei-date',  'التاريخ', 'date', '', '') +
           '</div>' +
           expFld('ei-notes', 'ملاحظات', 'text', '', 'اختياري') +
@@ -16285,7 +16285,7 @@ document.addEventListener('click', e => {
             expFld('eo-desc', 'الوصف', 'text', '', 'تفاصيل المصروف') +
           '</div>' +
           '<div class="exp-form-grid">' +
-            expFld('eo-amount', 'المبلغ (جنيه)', 'number', '', '0') +
+            expFld('eo-amount', 'المبلغ (جنيه)', 'number', '', '') +
             expFld('eo-date',   'التاريخ',        'date',   '', '') +
           '</div>' +
           expFld('eo-notes', 'ملاحظات', 'text', '', 'اختياري') +
@@ -20326,7 +20326,7 @@ document.addEventListener('click', e => {
   #pg-farm .fls-track i::after{
     content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);
-    animation:flxSheen 1.8s ease-in-out .5s 2;
+    animation:flxSheen 1.8s ease-in-out .5s 2 both;
   }
   #pg-farm .fls-btn.p{position:relative;overflow:hidden}
   #pg-farm .fls-btn.p::after{
@@ -20387,7 +20387,7 @@ document.addEventListener('click', e => {
   #pg-farm .exp-sum-total::after{
     content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.16) 50%,transparent 65%);
-    animation:flxSheen 2.4s ease-in-out 1s 1;
+    animation:flxSheen 2.4s ease-in-out 1s 1 both;
   }
 
   /* ───────── 10) حالات «لا توجد بيانات»: الأيقونة بتطفو بهدوء ───────── */
