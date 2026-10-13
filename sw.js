@@ -7,7 +7,7 @@
  *  Firebase / Auth → Network Only  (NEVER cached)
  */
 
-const SW_VERSION   = 'nabtex-v2.5.0'; // bumped: academy push-notifications added
+const SW_VERSION   = 'nabtex-v2.5.1'; // bumped: /api/* (weather proxy) bypasses the SW cache
 const SHELL_CACHE  = SW_VERSION + '-shell';
 const STATIC_CACHE = SW_VERSION + '-static';
 const FONT_CACHE   = SW_VERSION + '-fonts';
@@ -37,6 +37,7 @@ function shouldBypass(url) {
   try {
     const u = new URL(url);
     if (BYPASS_HOSTS.some(h => u.hostname.includes(h))) return true;
+    if (u.origin === self.location.origin && u.pathname.startsWith('/api/')) return true; /* weather proxy: never cache — 30-min cache lives in the page */
     if (BYPASS_PATH_FRAGS.some(p => u.pathname.includes(p))) return true;
     if (u.search.includes('token') || u.search.includes('key=')) return true;
   } catch (_) {}

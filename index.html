@@ -24079,14 +24079,14 @@ function nbResetOnboarding(){
   App._buildPersonalDashboard();
 }
 
-/* ── Weather (Open-Meteo, no API key needed) ────────────────── */
+/* ── Weather (WeatherAPI.com عبر proxy الخادم /api/weather — المفتاح سري على الخادم ولا يظهر هنا) ── */
 async function nbFetchWeather(){
   const now = Date.now();
   if(_nbWeatherCache && now - _nbWeatherCache.ts < 30*60*1000) return _nbWeatherCache.data;
   try{
-    // Default to Egypt (Cairo) coordinates; Open-Meteo free, no key
+    // Default to Egypt (Cairo) coordinates
     const lat=30.0444, lon=31.2357;
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=Africa%2FCairo`;
+    const url=`/api/weather?lat=${lat}&lon=${lon}`;
     const res = await fetch(url, {signal: AbortSignal.timeout(5000)});
     if(!res.ok) throw new Error('weather fetch failed');
     const d = await res.json();
@@ -24137,6 +24137,7 @@ function nbWeatherWidget(w){
         <div class="nb-wm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 15h1"/><polyline points="16 16 12 20 8 16"/><line x1="12" y1="12" x2="12" y2="20"/></svg>${w.rainPct}% أمطار</div>
       </div>
       <div class="nb-weather-range">أعلى ${w.maxT}° · أدنى ${w.minT}°</div>
+      <div class="nbfw-f"><a href="https://www.weatherapi.com/" title="Free Weather API" target="_blank" rel="noopener">Powered by WeatherAPI.com</a></div>
     </div>
   </div>`;
 }
@@ -25452,9 +25453,9 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 
 <script id="nb-farm-weather-js">
 /* ═══════════════════════════════════════════════════════════════
-   الطقس وقرار الري والرش — Open-Meteo (مجاني، بدون مفتاح API، نفس مصدر ودجت الطقس الموجود في الملف)
+   الطقس وقرار الري والرش — WeatherAPI.com عبر proxy الخادم /api/weather (api/weather.js) — المفتاح WEATHER_API_KEY سري على الخادم فقط
    • الموقع: بيتقرا من حقل «الموقع / المحافظة» المحفوظ في بيانات المزرعة (نص) ← إحداثيات مركز المحافظة،
-     ولو الاسم مش محافظة بيتم البحث عنه في Geocoding المجاني بتاع Open-Meteo.
+     ولو الاسم مش محافظة بيتم البحث عنه في Geocoding المجاني بتاع Open-Meteo (بحث أسماء أماكن فقط، مش بيانات طقس).
    • لا Firestore ولا أي كتابة في بيانات المزرعة: قراءة فقط + كاش محلي 30 دقيقة في الجهاز.
    • لو الإنترنت واقع: بيعرض آخر بيانات محفوظة (لو أقل من 12 ساعة) أو ما يعرضش حاجة — ومفيش أي خطأ يظهر للمستخدم.
 ═══════════════════════════════════════════════════════════════ */
@@ -25464,7 +25465,7 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 var TTL = 30*60*1000, STALE_MAX = 12*3600*1000, TMO = 8000;
 /* عتبات التنبيه (°م / كم/س / مم) — عدّلها من هنا فقط */
 var TH = { frostD:2, frostW:4, heatW:36, heatD:38, sprayWind:20, sprayWindW:15, sprayGust:30, sprayGustW:25, rainHold:5, windAlert:25, gustAlert:40 };
-var mem = {}, inflight = {};
+var mem = {}, inflight = {}, coolUntil = 0;
 
 function sGet(k){ if(mem[k]) return mem[k]; try{ var v = localStorage.getItem(k); if(v){ v = JSON.parse(v); mem[k] = v; return v; } }catch(e){} return null; }
 function sSet(k,v){ mem[k] = v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -25527,7 +25528,7 @@ function fetchJson(url){
   var t = ctl ? setTimeout(function(){ try{ ctl.abort(); }catch(e){} }, TMO) : null;
   return fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function(res){
     if(t) clearTimeout(t);
-    if(!res.ok) throw new Error('http ' + res.status);
+    if(!res.ok){ var er = new Error('http ' + res.status); er.status = res.status; throw er; }
     return res.json();
   }, function(e){ if(t) clearTimeout(t); throw e; });
 }
@@ -25551,27 +25552,27 @@ function geocode(text){
 
 /* ───────── 2) جلب الطقس (كاش 30 دقيقة) ───────── */
 function wxUrl(lat, lon){
-  return 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
-    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m' +
-    '&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation_probability,precipitation' +
-    '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration' +
-    '&wind_speed_unit=kmh&timezone=auto&forecast_days=3';
+  return '/api/weather?lat=' + Number(lat).toFixed(2) + '&lon=' + Number(lon).toFixed(2);
 }
 function validWx(d){ return !!(d && d.hourly && d.hourly.time && d.hourly.time.length > 24 && d.daily && d.daily.time && d.daily.time.length >= 2); }
 
 function getWx(c){
-  var key = 'nbfw:wx:' + c.lat.toFixed(2) + ',' + c.lon.toFixed(2);
+  var key = 'nbfw:wa:' + c.lat.toFixed(2) + ',' + c.lon.toFixed(2);
   var cached = sGet(key), now = Date.now();
   if(cached && cached.data && now - cached.ts < TTL) return Promise.resolve({ data:cached.data, ts:cached.ts, stale:false });
+  function stale(){ return (cached && cached.data && now - cached.ts < STALE_MAX) ? { data:cached.data, ts:cached.ts, stale:true } : null; }
+  /* بعد رد 429 (تجاوز حد الطلبات) بنوقف الطلبات 5 دقايق ونعرض آخر بيانات محفوظة لو موجودة */
+  if(now < coolUntil) return Promise.resolve(stale() || { rate:true });
   if(inflight[key]) return inflight[key];
   inflight[key] = fetchJson(wxUrl(c.lat, c.lon)).then(function(d){
     if(!validWx(d)) throw new Error('bad data');
     var rec = { ts:Date.now(), data:d };
     sSet(key, rec);
     return { data:d, ts:rec.ts, stale:false };
-  }).catch(function(){
-    if(cached && cached.data && now - cached.ts < STALE_MAX) return { data:cached.data, ts:cached.ts, stale:true };
-    return null;
+  }).catch(function(e){
+    var rate = !!(e && e.status === 429);
+    if(rate) coolUntil = Date.now() + 5*60*1000;
+    return stale() || (rate ? { rate:true } : null);
   }).then(function(x){ delete inflight[key]; return x; });
   return inflight[key];
 }
@@ -25584,6 +25585,7 @@ function load(farm){
     if(!c) return { err:'geo', loc:loc };
     return getWx(c).then(function(w){
       if(!w) return { err:'net' };
+      if(w.rate) return { err:'rate' };
       return { ctx:c, data:w.data, ts:w.ts, stale:w.stale, a:assess(w.data, farm) };
     });
   });
@@ -25765,12 +25767,13 @@ function cardHtml(res){
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
   h += '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. ' +
-    '<a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a></div>';
+    '<a href="https://www.weatherapi.com/" title="Free Weather API" target="_blank" rel="noopener">Powered by WeatherAPI.com</a></div>';
   return h;
 }
 function hintHtml(res){
   var m = res.err === 'noloc' ? 'أضف موقع المزرعة (المحافظة) من «إعداد المزرعة» لتفعيل تنبيهات الطقس وقرار الري.'
         : res.err === 'geo'   ? 'تعذّر تحديد موقع «' + esc(res.loc) + '» — اكتب اسم المحافظة بوضوح (مثال: الفيوم) في إعداد المزرعة.'
+        : res.err === 'rate'  ? 'خدمة الطقس مشغولة حاليًا — حاول مرة أخرى بعد قليل.'
         : 'تعذّر تحميل بيانات الطقس الآن — تأكد من الاتصال بالإنترنت.';
   return '<div class="nbfw-h"><div class="nbfw-hi">' + ico('cloud', 20) + '</div><div><div class="nbfw-ht">الطقس وقرار الري</div></div></div><div class="nbfw-sk">' + m + '</div>';
 }
