@@ -119,6 +119,8 @@ body[data-light] #admin-thm-btn .moon-icon{display:block}
 .stat-card.approved .stat-val{color:#4ade80}
 .stat-card.rejected .stat-val{color:#f87171}
 .stat-card.revenue  .stat-val{color:#c084fc}
+.stat-card.farms    .stat-icon{background:rgba(20,184,166,.12);color:#14b8a6}
+.stat-card.farms    .stat-val{color:#2dd4bf}
 .stat-lbl{font-size:10.5px;color:var(--muted);margin-top:3px}
 .sidebar-courses{padding:0 14px 12px}
 .courses-heading{font-size:10px;font-weight:800;color:var(--subtle);
@@ -532,6 +534,8 @@ body[data-light] .stat-card.pending  .stat-val{color:#b45309}
 body[data-light] .stat-card.approved .stat-val{color:#16a34a}
 body[data-light] .stat-card.rejected .stat-val{color:#dc2626}
 body[data-light] .stat-card.revenue  .stat-val{color:#9333ea}
+body[data-light] .stat-card.farms    .stat-icon{color:#0f766e}
+body[data-light] .stat-card.farms    .stat-val{color:#0f766e}
 body[data-light] .course-enroll-row{background:#f3faf4}
 body[data-light] .course-enroll-row:hover{background:#eef8f0}
 body[data-light] .course-enroll-count{color:#16a34a}
@@ -680,6 +684,10 @@ body[data-light] .fsa-card{background:#f3faf4}
         <div class="stat-card revenue">
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
           <div class="stat-info"><div class="stat-val" id="stat-revenue">—</div><div class="stat-lbl">الإيرادات (جنيه)</div></div>
+        </div>
+        <div class="stat-card farms">
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 8 9 5 4 5c0 4 3 7 8 7z"/><path d="M12 14c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z"/></svg></div>
+          <div class="stat-info"><div class="stat-val" id="stat-farms">—</div><div class="stat-lbl">المزارع المسجّلة</div></div>
         </div>
       </div>
       <div class="sidebar-courses" data-atab="home">
@@ -1059,6 +1067,7 @@ auth.onAuthStateChanged(async function(user) {
   startBroadcastLogListener();
   xpAdminLoad();
   startFarmSubListeners();
+  startFarmsCountListener();
 });
 
 function showAuth() {
@@ -2671,6 +2680,18 @@ function startFarmSubListeners() {
           (a.note ? '<br>ملاحظة: ' + fsubEsc(a.note) : '') + '</div>';
       }).join('');
     }, function() { document.getElementById('fsub-admin-audit').innerHTML = '<div class="fsa-empty">—</div>'; });
+}
+
+/* ── عدد المزارع المسجّلة في نظام إدارة المزرعة ── */
+let farmsCountUnsub = null;
+function startFarmsCountListener() {
+  if (farmsCountUnsub) { farmsCountUnsub(); farmsCountUnsub = null; }
+  const el = document.getElementById('stat-farms');
+  farmsCountUnsub = db.collection('farms').onSnapshot(function(snap) {
+    if (el) { el.textContent = snap.size; el.removeAttribute('title'); }
+  }, function(e) {
+    if (el) { el.textContent = '—'; el.title = 'تعذّر التحميل: ' + e.message + ' (تأكد من نشر firestore.rules الجديدة)'; }
+  });
 }
 
 function fsubAdminFilter(f) {

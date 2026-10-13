@@ -58,7 +58,7 @@ service cloud.firestore {
     // ── FARM DATA: owner-only (userId). Writes also require an active trial/paid subscription.
     //    Reads stay owner-only with no subscription check, so data is NEVER lost or hidden from its owner on expiry.
     match /farms/{docId} {
-      allow read:   if isAuth() && resource.data.userId == request.auth.uid;
+      allow read:   if (isAuth() && resource.data.userId == request.auth.uid) || isAdmin();
       allow create: if isAuth() && request.resource.data.userId == request.auth.uid && farmAccess();
       allow update: if isAuth() && resource.data.userId == request.auth.uid
                     && request.resource.data.userId == request.auth.uid && farmAccess();
