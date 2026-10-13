@@ -25468,7 +25468,7 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 
 var TTL = 30*60*1000, STALE_MAX = 12*3600*1000, TMO = 8000;
 /* عتبات التنبيه (°م / كم/س / مم) — عدّلها من هنا فقط */
-var TH = { frostD:2, frostW:4, heatW:36, heatD:38, sprayWind:20, sprayWindW:15, sprayGust:30, sprayGustW:25, rainHold:5, windAlert:25, gustAlert:40 };
+var TH = { frostD:2, frostW:4, heatW:36, heatD:38, sprayWind:20, sprayWindW:15, sprayGust:30, sprayGustW:25, rainHold:5, windAlert:25, gustAlert:40, etHigh:7.5, etLow:2.5 };
 var mem = {}, inflight = {}, coolUntil = 0;
 
 function sGet(k){ if(mem[k]) return mem[k]; try{ var v = localStorage.getItem(k); if(v){ v = JSON.parse(v); mem[k] = v; return v; } }catch(e){} return null; }
@@ -25561,7 +25561,7 @@ function wxUrl(lat, lon){
 function validWx(d){ return !!(d && d.hourly && d.hourly.time && d.hourly.time.length > 24 && d.daily && d.daily.time && d.daily.time.length >= 2); }
 
 function getWx(c){
-  var key = 'nbfw:wa:' + c.lat.toFixed(2) + ',' + c.lon.toFixed(2);
+  var key = 'nbfw:wb:' + c.lat.toFixed(2) + ',' + c.lon.toFixed(2);
   var cached = sGet(key), now = Date.now();
   if(cached && cached.data && now - cached.ts < TTL) return Promise.resolve({ data:cached.data, ts:cached.ts, stale:false });
   function stale(){ return (cached && cached.data && now - cached.ts < STALE_MAX) ? { data:cached.data, ts:cached.ts, stale:true } : null; }
@@ -25584,7 +25584,7 @@ function getWx(c){
 function pinned(farm){
   var la = farm && farm.lat, lo = farm && farm.lon;
   return (typeof la === 'number' && typeof lo === 'number' && isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180)
-    ? { lat:la, lon:lo, place:'الموقع المحدد على الخريطة' } : null;
+    ? { lat:la, lon:lo, place:'الموقع المحدد على الخريطة', pin:true } : null;
 }
 function load(farm){
   var loc = String(farm.location || '').trim(), pin = pinned(farm);
@@ -25595,7 +25595,7 @@ function load(farm){
     return getWx(c).then(function(w){
       if(!w) return { err:'net' };
       if(w.rate) return { err:'rate' };
-      return { ctx:c, data:w.data, ts:w.ts, stale:w.stale, a:assess(w.data, farm) };
+      return { ctx:c, data:w.data, ts:w.ts, stale:w.stale, a:assess(w.data, farm, w.ts) };
     });
   });
 }
@@ -25605,10 +25605,27 @@ function seg(arr, i, n){ return (arr || []).slice(i, i+n).filter(function(x){ re
 function mx(a){ return a.length ? Math.max.apply(null, a) : null; }
 function mn(a){ return a.length ? Math.min.apply(null, a) : null; }
 function sm(a){ return a.reduce(function(s,x){ return s + x; }, 0); }
-function nowIdx(d){
-  var t = d.current && d.current.time, H = d.hourly.time, i = 0;
+/* «الآن» الحقيقي عند المزرعة = وقت الخادم المحلي وقت التوليد + الزمن اللي عدّى (الكاش 5 دقايق على الـ CDN و30 دقيقة في الجهاز، وحتى 12 ساعة لو أوفلاين) */
+function shiftLocal(t, ms){
+  var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(t || '');
+  return m ? new Date(Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5]) + ms).toISOString().substr(0, 16) : t;
+}
+function ageOf(d, ts){
+  var a = d && d.generated_at ? Date.now() - d.generated_at : (ts ? Date.now() - ts : 0);
+  return (a > 0 && a < 24*3600*1000) ? a : 0;
+}
+function nowIdx(d, age){
+  var t = d.local_time || (d.current && d.current.time), H = d.hourly.time, i = 0;
+  if(t && age) t = shiftLocal(t, age);
   if(t){ for(var k=0;k<H.length;k++){ if(H[k] <= t) i = k; else break; } }
   return i;
+}
+/* ΔT = الحرارة − حرارة الترمومتر المبلل (Stull 2011): معيار الرش — المثالي 2–8° */
+function deltaT(t, rh){
+  if(t == null || rh == null || t < -20 || t > 50) return null;
+  rh = Math.max(5, Math.min(99, rh));
+  var tw = t*Math.atan(0.151977*Math.sqrt(rh + 8.313659)) + Math.atan(t + rh) - Math.atan(rh - 1.676331) + 0.00391838*Math.pow(rh, 1.5)*Math.atan(0.023101*rh) - 4.686035;
+  return t - tw;
 }
 function dayDiff(a, b){
   var pa = a.substr(0,10).split('-'), pb = b.substr(0,10).split('-');
@@ -25624,13 +25641,26 @@ function whenAny(t, nowT){ return dayWord(dayDiff(t, nowT)) + ' ' + hour12(parse
 function dayWord(dd){ return dd <= 0 ? 'اليوم' : dd === 1 ? 'غدًا' : 'بعد غد'; }
 function hour12(h){ var x = h % 12 || 12; return x + (h < 12 ? ' ص' : ' م'); }
 
-function assess(d, farm){
+function peakWin(H, date, from, thr){
+  var a = -1, b = -1;
+  for(var q = from; q < H.time.length; q++){
+    var dq = H.time[q].substr(0,10);
+    if(dq > date) break;
+    if(dq < date) continue;
+    if(H.temperature_2m[q] != null && H.temperature_2m[q] >= thr){ if(a < 0) a = q; b = q; }
+  }
+  return a < 0 ? '' : ' (تتركز من ' + hour12(parseInt(H.time[a].substr(11,2), 10)) + ' إلى ' + hour12((parseInt(H.time[b].substr(11,2), 10) + 1) % 24) + ')';
+}
+
+function assess(d, farm, ts){
   var H = d.hourly, D = d.daily, c = d.current || {};
-  var i = nowIdx(d), nowT = H.time[i];
-  var temp = c.temperature_2m != null ? c.temperature_2m : H.temperature_2m[i];
-  var wind = c.wind_speed_10m != null ? c.wind_speed_10m : H.wind_speed_10m[i];
-  var gust = c.wind_gusts_10m != null ? c.wind_gusts_10m : H.wind_gusts_10m[i];
-  var hum  = c.relative_humidity_2m;
+  var age = ageOf(d, ts), fresh = age < 40*60*1000;
+  var i = nowIdx(d, age), nowT = H.time[i], todayStr = String(nowT).substr(0,10);
+  /* القراءة اللحظية بتتستخدم لو حديثة؛ لو البيانات قديمة بنقرا من توقع الساعة الحالية الفعلية */
+  var temp = (fresh && c.temperature_2m != null) ? c.temperature_2m : H.temperature_2m[i];
+  var wind = (fresh && c.wind_speed_10m != null) ? c.wind_speed_10m : H.wind_speed_10m[i];
+  var gust = (fresh && c.wind_gusts_10m != null) ? c.wind_gusts_10m : H.wind_gusts_10m[i];
+  var hum  = fresh ? c.relative_humidity_2m : (H.relative_humidity_2m ? H.relative_humidity_2m[i] : null);
   var et0 = D.et0_fao_evapotranspiration ? D.et0_fao_evapotranspiration[0] : null;
   var alerts = [];
 
@@ -25638,20 +25668,31 @@ function assess(d, farm){
   var tSeg = (H.temperature_2m || []).slice(i, i + 49), fMin = null, fK = -1;
   tSeg.forEach(function(v, k){ if(v != null && (fMin === null || v < fMin)){ fMin = v; fK = k; } });
   var frost = null;
-  if(fMin !== null && fMin <= TH.frostW){
-    var fw = whenLabel(H.time[i + fK], nowT);
-    frost = { level: fMin <= TH.frostD ? 'danger' : 'warn', min: fMin, when: fw };
+  /* عند أبرد ساعة: سماء صافية + هواء ساكن = تبريد إشعاعي — حرارة الأوراق أقل من الجو بنحو 3°، فبنرفع العتبتين درجة (رفع مستوى التحذير فقط، مفيش تحذير بيتلغي) */
+  var fCl = (fK >= 0 && H.cloud_cover) ? H.cloud_cover[i + fK] : null, fWd = fK >= 0 ? H.wind_speed_10m[i + fK] : null;
+  var calmClear = fCl != null && fWd != null && fCl <= 30 && fWd <= 8;
+  var fLD = TH.frostD + (calmClear ? 1 : 0), fLW = TH.frostW + (calmClear ? 1 : 0);
+  if(fMin !== null && fMin <= fLW){
+    var fw = whenLabel(H.time[i + fK], nowT), fDanger = fMin <= fLD;
+    frost = { level: fDanger ? 'danger' : 'warn', min: fMin, when: fw };
     alerts.push({
       tone: frost.level, icon: 'frost',
-      title: fMin <= TH.frostD ? 'تنبيه صقيع' : 'احتمال صقيع إشعاعي',
+      title: fDanger ? 'تنبيه صقيع' : 'احتمال صقيع إشعاعي',
       text: 'أقل حرارة متوقعة ' + r0(fMin) + '° ' + fw + '. ' +
-        (fMin <= TH.frostD ? 'غطِّ الشتلات والزراعات الحساسة قبل الغروب، وأجّل الرش الورقي.' : 'الليالي الصافية الهادئة قد تهبط فيها حرارة الأوراق دون حرارة الجو؛ جهّز الأغطية للزراعات الحساسة.')
+        (calmClear ? 'السماء صافية والهواء ساكن وقتها — قد تهبط حرارة الأوراق إلى نحو ' + r0(fMin - 3) + '°. ' : '') +
+        (fDanger ? 'غطِّ الشتلات والزراعات الحساسة قبل الغروب، وأجّل الرش الورقي.' : (calmClear ? 'جهّز الأغطية للزراعات الحساسة.' : 'الليالي الصافية الهادئة قد تهبط فيها حرارة الأوراق دون حرارة الجو؛ جهّز الأغطية للزراعات الحساسة.'))
     });
   }
 
   /* حر: أعلى حرارة خلال 3 أيام */
-  var tmax = D.temperature_2m_max || [], hot = null, hotDays = 0, hotMax = null, hotDay = -1;
-  tmax.forEach(function(v, k){
+  var tmax = D.temperature_2m_max || [], hot = null, hotDays = 0, hotMax = null, hotDay = -1, tmaxE = tmax.slice();
+  /* «اليوم»: الحرارة المتبقية من الآن لآخر اليوم بس — مفيش تنبيه على ذروة عدّت فعلًا */
+  (function(){
+    var r = [];
+    for(var q = i; q < H.time.length && H.time[q].substr(0,10) === todayStr; q++){ if(H.temperature_2m[q] != null) r.push(H.temperature_2m[q]); }
+    if(r.length && tmaxE[0] != null) tmaxE[0] = Math.min(tmaxE[0], mx(r));
+  })();
+  tmaxE.forEach(function(v, k){
     if(v == null) return;
     if(hotMax === null || v > hotMax){ hotMax = v; hotDay = k; }
     if(v >= TH.heatD) hotDays++;
@@ -25661,7 +25702,7 @@ function assess(d, farm){
     alerts.push({
       tone: hot.level, icon: 'heat',
       title: (hotDays >= 2 || hotMax >= 40) ? 'موجة حر' : (hotMax >= TH.heatD ? 'حر شديد' : 'ارتفاع في الحرارة'),
-      text: 'عظمى متوقعة ' + r0(hotMax) + '° ' + dayWord(hotDay) + '. ' +
+      text: 'عظمى متوقعة ' + r0(hotMax) + '° ' + dayWord(hotDay) + peakWin(H, D.time[hotDay], hotDay === 0 ? i : 0, hotMax - 2) + '. ' +
         (hotMax >= TH.heatD ? 'خطر إجهاد حراري وسقوط أزهار وحرق ثمار — ظلّل الحساس منها وانتبه لمواعيد الري.' : 'راقب إجهاد النباتات وقت الظهيرة.')
     });
   }
@@ -25688,15 +25729,24 @@ function assess(d, farm){
   if(temp != null && temp <= 3) bad.push('حرارة ' + r0(temp) + '° — خطر تجمّد الرذاذ على الأوراق');
   if(temp != null && temp >= TH.heatD) bad.push('حرارة ' + r0(temp) + '° — يزيد التبخر وخطر حرق الأوراق');
   else if(temp != null && temp >= 32) warn.push('حرارة ' + r0(temp) + '° — الأفضل الصباح الباكر أو بعد العصر');
+  /* ΔT (معيار الرش الزراعي) + الهواء الساكن (خطر الانعكاس الحراري) */
+  var dT = deltaT(temp, hum);
+  if(dT != null){
+    if(dT > 10) bad.push('الهواء جاف جدًا (ΔT ' + r0(dT) + '°) — الرذاذ يتبخر قبل ما يوصل للنبات');
+    else if(dT > 8) warn.push('الهواء جاف نسبيًا (ΔT ' + r0(dT) + '°) — تجنّب القطرات الدقيقة جدًا');
+    else if(dT < 2) warn.push('رطوبة عالية جدًا (ΔT ' + r1(dT) + '°) — الرذاذ يجف ببطء وقد يسيل عن الأوراق');
+  }
+  if(wind != null && wind < 3) warn.push('الهواء شبه ساكن (' + r0(wind) + ' كم/س) — خطر انعكاس حراري يبقي الرذاذ الناعم معلّقًا ويحمله بعيدًا');
   var sLevel = bad.length ? 'bad' : (warn.length ? 'warn' : 'ok');
-  var sText = bad.length ? bad.join(' · ') : (warn.length ? warn.join(' · ') : 'رياح ' + r0(w6) + ' كم/س ولا مطر متوقع خلال 6 ساعات.');
+  var sText = bad.length ? bad.join(' · ') : (warn.length ? warn.join(' · ') : 'رياح ' + r0(w6) + ' كم/س ولا مطر متوقع خلال 6 ساعات.' + (dT != null ? ' فرق الحرارة ΔT ' + r0(dT) + '° (المثالي 2–8°).' : ''));
   if(sLevel !== 'ok'){
     for(var k = i + 1; k < Math.min(i + 37, H.time.length); k++){
       var hh = parseInt(H.time[k].substr(11,2), 10);
       if(hh < 5 || hh > 19) continue;
       var tt = H.temperature_2m[k], ww = H.wind_speed_10m[k], gg = H.wind_gusts_10m[k];
       if(tt == null || ww == null || gg == null) continue;
-      if(ww < 15 && gg < 25 && tt >= 5 && tt <= 32 &&
+      var rhk = H.relative_humidity_2m ? H.relative_humidity_2m[k] : null, dTk = deltaT(tt, rhk);
+      if(ww < 15 && gg < 25 && tt >= 5 && tt <= 32 && ww >= 3 && (dTk == null || (dTk >= 2 && dTk <= 8)) &&
          (mx(seg(H.precipitation_probability, k, 4)) || 0) < 30 && sm(seg(H.precipitation, k, 4)) < 0.2){
         sText += '. أقرب وقت مناسب: ' + dayWord(dayDiff(H.time[k], nowT)) + ' ' + hour12(hh) + '.';
         break;
@@ -25712,23 +25762,29 @@ function assess(d, farm){
   /* قرار الري */
   var rainT = D.precipitation_sum ? D.precipitation_sum[0] : null, rainN = D.precipitation_sum ? D.precipitation_sum[1] : null;
   var rainMm = Math.max(rainT || 0, rainN || 0), rainDay = (rainT || 0) >= (rainN || 0) ? 0 : 1;
+  /* المطر بيتقيَّم بكميته واحتماله معًا، واليوم الحالي بنفرّق فيه بين اللي هطل واللي لسه جاي */
+  var rainP = D.precipitation_probability_max ? D.precipitation_probability_max[rainDay] : null;
+  var rainSure = rainMm >= TH.rainHold && (rainP == null || rainP >= 50);
+  var rainLeft = 0;
+  for(var qr = i; qr < H.time.length && H.time[qr].substr(0,10) === todayStr; qr++) rainLeft += (H.precipitation[qr] || 0);
+  var rainPast = rainDay === 0 && rainLeft < 0.5;
   var sprinkler = !!(farm && farm.irrSystem === 'رش');
-  var etTxt = et0 != null ? ' التبخر المرجعي المتوقع اليوم ' + r1(et0) + ' مم.' : '';
+  var etTxt = et0 != null ? ' التبخر المرجعي المتوقع اليوم ' + r1(et0) + ' مم (تقدير).' : '';
   var irr;
-  if(rainMm >= TH.rainHold){
-    irr = { tone:'info', title:'أجّل الري', text:'أمطار متوقعة ' + r1(rainMm) + ' مم ' + dayWord(rainDay) + '. افحص رطوبة التربة في منطقة الجذور ولا تروِ إلا إذا جفّت.' };
+  if(rainSure){
+    irr = { tone:'info', title:'أجّل الري', text:(rainPast ? 'هطل اليوم نحو ' + r1(rainMm) + ' مم' : 'أمطار متوقعة ' + r1(rainMm) + ' مم ' + dayWord(rainDay)) + (rainP != null ? ' (احتمال ' + r0(rainP) + '%)' : '') + '. افحص رطوبة التربة في منطقة الجذور ولا تروِ إلا إذا جفّت.' };
   } else if(sprinkler && (w6 >= TH.sprayWind || g6 >= TH.sprayGust)){
     irr = { tone:'warn', title:'أجّل الري بالرش', text:'الرياح ' + r0(w6) + ' كم/س تُخلّ بانتظام توزيع المياه وتزيد الفاقد بالانجراف والتبخر. اروِ في فترة أهدأ.' };
   } else if(frost){
     irr = { tone:'warn', title:'خطر صقيع — نسّق الري', text:'إن احتاجت التربة ريًّا فليكن خفيفًا في وقت متأخر من النهار قبل الليلة الباردة (التربة الرطبة تختزن الحرارة وتُطلقها ليلًا). تجنّب الري ليلًا أو فجرًا، وتجنّبه كليًا إن كانت التربة مشبعة.' };
   } else if(hot && hot.level === 'danger'){
     irr = { tone:'warn', title:'زِد الري وقسّمه', text:'الحرارة العظمى المتوقعة ' + r0(hot.max) + '°.' + etTxt + ' اروِ فجرًا أو بعد العصر، وقسّم الكمية على ريّات أقصر، وتجنّب ريّ الظهيرة.' };
-  } else if(et0 != null && et0 >= 6){
+  } else if(et0 != null && et0 >= TH.etHigh){
     irr = { tone:'warn', title:'تبخر مرتفع — راجع كمية الري', text:etTxt.trim() + ' قد تحتاج كمية أكبر من المعتاد، خصوصًا في التربة الرملية.' };
-  } else if(et0 != null && et0 <= 2.5){
+  } else if(et0 != null && et0 <= TH.etLow){
     irr = { tone:'ok', title:'تبخر منخفض — خفّف الري', text:etTxt.trim() + ' يمكنك مدّ الفترة بين الريّات وتجنّب الإفراط.' };
   } else {
-    irr = { tone:'ok', title:'التزم بجدول الري المعتاد', text:'لا أمطار ولا موجات حر أو صقيع متوقعة.' + etTxt };
+    irr = { tone:'ok', title:'التزم بجدول الري المعتاد', text:(rainMm >= TH.rainHold ? 'احتمال المطر ضعيف (' + r0(rainP) + '%) فلا تعتمد عليه.' : 'لا أمطار ولا موجات حر أو صقيع متوقعة.') + etTxt };
   }
 
   return {
@@ -25774,7 +25830,9 @@ function cardHtml(res){
   h += '<div class="nbfw-sec">قراراتك اليوم</div>';
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
-  h += '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>';
+  h += res.ctx.pin
+    ? '<div class="nbfw-f">إرشادات مبنية على توقعات الطقس لنقطة مزرعتك المحددة على الخريطة، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>'
+    : '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. حدّد موقع مزرعتك على الخريطة من «إعداد المزرعة» لنتائج أدق.</div>';
   return h;
 }
 function hintHtml(res){
