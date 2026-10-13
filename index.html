@@ -13691,12 +13691,27 @@ document.addEventListener('click', e => {
             _doRenderFarmView(mc2, view);
             mc2.style.opacity   = '1';
             mc2.style.transform = '';
+            farmScrollToTop(mc2);
           }
         }, 150);
       } else {
         renderFarmView(view);
+        farmScrollToTop(null);
       }
     };
+
+    /* عند فتح أي تاب: ابدأ من أعلى الصفحة (فوري، من غير ما سكرول الصفحة الناعم يلغيه) */
+    function farmScrollToTop(mc) {
+      try {
+        var de = document.documentElement, prev = de.style.scrollBehavior;
+        de.style.scrollBehavior = 'auto';
+        window.scrollTo(0, 0);
+        if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+        var m = mc || document.getElementById('farm-main-content');
+        if (m) m.scrollTop = 0;
+        de.style.scrollBehavior = prev;
+      } catch (e) {}
+    }
 
     function renderFarmView(view) {
       var mc = document.getElementById('farm-main-content');
@@ -15107,7 +15122,7 @@ document.addEventListener('click', e => {
             try { f.focus({ preventScroll: true }); if (f.type === 'number' && f.select) f.select(); } catch (e) {}
           }, 120);
         }
-        try { bar.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {}
+        if (focus) { try { bar.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }
       }
 
       function next() {
@@ -20409,6 +20424,11 @@ document.addEventListener('click', e => {
   #pg-farm .fls-btn.p:hover::after{transform:translate3d(-130%,0,0) skewX(-18deg);transition:transform .7s cubic-bezier(.22,1,.36,1)}
   #pg-farm .fls-opt:hover:not(.on):not(:active){transform:translateY(-3px)}
 }
+</style>
+<style id="farm-tab-scroll">
+/* أي scrollIntoView داخل المزرعة يوقف المحتوى تحت الشريط العلوي + شريط القائمة العائم، مش وراهم */
+#pg-farm{scroll-margin-top:calc(var(--fsb-top,64px) + 84px)}
+#pg-farm .fls-bar,#pg-farm .farm-view,#pg-farm .op-success-banner,#pg-farm [id$="-banner"]{scroll-margin-top:calc(var(--fsb-top,64px) + 84px)}
 </style>
 
 <!-- ═══════════════════════════════════════════════════════
