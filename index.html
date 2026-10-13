@@ -14009,6 +14009,7 @@ document.addEventListener('click', e => {
             fField('farm-location', 'الموقع / المحافظة',    'text',   f.location||'',    'مثال: الفيوم') +
             fField('farm-phone',    'رقم التواصل',           'text',   f.phone||'',       'اختياري') +
           '</div>' +
+          (window.NbFarmLoc ? window.NbFarmLoc.row(f) : '') +
           '<div class="farm-form-grid">' +
             fSelect('farm-water-source', 'مصدر المياه', f.waterSource||'', [
               'نهر النيل','ترعة رئيسية','ترعة فرعية','بئر جوفية','محطة رفع','مياه مطرية','خزان مياه'
@@ -14032,6 +14033,7 @@ document.addEventListener('click', e => {
               setupViewRow('', 'اسم المزرعة',           f.name     || '—') +
               setupViewRow('', 'المساحة',                (f.area    || '—') + ' فدان') +
               setupViewRow('', 'الموقع',                 f.location || '—') +
+              (typeof f.lat === 'number' && typeof f.lon === 'number' ? setupViewRow('', 'موقع الطقس', 'محدد على الخريطة') : '') +
               setupViewRow('', 'التواصل',                f.phone    || '—') +
               setupViewRow('', 'مصدر المياه',            f.waterSource || '—') +
               setupViewRow('', 'نظام الري',              f.irrSystem   || '—') +
@@ -14735,11 +14737,14 @@ document.addEventListener('click', e => {
         waterSource: selVal('farm-water-source'), irrSystem: selVal('farm-irr-system'),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      var _loc = window.NbFarmLoc && window.NbFarmLoc.get(); /* موقع الطقس المحدد على الخريطة (أو null لو مفيش) */
+      if (_loc) { data.lat = _loc.lat; data.lon = _loc.lon; }
       var prom = farmState.currentFarm && farmState.currentFarm.id
         ? db.collection('farms').doc(farmState.currentFarm.id).set(data, {merge:true})
         : db.collection('farms').add(Object.assign(data, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
       prom.then(function(ref) {
         if (ref) { data.id = ref.id; farmState.currentFarm = data; }
+        else if (_loc && farmState.currentFarm) { farmState.currentFarm.lat = _loc.lat; farmState.currentFarm.lon = _loc.lon; }
         farmState.farmInfoEditMode = false;
         farmToast('تم حفظ معلومات المزرعة بنجاح', 'success');
         loadUserFarms().then(function() {
@@ -24137,7 +24142,6 @@ function nbWeatherWidget(w){
         <div class="nb-wm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 15h1"/><polyline points="16 16 12 20 8 16"/><line x1="12" y1="12" x2="12" y2="20"/></svg>${w.rainPct}% أمطار</div>
       </div>
       <div class="nb-weather-range">أعلى ${w.maxT}° · أدنى ${w.minT}°</div>
-      <div class="nbfw-f"><a href="https://www.weatherapi.com/" title="Free Weather API" target="_blank" rel="noopener">Powered by WeatherAPI.com</a></div>
     </div>
   </div>`;
 }
@@ -25577,10 +25581,15 @@ function getWx(c){
   return inflight[key];
 }
 
+function pinned(farm){
+  var la = farm && farm.lat, lo = farm && farm.lon;
+  return (typeof la === 'number' && typeof lo === 'number' && isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180)
+    ? { lat:la, lon:lo, place:'الموقع المحدد على الخريطة' } : null;
+}
 function load(farm){
-  var loc = String(farm.location || '').trim();
-  if(!loc) return Promise.resolve({ err:'noloc' });
-  var c0 = locate(loc);
+  var loc = String(farm.location || '').trim(), pin = pinned(farm);
+  if(!loc && !pin) return Promise.resolve({ err:'noloc' });
+  var c0 = pin || locate(loc);
   return (c0 ? Promise.resolve(c0) : geocode(loc)).then(function(c){
     if(!c) return { err:'geo', loc:loc };
     return getWx(c).then(function(w){
@@ -25761,13 +25770,11 @@ function cardHtml(res){
     mi('الرطوبة', n.hum != null ? r0(n.hum) + '<small>%</small>' : '—') +
     mi('عظمى / صغرى', (t.max != null ? r0(t.max) : '—') + '° / ' + (t.min != null ? r0(t.min) : '—') + '°') +
     mi('مطر اليوم', (t.rain != null ? r1(t.rain) : '0') + '<small> مم</small>') +
-    mi('التبخر ET₀', t.et0 != null ? r1(t.et0) + '<small> مم</small>' : '—') +
   '</div>';
   h += '<div class="nbfw-sec">قراراتك اليوم</div>';
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
-  h += '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. ' +
-    '<a href="https://www.weatherapi.com/" title="Free Weather API" target="_blank" rel="noopener">Powered by WeatherAPI.com</a></div>';
+  h += '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>';
   return h;
 }
 function hintHtml(res){
@@ -25817,6 +25824,152 @@ window.NbFarmWx = function(view, mc, st){
 };
 window.NbFarmWx.assess = assess;
 window.NbFarmWx.locate = locate;
+})();
+</script>
+
+<style id="nb-farm-loc">
+/* ═══════════════════════════════════════════════════════════════
+   تحديد موقع المزرعة على الخريطة (اختيار يدوي من المستخدم فقط — بدون GPS)
+   إضافة فقط: كل الكلاسات بادئة بـ nbfl-. الخريطة (Leaflet) بتتحمّل لحظة فتح الشاشة بس.
+   للتراجع: امسح هذا البلوك (style + script) وأسطر NbFarmLoc في renderSetup / saveFarmSetup / عرض الإعداد / load بتاع الطقس.
+═══════════════════════════════════════════════════════════════ */
+.nbfl{margin:0 0 18px;padding:12px 14px;border:1px dashed var(--line2);border-radius:14px;background:var(--bg2)}
+.nbfl-l{font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.nbfl-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nbfl-btns .farm-btn-secondary{display:inline-flex;align-items:center;gap:6px}
+.nbfl-clear{background:none;border:0;padding:6px 4px;font:inherit;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
+.nbfl-st{margin-top:8px;font-size:11.5px;line-height:1.8;color:var(--muted)}
+.nbfl-modal{position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.nbfl-sheet{width:100%;max-width:640px;height:100%;max-height:100dvh;background:var(--card);display:flex;flex-direction:column}
+@media (min-width:700px){.nbfl-modal{align-items:center}.nbfl-sheet{height:min(86vh,720px);border-radius:20px;overflow:hidden}}
+.nbfl-top{padding:14px 16px 10px;padding-top:max(14px,env(safe-area-inset-top))}
+.nbfl-title{font-size:15px;font-weight:800;color:var(--ink);line-height:1.5}
+.nbfl-sub{font-size:12px;color:var(--muted);line-height:1.7}
+.nbfl-map{position:relative;flex:1;min-height:240px;background:var(--bg2)}
+.nbfl-load{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;font-size:13px;color:var(--muted);z-index:500}
+.nbfl-bar{display:flex;gap:8px;padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line2)}
+.nbfl-bar .farm-btn-primary{flex:1}
+.nbfl-ok:disabled{opacity:.5;pointer-events:none;box-shadow:none}
+.nbfl-pin{background:none;border:0}
+</style>
+
+<script id="nb-farm-loc-js">
+(function(){
+'use strict';
+var LF = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.';
+var cur = null, dirty = false, map = null, prevOv = '';
+
+function isN(n){ return typeof n === 'number' && isFinite(n); }
+function valid(la, lo){ return isN(la) && isN(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180; }
+function r4(x){ return Math.round(x * 1e4) / 1e4; }
+function pinSvg(){ return '<svg width="34" height="44" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg"><path d="M12 29C12 29 22 18.5 22 11A10 10 0 0 0 2 11c0 7.5 10 18 10 18z" fill="#dc2626" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11" r="3.6" fill="#fff"/></svg>'; }
+function pinIco(){ return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'; }
+
+function inner(){
+  var st = cur
+    ? 'تم تحديد موقع المزرعة على الخريطة (' + cur.lat.toFixed(4) + '، ' + cur.lon.toFixed(4) + ') — الطقس بيتحسب لهذه النقطة ويتقدّم على اسم المحافظة.' + (dirty ? ' اضغط «حفظ معلومات المزرعة» لتأكيد الحفظ.' : '')
+    : 'لم يتم تحديد موقع على الخريطة — الطقس حاليًا حسب اسم المحافظة المكتوب فوق.' + (dirty ? ' اضغط «حفظ معلومات المزرعة» لتأكيد الحفظ.' : '');
+  return '<div class="nbfl-l">موقع المزرعة الدقيق للطقس (اختياري)</div>' +
+    '<div class="nbfl-btns"><button type="button" class="farm-btn-secondary" id="nbfl-open">' + pinIco() + (cur ? 'تغيير الموقع على الخريطة' : 'تحديد موقع المزرعة على الخريطة') + '</button>' +
+    (cur ? '<button type="button" class="nbfl-clear" id="nbfl-clear">إزالة التحديد</button>' : '') + '</div>' +
+    '<div class="nbfl-st" id="nbfl-st">' + st + '</div>';
+}
+function paint(){
+  var b = document.getElementById('nbfl-box'); if(!b) return;
+  b.innerHTML = inner();
+  var o = document.getElementById('nbfl-open'); if(o) o.onclick = open;
+  var c = document.getElementById('nbfl-clear'); if(c) c.onclick = function(){ cur = null; dirty = true; paint(); };
+}
+
+/* بيتنده من renderSetup (وضع التعديل): بيرجّع HTML الصف ويبدأ من الإحداثيات المحفوظة في المزرعة */
+function row(f){
+  cur = (f && valid(f.lat, f.lon)) ? { lat:f.lat, lon:f.lon } : null;
+  dirty = false;
+  /* الأزرار بتتربط بعد ما الـ HTML يدخل الصفحة */
+  setTimeout(paint, 0);
+  return '<div class="nbfl" id="nbfl-box">' + inner() + '</div>';
+}
+/* بيتنده من saveFarmSetup: null = الصف مش معروض (متلمسش lat/lon) */
+function get(){
+  if(!document.getElementById('nbfl-box')) return null;
+  return { lat: cur ? cur.lat : null, lon: cur ? cur.lon : null };
+}
+
+function loadLeaflet(){
+  return new Promise(function(res, rej){
+    if(window.L && window.L.map) return res();
+    var done = false, t = setTimeout(function(){ if(!done){ done = true; rej(new Error('timeout')); } }, 15000);
+    function ok(){ if(!done){ done = true; clearTimeout(t); window.L && window.L.map ? res() : rej(new Error('no L')); } }
+    function bad(){ if(!done){ done = true; clearTimeout(t); rej(new Error('load')); } }
+    if(!document.getElementById('nbfl-css')){
+      var l = document.createElement('link'); l.id = 'nbfl-css'; l.rel = 'stylesheet'; l.href = LF + 'css'; document.head.appendChild(l);
+    }
+    var s = document.createElement('script'); s.src = LF + 'js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s);
+  });
+}
+
+function startView(){
+  if(cur) return { lat:cur.lat, lon:cur.lon, z:15 };
+  var inp = document.getElementById('farm-location'), t = inp ? inp.value : '';
+  var c = (window.NbFarmWx && window.NbFarmWx.locate) ? window.NbFarmWx.locate(t) : null;
+  if(c) return { lat:c.lat, lon:c.lon, z:10 };
+  return { lat:26.8, lon:30.8, z:6 };
+}
+
+function close(){
+  try{ if(map) map.remove(); }catch(e){}
+  map = null;
+  var m = document.getElementById('nbfl-modal'); if(m && m.parentNode) m.parentNode.removeChild(m);
+  document.body.style.overflow = prevOv;
+  document.removeEventListener('keydown', onKey);
+}
+function onKey(e){ if(e.key === 'Escape') close(); }
+
+function open(){
+  if(document.getElementById('nbfl-modal')) return;
+  var m = document.createElement('div');
+  m.id = 'nbfl-modal'; m.className = 'nbfl-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+  m.innerHTML = '<div class="nbfl-sheet">' +
+    '<div class="nbfl-top"><div class="nbfl-title">حدد موقع مزرعتك على الخريطة</div>' +
+    '<div class="nbfl-sub">اضغط على مكان المزرعة أو اسحب الدبوس. قرّب الخريطة لتحديد أدق.</div></div>' +
+    '<div class="nbfl-map" id="nbfl-map"><div class="nbfl-load" id="nbfl-load">جارٍ تحميل الخريطة...</div></div>' +
+    '<div class="nbfl-bar"><button type="button" class="farm-btn-primary nbfl-ok" id="nbfl-ok" disabled>تأكيد الموقع</button>' +
+    '<button type="button" class="farm-btn-secondary" id="nbfl-cancel">إلغاء</button></div></div>';
+  document.body.appendChild(m);
+  prevOv = document.body.style.overflow; document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', onKey);
+  document.getElementById('nbfl-cancel').onclick = close;
+
+  loadLeaflet().then(function(){
+    var box = document.getElementById('nbfl-map'); if(!box) return; /* اتقفلت قبل التحميل */
+    var ld = document.getElementById('nbfl-load'); if(ld) ld.parentNode.removeChild(ld);
+    var v = startView(), pick = cur ? { lat:cur.lat, lon:cur.lon } : null, marker = null, okb = document.getElementById('nbfl-ok');
+    map = L.map(box).setView([v.lat, v.lon], v.z);
+    map.attributionControl.setPrefix(false);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' }).addTo(map);
+    function place(ll){
+      pick = { lat:ll.lat, lon:ll.lng };
+      if(!marker){
+        marker = L.marker(ll, { draggable:true, icon:L.divIcon({ className:'nbfl-pin', html:pinSvg(), iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+        marker.on('dragend', function(){ var p = marker.getLatLng().wrap(); pick = { lat:p.lat, lon:p.lng }; });
+      } else marker.setLatLng(ll);
+      okb.disabled = false;
+    }
+    map.on('click', function(e){ place(e.latlng.wrap()); });
+    if(pick) place(L.latLng(pick.lat, pick.lon));
+    okb.onclick = function(){
+      if(!pick || !valid(pick.lat, pick.lon)) return;
+      cur = { lat:r4(pick.lat), lon:r4(pick.lon) }; dirty = true;
+      close(); paint();
+    };
+    setTimeout(function(){ if(map) map.invalidateSize(); }, 60);
+  }).catch(function(){
+    var ld = document.getElementById('nbfl-load');
+    if(ld) ld.textContent = 'تعذّر تحميل الخريطة — تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
+  });
+}
+
+window.NbFarmLoc = { row: row, get: get, open: open };
 })();
 </script>
 

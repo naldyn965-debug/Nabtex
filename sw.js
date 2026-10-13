@@ -7,7 +7,7 @@
  *  Firebase / Auth → Network Only  (NEVER cached)
  */
 
-const SW_VERSION   = 'nabtex-v2.5.1'; // bumped: /api/* (weather proxy) bypasses the SW cache
+const SW_VERSION   = 'nabtex-v2.5.2'; // bumped: /api/* (weather proxy) and map tiles bypass the SW cache
 const SHELL_CACHE  = SW_VERSION + '-shell';
 const STATIC_CACHE = SW_VERSION + '-static';
 const FONT_CACHE   = SW_VERSION + '-fonts';
@@ -30,6 +30,7 @@ const BYPASS_HOSTS = [
   'accounts.google.com',
   'oauth2.googleapis.com',
   'lh3.googleusercontent.com',
+  'tile.openstreetmap.org', /* farm location picker map tiles — never cache (unbounded) */
 ];
 const BYPASS_PATH_FRAGS = ['/__/auth/', '/v1/', '/v1beta1/'];
 
