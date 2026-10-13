@@ -8,7 +8,8 @@
  * - بيطلب من WeatherAPI.com (forecast.json, days=3 — بيرجّع كمان كائن `current` الخاص بالطقس الحالي)
  *   وبيحوّل الرد لنفس شكل Open-Meteo اللي الواجهة متعودة عليه، فمنطق التنبيهات والعرض في index.html
  *   مش بيتغيّر: الحرارة والرطوبة والرياح وحالة الطقس والوحدات (°م، %، كم/س، مم) زي ما هي.
- * - ET₀ (التبخر المرجعي) مش متاح في خطط WeatherAPI غير Enterprise، فمش بيتبعت (الواجهة بتعرض «—»).
+ * - ET₀ (التبخر المرجعي) مش متاح في خطط WeatherAPI غير Enterprise، فبيتحسب هنا تقديريًا بمعادلة Hargreaves-Samani (FAO-56) من الحرارة العظمى/الصغرى وخط العرض وتاريخ اليوم.
+ *   + رطوبة وغطاء سحب كل ساعة (للتقييم الدقيق للصقيع والرش) + generated_at/local_time (عشان الواجهة تحسب «الآن» صح حتى من الكاش).
  */
 'use strict';
 
@@ -38,6 +39,27 @@ function wmo(code) {
   return 3;
 }
 
+/* الإشعاع خارج الغلاف الجوي Ra (ميجاجول/م²/يوم) — FAO-56 معادلة 21 */
+function extraRad(latDeg, dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || ''));
+  if (!m || !Number.isFinite(latDeg)) return null;
+  const J = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(+m[1], 0, 0)) / 86400000);
+  const phi = latDeg * Math.PI / 180;
+  const dr = 1 + 0.033 * Math.cos(2 * Math.PI * J / 365);
+  const dl = 0.409 * Math.sin(2 * Math.PI * J / 365 - 1.39);
+  const ws = Math.acos(Math.max(-1, Math.min(1, -Math.tan(phi) * Math.tan(dl))));
+  return (24 * 60 / Math.PI) * 0.0820 * dr * (ws * Math.sin(phi) * Math.sin(dl) + Math.cos(phi) * Math.cos(dl) * Math.sin(ws));
+}
+
+/* ET₀ تقديري (مم/يوم) — Hargreaves-Samani: 0.0023·(Tmean+17.8)·√(Tmax−Tmin)·Ra·0.408 */
+function et0Hargreaves(tmax, tmin, latDeg, dateStr) {
+  if (tmax == null || tmin == null) return null;
+  const ra = extraRad(latDeg, dateStr);
+  if (ra == null) return null;
+  const v = 0.0023 * ((tmax + tmin) / 2 + 17.8) * Math.sqrt(Math.max(tmax - tmin, 0)) * ra * 0.408;
+  return Number.isFinite(v) ? Math.round(Math.max(0, Math.min(15, v)) * 10) / 10 : null;
+}
+
 function num(x) {
   const n = typeof x === 'number' ? x : parseFloat(x);
   return Number.isFinite(n) ? n : null;
@@ -56,6 +78,9 @@ function mapResponse(w) {
 
   const out = {
     source: 'weatherapi.com',
+    generated_at: Date.now(),
+    local_time: isoLocal(w.location && w.location.localtime),
+    et0_method: 'hargreaves-samani',
     latitude: num(w.location && w.location.lat),
     longitude: num(w.location && w.location.lon),
     current: {
@@ -66,8 +91,8 @@ function mapResponse(w) {
       wind_gusts_10m: num(cur.gust_kph),
       weather_code: wmo(cur.condition && cur.condition.code)
     },
-    hourly: { time: [], temperature_2m: [], wind_speed_10m: [], wind_gusts_10m: [], precipitation_probability: [], precipitation: [] },
-    daily: { time: [], temperature_2m_max: [], temperature_2m_min: [], precipitation_sum: [], precipitation_probability_max: [] }
+    hourly: { time: [], temperature_2m: [], relative_humidity_2m: [], cloud_cover: [], wind_speed_10m: [], wind_gusts_10m: [], is_day: [], precipitation_probability: [], precipitation: [] },
+    daily: { time: [], temperature_2m_max: [], temperature_2m_min: [], precipitation_sum: [], precipitation_probability_max: [], et0_fao_evapotranspiration: [] }
   };
 
   days.forEach(function (d) {
@@ -77,13 +102,17 @@ function mapResponse(w) {
     out.daily.temperature_2m_min.push(num(day.mintemp_c));
     out.daily.precipitation_sum.push(num(day.totalprecip_mm));
     out.daily.precipitation_probability_max.push(num(day.daily_chance_of_rain));
+    out.daily.et0_fao_evapotranspiration.push(et0Hargreaves(num(day.maxtemp_c), num(day.mintemp_c), out.latitude, d.date));
     (d.hour || []).forEach(function (h) {
       out.hourly.time.push(isoLocal(h.time));
       out.hourly.temperature_2m.push(num(h.temp_c));
+      out.hourly.relative_humidity_2m.push(num(h.humidity));
+      out.hourly.cloud_cover.push(num(h.cloud));
       out.hourly.wind_speed_10m.push(num(h.wind_kph));
       out.hourly.wind_gusts_10m.push(num(h.gust_kph));
       out.hourly.precipitation_probability.push(num(h.chance_of_rain));
       out.hourly.precipitation.push(num(h.precip_mm));
+      out.hourly.is_day.push(num(h.is_day));
     });
   });
 
@@ -157,3 +186,5 @@ module.exports = async function handler(req, res) {
 
 module.exports._mapResponse = mapResponse;
 module.exports._wmo = wmo;
+module.exports._extraRad = extraRad;
+module.exports._et0 = et0Hargreaves;
