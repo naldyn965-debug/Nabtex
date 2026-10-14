@@ -26618,6 +26618,8 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 [data-dark] .nbai-ov{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.16);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.75);--ai-sh:0 1px 2px rgba(0,0,0,.4),0 14px 32px -16px rgba(0,0,0,.75)}
 .nbai-ov::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(72% 36% at 90% -6%,rgba(124,58,237,.14),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.11),transparent 72%),var(--bg)}
 [data-dark] .nbai-ov::before{background:radial-gradient(72% 36% at 90% -6%,rgba(168,85,247,.22),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.24),transparent 72%),var(--bg)}
+/* تعديل: لو الكيبورد غيّر الارتفاع بعد القياس، الخلفية تمتد تحت الواجهة فمايظهرش محتوى الصفحة اللي ورا */
+.nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
 .nbai-ov .nbai-ov-in{padding-inline:16px}
 
 /* الهيدر */
@@ -27329,6 +27331,8 @@ function openScreen(opener){
     document.addEventListener('keydown', onKey);
     window.addEventListener('popstate', function(){ if(OPEN) hideScreen(); });
     if(window.visualViewport){ window.visualViewport.addEventListener('resize', syncVV); window.visualViewport.addEventListener('scroll', syncVV); }
+    var kbRetry = function(){ [60, 200, 450, 800].forEach(function(t){ setTimeout(syncVV, t); }); };   /* الكيبورد بيستقر متأخر على آيفون */
+    document.addEventListener('focusin', kbRetry); document.addEventListener('focusout', kbRetry);
   }
   OPENER = opener || null; OPEN = true;
   PREV_OV = document.body.style.overflow; document.body.style.overflow = 'hidden';
