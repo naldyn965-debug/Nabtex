@@ -26564,6 +26564,12 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-go-ask svg{transform:scaleX(-1)}
 .nbai-new{display:block;margin:8px auto 0;padding:0 8px;min-height:36px;background:none;border:0;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nbai-new[hidden]{display:none}
+/* استشارة «رسالة برسالة»: سؤال واحد + رده، وزر «تحليل جديد» تحت يرجّع مربع الكتابة */
+.nbai-pane.nbai-solo .nbai-chips,.nbai-pane.nbai-solo .nbai-cm{display:none}
+.nbai-again{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:10px;padding:0 18px;min-height:46px;border:0;border-radius:999px;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-again:active{transform:scale(.97)}
+.nbai-again:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbai-again[hidden]{display:none}
 
 /* ── كارت Nabtex AI المدمج (أعلى صفحة المزرعة، تحت الهيدر مباشرة — مش sticky) ── */
 .nbai-cta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px 12px;margin:0 0 16px;padding:14px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.09),rgba(124,58,237,0) 58%),var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
@@ -26793,6 +26799,7 @@ function buildScreen(){
       '<div class="nbai-chips"><button type="button" class="nbai-chip" data-q="">حلّل مزرعتي</button><button type="button" class="nbai-chip" data-q="إزاي أحسّن الري؟">إزاي أحسّن الري؟</button><button type="button" class="nbai-chip" data-q="إزاي أوفّر في التسميد؟">إزاي أوفّر في التسميد؟</button></div>' +
       '<div class="nbai-cm"><input class="nbai-q nbai-qi" type="text" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي">' +
       '<button type="button" class="nbai-go nbai-go-ask" aria-label="إرسال"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button></div>' +
+    '<button type="button" class="nbai-again" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>تحليل جديد</span></button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="diag" hidden>' +
       '<div class="nbai-th" data-th="diag" role="log" aria-live="polite" aria-label="محادثة التشخيص"></div>' +
@@ -26843,6 +26850,10 @@ function buildScreen(){
     keep(t, 'ai', h, e);
     if(d && d.parentNode){ d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; var sc = scroller(t); sc.scrollTop += d.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
   }
+  /* استشارة «رسالة برسالة»: مفيش سجل شات — سؤال واحد + رده، وزر «تحليل جديد» يرجّع الشاشة لمربع السؤال */
+  var askPane = card.querySelector('.nbai-pane[data-p="ask"]'), again = card.querySelector('.nbai-again');
+  function setSolo(on){ askPane.classList.toggle('nbai-solo', on); again.hidden = true; }
+  function freshAsk(){ TH.ask.innerHTML = ''; CHAT.ask.length = 0; }
   ['ask', 'diag'].forEach(function(t){
     TH[t].appendChild(mkMsg('ai', GREET[t], false));
     CHAT[t].forEach(function(m){ TH[t].appendChild(mkMsg(m.r, m.h, m.e)); });
@@ -26862,6 +26873,12 @@ function buildScreen(){
     var chip = ev.target.closest && ev.target.closest('.nbai-chip');
     if(chip) return runAsk(chip.getAttribute('data-q') || '');
     if(ev.target.closest && ev.target.closest('.nbai-go-ask')) return sendAsk();
+    if(ev.target.closest && ev.target.closest('.nbai-again')){
+      if(busy) return;
+      freshAsk(); TH.ask.appendChild(mkMsg('ai', GREET.ask, false)); setSolo(false); paintFoot();
+      var qi = card.querySelector('.nbai-qi'); if(qi) qi.focus({ preventScroll: true });
+      return;
+    }
     if(ev.target.closest && ev.target.closest('.nbai-new')){ if(!busy){ resetComposer(); show('', false); } return; }
     if(ev.target.closest && ev.target.closest('.nbai-go-diag')) return runDiag();
   });
@@ -26895,12 +26912,13 @@ function buildScreen(){
   function runAsk(ov){
     if(busy) return;
     var u = user(), inp = card.querySelector('.nbai-qi'), btn = card.querySelector('.nbai-go-ask');
-    if(!u){ push('ask', 'ai', esc(MSG.login), true); return; }
+    if(!u){ freshAsk(); push('ask', 'ai', esc(MSG.login), true); return; }
     var fromInput = typeof ov !== 'string';
     var q = (fromInput ? inp.value : ov).trim().slice(0, 300);
     var summary = buildSummary(curFarm(), u.uid);
-    if(!summary.operations && !q){ push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
+    if(!summary.operations && !q){ freshAsk(); push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
     function lock(on){ busy = on; btn.disabled = on; card.querySelectorAll('.nbai-chip').forEach(function(c){ c.disabled = on; }); }
+    freshAsk(); setSolo(true);
     push('ask', 'user', q ? esc(q) : 'حلّل مزرعتي');
     var ty = typing('ask');
     if(fromInput) inp.value = '';
@@ -26910,6 +26928,8 @@ function buildScreen(){
       if(live) lock(false); else busy = false;
       settle(ty, 'ask', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
       if(live){
+        if(r.ok){ again.hidden = false; if(OPEN){ try{ again.focus({ preventScroll: true }); }catch(e){} } }
+        else setSolo(false);   /* فشل → مربع الكتابة يرجع عشان يتبعت تاني */
         if(!r.ok && fromInput && q && !inp.value) inp.value = q;   /* فشل → السؤال يرجع للمربع عشان يتبعت تاني */
         paintFoot();
       }
