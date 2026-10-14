@@ -13748,6 +13748,8 @@ document.addEventListener('click', e => {
       attachViewEvents(view);
       /* الطقس حسب موقع المزرعة (تنبيه صقيع/حر/رياح + قرار الري والرش) — إضافة معزولة، أي خطأ فيها ما بيأثرش على الرسم */
       try { if (window.NbFarmWx) window.NbFarmWx(view, mc, farmState); } catch (e) { console.warn('[Nabtex Farm] weather:', e); }
+      /* مساعد المزرعة الذكي (Gemini) — إضافة معزولة وعند الطلب فقط، أي خطأ فيها ما بيأثرش على الرسم */
+      try { if (window.NbFarmAI) window.NbFarmAI(view, mc, farmState); } catch (e) { console.warn('[Nabtex Farm] ai:', e); }
     }
 
     function showFarmLoader(show) {
@@ -26504,6 +26506,194 @@ window.NbFarmWx = function(view, mc, st){
 };
 window.NbFarmWx.assess = assess;
 window.NbFarmWx.locate = locate;
+})();
+</script>
+
+<style id="nb-farm-ai-css">
+.nbai{margin:0 0 20px;padding:16px;border:1px solid var(--line2);border-radius:18px;background:var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
+.nbai-h{display:flex;align-items:center;gap:10px}
+.nbai-hi{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#9333ea;background:rgba(147,51,234,.12)}
+.nbai-ht{font-size:15px;font-weight:800;color:var(--ink);line-height:1.5}
+.nbai-hs{font-size:11.5px;color:var(--muted);line-height:1.6}
+.nbai-q{display:block;width:100%;box-sizing:border-box;margin-top:12px;padding:10px 12px;min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);color:var(--ink);font-family:inherit;font-size:13px;line-height:1.6}
+.nbai-q:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbai-go{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:9px 18px;min-height:42px;border-radius:999px;border:0;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-go:active{transform:scale(.97)}
+.nbai-go[disabled]{opacity:.6;cursor:default}
+.nbai-out{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);font-size:13px;line-height:1.95;color:var(--ink2);word-break:break-word}
+.nbai-out:empty{display:none}
+.nbai-out.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
+[data-dark] .nbai-out.err{color:#fbbf24}
+.nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
+@media (max-width:480px){.nbai{padding:14px;border-radius:16px}.nbai-go{width:100%}}
+</style>
+
+<script id="nb-farm-ai-js">
+/* ═══════════════════════════════════════════════════════════════
+   مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
+   • عند الطلب فقط (زر)، مفيش أي استدعاء تلقائي.
+   • بيبعت ملخص مضغوط (أرقام مجمّعة لآخر 30 يوم) مش سجلات خام → أقل tokens ممكنة.
+   • حدود: 5 تحليلات/يوم لكل مستخدم + كاش 6 ساعات لنفس البيانات + فاصل 20 ثانية بين الطلبات.
+   • قراءة فقط: من الكاش المحلي لعمليات المزرعة (nabtex_farm_ops_v2__<uid>) — لا Firestore ولا أي كتابة في بيانات المزرعة.
+   للتراجع: امسح هذا البلوك (style + script) وامسح السطر اللي فيه NbFarmAI جوه _doRenderFarmView، وامسح api/farm-ai.js.
+═══════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var DAILY = 5, COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 30000;
+
+function lsGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function n(x){ var v = typeof x === 'number' ? x : parseFloat(x); return isFinite(v) ? v : 0; }
+function r1(x){ return Math.round(x*10)/10; }
+function user(){ try{ return (typeof currentUser !== 'undefined' && currentUser) ? currentUser : null; }catch(e){ return null; } }
+
+function quotaGet(uid){ var q = lsGet('nbai:q:' + uid); return (q && q.day === today()) ? q : { day: today(), n: 0, last: 0 }; }
+
+/* ملخص مضغوط لآخر DAYS يوم من الكاش المحلي لعمليات المزرعة */
+function buildSummary(farm, uid){
+  var c = lsGet('nabtex_farm_ops_v2__' + uid);
+  var all = (c && c.ops) || [];
+  var cut = new Date(Date.now() - DAYS*86400000).toISOString().slice(0,10);
+  var ops = all.filter(function(o){
+    return o && o.date && o.date >= cut && o.data && (!farm.id || !o.farmId || o.farmId === farm.id);
+  });
+  var s = { farm: { name: farm.name || '', areaFeddan: n(farm.area) || null, location: farm.location || '', water: farm.waterSource || '', irrigationSystem: farm.irrSystem || '' }, periodDays: DAYS, operations: ops.length };
+  if(!ops.length) return s;
+
+  var days = {}, fields = {}, stages = {}, irr = { n:0, times:0, hours:0, amount:0, methods:{} };
+  var fert = {}, npk = { N:0, P:0, K:0, organic:0 }, spray = {}, h = { qty:0, waste:0, n:0, qual:{} };
+  var wx = { t:0, tn:0, h:0, hn:0, rain:0 }, notes = [], labor = 0, laborN = 0;
+  ops.forEach(function(o){
+    var d = o.data; days[o.date] = 1;
+    if(d.fieldName) fields[d.fieldName] = 1;
+    if(d.cropStage) stages[d.cropStage] = (stages[d.cropStage]||0) + 1;
+    if(n(d.irr_times) || n(d.irr_hours) || n(d.irr_amount)){
+      irr.n++; irr.times += n(d.irr_times); irr.hours += n(d.irr_hours); irr.amount += n(d.irr_amount);
+      if(d.irr_method) irr.methods[d.irr_method] = 1;
+    }
+    if(d.fert_name){
+      var fk = d.fert_name + (d.fert_type ? ' (' + d.fert_type + ')' : '');
+      fert[fk] = (fert[fk]||0) + 1;
+      npk.N += n(d.fert_n); npk.P += n(d.fert_p); npk.K += n(d.fert_k); npk.organic += n(d.fert_organic);
+    }
+    if(d.spray_name){
+      var sk = d.spray_name + (d.spray_type ? ' (' + d.spray_type + ')' : '') + (d.spray_pest ? ' ← ' + d.spray_pest : '');
+      spray[sk] = (spray[sk]||0) + 1;
+    }
+    if(d.is_harvest){ h.n++; h.qty += n(d.harvest_qty); h.waste += n(d.harvest_waste); if(d.harvest_qual) h.qual[d.harvest_qual] = (h.qual[d.harvest_qual]||0) + 1; }
+    if(n(d.temp)){ wx.t += n(d.temp); wx.tn++; }
+    if(n(d.humidity)){ wx.h += n(d.humidity); wx.hn++; }
+    wx.rain += n(d.rain);
+    if(n(d.labor)){ labor += n(d.labor); laborN++; }
+    if(d.notes && notes.length < 4) notes.push(String(d.notes).slice(0, 80));
+  });
+  function top(map, k){ return Object.keys(map).sort(function(a,b){ return map[b]-map[a]; }).slice(0, k).map(function(x){ return x + ' ×' + map[x]; }); }
+  s.daysLogged = Object.keys(days).length;
+  s.fields = Object.keys(fields).slice(0, 8);
+  s.cropStages = top(stages, 4);
+  if(irr.n) s.irrigation = { records: irr.n, totalTimes: r1(irr.times), totalHours: r1(irr.hours), totalAmount: r1(irr.amount), methods: Object.keys(irr.methods) };
+  if(Object.keys(fert).length) s.fertilizers = { top: top(fert, 5), totalN: r1(npk.N), totalP: r1(npk.P), totalK: r1(npk.K), totalOrganic: r1(npk.organic) };
+  if(Object.keys(spray).length) s.sprays = top(spray, 6);
+  if(h.n) s.harvest = { records: h.n, totalQty: r1(h.qty), totalWaste: r1(h.waste), quality: top(h.qual, 3) };
+  if(wx.tn || wx.hn || wx.rain) s.weatherLogged = { avgTemp: wx.tn ? r1(wx.t/wx.tn) : null, avgHumidity: wx.hn ? r1(wx.h/wx.hn) : null, totalRain: r1(wx.rain) };
+  if(laborN) s.avgLabor = r1(labor/laborN);
+  if(notes.length) s.recentNotes = notes;
+  return s;
+}
+
+function hash(str){ var h = 5381; for(var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return String(h); }
+
+function fmt(text){
+  return esc(text).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/^\s*[*•-]\s+/gm, '• ').replace(/\n/g, '<br>');
+}
+
+var MSG = {
+  offline: 'محتاج اتصال بالإنترنت لتشغيل المساعد.',
+  login: 'سجّل دخولك الأول.',
+  user_limit: 'وصلت للحد اليومي من التحليلات (' + DAILY + '). جرّب بكرة.',
+  busy: 'المساعد مشغول دلوقتي. جرّب بعد شوية.',
+  not_configured: 'المساعد غير متاح حاليًا.',
+  generic: 'حصلت مشكلة مؤقتة. جرّب تاني بعد شوية.'
+};
+
+function mount(mc, farm){
+  var anchor = mc.querySelector('.nbfw') || mc.querySelector('#fv-dashboard .farm-stats-grid');
+  if(!anchor || mc.querySelector('.nbai')) return;
+  var card = document.createElement('section');
+  card.className = 'nbai';
+  card.innerHTML =
+    '<div class="nbai-h"><div class="nbai-hi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z"/></svg></div>' +
+    '<div><div class="nbai-ht">مساعد المزرعة الذكي</div><div class="nbai-hs">تحليل مختصر لآخر ' + DAYS + ' يوم من تسجيلاتك — عند الطلب فقط</div></div></div>' +
+    '<input class="nbai-q" type="text" maxlength="300" placeholder="سؤال اختياري، مثال: إزاي أحسّن الري؟" aria-label="سؤال للمساعد الذكي">' +
+    '<button type="button" class="nbai-go">حلّل مزرعتي</button>' +
+    '<div class="nbai-out" role="status" aria-live="polite"></div>' +
+    '<div class="nbai-f"></div>';
+  anchor.insertAdjacentElement('afterend', card);
+
+  var btn = card.querySelector('.nbai-go'), out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f'), inp = card.querySelector('.nbai-q');
+  function left(){ var u = user(); return u ? Math.max(0, DAILY - quotaGet(u.uid).n) : DAILY; }
+  function paintFoot(){ foot.textContent = 'متبقي لك اليوم: ' + left() + ' من ' + DAILY + ' — الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص.'; }
+  function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
+  paintFoot();
+
+  btn.addEventListener('click', function(){
+    var u = user();
+    if(!u){ show(esc(MSG.login), true); return; }
+    if(!navigator.onLine){ show(esc(MSG.offline), true); return; }
+    var q = (inp.value || '').trim().slice(0, 300);
+    var summary = buildSummary(farm, u.uid);
+    if(!summary.operations && !q){ show('سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
+
+    var key = 'nbai:r:' + u.uid, ck = hash(JSON.stringify(summary) + '|' + q);
+    var saved = lsGet(key);
+    if(saved && saved.k === ck && Date.now() - saved.at < TTL){ show(fmt(saved.text), false); return; }   /* كاش: من غير استهلاك */
+
+    var qt = quotaGet(u.uid);
+    if(qt.n >= DAILY){ show(esc(MSG.user_limit), true); return; }
+    if(Date.now() - qt.last < COOLDOWN){ show('استنى ثواني قبل الطلب الجاي.', true); return; }
+
+    btn.disabled = true; btn.textContent = 'جارٍ التحليل...'; show('', false);
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, TMO);
+    u.getIdToken().then(function(tok){
+      return fetch('/api/farm-ai', {
+        method: 'POST', signal: ctl ? ctl.signal : undefined,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify({ summary: summary, question: q })
+      });
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j }; });
+    }).then(function(res){
+      if(!card.isConnected) return;
+      if(res.ok && res.j && res.j.text){
+        if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:' + u.uid, qt); }
+        lsSet(key, { k: ck, at: Date.now(), text: res.j.text });
+        show(fmt(res.j.text), false);
+      } else {
+        var e = res.j && res.j.error;
+        show(esc(MSG[e] || MSG.generic), true);
+      }
+    }).catch(function(){
+      if(card.isConnected) show(esc(MSG.generic), true);
+    }).then(function(){
+      clearTimeout(timer);
+      if(!card.isConnected) return;
+      btn.disabled = false; btn.textContent = 'حلّل مزرعتي'; paintFoot();
+    });
+  });
+}
+
+window.NbFarmAI = function(view, mc, st){
+  try{
+    if(view !== 'dashboard' || !mc) return;
+    var farm = (st && st.farms && st.farms[0]) || (st && st.currentFarm) || null;
+    if(!farm) return;
+    mount(mc, farm);
+  }catch(e){ console.warn('[Nabtex Farm] ai:', e); }
+};
 })();
 </script>
 
