@@ -26545,6 +26545,17 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
 .nbai-log{margin:0 0 18px}
 @media (max-width:480px){.nbai{padding:14px;border-radius:16px}.nbai-go{width:100%}}
+/* ڤويس "سجّل بكلامك" — إضافة فقط: كل الكلاسات nbai-row / nbai-mic */
+.nbai-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.nbai-row .nbai-go{margin-top:0}
+.nbai-mic{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;min-height:42px;border-radius:999px;border:1.5px solid var(--brand);background:transparent;color:var(--brand);font-family:inherit;font-size:13px;font-weight:800;line-height:1.4;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-mic[hidden]{display:none}
+.nbai-mic:active{transform:scale(.97)}
+.nbai-mic:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbai-mic.on{color:#fff;border-color:#dc2626;background:#dc2626;animation:nbai-mic-pulse 1.4s ease-out infinite}
+@keyframes nbai-mic-pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}70%,100%{box-shadow:0 0 0 10px rgba(220,38,38,0)}}
+@media (prefers-reduced-motion:reduce){.nbai-mic.on{animation:none}}
+@media (max-width:480px){.nbai-row .nbai-go{flex:1;width:auto}}
 </style>
 
 <script id="nb-farm-ai-js">
@@ -26556,6 +26567,7 @@ textarea.nbai-q{resize:vertical;min-height:84px}
    • حدود لكل وضع (نفس أرقام الخادم) + كاش 6 ساعات لنفس الطلب + فاصل 20 ثانية بين الطلبات.
    • تعبئة التسجيل: بتملأ الحقول بس وتعرض اللي اتملا للمراجعة — الحفظ بيفضل بإيد المستخدم (saveOperation الأصلي ما اتلمسش).
    • قراءة فقط من الكاش المحلي لعمليات المزرعة (nabtex_farm_ops_v2__<uid>) — لا Firestore ولا أي كتابة في بيانات المزرعة.
+   • ڤويس «سجّل بكلامك»: زر ميكروفون (Web Speech API، ar-EG) بيكتب في نفس الـ textarea — بيتخفّى لو المتصفح مش بيدعمه.
    للتراجع: امسح هذا البلوك (style + script) وامسح السطرين اللي فيهم NbFarmAI جوه _doRenderFarmView، وامسح api/farm-ai.js.
 ═══════════════════════════════════════════════════════════════ */
 (function(){
@@ -26898,7 +26910,7 @@ function mountLog(mc, farm){
     '<div class="nbai-h"><div class="nbai-hi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/></svg></div>' +
     '<div><div class="nbai-ht">سجّل بكلامك</div><div class="nbai-hs">اكتب اللي عملته اليوم بالعامية، والمساعد يملأ النموذج — وانت تراجع وتحفظ</div></div></div>' +
     '<textarea class="nbai-q" maxlength="700" placeholder="مثال: روينا 3 ساعات بالتنقيط وسمّدنا نترات كالسيوم 20 كجم ورشينا نحاس على عفن رمادي، وكان معانا 4 عمال" aria-label="اكتب عملياتك اليومية"></textarea>' +
-    '<button type="button" class="nbai-go">املأ النموذج</button>' +
+    '<div class="nbai-row"><button type="button" class="nbai-mic" aria-label="ابدأ التسجيل الصوتي"><span class="nbai-mic-i" aria-hidden="true"></span><span class="nbai-mic-t">تكلّم</span></button><button type="button" class="nbai-go">املأ النموذج</button></div>' +
     '<div class="nbai-out" role="status" aria-live="polite"></div>' +
     '<div class="nbai-f"></div>';
   hdr.insertAdjacentElement('afterend', card);
@@ -26941,6 +26953,101 @@ function mountLog(mc, farm){
       show(done.length ? '<b>اتملا في النموذج — راجعه قبل الحفظ:</b><br>• ' + done.map(esc).join('<br>• ') : esc(MSG.nothing_found), !done.length);
     });
   });
+
+  /* ── إدخال صوتي (Web Speech API): بيكتب الكلام في نفس الـ textarea بس — زر "املأ النموذج" وfill والحفظ ما اتلمسوش.
+        المتصفحات اللي ملهاش دعم → الزر بيتخفّى والكتابة بتفضل شغالة عادي. ── */
+  var mic = card.querySelector('.nbai-mic');
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(mic && !SR){ mic.hidden = true; }
+  else if(mic){
+    var micIc = mic.querySelector('.nbai-mic-i'), micTx = mic.querySelector('.nbai-mic-t');
+    var SVG_MIC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+    var SVG_STOP = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+    var LISTEN_HTML = 'بسمعك دلوقتي… اتكلم بالعامية وأنا هكتب. اضغط «إيقاف» لما تخلّص.';
+    var VMSG = {
+      denied: 'لازم تسمح للموقع باستخدام الميكروفون من إعدادات المتصفح، وبعدين جرّب تاني.',
+      nomic: 'ما لقيتش ميكروفون شغّال على الجهاز.',
+      network: 'الڤويس محتاج اتصال بالإنترنت. جرّب تاني.',
+      lang: 'المتصفح ده مش بيدعم التعرّف على العربية صوتيًا. اكتب بإيدك.',
+      silent: 'ما سمعتش صوت. قرّب من الميكروفون وجرّب تاني.',
+      generic: 'ما قدرتش أشغّل الڤويس. اكتب بإيدك أو جرّب تاني.'
+    };
+    var VMAX = 700, V_SILENCE = 7000, V_TOTAL = 90000;
+    var rec = null, active = false, base = '', heard = false, lastHeard = 0, t0 = 0, fatal = '', guard = 0;
+
+    function joinTxt(a, b){ a = String(a || '').replace(/\s+$/, ''); b = String(b || '').trim(); return (a && b) ? a + ' ' + b : a + b; }
+    function paintMic(on){
+      mic.classList.toggle('on', on);
+      mic.setAttribute('aria-label', on ? 'إيقاف التسجيل الصوتي' : 'ابدأ التسجيل الصوتي');
+      micIc.innerHTML = on ? SVG_STOP : SVG_MIC;
+      micTx.textContent = on ? 'إيقاف' : 'تكلّم';
+    }
+    paintMic(false);
+
+    function cleanup(){
+      clearTimeout(guard);
+      var wasOn = mic.classList.contains('on');
+      active = false; rec = null; ta.readOnly = false; paintMic(false);
+      if(!wasOn) return;
+      if(fatal){ show(esc(fatal), true); }
+      else if(!heard){ show(esc(VMSG.silent), true); }
+      else if(out.innerHTML === LISTEN_HTML){ show('', false); }
+      fatal = '';
+    }
+    function begin(){
+      var r = new SR();
+      r.lang = 'ar-EG'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+      r.onresult = function(e){
+        if(!card.isConnected){ stopVoice(); return; }
+        lastHeard = Date.now(); heard = true;
+        var fin = '', itm = '';
+        for(var i = e.resultIndex; i < e.results.length; i++){
+          var t = e.results[i][0].transcript;
+          if(e.results[i].isFinal) fin += t; else itm += t;
+        }
+        if(fin) base = joinTxt(base, fin).slice(0, VMAX);
+        ta.value = joinTxt(base, itm).slice(0, VMAX);
+        ta.scrollTop = ta.scrollHeight;
+      };
+      r.onerror = function(e){
+        var c = e && e.error;
+        if(c === 'no-speech' || c === 'aborted') return;
+        fatal = (c === 'not-allowed' || c === 'service-not-allowed') ? VMSG.denied
+              : c === 'audio-capture' ? VMSG.nomic
+              : c === 'network' ? VMSG.network
+              : c === 'language-not-supported' ? VMSG.lang : VMSG.generic;
+        active = false;
+      };
+      r.onend = function(){
+        rec = null;
+        var again = active && card.isConnected && !fatal && ta.value.length < VMAX &&
+                    (Date.now() - lastHeard) < V_SILENCE && (Date.now() - t0) < V_TOTAL;
+        if(!again){ cleanup(); return; }
+        setTimeout(function(){
+          if(!active){ cleanup(); return; }
+          try{ begin(); }catch(err){ fatal = VMSG.generic; cleanup(); }
+        }, 150);
+      };
+      rec = r;
+      r.start();
+    }
+    function stopVoice(){
+      active = false;
+      if(!rec){ cleanup(); return; }
+      try{ rec.stop(); }catch(e){ cleanup(); return; }
+      guard = setTimeout(cleanup, 1500);
+    }
+
+    mic.addEventListener('click', function(){
+      if(active){ stopVoice(); return; }
+      if(btn.disabled) return;
+      if(!navigator.onLine){ show(esc(MSG.offline), true); return; }
+      base = ta.value.trim(); heard = false; fatal = ''; t0 = lastHeard = Date.now();
+      active = true; ta.readOnly = true; paintMic(true); show(LISTEN_HTML, false);
+      try{ begin(); }catch(err){ fatal = VMSG.generic; cleanup(); }
+    });
+    btn.addEventListener('click', function(){ if(active) stopVoice(); });
+  }
 }
 
 window.NbFarmAI = function(view, mc, st){
