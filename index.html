@@ -26972,7 +26972,7 @@ function mountLog(mc, farm){
       silent: 'ما سمعتش صوت. قرّب من الميكروفون وجرّب تاني.',
       generic: 'ما قدرتش أشغّل الڤويس. اكتب بإيدك أو جرّب تاني.'
     };
-    var VMAX = 700, V_SILENCE = 7000, V_TOTAL = 90000;
+    var VMAX = 700, V_SILENCE = 7000, V_TOTAL = 90000, IS_ANDROID = /Android/i.test(navigator.userAgent || '');
     var rec = null, active = false, base = '', heard = false, lastHeard = 0, t0 = 0, fatal = '', guard = 0;
 
     function joinTxt(a, b){ a = String(a || '').replace(/\s+$/, ''); b = String(b || '').trim(); return (a && b) ? a + ' ' + b : a + b; }
@@ -26996,17 +26996,17 @@ function mountLog(mc, farm){
     }
     function begin(){
       var r = new SR();
-      r.lang = 'ar-EG'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+      /* continuous على الدسكتوب/آيفون = بدون فجوات بين الجمل؛ أندرويد كروم بيكرّر النص مع continuous فبنسيبه جملة-جملة */
+      r.lang = 'ar-EG'; r.interimResults = true; r.continuous = !IS_ANDROID; r.maxAlternatives = 1;
       r.onresult = function(e){
         if(!card.isConnected){ stopVoice(); return; }
         lastHeard = Date.now(); heard = true;
-        var fin = '', itm = '';
-        for(var i = e.resultIndex; i < e.results.length; i++){
-          var t = e.results[i][0].transcript;
-          if(e.results[i].isFinal) fin += t; else itm += t;
+        var spoken = '';
+        for(var i = 0; i < e.results.length; i++){
+          var t = String(e.results[i][0].transcript || '').trim();
+          if(t) spoken = spoken ? spoken + ' ' + t : t;
         }
-        if(fin) base = joinTxt(base, fin).slice(0, VMAX);
-        ta.value = joinTxt(base, itm).slice(0, VMAX);
+        ta.value = joinTxt(base, spoken).slice(0, VMAX);
         ta.scrollTop = ta.scrollHeight;
       };
       r.onerror = function(e){
@@ -27019,14 +27019,14 @@ function mountLog(mc, farm){
         active = false;
       };
       r.onend = function(){
-        rec = null;
+        rec = null; base = ta.value.trim();
         var again = active && card.isConnected && !fatal && ta.value.length < VMAX &&
                     (Date.now() - lastHeard) < V_SILENCE && (Date.now() - t0) < V_TOTAL;
         if(!again){ cleanup(); return; }
         setTimeout(function(){
           if(!active){ cleanup(); return; }
           try{ begin(); }catch(err){ fatal = VMSG.generic; cleanup(); }
-        }, 150);
+        }, 60);
       };
       rec = r;
       r.start();
