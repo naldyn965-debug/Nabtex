@@ -26510,11 +26510,6 @@ window.NbFarmWx.locate = locate;
 </script>
 
 <style id="nb-farm-ai-css">
-.nbai{margin:0 0 20px;padding:16px;border:1px solid var(--line2);border-radius:18px;background:var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
-.nbai-h{display:flex;align-items:center;gap:10px}
-.nbai-hi{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#9333ea;background:rgba(147,51,234,.12)}
-.nbai-ht{font-size:15px;font-weight:800;color:var(--ink);line-height:1.5}
-.nbai-hs{font-size:11.5px;color:var(--muted);line-height:1.6}
 .nbai-tabs{display:flex;gap:6px;margin-top:12px}
 .nbai-tab{flex:1;font-family:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:8px 10px;min-height:38px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nbai-tab[aria-selected="true"]{color:#9333ea;border-color:#9333ea;background:rgba(147,51,234,.1)}
@@ -26543,7 +26538,7 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-out.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
 [data-dark] .nbai-out.err{color:#fbbf24}
 .nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
-@media (max-width:480px){.nbai{padding:14px;border-radius:16px}.nbai-go{width:100%}}
+@media (max-width:480px){.nbai-go{width:100%}}
 /* شات المساعد — إضافة فقط: كل الكلاسات nbai-th / nbai-m / nbai-chip / nbai-cm / nbai-new / nbai-dots */
 .nbai-th{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:min(55vh,440px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px}
 .nbai-m{max-width:92%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.95;overflow-wrap:anywhere;word-break:break-word}
@@ -26569,12 +26564,48 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-go-ask svg{transform:scaleX(-1)}
 .nbai-new{display:block;margin:8px auto 0;padding:0 8px;min-height:36px;background:none;border:0;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nbai-new[hidden]{display:none}
+
+/* ── كارت Nabtex AI المدمج (أعلى صفحة المزرعة، تحت الهيدر مباشرة — مش sticky) ── */
+.nbai-cta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px 12px;margin:0 0 16px;padding:14px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.09),rgba(124,58,237,0) 58%),var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
+.nbai-cta-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 8px 16px -8px rgba(124,58,237,.7)}
+.nbai-cta-t{font-size:16px;font-weight:800;line-height:1.4;color:var(--ink)}
+.nbai-cta-d{margin:2px 0 0;font-size:12.5px;line-height:1.7;color:var(--muted)}
+.nbai-cta-go{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-cta-go:active{transform:scale(.97)}
+.nbai-cta-go:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+@media (max-width:379px){.nbai-cta{grid-template-columns:auto minmax(0,1fr)}.nbai-cta-go{grid-column:1/-1;width:100%}}
+
+/* ── واجهة المساعد المستقلة (شاشة كاملة داخل المنصة) ── */
+.nbai-ov{position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:9000;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);overscroll-behavior:contain;animation:nbai-ov-in .22s cubic-bezier(.22,1,.36,1)}
+.nbai-ov[hidden]{display:none}
+@keyframes nbai-ov-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nbai-ov{animation:none}}
+.nbai-ov-in{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box;padding:0 14px max(12px,env(safe-area-inset-bottom,0px))}
+.nbai-bar{flex:none;display:flex;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top,0px)) 0 10px}
+.nbai-back{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-back:active{transform:scale(.97)}
+.nbai-back:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbai-bar-id{display:flex;align-items:center;gap:10px;min-width:0}
+.nbai-bar-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.nbai-bar-t{font-size:15px;font-weight:800;line-height:1.4;color:var(--ink)}
+.nbai-bar-s{font-size:11.5px;line-height:1.5;color:var(--muted)}
+.nbai-ov .nbai-tabs{flex:none;margin-top:0}
+.nbai-ov .nbai-pane{flex:1;min-height:0;display:flex;flex-direction:column}
+.nbai-ov .nbai-pane[hidden]{display:none}
+.nbai-ov .nbai-pane[data-p="ask"]>:not(.nbai-th){flex:none}
+.nbai-ov .nbai-pane[data-p="ask"] .nbai-th{flex:1;min-height:0;max-height:none}
+.nbai-ov .nbai-pane[data-p="diag"]{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.nbai-ov .nbai-pane[data-p="diag"]>*{flex:none}
+.nbai-ov .nbai-pane[data-p="diag"] .nbai-th{max-height:none;overflow:visible}
+.nbai-ov .nbai-out,.nbai-ov .nbai-f{flex:none}
+.nbai-ov .nbai-f{margin-top:8px}
+
 </style>
 
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
-   الأوضاع: تحليل المزرعة / سؤال حر (لوحة التحكم) · تشخيص من صورة (لوحة التحكم)
+   الأوضاع: تحليل المزرعة / سؤال حر · تشخيص من صورة — من واجهة مستقلة بتتفتح من كارت Nabtex AI أعلى لوحة التحكم (تحت الهيدر مباشرة)
    • عند الطلب فقط (زر)، مفيش أي استدعاء تلقائي.
    • واجهة شات: فقاعات سؤال/رد، السجل فوق ومربع الكتابة تحت (في الذاكرة بس)، وكل سؤال بيتجاوب عليه لوحده (الخادم بلا ذاكرة).
    • بيبعت ملخص أرقام مضغوط لآخر 30 يوم (مش سجلات خام) والصورة بتتصغّر في المتصفح (≈800px JPEG) → أقل tokens وبيانات ممكنة.
@@ -26740,18 +26771,21 @@ function shrink(file, cb){
 /* سجل المحادثة في الذاكرة بس (بيرجع لو الصفحة اتعمل لها render تاني) — بيتصفّر لو المستخدم اتغيّر */
 var CHAT = { uid: null, ask: [], diag: [] };
 
-function mountDash(mc, farm){
-  var anchor = mc.querySelector('.nbfw') || mc.querySelector('#fv-dashboard .farm-stats-grid');
-  if(!anchor || mc.querySelector('.nbai')) return;
+/* الواجهة المستقلة: بتتبني مرة واحدة (lazy) وتفضل مخفية لحد ما المستخدم يفتحها — مش جزء من صفحة المزرعة */
+function buildScreen(){
   var u0 = user(), uid0 = u0 ? u0.uid : '';
   if(CHAT.uid !== uid0) CHAT = { uid: uid0, ask: [], diag: [] };
-  var card = document.createElement('section');
-  card.className = 'nbai';
+  var card = document.createElement('div');
+  card.className = 'nbai-ov'; card.hidden = true; card._uid = uid0;
+  card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'nbai-ov-t');
   card.innerHTML =
-    '<div class="nbai-h"><div class="nbai-hi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z"/></svg></div>' +
-    '<div><div class="nbai-ht">مساعد المزرعة الذكي</div><div class="nbai-hs">مهندسك الذكي: تحليل وأسئلة وتشخيص بالصورة — عند الطلب فقط</div></div></div>' +
+    '<div class="nbai-ov-in">' +
+    '<header class="nbai-bar">' +
+      '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
+      '<div class="nbai-bar-id"><span class="nbai-bar-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z"/></svg></span><div><div class="nbai-bar-t" id="nbai-ov-t"><bdi dir="ltr">Nabtex AI</bdi></div><div class="nbai-bar-s">مهندسك الزراعي الذكي</div></div></div>' +
+    '</header>' +
     '<div class="nbai-tabs" role="tablist">' +
-      '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">تحليل وأسئلة</button>' +
+      '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">استشارة زراعية</button>' +
       '<button type="button" class="nbai-tab" role="tab" data-t="diag" aria-selected="false">تشخيص بالصورة</button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
@@ -26771,8 +26805,9 @@ function mountDash(mc, farm){
       '<button type="button" class="nbai-new" hidden>إلغاء وتشخيص جديد</button>' +
     '</div>' +
     '<div class="nbai-out" role="status" aria-live="polite"></div>' +
-    '<div class="nbai-f"></div>';
-  anchor.insertAdjacentElement('afterend', card);
+    '<div class="nbai-f"></div>' +
+    '</div>';
+  document.body.appendChild(card);
 
   var out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f');
   var tab = 'ask', imgData = null, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة';
@@ -26791,7 +26826,9 @@ function mountDash(mc, farm){
     diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
   };
   function mkMsg(r, h, e){ var d = document.createElement('div'); d.className = 'nbai-m nbai-m-' + r + (e ? ' err' : ''); d.innerHTML = h; return d; }
-  function toEnd(t){ var el = TH[t]; if(el) el.scrollTop = el.scrollHeight; }
+  /* الحاوية اللي بتسكرول: الشات في الاستشارة، والبانل كله في التشخيص */
+  function scroller(t){ return t === 'diag' ? card.querySelector('.nbai-pane[data-p="diag"]') : TH.ask; }
+  function toEnd(t){ var el = scroller(t); if(el) el.scrollTop = el.scrollHeight; }
   function keep(t, r, h, e){
     CHAT[t].push({ r: r, h: h, e: !!e });
     if(CHAT[t].length > 30) CHAT[t].shift();
@@ -26804,7 +26841,7 @@ function mountDash(mc, farm){
   }
   function settle(d, t, h, e){
     keep(t, 'ai', h, e);
-    if(d && d.parentNode){ d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; TH[t].scrollTop = Math.max(0, d.offsetTop - 8); }
+    if(d && d.parentNode){ d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; var sc = scroller(t); sc.scrollTop += d.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
   }
   ['ask', 'diag'].forEach(function(t){
     TH[t].appendChild(mkMsg('ai', GREET[t], false));
@@ -26820,6 +26857,7 @@ function mountDash(mc, farm){
       card.querySelectorAll('.nbai-pane').forEach(function(p){ p.hidden = p.getAttribute('data-p') !== tab; });
       show('', false); paintFoot(); toEnd(tab); return;
     }
+    if(ev.target.closest && ev.target.closest('.nbai-back')){ closeScreen(); return; }
     if(ev.target.closest && ev.target.closest('.nbai-pick')){ card.querySelector('.nbai-file').click(); return; }
     var chip = ev.target.closest && ev.target.closest('.nbai-chip');
     if(chip) return runAsk(chip.getAttribute('data-q') || '');
@@ -26860,7 +26898,7 @@ function mountDash(mc, farm){
     if(!u){ push('ask', 'ai', esc(MSG.login), true); return; }
     var fromInput = typeof ov !== 'string';
     var q = (fromInput ? inp.value : ov).trim().slice(0, 300);
-    var summary = buildSummary(farm, u.uid);
+    var summary = buildSummary(curFarm(), u.uid);
     if(!summary.operations && !q){ push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
     function lock(on){ busy = on; btn.disabled = on; card.querySelectorAll('.nbai-chip').forEach(function(c){ c.disabled = on; }); }
     push('ask', 'user', q ? esc(q) : 'حلّل مزرعتي');
@@ -26928,7 +26966,7 @@ function mountDash(mc, farm){
     if(busy || !imgData) return;
     var u = user(), btn = card.querySelector('.nbai-go-diag');
     if(!u){ show(esc(MSG.login), true); return; }
-    var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(farm, u.uid);
+    var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(curFarm(), u.uid);
     var image = { mime: 'image/jpeg', data: imgData.replace(/^data:image\/jpeg;base64,/, '') };
     var ck = imgData.length + ':' + imgData.slice(-200) + '|' + note;
 
@@ -26970,6 +27008,84 @@ function mountDash(mc, farm){
       if(live){ if(r.ok) resetComposer(); paintFoot(); }   /* بعد التشخيص النهائي الفورم بيتفضّى لتشخيص جديد */
     });
   }
+  return card;
+}
+
+/* ═══ الكارت المدمج أعلى صفحة المزرعة + فتح/قفل الواجهة المستقلة ═══ */
+var STATE = null, SCR = null, OPEN = false, HIST = false, OPENER = null, PREV_OV = '', BOUND = false;
+
+function curFarm(){ return (STATE && STATE.farms && STATE.farms[0]) || (STATE && STATE.currentFarm) || null; }
+
+function syncVV(){
+  var vv = window.visualViewport;
+  if(!vv || !SCR || !OPEN) return;
+  SCR.style.height = vv.height + 'px'; SCR.style.top = vv.offsetTop + 'px';   /* الكيبورد على آيفون */
+}
+function onKey(ev){
+  if(!OPEN || !SCR) return;
+  if(ev.key === 'Escape'){ ev.preventDefault(); closeScreen(); return; }
+  if(ev.key !== 'Tab') return;
+  var f = [].slice.call(SCR.querySelectorAll('button,input,[tabindex]')).filter(function(el){ return !el.disabled && !el.hidden && el.getAttribute('tabindex') !== '-1' && el.offsetParent !== null; });
+  if(!f.length) return;
+  var first = f[0], last = f[f.length - 1], a = document.activeElement;
+  if(!SCR.contains(a)){ ev.preventDefault(); first.focus(); }
+  else if(ev.shiftKey && a === first){ ev.preventDefault(); last.focus(); }
+  else if(!ev.shiftKey && a === last){ ev.preventDefault(); first.focus(); }
+}
+function dropScreen(){
+  if(OPEN) hideScreen();
+  if(SCR){ SCR.remove(); SCR = null; }
+  CHAT = { uid: null, ask: [], diag: [] };
+}
+function openScreen(opener){
+  if(OPEN) return;
+  var u = user(), uid = u ? u.uid : '';
+  if(SCR && SCR._uid !== uid) dropScreen();           /* مستخدم تاني → محادثة جديدة */
+  if(!SCR) SCR = buildScreen();
+  if(!BOUND){
+    BOUND = true;
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('popstate', function(){ if(OPEN) hideScreen(); });
+    if(window.visualViewport){ window.visualViewport.addEventListener('resize', syncVV); window.visualViewport.addEventListener('scroll', syncVV); }
+  }
+  OPENER = opener || null; OPEN = true;
+  PREV_OV = document.body.style.overflow; document.body.style.overflow = 'hidden';
+  SCR.hidden = false; syncVV();
+  try{ history.pushState({ nbai: 1 }, '', location.href); HIST = true; }catch(e){ HIST = false; }   /* زر رجوع الموبايل/المتصفح يقفل الواجهة بدل ما يطلع من الصفحة */
+  var b = SCR.querySelector('.nbai-back'); if(b) b.focus({ preventScroll: true });
+}
+function hideScreen(){
+  if(!OPEN) return;
+  OPEN = false; HIST = false;
+  SCR.hidden = true; SCR.style.height = ''; SCR.style.top = '';
+  document.body.style.overflow = PREV_OV;
+  var o = OPENER; OPENER = null;
+  if(o && o.isConnected){ try{ o.focus({ preventScroll: true }); }catch(e){} }
+}
+function closeScreen(){
+  if(!OPEN) return;
+  if(HIST && history.state && history.state.nbai){
+    HIST = false;
+    try{ history.back(); }catch(e){ hideScreen(); return; }
+    setTimeout(function(){ if(OPEN) hideScreen(); }, 400);
+  } else hideScreen();
+}
+
+function mountDash(mc, farm, st){
+  if(st) STATE = st;
+  var dash = mc.querySelector('#fv-dashboard');
+  var hdr = dash && dash.querySelector('.farm-view-header');
+  if(!hdr || mc.querySelector('.nbai-cta')) return;
+  var u = user(), uid = u ? u.uid : '';
+  if(SCR && SCR._uid !== uid) dropScreen();
+  var cta = document.createElement('section');
+  cta.className = 'nbai-cta'; cta.setAttribute('aria-label', 'Nabtex AI');
+  cta.innerHTML =
+    '<div class="nbai-cta-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z"/></svg></div>' +
+    '<div class="nbai-cta-tx"><div class="nbai-cta-t"><bdi dir="ltr">Nabtex AI</bdi></div><p class="nbai-cta-d">استشارة زراعية وتشخيص النبات بالصورة.</p></div>' +
+    '<button type="button" class="nbai-cta-go">افتح المساعد<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>';
+  hdr.insertAdjacentElement('afterend', cta);   /* أعلى ترتيب الصفحة: بعد الهيدر مباشرة وقبل باقي الأقسام */
+  cta.querySelector('.nbai-cta-go').addEventListener('click', function(){ openScreen(this); });
 }
 
 window.NbFarmAI = function(view, mc, st){
@@ -26977,7 +27093,7 @@ window.NbFarmAI = function(view, mc, st){
     if(!mc || view !== 'dashboard') return;
     var farm = (st && st.farms && st.farms[0]) || (st && st.currentFarm) || null;
     if(!farm) return;
-    mountDash(mc, farm);
+    mountDash(mc, farm, st);
   }catch(e){ console.warn('[Nabtex Farm] ai:', e); }
 };
 })();
