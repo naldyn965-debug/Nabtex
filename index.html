@@ -14212,6 +14212,8 @@ document.addEventListener('click', e => {
       var fieldsOpts = farmState.fields.map(function(f) {
         return '<option value="' + f.id + '">' + (f.name||'حقل') + '</option>';
       }).join('');
+      /* خيار «المزرعة كلها» للعمليات اللي بتتم على كل الحقول مرة واحدة. بيظهر بس لو في أكتر من حقل (لو حقل واحد يبقى هو نفسه المزرعة)، وفي الآخر عشان الاختيار الافتراضي يفضل أول حقل. للتراجع: امسح السطر ده. */
+      if (farmState.fields.length > 1) fieldsOpts += '<option value="__all__">المزرعة كلها</option>';
 
       // ── Header Card ──────────────────────────────────
       var headerCard =
@@ -15336,7 +15338,8 @@ document.addEventListener('click', e => {
     var FGD_TIPS = {
       /* ── التسجيل اليومي ── */
       'op-date': 'التاريخ بيتحدد تلقائي بتاريخ النهارده — غيّره بس لو بتسجّل عملية من يوم فات.',
-      'op-field': 'اختار الحقل اللي اتعملت فيه العملية. لو مفيش حقول، ضيفها الأول من «إعداد المزرعة».',
+      /* القديم (للتراجع): 'op-field': 'اختار الحقل اللي اتعملت فيه العملية. لو مفيش حقول، ضيفها الأول من «إعداد المزرعة».', */
+      'op-field': 'اختار الحقل اللي اتعملت فيه العملية. ولو العملية تمّت على كل الحقول اختار «المزرعة كلها». لو مفيش حقول، ضيفها الأول من «إعداد المزرعة».',
       'op-crop-stage': 'اختار مرحلة نمو المحصول النهارده — بتتحفظ لباقي عمليات نفس اليوم.',
       'op-irr-method': 'اختار الطريقة اللي رويت بيها النهارده.',
       'op-irr-times': 'اكتب كام مرة رويت الحقل النهارده.',
@@ -15909,7 +15912,9 @@ document.addEventListener('click', e => {
       else if (!st.ops) fb.innerHTML = '<div class="nbfd-msg">جارٍ التحميل…</div>';
       else {
         var list = fields.map(function (fl) {
-          var d = calc.last['id:' + fl.id] || calc.last['n:' + fl.name] || '';
+          /* القديم (للتراجع): var d = calc.last['id:' + fl.id] || calc.last['n:' + fl.name] || ''; */
+          var d = calc.last['id:' + fl.id] || calc.last['n:' + fl.name] || '', dAll = calc.last['id:__all__'] || '';
+          if (dAll > d) d = dAll;   /* عملية «المزرعة كلها» بتتحسب نشاط لكل حقل */
           var n = d ? Math.round((new Date(todayStr() + 'T00:00:00') - new Date(d + 'T00:00:00')) / 86400000) : null;
           return { fl: fl, d: d, n: (n == null || isNaN(n)) ? null : n };
         }).sort(function (a, b) { return (b.n == null ? 1e9 : b.n) - (a.n == null ? 1e9 : a.n); });
