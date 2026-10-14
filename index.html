@@ -26736,7 +26736,8 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-ov .nbai-cm{animation:nbai3-rise .55s var(--ai-ease) .3s backwards}
 
 /* ── الهيدر ── */
-.nbai-ov .nbai-bar{padding-bottom:16px}
+/* نزول الهيدر: مسافة علوية إضافية تحت شريط الحالة/النوتش (36px في المتصفح، ومنطقة الأمان + 16px في وضع التطبيق) */
+.nbai-ov .nbai-bar{padding-top:calc(max(env(safe-area-inset-top,0px),20px) + 16px);padding-bottom:16px}
 .nbai-ov .nbai-bar-id{gap:12px}
 .nbai-ov .nbai-bar-t{font-size:17px;font-weight:800;letter-spacing:.02em}
 @media (hover:hover){.nbai-ov .nbai-back:hover{border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft),var(--ai-sh)}}
