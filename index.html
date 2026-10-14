@@ -26622,6 +26622,8 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
 /* تعديل: أثناء تحليل الصورة نخفي أدوات الإدخال مؤقتًا (الصورة بالفعل ظاهرة في المحادثة) عشان فقاعة «بيحلّل» تبان كاملة */
 .nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-pick,.nbai-prev,.nbai-note,.nbai-qs,.nbai-new){display:none}
+/* تعديل: بعد الفحص الأولي للصورة (نبات واضح) نفضّل أدوات اختيار الصورة/المعاينة/الملاحظات مخفية لحد التشخيص النهائي أو «إلغاء وتشخيص جديد» */
+.nbai-ov .nbai-pane.nbai-diag-step :is(.nbai-pick,.nbai-prev,.nbai-note){display:none}
 .nbai-ov .nbai-ov-in{padding-inline:16px}
 
 /* الهيدر */
@@ -27213,6 +27215,7 @@ function buildScreen(){
 
   function resetSteps(){
     step = null; DIAG_LBL = 'شخّص المشكلة';
+    card.querySelector('.nbai-pane[data-p="diag"]').classList.remove('nbai-diag-step');
     var qs = card.querySelector('.nbai-qs'); qs.innerHTML = ''; qs.hidden = true;
     var b = card.querySelector('.nbai-go-diag'); b.textContent = DIAG_LBL;
   }
@@ -27271,6 +27274,7 @@ function buildScreen(){
         settle(ty1, 'diag', prelimHtml(q), !q.isPlant);
         if(!live) return;
         step = q;
+        if(q.isPlant) card.querySelector('.nbai-pane[data-p="diag"]').classList.add('nbai-diag-step');
         renderQuestions(q);
         if((q.questions || []).length){ DIAG_LBL = 'كمّل التشخيص'; btn.textContent = DIAG_LBL; }
         paintFoot();
