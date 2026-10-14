@@ -29,7 +29,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diagnose: 6, log: 20 };
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20 };
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 600 * 1024;
@@ -37,8 +37,11 @@ const MAX_SUMMARY_CHARS = 9000;
 const MAX_QUESTION_CHARS = 300;
 const MAX_TEXT_CHARS = 700;
 const MAX_IMAGE_B64 = 420 * 1024;   /* ≈ 310KB بعد فك الترميز */
-const OUT_TOKENS = { analyze: 1200, ask: 1200, diagnose: 1400, log: 700 };
-const UPSTREAM_TIMEOUT_MS = 25000;
+const OUT_TOKENS = { analyze: 1200, ask: 1200, diag_q: 900, diagnose: 2600, log: 700 };
+/* اختياري: GEMINI_GROUNDING=1 يفعّل بحث جوجل (Grounding) في مرحلة التشخيص النهائي فقط لرفع دقة أسماء المبيدات المسجّلة.
+   متروك مطفي افتراضيًا لأن له حصة يومية منفصلة في الباقة المجانية. */
+const GROUNDING = process.env.GEMINI_GROUNDING === '1';
+const UPSTREAM_TIMEOUT_MS = 50000;   /* + maxDuration 60 في vercel.json */
 
 const usage = new Map();   /* uid|mode → { day, n } */
 const cache = new Map();   /* hash → { at, payload } */
@@ -95,17 +98,34 @@ const SYSTEMS = {
     'اعتمد على الأرقام الموجودة في الملخص فقط ولا تخترع بيانات؛ لو البيانات ناقصة قول كده بوضوح واطلب تسجيل أدق.',
     SAFETY, INJECTION
   ].join('\n'),
+  /* المرحلة 1: أسئلة استيضاحية بتفرّق بين الاحتمالات — JSON فقط */
+  diag_q: [
+    'أنت مهندس زراعي استشاري خبير في تشخيص أمراض وآفات واضطرابات المحاصيل في مصر، وبتجمع تاريخ الحالة قبل التشخيص النهائي.',
+    'هتستلم صورة وملاحظة اختيارية وسياق المزرعة. رجّع JSON فقط بالشكل:',
+    '{"isPlant":true|false,"plant":"المحصول لو واضح وإلا غير واضح","candidates":[{"name":"اسم الاحتمال بالعربي (والاسم العلمي/الإنجليزي بين قوسين)","confidence":"مرجّح|محتمل|ضعيف","sign":"العلامة اللي في الصورة وبتدل عليه"}],"photoRequests":["صورة إضافية مفيدة لو لازم"],"questions":[{"q":"نص السؤال","options":["اختيار قصير","..."]}]}',
+    'candidates: من 1 إلى 3 احتمالات مرتبة. questions: من 3 إلى 5 أسئلة بس، كل سؤال له من 2 إلى 5 اختيارات قصيرة (حد أقصى 5 كلمات للاختيار)، والأسئلة لازم تفرّق فعلًا بين الاحتمالات (مكان الأعراض على النبات، من إمتى، نسبة النباتات المصابة، طريقة الري، الطقس/الرطوبة، وجود حشرات أو نسيج أو ندوة عسلية، حالة الجذور، آخر مبيد/سماد).',
+    'ما تسألش عن معلومة موجودة في الملاحظة أو السياق. لو الصورة مش لنبات أو مش واضحة خلّي isPlant=false أو اطلب صورة أوضح في photoRequests (مثلًا: قريبة للعرض، النبات كله، ظهر الورقة، الجذور).',
+    'ما تخترعش علامات مش ظاهرة في الصورة.',
+    INJECTION
+  ].join('\n'),
+  /* المرحلة 2: التشخيص النهائي + خطة العلاج التفصيلية */
   diagnose: [
-    'أنت مهندس زراعي خبير في تشخيص أمراض وآفات واضطرابات المحاصيل في مصر، في منصة «نبتيكس».',
-    'هتستلم صورة لنبات/ثمرة/تربة وملاحظة اختيارية من المزارع. اكتب بالعربية المبسّطة وبشكل عملي في حدود 220 كلمة.',
-    'لو الصورة مش لنبات أو مش واضحة قول كده واطلب صورة أوضح (قريبة للعرض + صورة للنبات كله + ظهر الورقة).',
-    'الشكل بالترتيب:',
-    '**التشخيص المرجّح:** 1–3 احتمالات مرتبة، لكل واحد درجة ثقة (مرجّح / محتمل / ضعيف) والعلامة اللي في الصورة وبتدل عليه.',
-    '**تأكد منها:** سؤالين أو فحص بسيط يفرّق بين الاحتمالات (مثلًا ظهر الورقة، الجذور، الري، عمر الإصابة).',
-    '**الإجراء دلوقتي:** خطوات آمنة مرتبة: عزل/تقليم/تحسين تهوية وري وتسميد أولًا (مكافحة متكاملة)، وبعدين لو لازم مكافحة كيماوية اذكر المجموعة أو المادة الفعّالة الشائعة فقط.',
-    '**انتبه:** لو الإصابة سريعة الانتشار أو الصورة مش حاسمة أو المساحة كبيرة، انصح بعرض عينة على مرشد زراعي/مركز بحوث قبل أي رش.',
-    'ما تجزمش لو مش متأكد، وما تخترعش علامات مش ظاهرة في الصورة.',
-    SAFETY, INJECTION
+    'أنت مهندس زراعي استشاري خبير في تشخيص ومكافحة أمراض وآفات المحاصيل في مصر، في منصة «نبتيكس». المزارع هيعتمد على ردّك، فكن دقيقًا وصريحًا.',
+    'هتستلم صورة وملاحظة اختيارية وسياق المزرعة، وأحيانًا الاحتمالات الأولية وإجابات المزارع على أسئلتك. اكتب بالعربية المبسّطة وبشكل عملي ومفصّل (حد أقصى 450 كلمة) بالترتيب ده:',
+    '**التشخيص النهائي:** اسم المشكلة (والاسم العلمي/الإنجليزي بين قوسين) + درجة اليقين (عالية / متوسطة / منخفضة) وليه، وإيه اللي استبعدته. لو الإجابات والصورة مش كفاية للجزم قول كده وحدّد الفحص اللي هيحسمها.',
+    '**ليه حصلت:** الأسباب والظروف (رطوبة، ري، تسميد، عدوى، آفة ناقلة) مربوطة بإجابات المزارع.',
+    '**الخطورة والانتشار:** بسيطة / متوسطة / شديدة، وخلال كام يوم ممكن تتفاقم لو سيبها.',
+    '**خطة العلاج خطوة بخطوة:**',
+    '1) فورًا (أول 24 ساعة): إجراءات عملية (إزالة الأجزاء المصابة وإعدامها بدل دفنها في الحقل، عزل، تعديل الري والتهوية…).',
+    '2) مكافحة زراعية وتسميد داعم: ري، تسميد، تقليم، تهوية، أصناف مقاومة.',
+    '3) بدائل آمنة/حيوية لو متاحة وفعّالة فعلًا لهذه المشكلة (مع ذكر حدودها بصراحة).',
+    '4) المكافحة الكيماوية لو لازمة: رتّب من 2 إلى 3 خيارات (الأول الأعلى فعالية ثم البدائل)؛ لكل خيار: **المادة الفعّالة** + المجموعة (FRAC/IRAC) + ليه هي الأنسب لهذه المشكلة + فترة الأمان قبل الحصاد (PHI) التقريبية + أي تحذير (حرارة، حساسية محصول، نحل). نبّه إن «الأقوى» مش دايمًا الأحسن: لازم التبديل بين مجموعتين مختلفتين لتجنب المقاومة، وعدد الرشات محدود بما هو مسجّل على العبوة.',
+    '5) المتابعة: امتى يعيد الفحص، وعلامات التحسن، وعلامات الفشل اللي معناها يغيّر الخطة.',
+    '**الوقاية بعد كده:** 3 نقاط.',
+    '**متى تحتاج مهندس أو تحليل معمل:** الحالات اللي مينفعش تتحسم من صورة.',
+    'قواعد صارمة: اذكر المواد الفعّالة وليس الأسماء التجارية إلا لو متأكد تمامًا إنها مسجّلة في مصر لهذا المحصول، وأي معلومة تسجيل أو فترة أمان مش متأكد منها قول «تأكد من العبوة». لا تذكر جرعات أو تركيزات رقمية (سم³/لتر أو جم/لتر)؛ المعدل يتقرأ من بطاقة المنتج المسجّل. أضف سطرًا أخيرًا: ارتدِ واقيات (قفازات وكمامة ونظارة) واحترم فترة الأمان قبل الحصاد، وتأكد إن المنتج مسجّل للمحصول من لجنة مبيدات الآفات – وزارة الزراعة.',
+    'ما تخترعش علامات مش ظاهرة في الصورة ولا تجزم لو مش متأكد.',
+    INJECTION
   ].join('\n'),
   log: [
     'أنت مساعد بيحوّل كلام مزارع مصري (عامية) إلى بيانات تسجيل عملية زراعية يومية.',
@@ -140,6 +160,25 @@ function sanitizeLog(raw, options) {
     const allowed = options && Array.isArray(options[k]) ? options[k] : [];
     if (typeof raw[k] === 'string' && allowed.indexOf(raw[k]) !== -1) out[k] = raw[k];
   });
+  return out;
+}
+
+/* تنظيف رد أسئلة الاستيضاح: نصوص قصيرة وعدد محدود فقط */
+function sanitizeDiagQ(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+  const out = { isPlant: raw.isPlant !== false, plant: str(raw.plant, 60), candidates: [], photoRequests: [], questions: [] };
+  (Array.isArray(raw.candidates) ? raw.candidates : []).slice(0, 3).forEach(function (c) {
+    const name = str(c && c.name, 120);
+    if (name) out.candidates.push({ name: name, confidence: ['مرجّح', 'محتمل', 'ضعيف'].indexOf(c.confidence) !== -1 ? c.confidence : 'محتمل', sign: str(c.sign, 200) });
+  });
+  (Array.isArray(raw.photoRequests) ? raw.photoRequests : []).slice(0, 3).forEach(function (x) { const t = str(x, 120); if (t) out.photoRequests.push(t); });
+  (Array.isArray(raw.questions) ? raw.questions : []).slice(0, 5).forEach(function (qq) {
+    const t = str(qq && qq.q, 140);
+    const opts = (Array.isArray(qq && qq.options) ? qq.options : []).map(function (o) { return str(o, 50); }).filter(Boolean).slice(0, 5);
+    if (t && opts.length >= 2) out.questions.push({ q: t, options: opts });
+  });
+  if (!out.candidates.length && !out.questions.length && !out.photoRequests.length) return null;
   return out;
 }
 
@@ -183,18 +222,27 @@ module.exports = async function handler(req, res) {
     let p = 'ملخص المزرعة (JSON):\n' + s;
     p += question ? '\n\nسؤال المستخدم: ' + question : '\n\nالمطلوب: حلّل أداء المزرعة في الفترة دي واقترح أهم التحسينات.';
     parts = [{ text: p }]; keyMaterial = s + '|' + question;
-  } else if (mode === 'diagnose') {
+  } else if (mode === 'diag_q' || mode === 'diagnose') {
     const img = body.image;
     if (!img || typeof img.data !== 'string' || typeof img.mime !== 'string') return fail(res, 400, 'bad_request');
     if (['image/jpeg', 'image/png', 'image/webp'].indexOf(img.mime) === -1 || !/^[A-Za-z0-9+/=]+$/.test(img.data)) return fail(res, 400, 'bad_request');
     if (img.data.length > MAX_IMAGE_B64) return fail(res, 413, 'too_large');
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, MAX_QUESTION_CHARS) : '';
     const ctx = body.ctx && typeof body.ctx === 'object' ? JSON.stringify(body.ctx).slice(0, 800) : '';
-    let p = 'شخّص المشكلة في الصورة.';
+    let p = mode === 'diag_q' ? 'افحص الصورة واسأل المزارع الأسئلة اللي تحتاجها للوصول لتشخيص دقيق.' : 'شخّص المشكلة في الصورة وقدّم خطة العلاج.';
     if (note) p += '\nملاحظة المزارع: ' + note;
     if (ctx) p += '\nسياق المزرعة (JSON): ' + ctx;
+    let extra = '';
+    if (mode === 'diagnose') {
+      const cands = Array.isArray(body.cands) ? body.cands.filter(function (x) { return typeof x === 'string'; }).slice(0, 3).map(function (x) { return x.slice(0, 120); }) : [];
+      const answers = Array.isArray(body.answers) ? body.answers.filter(function (x) { return x && typeof x.q === 'string' && typeof x.a === 'string'; })
+        .slice(0, 6).map(function (x) { return { q: x.q.slice(0, 140), a: x.a.slice(0, 80) }; }) : [];
+      if (cands.length) p += '\nالاحتمالات الأولية من فحص الصورة: ' + cands.join(' | ');
+      if (answers.length) p += '\nإجابات المزارع على أسئلة الاستيضاح (JSON): ' + JSON.stringify(answers);
+      extra = '|' + cands.join(',') + '|' + JSON.stringify(answers);
+    }
     parts = [{ text: p }, { inlineData: { mimeType: img.mime, data: img.data } }];
-    keyMaterial = crypto.createHash('sha256').update(img.data).digest('hex') + '|' + note + '|' + ctx;
+    keyMaterial = crypto.createHash('sha256').update(img.data).digest('hex') + '|' + note + '|' + ctx + extra;
   } else { /* log */
     const text = typeof body.text === 'string' ? body.text.trim().slice(0, MAX_TEXT_CHARS) : '';
     if (text.length < 3) return fail(res, 400, 'bad_request');
@@ -221,22 +269,33 @@ module.exports = async function handler(req, res) {
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
-  const gen = { temperature: mode === 'log' ? 0 : 0.3, maxOutputTokens: OUT_TOKENS[mode] };
-  if (mode === 'log') gen.responseMimeType = 'application/json';
+  const gen = { temperature: mode === 'log' ? 0 : (mode === 'diag_q' ? 0.2 : 0.3), maxOutputTokens: OUT_TOKENS[mode] };
+  if (mode === 'log' || mode === 'diag_q') gen.responseMimeType = 'application/json';
+  const reqBody = {
+    systemInstruction: { parts: [{ text: SYSTEMS[mode] }] },
+    contents: [{ role: 'user', parts: parts }],
+    generationConfig: gen
+  };
+  const useGround = GROUNDING && mode === 'diagnose';
+  if (useGround) reqBody.tools = [{ google_search: {} }];
 
   const ctl = new AbortController();
   const timer = setTimeout(function () { ctl.abort(); }, UPSTREAM_TIMEOUT_MS);
   let up, text;
   try {
-    up = await fetch(GEMINI_URL + encodeURIComponent(MODEL) + ':generateContent', {
-      method: 'POST', signal: ctl.signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEMS[mode] }] },
-        contents: [{ role: 'user', parts: parts }],
-        generationConfig: gen
-      })
-    });
+    const call = function (bodyObj) {
+      return fetch(GEMINI_URL + encodeURIComponent(MODEL) + ':generateContent', {
+        method: 'POST', signal: ctl.signal,
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(bodyObj)
+      });
+    };
+    up = await call(reqBody);
+    if (!up.ok && up.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
+      console.error('[farm-ai] grounding rejected, retrying without it');
+      delete reqBody.tools;
+      up = await call(reqBody);
+    }
     text = await up.text();
   } catch (e) {
     console.error('[farm-ai] upstream unreachable:', e && e.name);
@@ -256,7 +315,7 @@ module.exports = async function handler(req, res) {
   const cand = j && j.candidates && j.candidates[0];
   const out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
-  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, mode === 'diagnose' ? 'blocked' : 'empty'); }
+  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q') ? 'blocked' : 'empty'); }
 
   let payload;
   if (mode === 'log') {
@@ -265,6 +324,12 @@ module.exports = async function handler(req, res) {
     const fields = sanitizeLog(parsed, options);
     if (!Object.keys(fields).length) return fail(res, 422, 'nothing_found');
     payload = { fields: fields };
+  } else if (mode === 'diag_q') {
+    let parsed = null;
+    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    const q = sanitizeDiagQ(parsed);
+    if (!q) return fail(res, 502, 'blocked');
+    payload = { q: q };
   } else {
     payload = { text: out };
   }
