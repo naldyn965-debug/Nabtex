@@ -26843,6 +26843,14 @@ body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibi
 .nbai-ov .nbq-tr{position:relative;height:9px;border-radius:999px;background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
 .nbai-ov .nbq-fl{display:block;height:100%;width:0;border-radius:inherit;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 12px -3px var(--ai-glow);transition:width .7s var(--ai-ease)}
 .nbai-ov .nbq-d{font-size:11px;line-height:1.9;color:var(--slate);text-wrap:balance}
+/* ── تهدئة بصرية لكارت «رصيدك اليوم» (CSS فقط): شيلنا الظل الكبير والخلفية البيضا والتوهّج وخفّفنا الأوزان والألوان عشان الكارت يتناسق مع الشيبس وصندوق الكتابة. مفيش أي تغيير في الـ HTML أو الـ JS أو منطق الحصص. للتراجع: امسح البلوك ده بس. ── */
+.nbai-ov .nbq{padding:8px 12px 9px;border-color:var(--line);border-radius:14px;background:transparent;box-shadow:none}
+.nbai-ov .nbq-h{margin-bottom:7px;font-size:11.5px;font-weight:700}
+.nbai-ov .nbq-t{color:var(--slate);font-weight:700}
+.nbai-ov .nbq-sp{color:var(--ai-tx);opacity:.7}
+.nbai-ov .nbq-n b{font-size:12px;font-weight:700}
+.nbai-ov .nbq-tr{height:6px;box-shadow:none}
+.nbai-ov .nbq-fl{box-shadow:none;opacity:.72}
 </style>
 
 <style id="nb-farm-ai-reveal">
@@ -27101,7 +27109,8 @@ function buildScreen(){
   /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
   var TH = { ask: card.querySelector('.nbai-th[data-th="ask"]'), diag: card.querySelector('.nbai-th[data-th="diag"]') };
   var GREET = {
-    ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.',
+    /* القديم (للتراجع): ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.', */
+    ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.',
     diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
   };
   function mkMsg(r, h, e){ var d = document.createElement('div'); d.className = 'nbai-m nbai-m-' + r + (e ? ' err' : ''); d.innerHTML = h; return d; }
