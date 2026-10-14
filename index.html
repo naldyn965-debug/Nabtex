@@ -26543,31 +26543,17 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-out.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
 [data-dark] .nbai-out.err{color:#fbbf24}
 .nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
-.nbai-log{margin:0 0 18px}
 @media (max-width:480px){.nbai{padding:14px;border-radius:16px}.nbai-go{width:100%}}
-/* ڤويس "سجّل بكلامك" — إضافة فقط: كل الكلاسات nbai-row / nbai-mic */
-.nbai-row{display:flex;align-items:center;gap:8px;margin-top:10px}
-.nbai-row .nbai-go{margin-top:0}
-.nbai-mic{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;min-height:42px;border-radius:999px;border:1.5px solid var(--brand);background:transparent;color:var(--brand);font-family:inherit;font-size:13px;font-weight:800;line-height:1.4;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-mic[hidden]{display:none}
-.nbai-mic:active{transform:scale(.97)}
-.nbai-mic:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-mic.on{color:#fff;border-color:#dc2626;background:#dc2626;animation:nbai-mic-pulse 1.4s ease-out infinite}
-@keyframes nbai-mic-pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}70%,100%{box-shadow:0 0 0 10px rgba(220,38,38,0)}}
-@media (prefers-reduced-motion:reduce){.nbai-mic.on{animation:none}}
-@media (max-width:480px){.nbai-row .nbai-go{flex:1;width:auto}}
 </style>
 
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
-   الأوضاع: تحليل المزرعة / سؤال حر (لوحة التحكم) · تشخيص من صورة (لوحة التحكم) · تعبئة التسجيل اليومي من كلام المزارع (تسجيل يومي)
+   الأوضاع: تحليل المزرعة / سؤال حر (لوحة التحكم) · تشخيص من صورة (لوحة التحكم)
    • عند الطلب فقط (زر)، مفيش أي استدعاء تلقائي.
    • بيبعت ملخص أرقام مضغوط لآخر 30 يوم (مش سجلات خام) والصورة بتتصغّر في المتصفح (≈800px JPEG) → أقل tokens وبيانات ممكنة.
    • حدود لكل وضع (نفس أرقام الخادم) + كاش 6 ساعات لنفس الطلب + فاصل 20 ثانية بين الطلبات.
-   • تعبئة التسجيل: بتملأ الحقول بس وتعرض اللي اتملا للمراجعة — الحفظ بيفضل بإيد المستخدم (saveOperation الأصلي ما اتلمسش).
    • قراءة فقط من الكاش المحلي لعمليات المزرعة (nabtex_farm_ops_v2__<uid>) — لا Firestore ولا أي كتابة في بيانات المزرعة.
-   • ڤويس «سجّل بكلامك»: زر ميكروفون (Web Speech API، ar-EG) بيكتب في نفس الـ textarea — بيتخفّى لو المتصفح مش بيدعمه.
    للتراجع: امسح هذا البلوك (style + script) وامسح السطرين اللي فيهم NbFarmAI جوه _doRenderFarmView، وامسح api/farm-ai.js.
 ═══════════════════════════════════════════════════════════════ */
 (function(){
@@ -26886,176 +26872,12 @@ function mountDash(mc, farm){
   }
 }
 
-/* ═════════ التسجيل اليومي: املأ النموذج من كلام المزارع ═════════ */
-var NUM_MAP = { irr_times:'op-irr-times', irr_amount:'op-irr-amount', irr_hours:'op-irr-hours', fert_n:'op-fert-n', fert_p:'op-fert-p', fert_k:'op-fert-k',
-  fert_organic:'op-fert-organic', fert_micro:'op-fert-micro', fert_amount:'op-fert-amount', spray_conc:'op-spray-conc', spray_water:'op-spray-water',
-  spray_area:'op-spray-area', spray_times:'op-spray-times', labor:'op-labor', machines:'op-machines', temp:'op-temp', humidity:'op-humidity', rain:'op-rain' };
-var TXT_MAP = { fert_name:'op-fert-name', fert_company:'op-fert-company', spray_name:'op-spray-name', spray_company:'op-spray-company', spray_pest:'op-spray-pest', notes:'op-notes' };
-var SEL_MAP = { crop_stage:'op-crop-stage', irr_method:'op-irr-method', fert_type:'op-fert-type', fert_method:'op-fert-method', spray_type:'op-spray-type', agri_type:'op-agri-type' };
-
-function chipsOf(lv, id){
-  var hid = lv.querySelector('#' + id), g = hid && hid.closest ? hid.closest('.farm-fg-chips') : null;
-  return g ? Array.prototype.slice.call(g.querySelectorAll('.fc-chip')) : [];
-}
-function labelOf(lv, id){ var l = lv.querySelector('label[for="' + id + '"]') || lv.querySelector('#' + id + '-lbl'); return l ? l.textContent.trim() : (id === 'op-notes' ? 'ملاحظات' : id); }
-
-function mountLog(mc, farm){
-  var lv = mc.querySelector('#fv-log');
-  if(!lv || lv.querySelector('.nbai-log')) return;
-  var hdr = lv.querySelector('.farm-view-header');
-  if(!hdr) return;
-  var card = document.createElement('section');
-  card.className = 'nbai nbai-log';
-  card.innerHTML =
-    '<div class="nbai-h"><div class="nbai-hi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/></svg></div>' +
-    '<div><div class="nbai-ht">سجّل بكلامك</div><div class="nbai-hs">اكتب اللي عملته اليوم بالعامية، والمساعد يملأ النموذج — وانت تراجع وتحفظ</div></div></div>' +
-    '<textarea class="nbai-q" maxlength="700" placeholder="مثال: روينا 3 ساعات بالتنقيط وسمّدنا نترات كالسيوم 20 كجم ورشينا نحاس على عفن رمادي، وكان معانا 4 عمال" aria-label="اكتب عملياتك اليومية"></textarea>' +
-    '<div class="nbai-row"><button type="button" class="nbai-mic" aria-label="ابدأ التسجيل الصوتي"><span class="nbai-mic-i" aria-hidden="true"></span><span class="nbai-mic-t">تكلّم</span></button><button type="button" class="nbai-go">املأ النموذج</button></div>' +
-    '<div class="nbai-out" role="status" aria-live="polite"></div>' +
-    '<div class="nbai-f"></div>';
-  hdr.insertAdjacentElement('afterend', card);
-  var out = card.querySelector('.nbai-out'), btn = card.querySelector('.nbai-go'), ta = card.querySelector('textarea'), foot = card.querySelector('.nbai-f');
-  function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
-  function paintFoot(){ foot.textContent = 'متبقي لك اليوم: ' + left('log') + ' — راجع الحقول قبل الحفظ.'; }
-  paintFoot();
-
-  function fill(fields){
-    var done = [];
-    function fire(el){ try{ el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }catch(e){} }
-    Object.keys(NUM_MAP).forEach(function(k){
-      var el = lv.querySelector('#' + NUM_MAP[k]);
-      if(el && fields[k] != null){ el.value = String(fields[k]); fire(el); done.push(labelOf(lv, NUM_MAP[k]) + ': ' + fields[k]); }
-    });
-    Object.keys(TXT_MAP).forEach(function(k){
-      var el = lv.querySelector('#' + TXT_MAP[k]);
-      if(el && fields[k]){ el.value = fields[k]; fire(el); done.push(labelOf(lv, TXT_MAP[k]) + ': ' + fields[k]); }
-    });
-    Object.keys(SEL_MAP).forEach(function(k){
-      if(!fields[k]) return;
-      var chip = chipsOf(lv, SEL_MAP[k]).filter(function(c){ return c.getAttribute('data-val') === fields[k]; })[0];
-      if(chip){ chip.click(); done.push(labelOf(lv, SEL_MAP[k]) + ': ' + chip.textContent.trim()); }
-    });
-    return done;
-  }
-
-  btn.addEventListener('click', function(){
-    if(btn.disabled) return;
-    var text = ta.value.trim().slice(0, 700);
-    if(text.length < 3){ show('اكتب اللي عملته الأول.', true); return; }
-    var options = {};
-    Object.keys(SEL_MAP).forEach(function(k){ options[k] = chipsOf(lv, SEL_MAP[k]).map(function(c){ return c.getAttribute('data-val'); }).filter(Boolean); });
-    btn.disabled = true; btn.textContent = 'جارٍ القراءة...'; show('', false);
-    call('log', { text: text, options: options }, text + '|' + JSON.stringify(options), function(r){
-      if(!card.isConnected) return;
-      btn.disabled = false; btn.textContent = 'املأ النموذج'; paintFoot();
-      if(!r.ok){ show(esc(errText(r.err)), true); return; }
-      var done = fill(r.j.fields || {});
-      show(done.length ? '<b>اتملا في النموذج — راجعه قبل الحفظ:</b><br>• ' + done.map(esc).join('<br>• ') : esc(MSG.nothing_found), !done.length);
-    });
-  });
-
-  /* ── إدخال صوتي (Web Speech API): بيكتب الكلام في نفس الـ textarea بس — زر "املأ النموذج" وfill والحفظ ما اتلمسوش.
-        المتصفحات اللي ملهاش دعم → الزر بيتخفّى والكتابة بتفضل شغالة عادي. ── */
-  var mic = card.querySelector('.nbai-mic');
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(mic && !SR){ mic.hidden = true; }
-  else if(mic){
-    var micIc = mic.querySelector('.nbai-mic-i'), micTx = mic.querySelector('.nbai-mic-t');
-    var SVG_MIC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
-    var SVG_STOP = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
-    var LISTEN_HTML = 'بسمعك دلوقتي… اتكلم بالعامية وأنا هكتب. اضغط «إيقاف» لما تخلّص.';
-    var VMSG = {
-      denied: 'لازم تسمح للموقع باستخدام الميكروفون من إعدادات المتصفح، وبعدين جرّب تاني.',
-      nomic: 'ما لقيتش ميكروفون شغّال على الجهاز.',
-      network: 'الڤويس محتاج اتصال بالإنترنت. جرّب تاني.',
-      lang: 'المتصفح ده مش بيدعم التعرّف على العربية صوتيًا. اكتب بإيدك.',
-      silent: 'ما سمعتش صوت. قرّب من الميكروفون وجرّب تاني.',
-      generic: 'ما قدرتش أشغّل الڤويس. اكتب بإيدك أو جرّب تاني.'
-    };
-    var VMAX = 700, V_SILENCE = 7000, V_TOTAL = 90000, IS_ANDROID = /Android/i.test(navigator.userAgent || '');
-    var rec = null, active = false, base = '', heard = false, lastHeard = 0, t0 = 0, fatal = '', guard = 0;
-
-    function joinTxt(a, b){ a = String(a || '').replace(/\s+$/, ''); b = String(b || '').trim(); return (a && b) ? a + ' ' + b : a + b; }
-    function paintMic(on){
-      mic.classList.toggle('on', on);
-      mic.setAttribute('aria-label', on ? 'إيقاف التسجيل الصوتي' : 'ابدأ التسجيل الصوتي');
-      micIc.innerHTML = on ? SVG_STOP : SVG_MIC;
-      micTx.textContent = on ? 'إيقاف' : 'تكلّم';
-    }
-    paintMic(false);
-
-    function cleanup(){
-      clearTimeout(guard);
-      var wasOn = mic.classList.contains('on');
-      active = false; rec = null; ta.readOnly = false; paintMic(false);
-      if(!wasOn) return;
-      if(fatal){ show(esc(fatal), true); }
-      else if(!heard){ show(esc(VMSG.silent), true); }
-      else if(out.innerHTML === LISTEN_HTML){ show('', false); }
-      fatal = '';
-    }
-    function begin(){
-      var r = new SR();
-      /* continuous على الدسكتوب/آيفون = بدون فجوات بين الجمل؛ أندرويد كروم بيكرّر النص مع continuous فبنسيبه جملة-جملة */
-      r.lang = 'ar-EG'; r.interimResults = true; r.continuous = !IS_ANDROID; r.maxAlternatives = 1;
-      r.onresult = function(e){
-        if(!card.isConnected){ stopVoice(); return; }
-        lastHeard = Date.now(); heard = true;
-        var spoken = '';
-        for(var i = 0; i < e.results.length; i++){
-          var t = String(e.results[i][0].transcript || '').trim();
-          if(t) spoken = spoken ? spoken + ' ' + t : t;
-        }
-        ta.value = joinTxt(base, spoken).slice(0, VMAX);
-        ta.scrollTop = ta.scrollHeight;
-      };
-      r.onerror = function(e){
-        var c = e && e.error;
-        if(c === 'no-speech' || c === 'aborted') return;
-        fatal = (c === 'not-allowed' || c === 'service-not-allowed') ? VMSG.denied
-              : c === 'audio-capture' ? VMSG.nomic
-              : c === 'network' ? VMSG.network
-              : c === 'language-not-supported' ? VMSG.lang : VMSG.generic;
-        active = false;
-      };
-      r.onend = function(){
-        rec = null; base = ta.value.trim();
-        var again = active && card.isConnected && !fatal && ta.value.length < VMAX &&
-                    (Date.now() - lastHeard) < V_SILENCE && (Date.now() - t0) < V_TOTAL;
-        if(!again){ cleanup(); return; }
-        setTimeout(function(){
-          if(!active){ cleanup(); return; }
-          try{ begin(); }catch(err){ fatal = VMSG.generic; cleanup(); }
-        }, 60);
-      };
-      rec = r;
-      r.start();
-    }
-    function stopVoice(){
-      active = false;
-      if(!rec){ cleanup(); return; }
-      try{ rec.stop(); }catch(e){ cleanup(); return; }
-      guard = setTimeout(cleanup, 1500);
-    }
-
-    mic.addEventListener('click', function(){
-      if(active){ stopVoice(); return; }
-      if(btn.disabled) return;
-      if(!navigator.onLine){ show(esc(MSG.offline), true); return; }
-      base = ta.value.trim(); heard = false; fatal = ''; t0 = lastHeard = Date.now();
-      active = true; ta.readOnly = true; paintMic(true); show(LISTEN_HTML, false);
-      try{ begin(); }catch(err){ fatal = VMSG.generic; cleanup(); }
-    });
-    btn.addEventListener('click', function(){ if(active) stopVoice(); });
-  }
-}
-
 window.NbFarmAI = function(view, mc, st){
   try{
-    if(!mc || (view !== 'dashboard' && view !== 'log')) return;
+    if(!mc || view !== 'dashboard') return;
     var farm = (st && st.farms && st.farms[0]) || (st && st.currentFarm) || null;
     if(!farm) return;
-    if(view === 'dashboard') mountDash(mc, farm); else mountLog(mc, farm);
+    mountDash(mc, farm);
   }catch(e){ console.warn('[Nabtex Farm] ai:', e); }
 };
 })();
