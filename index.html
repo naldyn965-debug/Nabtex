@@ -26831,6 +26831,18 @@ body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibi
   .nbai-ov .nbai-dots i{opacity:.7}
   .nbai-cta::after{display:none}
 }
+
+/* ── شريط رصيد المساعد اليومي (بديل نص «متبقي لك اليوم»): إضافة فقط — كلاسات nbq-* ── */
+.nbai-ov .nbq{margin:2px auto 10px;padding:11px 14px 12px;border:1px solid var(--line2);border-radius:16px;background:var(--card);box-shadow:var(--ai-sh);text-align:start}
+.nbai-ov .nbq-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:12px;line-height:1.4;font-weight:800}
+.nbai-ov .nbq-t{display:inline-flex;align-items:center;gap:6px;color:var(--ai-tx);letter-spacing:.02em}
+.nbai-ov .nbq-sp{font-size:11px;line-height:1}
+.nbai-ov .nbq-n{color:var(--slate);font-weight:700;font-variant-numeric:tabular-nums}
+.nbai-ov .nbq-n b{color:var(--ink);font-size:13px;font-weight:800}
+.nbai-ov .nbq-r{margin-inline-start:6px;font-weight:700;color:var(--ai-tx)}
+.nbai-ov .nbq-tr{position:relative;height:9px;border-radius:999px;background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
+.nbai-ov .nbq-fl{display:block;height:100%;width:0;border-radius:inherit;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 12px -3px var(--ai-glow);transition:width .7s var(--ai-ease)}
+.nbai-ov .nbq-d{font-size:11px;line-height:1.9;color:var(--slate);text-wrap:balance}
 </style>
 
 <style id="nb-farm-ai-reveal">
@@ -27058,10 +27070,31 @@ function buildScreen(){
   var out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f');
   var tab = 'ask', imgData = null, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة';
   function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
+  /* شريط رصيد المساعد اليومي: بيتبني مرة واحدة وبعدها بيتحدّث بس، فعرض الشريط بيتسحب بنعومة مع كل استخدام. النقاط = نفس عدّاد الحد اليومي (left/LIM)، فمفيش أي تغيير في منطق الحصص. */
+  function paintQuota(l, mx){
+    var q = foot._q;
+    if(!q){
+      foot.textContent = '';
+      var box = document.createElement('div'); box.className = 'nbq';
+      box.innerHTML =
+        '<div class="nbq-h"><span class="nbq-t"><span class="nbq-sp" aria-hidden="true">✦</span>رصيدك اليوم</span>' +
+        '<span class="nbq-n"><bdi dir="ltr"><b class="nbq-v"></b> / <span class="nbq-m"></span></bdi> نقطة<span class="nbq-r" hidden>· يتجدد بكرة</span></span></div>' +
+        '<div class="nbq-tr" role="progressbar" aria-label="رصيد المساعد الذكي اليوم" aria-valuemin="0"><i class="nbq-fl"></i></div>';
+      var note = document.createElement('div'); note.className = 'nbq-d';
+      note.textContent = 'الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.';
+      foot.appendChild(box); foot.appendChild(note);
+      q = foot._q = { tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: box.querySelector('.nbq-r') };
+    }
+    var pct = mx > 0 ? Math.max(0, Math.min(100, l / mx * 100)) : 0;
+    q.v.textContent = l; q.m.textContent = mx; q.r.hidden = l > 0;
+    q.tr.setAttribute('aria-valuemax', mx); q.tr.setAttribute('aria-valuenow', l);
+    q.fl.style.width = pct + '%';
+  }
   function paintFoot(){
     var m = tab === 'diag' ? 'diagnose' : 'ask';
     var l = tab === 'diag' ? Math.min(left('diag_q'), left('diagnose')) : (card.querySelector('.nbai-qi').value.trim() ? left('ask') : left('analyze'));
-    foot.textContent = 'متبقي لك اليوم: ' + l + ' — الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.';
+    /* القديم (للتراجع): foot.textContent = 'متبقي لك اليوم: ' + l + ' — الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.'; */
+    paintQuota(l, tab === 'diag' ? Math.min(LIM.diag_q, LIM.diagnose) : (card.querySelector('.nbai-qi').value.trim() ? LIM.ask : LIM.analyze));
   }
   paintFoot();
 
