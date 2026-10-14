@@ -26544,6 +26544,31 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 [data-dark] .nbai-out.err{color:#fbbf24}
 .nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
 @media (max-width:480px){.nbai{padding:14px;border-radius:16px}.nbai-go{width:100%}}
+/* شات المساعد — إضافة فقط: كل الكلاسات nbai-th / nbai-m / nbai-chip / nbai-cm / nbai-new / nbai-dots */
+.nbai-th{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:min(55vh,440px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px}
+.nbai-m{max-width:92%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.95;overflow-wrap:anywhere;word-break:break-word}
+.nbai-m-ai{align-self:flex-end;background:var(--bg2);border:1px solid var(--line);color:var(--ink2);border-end-end-radius:6px}
+.nbai-m-user{align-self:flex-start;max-width:85%;background:var(--brand);color:#fff;border-end-start-radius:6px}
+.nbai-m.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
+[data-dark] .nbai-m.err{color:#fbbf24}
+.nbai-m img{display:block;max-width:150px;max-height:150px;border-radius:10px;margin-bottom:6px}
+.nbai-dots{display:inline-flex;align-items:center;gap:4px;min-height:22px}
+.nbai-dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:nbai-dot 1.2s infinite ease-in-out}
+.nbai-dots i:nth-child(2){animation-delay:.18s}
+.nbai-dots i:nth-child(3){animation-delay:.36s}
+@keyframes nbai-dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.nbai-dots i{animation:none;opacity:.7}}
+.nbai-chips{display:flex;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nbai-chips::-webkit-scrollbar{display:none}
+.nbai-chip{flex:none;font-family:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:7px 12px;min-height:36px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.nbai-chip:focus-visible,.nbai-new:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbai-chip[disabled]{opacity:.6;cursor:default}
+.nbai-cm{display:flex;align-items:center;gap:8px;margin-top:10px}
+.nbai-cm .nbai-q{margin-top:0;flex:1;min-width:0;border-radius:999px;padding-inline:16px}
+.nbai-cm .nbai-go{flex:none;width:44px;height:44px;min-height:44px;padding:0;margin-top:0}
+.nbai-go-ask svg{transform:scaleX(-1)}
+.nbai-new{display:block;margin:8px auto 0;padding:0 8px;min-height:36px;background:none;border:0;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-new[hidden]{display:none}
 </style>
 
 <script id="nb-farm-ai-js">
@@ -26551,6 +26576,7 @@ textarea.nbai-q{resize:vertical;min-height:84px}
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
    الأوضاع: تحليل المزرعة / سؤال حر (لوحة التحكم) · تشخيص من صورة (لوحة التحكم)
    • عند الطلب فقط (زر)، مفيش أي استدعاء تلقائي.
+   • واجهة شات: فقاعات سؤال/رد، السجل فوق ومربع الكتابة تحت (في الذاكرة بس)، وكل سؤال بيتجاوب عليه لوحده (الخادم بلا ذاكرة).
    • بيبعت ملخص أرقام مضغوط لآخر 30 يوم (مش سجلات خام) والصورة بتتصغّر في المتصفح (≈800px JPEG) → أقل tokens وبيانات ممكنة.
    • حدود لكل وضع (نفس أرقام الخادم) + كاش 6 ساعات لنفس الطلب + فاصل 20 ثانية بين الطلبات.
    • قراءة فقط من الكاش المحلي لعمليات المزرعة (nabtex_farm_ops_v2__<uid>) — لا Firestore ولا أي كتابة في بيانات المزرعة.
@@ -26711,9 +26737,14 @@ function shrink(file, cb){
 }
 
 /* ═════════ لوحة التحكم: تحليل / سؤال / تشخيص بالصورة ═════════ */
+/* سجل المحادثة في الذاكرة بس (بيرجع لو الصفحة اتعمل لها render تاني) — بيتصفّر لو المستخدم اتغيّر */
+var CHAT = { uid: null, ask: [], diag: [] };
+
 function mountDash(mc, farm){
   var anchor = mc.querySelector('.nbfw') || mc.querySelector('#fv-dashboard .farm-stats-grid');
   if(!anchor || mc.querySelector('.nbai')) return;
+  var u0 = user(), uid0 = u0 ? u0.uid : '';
+  if(CHAT.uid !== uid0) CHAT = { uid: uid0, ask: [], diag: [] };
   var card = document.createElement('section');
   card.className = 'nbai';
   card.innerHTML =
@@ -26724,16 +26755,20 @@ function mountDash(mc, farm){
       '<button type="button" class="nbai-tab" role="tab" data-t="diag" aria-selected="false">تشخيص بالصورة</button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
-      '<input class="nbai-q nbai-qi" type="text" maxlength="300" placeholder="سؤال اختياري، مثال: إزاي أحسّن الري؟" aria-label="سؤال للمساعد الذكي">' +
-      '<button type="button" class="nbai-go nbai-go-ask">حلّل مزرعتي</button>' +
+      '<div class="nbai-th" data-th="ask" role="log" aria-live="polite" aria-label="محادثة المساعد"></div>' +
+      '<div class="nbai-chips"><button type="button" class="nbai-chip" data-q="">حلّل مزرعتي</button><button type="button" class="nbai-chip" data-q="إزاي أحسّن الري؟">إزاي أحسّن الري؟</button><button type="button" class="nbai-chip" data-q="إزاي أوفّر في التسميد؟">إزاي أوفّر في التسميد؟</button></div>' +
+      '<div class="nbai-cm"><input class="nbai-q nbai-qi" type="text" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي">' +
+      '<button type="button" class="nbai-go nbai-go-ask" aria-label="إرسال"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button></div>' +
     '</div>' +
     '<div class="nbai-pane" data-p="diag" hidden>' +
+      '<div class="nbai-th" data-th="diag" role="log" aria-live="polite" aria-label="محادثة التشخيص"></div>' +
       '<input type="file" accept="image/*" capture="environment" class="nbai-file" hidden>' +
       '<button type="button" class="nbai-pick">📷 صوّر أو اختر صورة للنبات المصاب (ورقة / ثمرة / ساق)</button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
       '<button type="button" class="nbai-go nbai-go-diag" disabled>شخّص المشكلة</button>' +
+      '<button type="button" class="nbai-new" hidden>إلغاء وتشخيص جديد</button>' +
     '</div>' +
     '<div class="nbai-out" role="status" aria-live="polite"></div>' +
     '<div class="nbai-f"></div>';
@@ -26749,19 +26784,53 @@ function mountDash(mc, farm){
   }
   paintFoot();
 
+  /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
+  var TH = { ask: card.querySelector('.nbai-th[data-th="ask"]'), diag: card.querySelector('.nbai-th[data-th="diag"]') };
+  var GREET = {
+    ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.',
+    diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
+  };
+  function mkMsg(r, h, e){ var d = document.createElement('div'); d.className = 'nbai-m nbai-m-' + r + (e ? ' err' : ''); d.innerHTML = h; return d; }
+  function toEnd(t){ var el = TH[t]; if(el) el.scrollTop = el.scrollHeight; }
+  function keep(t, r, h, e){
+    CHAT[t].push({ r: r, h: h, e: !!e });
+    if(CHAT[t].length > 30) CHAT[t].shift();
+    if(TH[t].children.length > 31) TH[t].removeChild(TH[t].children[1]);
+  }
+  function push(t, r, h, e){ keep(t, r, h, e); var d = mkMsg(r, h, e); TH[t].appendChild(d); toEnd(t); return d; }
+  function typing(t){
+    var d = mkMsg('ai', '<span class="nbai-dots" role="img" aria-label="المساعد بيكتب"><i></i><i></i><i></i></span>', false);
+    TH[t].appendChild(d); toEnd(t); return d;
+  }
+  function settle(d, t, h, e){
+    keep(t, 'ai', h, e);
+    if(d && d.parentNode){ d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; TH[t].scrollTop = Math.max(0, d.offsetTop - 8); }
+  }
+  ['ask', 'diag'].forEach(function(t){
+    TH[t].appendChild(mkMsg('ai', GREET[t], false));
+    CHAT[t].forEach(function(m){ TH[t].appendChild(mkMsg(m.r, m.h, m.e)); });
+    toEnd(t);
+  });
+
   card.addEventListener('click', function(ev){
     var t = ev.target && ev.target.closest ? ev.target.closest('.nbai-tab') : null;
     if(t && card.contains(t)){
       tab = t.getAttribute('data-t');
       card.querySelectorAll('.nbai-tab').forEach(function(b){ b.setAttribute('aria-selected', b === t ? 'true' : 'false'); });
       card.querySelectorAll('.nbai-pane').forEach(function(p){ p.hidden = p.getAttribute('data-p') !== tab; });
-      show('', false); paintFoot(); return;
+      show('', false); paintFoot(); toEnd(tab); return;
     }
     if(ev.target.closest && ev.target.closest('.nbai-pick')){ card.querySelector('.nbai-file').click(); return; }
-    if(ev.target.closest && ev.target.closest('.nbai-go-ask')) return runAsk();
+    var chip = ev.target.closest && ev.target.closest('.nbai-chip');
+    if(chip) return runAsk(chip.getAttribute('data-q') || '');
+    if(ev.target.closest && ev.target.closest('.nbai-go-ask')) return sendAsk();
+    if(ev.target.closest && ev.target.closest('.nbai-new')){ if(!busy){ resetComposer(); show('', false); } return; }
     if(ev.target.closest && ev.target.closest('.nbai-go-diag')) return runDiag();
   });
   card.querySelector('.nbai-qi').addEventListener('input', paintFoot);
+  card.querySelector('.nbai-qi').addEventListener('keydown', function(ev){
+    if(ev.key === 'Enter' && !ev.isComposing){ ev.preventDefault(); sendAsk(); }
+  });
   card.querySelector('.nbai-file').addEventListener('change', function(){
     var f = this.files && this.files[0]; if(!f) return;
     try{ this.value = ''; }catch(e){}   /* يسمح باختيار نفس الصورة تاني */
@@ -26772,24 +26841,49 @@ function mountDash(mc, farm){
       imgData = d; resetSteps(); show('', false);
       var pv = card.querySelector('.nbai-prev'); pv.src = d; pv.hidden = false;
       card.querySelector('.nbai-go-diag').disabled = false;
+      card.querySelector('.nbai-new').hidden = false;
     });
   });
 
   function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !imgData); btn.textContent = on ? 'جارٍ التحليل...' : label; }
 
-  function runAsk(){
+  function sendAsk(){
+    var i = card.querySelector('.nbai-qi');
+    if(!i.value.trim()){ i.focus(); return; }
+    runAsk();
+  }
+
+  /* ov: نص جاهز من شريحة اقتراح ('' = تحليل المزرعة)؛ بدونه بيتاخد من مربع الكتابة */
+  function runAsk(ov){
     if(busy) return;
-    var u = user(), btn = card.querySelector('.nbai-go-ask');
-    if(!u){ show(esc(MSG.login), true); return; }
-    var q = card.querySelector('.nbai-qi').value.trim().slice(0, 300);
+    var u = user(), inp = card.querySelector('.nbai-qi'), btn = card.querySelector('.nbai-go-ask');
+    if(!u){ push('ask', 'ai', esc(MSG.login), true); return; }
+    var fromInput = typeof ov !== 'string';
+    var q = (fromInput ? inp.value : ov).trim().slice(0, 300);
     var summary = buildSummary(farm, u.uid);
-    if(!summary.operations && !q){ show('سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
-    setBusy(btn, true, 'حلّل مزرعتي'); show('', false);
+    if(!summary.operations && !q){ push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
+    function lock(on){ busy = on; btn.disabled = on; card.querySelectorAll('.nbai-chip').forEach(function(c){ c.disabled = on; }); }
+    push('ask', 'user', q ? esc(q) : 'حلّل مزرعتي');
+    var ty = typing('ask');
+    if(fromInput) inp.value = '';
+    lock(true); paintFoot();
     call(q ? 'ask' : 'analyze', { summary: summary, question: q }, JSON.stringify(summary) + '|' + q, function(r){
-      if(!card.isConnected) return;
-      setBusy(btn, false, 'حلّل مزرعتي');
-      show(r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok); paintFoot();
+      var live = card.isConnected;
+      if(live) lock(false); else busy = false;
+      settle(ty, 'ask', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
+      if(live){
+        if(!r.ok && fromInput && q && !inp.value) inp.value = q;   /* فشل → السؤال يرجع للمربع عشان يتبعت تاني */
+        paintFoot();
+      }
     });
+  }
+
+  function resetComposer(){
+    imgData = null; resetSteps();
+    var pv = card.querySelector('.nbai-prev'); pv.hidden = true; pv.removeAttribute('src');
+    card.querySelector('.nbai-note').value = '';
+    card.querySelector('.nbai-go-diag').disabled = true;
+    card.querySelector('.nbai-new').hidden = true;
   }
 
   function resetSteps(){
@@ -26840,16 +26934,19 @@ function mountDash(mc, farm){
 
     if(!step){
       /* المرحلة 1: فحص الصورة + أسئلة استيضاحية */
-      setBusy(btn, true, DIAG_LBL); show('جارٍ فحص الصورة...', false);
+      setBusy(btn, true, DIAG_LBL); show('', false);
+      push('diag', 'user', '<img src="' + imgData + '" alt="الصورة المرسلة">' + (note ? esc(note) : 'شخّص المشكلة'));
+      var ty1 = typing('diag');
       call('diag_q', { image: image, note: note, ctx: ctx }, ck, function(r){
-        if(!card.isConnected) return;
-        setBusy(btn, false, DIAG_LBL);
-        if(!r.ok){ show(esc(errText(r.err)), true); paintFoot(); return; }
+        var live = card.isConnected;
+        if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
+        if(!r.ok){ settle(ty1, 'diag', esc(errText(r.err)), true); if(live) paintFoot(); return; }
         var q = r.j.q; if(!q && r.j.text){ try{ q = JSON.parse(r.j.text); }catch(e){} }
-        if(!q){ show(esc(MSG.blocked), true); paintFoot(); return; }
+        if(!q){ settle(ty1, 'diag', esc(MSG.blocked), true); if(live) paintFoot(); return; }
+        settle(ty1, 'diag', prelimHtml(q), !q.isPlant);
+        if(!live) return;
         step = q;
         renderQuestions(q);
-        show(prelimHtml(q), !q.isPlant);
         if((q.questions || []).length){ DIAG_LBL = 'كمّل التشخيص'; btn.textContent = DIAG_LBL; }
         paintFoot();
       });
@@ -26863,11 +26960,14 @@ function mountDash(mc, farm){
       if(on && on.textContent !== 'مش عارف') answers.push({ q: step.questions[+qb.getAttribute('data-i')].q, a: on.textContent });
     });
     var cands = (step.candidates || []).map(function(c){ return c.name; });
-    setBusy(btn, true, DIAG_LBL); show('جارٍ إعداد التشخيص النهائي وخطة العلاج...', false);
+    setBusy(btn, true, DIAG_LBL); show('', false);
+    push('diag', 'user', answers.length ? answers.map(function(x){ return esc(x.q) + ': <b>' + esc(x.a) + '</b>'; }).join('<br>') : 'كمّل التشخيص');
+    var ty2 = typing('diag');
     call('diagnose', { image: image, note: note, ctx: ctx, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
-      if(!card.isConnected) return;
-      setBusy(btn, false, DIAG_LBL);
-      show(r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok); paintFoot();
+      var live = card.isConnected;
+      if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
+      settle(ty2, 'diag', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
+      if(live){ if(r.ok) resetComposer(); paintFoot(); }   /* بعد التشخيص النهائي الفورم بيتفضّى لتشخيص جديد */
     });
   }
 }
