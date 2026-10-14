@@ -26608,6 +26608,92 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 
 </style>
 
+<style id="nb-farm-ai-pro">
+/* ═══════════════════════════════════════════════════════════════
+   Nabtex AI — تصميم احترافي للواجهة المستقلة. CSS فقط، كل القواعد تحت .nbai-ov (مفيش أي تأثير على باقي الموقع).
+   • نفس الكلاسات ونفس الـ JS — طبقة تصميم فوق nb-farm-ai-css بس. للتراجع: امسح هذا البلوك (style) والـ span/svg جوه زر .nbai-pick.
+   • خلفية الواجهة على ::before (مش على العنصر الـ fixed نفسه) — نفس إصلاح iOS Liquid Glass المستخدم في #ldr، عشان Safari ما يطبّعش ضبابية فوق الهيدر.
+═══════════════════════════════════════════════════════════════ */
+.nbai-ov{--ai-g:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);--ai-tx:#6d28d9;--ai-soft:rgba(124,58,237,.08);--ai-ring:rgba(124,58,237,.3);--ai-glow:rgba(109,40,217,.8);--ai-sh:0 1px 2px rgba(16,24,40,.05),0 12px 30px -16px rgba(16,24,40,.24);--ai-ease:cubic-bezier(.16,1,.3,1);background:none}
+[data-dark] .nbai-ov{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.16);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.75);--ai-sh:0 1px 2px rgba(0,0,0,.4),0 14px 32px -16px rgba(0,0,0,.75)}
+.nbai-ov::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(72% 36% at 90% -6%,rgba(124,58,237,.14),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.11),transparent 72%),var(--bg)}
+[data-dark] .nbai-ov::before{background:radial-gradient(72% 36% at 90% -6%,rgba(168,85,247,.22),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.24),transparent 72%),var(--bg)}
+.nbai-ov .nbai-ov-in{padding-inline:16px}
+
+/* الهيدر */
+.nbai-ov .nbai-bar{gap:12px;padding-bottom:14px}
+.nbai-ov .nbai-back{min-height:42px;background:var(--card);border-color:var(--line2);box-shadow:var(--ai-sh);transition:transform .15s var(--ai-ease),box-shadow .2s}
+.nbai-ov .nbai-bar-ic{width:44px;height:44px;border-radius:15px;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 4px var(--ai-soft),0 12px 24px -10px var(--ai-glow)}
+.nbai-ov .nbai-bar-t{font-size:16.5px;letter-spacing:.01em}
+.nbai-ov .nbai-bar-s{font-size:12px;color:var(--slate)}
+
+/* التبويبات: segmented control */
+.nbai-ov .nbai-tabs{padding:4px;gap:4px;background:var(--bg3);border:1px solid var(--line);border-radius:16px}
+.nbai-ov .nbai-tab{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--slate);font-size:13px;transition:background .22s var(--ai-ease),color .22s,box-shadow .22s}
+.nbai-ov .nbai-tab[aria-selected="true"]{background:var(--card);color:var(--ai-tx);box-shadow:0 1px 2px rgba(16,24,40,.08),0 8px 16px -8px rgba(16,24,40,.22),inset 0 0 0 1px var(--ai-ring)}
+[data-dark] .nbai-ov .nbai-tab[aria-selected="true"]{background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
+
+/* المحادثة: رسالة برسالة */
+.nbai-ov .nbai-th{gap:14px;padding:10px 2px 14px;scrollbar-width:none}
+.nbai-ov .nbai-th::-webkit-scrollbar{display:none}
+.nbai-ov .nbai-m{animation:nbai-pop .34s var(--ai-ease) both}
+@keyframes nbai-pop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.nbai-ov .nbai-m-user{padding:11px 17px;border-radius:20px;border-end-start-radius:6px;background:var(--ai-g);color:#fff;font-size:14px;font-weight:700;box-shadow:0 14px 26px -14px var(--ai-glow)}
+.nbai-ov .nbai-m-ai{max-width:100%;padding:15px 18px 14px;border-radius:22px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:14px;line-height:2;box-shadow:var(--ai-sh)}
+.nbai-ov .nbai-m-ai::before{content:"✦  Nabtex AI";display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--ai-tx)}
+.nbai-ov .nbai-m-ai b{font-weight:800}
+.nbai-ov .nbai-m.err{background:rgba(217,119,6,.09);border-color:rgba(217,119,6,.35)}
+.nbai-ov .nbai-m.err::before{color:inherit}
+.nbai-ov .nbai-m img{border-radius:14px}
+.nbai-ov .nbai-dots i{background:var(--ai-tx)}
+/* الحالة الفاضية (رسالة الترحيب لوحدها): شاشة ترحيب في النص */
+.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err){align-self:center;margin:auto;max-width:330px;padding:10px 4px;border:0;background:none;box-shadow:none;text-align:center;color:var(--slate);font-size:14.5px;line-height:2}
+.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{content:"";width:68px;height:68px;margin:0 auto 18px;border-radius:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z'/%3E%3Cpath d='M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z'/%3E%3C/svg%3E") center/32px 32px no-repeat,var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 8px var(--ai-soft),0 18px 36px -12px var(--ai-glow)}
+@media (max-height:560px){.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}}
+
+/* الاقتراحات + مربع الكتابة */
+.nbai-ov .nbai-chips{flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px;overflow:visible}
+.nbai-ov .nbai-chip{min-height:38px;padding:8px 15px;border:1px solid var(--line2);background:var(--card);color:var(--ink2);box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .15s var(--ai-ease),background .2s,border-color .2s,color .2s}
+.nbai-ov .nbai-chip:first-child{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}
+.nbai-ov .nbai-chip:first-child::before{content:"✦";margin-inline-end:7px;font-size:11px}
+.nbai-ov .nbai-chip:active{transform:scale(.96)}
+@media (hover:hover){.nbai-ov .nbai-chip:hover{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}}
+.nbai-ov .nbai-cm{gap:6px;margin-top:12px;padding:6px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:var(--ai-sh);transition:border-color .2s,box-shadow .2s}
+.nbai-ov .nbai-cm:focus-within{border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft),var(--ai-sh)}
+.nbai-ov .nbai-cm .nbai-q{min-height:44px;padding-inline:14px;border:0;background:transparent;outline:0}
+.nbai-ov .nbai-q{border-color:var(--line2);background:var(--card);font-size:16px}   /* 16px: يمنع zoom التلقائي على iOS عند الكتابة */
+.nbai-ov .nbai-q::placeholder{font-size:12.5px}
+.nbai-ov .nbai-note{border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.nbai-ov .nbai-note:focus{border-color:var(--ai-ring);outline:0;box-shadow:0 0 0 4px var(--ai-soft)}
+.nbai-ov .nbai-cm .nbai-go{width:44px;height:44px;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 10px 20px -10px var(--ai-glow)}
+
+/* زر «تحليل جديد» + زر التشخيص */
+.nbai-ov .nbai-again,.nbai-ov .nbai-go-diag{min-height:50px;border-radius:16px;background:var(--ai-g);font-size:14px;letter-spacing:.01em;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 14px 26px -14px var(--ai-glow);transition:transform .15s var(--ai-ease),box-shadow .2s}
+.nbai-ov .nbai-again{margin-top:12px;border-radius:999px}
+.nbai-ov .nbai-go-diag{margin-top:14px}
+.nbai-ov .nbai-go-diag[disabled]{box-shadow:none}
+@media (min-width:481px){.nbai-ov .nbai-go-diag{width:100%}}
+
+/* تبويب التشخيص */
+.nbai-ov .nbai-pick{flex-direction:column;gap:4px;min-height:156px;margin-top:14px;padding:22px 16px;border:1.5px dashed var(--ai-ring);border-radius:22px;background:linear-gradient(180deg,var(--ai-soft),transparent 80%),var(--card);color:var(--ink);transition:transform .15s var(--ai-ease),border-color .2s}
+.nbai-ov .nbai-pick:active{transform:scale(.985)}
+.nbai-ov .nbai-pick-ic{display:grid;place-items:center;width:56px;height:56px;margin-bottom:8px;border-radius:18px;color:#fff;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 28px -12px var(--ai-glow)}
+.nbai-ov .nbai-pick-t{font-size:14px;font-weight:800;line-height:1.6}
+.nbai-ov .nbai-pick-s{font-size:12px;font-weight:600;color:var(--slate)}
+.nbai-ov .nbai-prev{border-radius:20px;box-shadow:var(--ai-sh)}
+.nbai-ov .nbai-qb{padding:14px;border:1px solid var(--line2);border-radius:18px;background:var(--card);box-shadow:var(--ai-sh)}
+.nbai-ov .nbai-opt{border-color:var(--line2);background:var(--bg2);transition:background .2s,color .2s,border-color .2s}
+.nbai-ov .nbai-opt[aria-pressed="true"]{border-color:transparent;background:var(--ai-g);color:#fff}
+.nbai-ov .nbai-new{color:var(--slate)}
+.nbai-ov .nbai-out{border-radius:16px;border-color:var(--line2);background:var(--card);color:var(--ink2)}
+.nbai-ov .nbai-out.err{background:rgba(217,119,6,.09);border-color:rgba(217,119,6,.35)}
+
+/* الفوتر + التركيز */
+.nbai-ov .nbai-f{margin-top:10px;font-size:11px;line-height:1.9;text-align:center;color:var(--slate);text-wrap:balance}
+.nbai-ov :is(.nbai-tab,.nbai-chip,.nbai-back,.nbai-go,.nbai-again,.nbai-pick,.nbai-opt,.nbai-new):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-m{animation:none}.nbai-ov *{transition:none!important}}
+</style>
+
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
@@ -26804,7 +26890,7 @@ function buildScreen(){
     '<div class="nbai-pane" data-p="diag" hidden>' +
       '<div class="nbai-th" data-th="diag" role="log" aria-live="polite" aria-label="محادثة التشخيص"></div>' +
       '<input type="file" accept="image/*" capture="environment" class="nbai-file" hidden>' +
-      '<button type="button" class="nbai-pick">📷 صوّر أو اختر صورة للنبات المصاب (ورقة / ثمرة / ساق)</button>' +
+      '<button type="button" class="nbai-pick"><span class="nbai-pick-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span><span class="nbai-pick-s">ورقة / ثمرة / ساق</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
