@@ -26620,6 +26620,8 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 [data-dark] .nbai-ov::before{background:radial-gradient(72% 36% at 90% -6%,rgba(168,85,247,.22),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.24),transparent 72%),var(--bg)}
 /* تعديل: لو الكيبورد غيّر الارتفاع بعد القياس، الخلفية تمتد تحت الواجهة فمايظهرش محتوى الصفحة اللي ورا */
 .nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
+/* تعديل: أثناء تحليل الصورة نخفي أدوات الإدخال مؤقتًا (الصورة بالفعل ظاهرة في المحادثة) عشان فقاعة «بيحلّل» تبان كاملة */
+.nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-pick,.nbai-prev,.nbai-note,.nbai-qs,.nbai-new){display:none}
 .nbai-ov .nbai-ov-in{padding-inline:16px}
 
 /* الهيدر */
@@ -27164,7 +27166,8 @@ function buildScreen(){
     });
   });
 
-  function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !imgData); btn.textContent = on ? 'جارٍ التحليل...' : label; }
+  function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !imgData); btn.textContent = on ? 'جارٍ التحليل...' : label;
+    if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
 
   function sendAsk(){
     var i = card.querySelector('.nbai-qi');
@@ -27333,6 +27336,18 @@ function openScreen(opener){
     if(window.visualViewport){ window.visualViewport.addEventListener('resize', syncVV); window.visualViewport.addEventListener('scroll', syncVV); }
     var kbRetry = function(){ [60, 200, 450, 800].forEach(function(t){ setTimeout(syncVV, t); }); };   /* الكيبورد بيستقر متأخر على آيفون */
     document.addEventListener('focusin', kbRetry); document.addEventListener('focusout', kbRetry);
+    /* تعديل: لما حقل جوه المساعد ياخد الفوكس، نسكرول البانل لحد ما الحقل يبقى ظاهر فوق الكيبورد */
+    document.addEventListener('focusin', function(ev){
+      var el = ev.target;
+      if(!OPEN || !SCR || !el || !SCR.contains(el) || el.tagName !== 'INPUT') return;
+      [250, 500, 900].forEach(function(t){ setTimeout(function(){
+        if(!OPEN || document.activeElement !== el) return;
+        var pane = el.closest('.nbai-pane');
+        if(!pane || pane.scrollHeight <= pane.clientHeight + 1) return;
+        var r = el.getBoundingClientRect(), pr = pane.getBoundingClientRect();
+        pane.scrollTop += (r.top - pr.top) - Math.max(0, (pr.height - r.height) / 2);
+      }, t); });
+    });
   }
   OPENER = opener || null; OPEN = true;
   PREV_OV = document.body.style.overflow; document.body.style.overflow = 'hidden';
