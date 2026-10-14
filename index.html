@@ -26774,7 +26774,7 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 /* شاشة الترحيب: لوجو كبير عايم بنبض هادي */
 .nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err){background:none}
 .nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::after{display:none}
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{content:"";width:72px;height:72px;margin:0 auto 20px;padding:0;line-height:0;border-radius:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0.3 1.4 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(-1.2 1.2)'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/g%3E%3Cpath d='M20.4 1.6Q20.9 3.4 22.7 3.9Q20.9 4.4 20.4 6.2Q19.9 4.4 18.1 3.9Q19.9 3.4 20.4 1.6Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/40px 40px no-repeat,var(--ai-g);animation:nbai3-float 5s ease-in-out infinite,nbai3-ripple 3s ease-out infinite}
+.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{content:"";width:72px;height:72px;margin:0 auto 20px;padding:0;line-height:0;border-radius:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0.3 0.8 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(-1.2 1.4)'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/g%3E%3Cpath d='M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/40px 40px no-repeat,var(--ai-g);animation:nbai3-float 5s ease-in-out infinite,nbai3-ripple 3s ease-out infinite}
 @media (max-height:560px){.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}}
 
 /* ── الاقتراحات + مربع الكتابة ── */
@@ -26823,6 +26823,20 @@ textarea.nbai-q{resize:vertical;min-height:84px}
   .nbai-ov .nbai-dots i{opacity:.7}
   .nbai-cta::after{display:none}
 }
+</style>
+
+<style id="nb-farm-ai-reveal">
+/* ═══════════════════════════════════════════════════════════════
+   Nabtex AI — ظهور الرد بنعومة (طبقة فوق nb-farm-ai-v3)
+   • الفقاعة بتتفتح من حجم "بيحلّل…" لحجمها الكامل (clip-path)، والكلمات بتظهر تباعًا بتركيز ناعم (opacity + blur).
+   • الـ JS: دالتين جوه nb-farm-ai-js (wordsIn / reveal) بتتندهوا من settle() بس. مفيش تغيير في المنطق أو الـ API.
+   • مفيش transform/inline-block على الكلمات عشان اتجاه النص (عربي/إنجليزي/أرقام) يفضل زي ما هو.
+   • متوقف تمامًا مع prefers-reduced-motion.
+   للتراجع: امسح هذا البلوك، وامسح الدالتين و سطر reveal(d, r0) من settle().
+═══════════════════════════════════════════════════════════════ */
+@keyframes nbai4-w{from{opacity:0;filter:blur(5px)}to{opacity:1;filter:blur(0)}}
+.nbai-ov .nbai-m-ai .nbai-w{animation:nbai4-w .7s var(--ai-ease,cubic-bezier(.16,1,.3,1)) var(--wd,0s) backwards}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-m-ai .nbai-w{animation:none!important}}
 </style>
 
 <script id="nb-farm-ai-js">
@@ -27005,7 +27019,7 @@ function buildScreen(){
     '<div class="nbai-ov-in">' +
     '<header class="nbai-bar">' +
       '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
-      '<div class="nbai-bar-id"><span class="nbai-bar-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0.3 1.4 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.2)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M20.4 1.6Q20.9 3.4 22.7 3.9Q20.9 4.4 20.4 6.2Q19.9 4.4 18.1 3.9Q19.9 3.4 20.4 1.6Z" fill="#fff" stroke="none"/></svg></span><div><div class="nbai-bar-t" id="nbai-ov-t"><bdi dir="ltr">Nabtex AI</bdi></div><div class="nbai-bar-s">مهندسك الزراعي الذكي</div></div></div>' +
+      '<div class="nbai-bar-id"><span class="nbai-bar-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><div><div class="nbai-bar-t" id="nbai-ov-t"><bdi dir="ltr">Nabtex AI</bdi></div><div class="nbai-bar-s">مهندسك الزراعي الذكي</div></div></div>' +
     '</header>' +
     '<div class="nbai-tabs" role="tablist">' +
       '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">استشارة زراعية</button>' +
@@ -27020,7 +27034,7 @@ function buildScreen(){
     '</div>' +
     '<div class="nbai-pane" data-p="diag" hidden>' +
       '<div class="nbai-th" data-th="diag" role="log" aria-live="polite" aria-label="محادثة التشخيص"></div>' +
-      '<input type="file" accept="image/*" capture="environment" class="nbai-file" hidden>' +
+      '<input type="file" accept="image/*" class="nbai-file" hidden>' +
       '<button type="button" class="nbai-pick"><span class="nbai-pick-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span><span class="nbai-pick-s">ورقة / ثمرة / ساق</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
@@ -27063,9 +27077,40 @@ function buildScreen(){
     var d = mkMsg('ai', '<span class="nbai-dots" role="img" aria-label="المساعد بيكتب"><i></i><i></i><i></i></span>', false);
     TH[t].appendChild(d); toEnd(t); return d;
   }
+  /* ظهور الرد بنعومة: الكلمات تظهر تباعًا (الإجمالي ≤ ~2.4 ث مهما كان طول الرد) + الفقاعة تتفتح من حجم الكتابة لحجمها الكامل */
+  var NOANIM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function wordsIn(el){
+    var tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: function(n){
+      return /\S/.test(n.nodeValue) && !(n.parentNode && n.parentNode.closest && n.parentNode.closest('button,input,textarea,select,a')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    } }), nodes = [], n, total = 0;
+    while((n = tw.nextNode())) { nodes.push(n); total += (n.nodeValue.match(/\S+/g) || []).length; }
+    var step = Math.min(0.04, 2.4 / Math.max(total, 1)), i = 0;
+    nodes.forEach(function(t){
+      var frag = document.createDocumentFragment();
+      t.nodeValue.split(/(\s+)/).forEach(function(p){
+        if(!p) return;
+        if(/^\s+$/.test(p)){ frag.appendChild(document.createTextNode(p)); return; }
+        var s = document.createElement('span'); s.className = 'nbai-w';
+        s.style.setProperty('--wd', (0.12 + (i++) * step).toFixed(3) + 's'); s.textContent = p; frag.appendChild(s);
+      });
+      t.parentNode.replaceChild(frag, t);
+    });
+  }
+  function reveal(d, r0){
+    if(NOANIM || !d.animate) return;
+    try{
+      wordsIn(d);
+      var b = d.getBoundingClientRect().height - r0.height;
+      if(b > 8) d.animate([{ clipPath: 'inset(0px 0px ' + b + 'px 0px round 22px)' }, { clipPath: 'inset(-40px round 22px)' }], { duration: 650, easing: 'cubic-bezier(.16,1,.3,1)' });
+    }catch(x){}
+  }
   function settle(d, t, h, e){
     keep(t, 'ai', h, e);
-    if(d && d.parentNode){ d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; var sc = scroller(t); sc.scrollTop += d.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
+    if(d && d.parentNode){
+      var r0 = d.getBoundingClientRect();
+      d.className = 'nbai-m nbai-m-ai' + (e ? ' err' : ''); d.innerHTML = h; var sc = scroller(t); sc.scrollTop += d.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8;
+      if(!e) reveal(d, r0);
+    }
   }
   /* استشارة «رسالة برسالة»: مفيش سجل شات — سؤال واحد + رده، وزر «تحليل جديد» يرجّع الشاشة لمربع السؤال */
   var askPane = card.querySelector('.nbai-pane[data-p="ask"]'), again = card.querySelector('.nbai-again');
@@ -27318,7 +27363,7 @@ function mountDash(mc, farm, st){
   var cta = document.createElement('section');
   cta.className = 'nbai-cta'; cta.setAttribute('aria-label', 'Nabtex AI');
   cta.innerHTML =
-    '<div class="nbai-cta-ic" aria-hidden="true"><svg width="28" height="28" viewBox="0.3 1.4 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.2)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M20.4 1.6Q20.9 3.4 22.7 3.9Q20.9 4.4 20.4 6.2Q19.9 4.4 18.1 3.9Q19.9 3.4 20.4 1.6Z" fill="#fff" stroke="none"/></svg></div>' +
+    '<div class="nbai-cta-ic" aria-hidden="true"><svg width="28" height="28" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></div>' +
     '<div class="nbai-cta-tx"><div class="nbai-cta-t"><bdi dir="ltr">Nabtex AI</bdi></div><p class="nbai-cta-d">استشارة زراعية وتشخيص النبات بالصورة.</p></div>' +
     '<button type="button" class="nbai-cta-go">افتح المساعد<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>';
   hdr.insertAdjacentElement('afterend', cta);   /* أعلى ترتيب الصفحة: بعد الهيدر مباشرة وقبل باقي الأقسام */
