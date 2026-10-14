@@ -1809,6 +1809,8 @@ body.modal-open { overflow: hidden; }
 .fls-pq{font-size:21px;font-weight:900;line-height:1.4;margin:0 0 6px;color:var(--fltx)}
 .fls-pp{margin:0 0 16px;font-size:13.5px;line-height:1.7;color:#4b6053}
 .fls-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* بعد شيل «البيئة والمناخ» بقى عدد الأنواع 5: آخر كارت (بيانات الحصاد) ياخد العرض كامل بدل ما يفضل لوحده نص عرض. للتراجع: امسح السطر ده. */
+.fls-opts .fls-opt:last-child:nth-child(odd){grid-column:1/-1}
 .fls-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:92px;padding:14px 8px;border-radius:20px;border:1.5px solid var(--flln);background:#fbfdfc;font:inherit;font-size:14px;font-weight:800;color:var(--fltx);cursor:pointer;transition:transform .15s,border-color .2s,background .2s,box-shadow .2s}
 .fls-opt:active{transform:scale(.96)}
 .fls-opt.on{border-color:var(--oc);background:color-mix(in srgb,var(--oc) 9%,#fff);box-shadow:0 6px 18px color-mix(in srgb,var(--oc) 18%,transparent)}
@@ -14401,8 +14403,10 @@ document.addEventListener('click', e => {
           '</div>' +
         '</div>';
 
+      /* القديم (للتراجع): headerCard + irrCard + fertCard + sprayCard + agriCard + envCard + harvestCard + notesCard */
+      /* البيئة والمناخ اتشال من التسجيل اليومي لأنها بتتحسب من نظام الطقس (envCard لسه متعرّف فوق ومش متعرض) */
       return viewWrap('log', 'التسجيل اليومي', 'تسجيل عملية زراعية جديدة',
-        headerCard + irrCard + fertCard + sprayCard + agriCard + envCard + harvestCard + notesCard
+        headerCard + irrCard + fertCard + sprayCard + agriCard + harvestCard + notesCard
       );
 
     }
@@ -25981,6 +25985,21 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 .nbfw-go:active{transform:scale(.97)}
 .nbfw-note{margin:0 0 14px}
 @media (max-width:480px){.nbfw{padding:14px;border-radius:16px}.nbfw-m{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* ── تحسين UI/UX لكارت «الطقس وقرار الري» (CSS فقط — مفيش أي تغيير في الـ HTML أو الـ JS أو منطق القرارات). للتراجع: امسح البلوك ده بس. ── */
+/* 1) خمس مربعات قياس كانت بتتوزّع 3+2 وبتسيب فراغ في آخر صف: 3 فوق وتنين أعرض تحت فالصف يتملّي */
+@media (max-width:480px){
+  .nbfw-m{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .nbfw-m .nbfw-mi{grid-column:span 2}
+  .nbfw-m .nbfw-mi:nth-child(n+4){grid-column:span 3}
+}
+/* 2) عنوان «قراراتك اليوم» كان أصغر من عناوين الكروت اللي تحته (12px مقابل 13.5px) فالتسلسل البصري مقلوب */
+.nbfw-sec{margin-top:22px;font-size:14px}
+/* 3) شيبس «نوع الرش» كانت لازقة في زرار «سجّل ري» وباين إنها تبعه: خط فاصل ومسافة يفصلوا قرار الري عن قرار الرش + منطقة لمس أكبر */
+.nbfw-ty{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);gap:8px}
+.nbfw-tb{min-height:36px}
+/* 4) زرار «سجّل ري / سجّل رش» كان شكله زي الشيبس بالظبط (اختيار vs إجراء): لون البراند + منطقة لمس 44px */
+.nbfw-go{min-height:44px;color:var(--brand);border-color:color-mix(in srgb,var(--brand) 38%,var(--line));background:color-mix(in srgb,var(--brand) 8%,var(--bg2))}
+[data-dark] .nbfw-go{color:var(--brand-l)}
 </style>
 
 <script id="nb-farm-weather-js">
