@@ -26851,6 +26851,8 @@ body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibi
 .nbai-ov .nbq-n b{font-size:12px;font-weight:700}
 .nbai-ov .nbq-tr{height:6px;box-shadow:none}
 .nbai-ov .nbq-fl{box-shadow:none;opacity:.72}
+/* ── إصلاح تداخل الفوتر مع حقل الكتابة لما الكيبورد يفتح (CSS فقط): الواجهة بتصغر لارتفاع الكيبورد فالبانل بتضيق والفوتر (كارت الرصيد + التنبيه) بيطلع فوق حقل الكتابة. فبنخفي الفوتر طول ما أي حقل جوه المساعد عليه فوكس، ويرجع تلقائي أول ما الكيبورد يتقفل. للتراجع: امسح السطر ده بس. ── */
+.nbai-ov:has(.nbai-q:focus) .nbai-f{display:none}
 </style>
 
 <style id="nb-farm-ai-reveal">
