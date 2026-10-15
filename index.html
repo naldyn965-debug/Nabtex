@@ -27247,7 +27247,12 @@ function buildScreen(){
       tab = t.getAttribute('data-t');
       card.querySelectorAll('.nbai-tab').forEach(function(b){ b.setAttribute('aria-selected', b === t ? 'true' : 'false'); });
       card.querySelectorAll('.nbai-pane').forEach(function(p){ p.hidden = p.getAttribute('data-p') !== tab; });
-      show('', false); paintFoot(); toEnd(tab); return;
+      show('', false); paintFoot();
+      /* تعديل: تاب «تشخيص بالصورة» بيتفتح من فوق لما مفيش محادثة تشخيص لسه (الترحيب بس) —
+         toEnd كان بينزّل البانل لآخره فاللوجو والترحيب يتقصّوا تحت التابات. لو فيه محادثة/نتيجة
+         قديمة بنكمّل زي الأول ونروح لآخر رسالة. */
+      if(tab === 'diag' && TH.diag.children.length <= 1){ var _dp = scroller('diag'); if(_dp) _dp.scrollTop = 0; } else toEnd(tab);
+      return;
     }
     if(ev.target.closest && ev.target.closest('.nbai-back')){ closeScreen(); return; }
     if(ev.target.closest && ev.target.closest('.nbai-pick')){ card.querySelector('.nbai-file').click(); return; }
