@@ -27731,6 +27731,24 @@ window.NbFarmAI = function(view, mc, st){
     backdrop-filter:none;
     -webkit-backdrop-filter:none;
   }
+
+  /* will-change:transform on every card pre-promotes each one to its own
+     GPU layer (dozens inside the page layer) — WebKit's layer count/
+     memory blows up and scrolling + pull-to-refresh stall. The hover/
+     active transitions still run (Safari promotes during the transition
+     itself). isolation:isolate keeps the same stacking context the
+     will-change was creating, so z-index/paint order is unchanged.
+     .page{will-change} is deliberately NOT touched: the marketplace
+     modals sit inside #pg-market and rely on it as their containing
+     block. */
+  .pcard,
+  .cat-card,
+  .acad-cat-card,
+  .acad-cat-card:not(.premium),
+  .mkt-pcard{
+    will-change:auto !important;
+    isolation:isolate;
+  }
 }
 </style>
 
