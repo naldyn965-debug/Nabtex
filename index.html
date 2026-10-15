@@ -27122,6 +27122,12 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbai-pick,.nbai-ov .nbai-prev{display:none!important}
 .nbai-ov .nbai-pane.nbai-diag-busy .nbai-wz,.nbai-ov .nbai-pane.nbai-diag-step .nbai-wz{display:none}
 .nbai-ov .nbai-wz{margin-top:14px}
+/* اختيار نوع المستخدم: صاحب مزرعة / نباتات في البيت (بيتخبّى وقت الأسئلة والتحليل زي المعالج) */
+.nbai-ov .nbai-pane.nbai-diag-busy .nbai-aud,.nbai-ov .nbai-pane.nbai-diag-step .nbai-aud{display:none}
+.nbai-ov .nbai-aud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;padding:4px;border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
+.nbai-ov .nbai-aud-b{min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
+.nbai-ov .nbai-aud-b.is-on{background:var(--card);border-color:var(--ai-ring);color:var(--ai-tx);font-weight:800}
+.nbai-ov .nbai-aud-b:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
 
 /* شريط الخطوات (بيتحوّل لمعاينات مصغّرة بعد التصوير، وكل خانة بتفتح خطوتها للتعديل) */
 .nbai-ov .nbai-wz-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:4px 4px 0}
@@ -27425,6 +27431,7 @@ function buildScreen(){
       '<input type="file" accept="image/*" class="nbai-file" hidden>' +
       '<button type="button" class="nbai-pick"><span class="nbai-pick-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span><span class="nbai-pick-s">ورقة / ثمرة / ساق</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
+      '<div class="nbai-aud" role="radiogroup" aria-label="نوع المستخدم"><button type="button" class="nbai-aud-b" data-aud="farm" role="radio">صاحب مزرعة</button><button type="button" class="nbai-aud-b" data-aud="home" role="radio">نباتات في البيت</button></div>' +
       '<div class="nbai-wz"></div>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
@@ -27437,7 +27444,7 @@ function buildScreen(){
   document.body.appendChild(card);
 
   var out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f');
-  var tab = 'ask', shots = [null, null, null, null], qcs = [null, null, null, null], cur = 0, pend = 0, wzLoad = false, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة';
+  var tab = 'ask', shots = [null, null, null, null], qcs = [null, null, null, null], cur = 0, pend = 0, wzLoad = false, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة', aud = (lsGet('nbai:aud') === 'home' ? 'home' : 'farm');
   function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
   /* شريط رصيد المساعد اليومي: بيتبني مرة واحدة وبعدها بيتحدّث بس، فعرض الشريط بيتسحب بنعومة مع كل استخدام. النقاط = نفس عدّاد الحد اليومي (left/LIM)، فمفيش أي تغيير في منطق الحصص. */
   function paintQuota(l, mx){
@@ -27576,11 +27583,11 @@ function buildScreen(){
   var IC_WARN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>';
   var LEAF = 'M8 40C8 21 21 8 40 8C40 27 27 40 8 40Z';
   var STEPS = [
-    { t: 'الورقة من الأمام', sh: 'أمام', rl: 'أمام', s: 'صوّر الوجه العلوي للورقة المصابة', req: true,
-      tips: ['صوّر في ضوء النهار من غير فلاش', 'قرّب لحد ما الورقة تملا الإطار', 'ثبّت إيدك ثانية لحد ما الصورة تركّز'],
+    { t: 'الجزء المصاب من الأمام', sh: 'أمام', rl: 'أمام', s: 'صوّر الجزء المصاب (ورقة أو ثمرة أو ساق أو جذور أو النبات كله) من الأمام', req: true,
+      tips: ['صوّر في ضوء النهار من غير فلاش', 'قرّب لحد ما الجزء المصاب يملا الإطار', 'ثبّت إيدك ثانية لحد ما الصورة تركّز'],
       ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + LEAF + '"/><path d="M8 40L32 16"/><path d="M16 32l5 5M22 26l7 7M28 20l7 7M16 32l-5-5M22 26l-5-5M28 20l-5-5" opacity=".6"/></svg>' },
-    { t: 'الورقة من الخلف', sh: 'خلف', rl: 'خلف', s: 'اقلب نفس الورقة وصوّر وجهها السفلي', req: true,
-      tips: ['الحشرات والبثور والبودرة بتظهر غالبًا هنا', 'نفس الورقة ونفس الضوء', 'ابعد ظل إيدك أو الموبايل عن الورقة'],
+    { t: 'الجزء المصاب من الخلف', sh: 'خلف', rl: 'خلف', s: 'اقلب نفس الجزء وصوّر وجهه الخلفي (زي ظهر الورقة)', req: false,
+      tips: ['ظهر الورقة بيكشف حشرات وبثور وبودرة', 'لو الجزء مالوش وجه تاني (زي ثمرة أو جذر) تقدر تتخطى', 'نفس الضوء وابعد ظل إيدك أو الموبايل'],
       ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + LEAF + '" stroke-dasharray="3 4"/><path d="M8 40L32 16M16 32l5 5M22 26l7 7M28 20l7 7M16 32l-5-5M22 26l-5-5M28 20l-5-5" stroke-width="3"/><path d="M33 5c6 1 10 5 10 11M38 13l5 4 4-5" opacity=".7"/></svg>' },
     { t: 'الساق أو الثمرة', sh: 'ساق / ثمرة', rl: 'ساق / ثمرة', s: 'قرّب على الساق أو الفرع أو الثمرة اللي فيها أعراض', req: false,
       tips: ['لو مفيش أعراض عليهم تقدر تتخطى الخطوة دي', 'صوّر مكان بداية الإصابة وحدودها', 'قرّب من غير ما تغطي الضوء'],
@@ -27593,7 +27600,7 @@ function buildScreen(){
   wz.innerHTML = '<div class="nbai-wz-rail"></div><div class="nbai-wz-card"></div><p class="nbai-wz-hint" role="status"></p>';
   var wzRail = wz.querySelector('.nbai-wz-rail'), wzCard = wz.querySelector('.nbai-wz-card'), wzHint = wz.querySelector('.nbai-wz-hint');
 
-  function ready(){ return !!(shots[0] && shots[1]); }
+  function ready(){ return shots.some(Boolean); }
   function qcInfo(q){
     if(!q) return { ok: true, m: 'تم تجهيز الصورة' };
     var w = [];
@@ -27644,7 +27651,7 @@ function buildScreen(){
       h += '</div>';
     }
     wzCard.innerHTML = h;
-    wzHint.textContent = ready() ? 'تمام ✓ تقدر تبدأ التشخيص دلوقتي، أو تضيف زوايا زيادة لدقة أعلى.' : 'لازم تصوّر الورقة من الأمام ومن الخلف الأول عشان نبدأ التشخيص.';
+    wzHint.textContent = ready() ? 'تمام ✓ تقدر تبدأ التشخيص دلوقتي، أو تضيف زوايا زيادة لدقة أعلى.' : 'صوّر الجزء المصاب الأول عشان نبدأ التشخيص — صورة واحدة كفاية.';
     sync();
     if(had){ var mb = wzCard.querySelector('.nbai-wz-main'); if(mb) try{ mb.focus({ preventScroll: true }); }catch(e){} }
   }
@@ -27671,6 +27678,14 @@ function buildScreen(){
     });
   });
   paintWz();
+
+  var audBox = card.querySelector('.nbai-aud');
+  function paintAud(){ audBox.querySelectorAll('.nbai-aud-b').forEach(function(b){ var on = b.getAttribute('data-aud') === aud; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); }); }
+  audBox.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('.nbai-aud-b'); if(!b || busy || wzLoad) return;
+    aud = b.getAttribute('data-aud') === 'home' ? 'home' : 'farm'; lsSet('nbai:aud', aud); paintAud();
+  });
+  paintAud();
 
   function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;
     if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
@@ -27761,14 +27776,14 @@ function buildScreen(){
     if(!u){ show(esc(MSG.login), true); return; }
     var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(curFarm(), u.uid);
     var list = []; shots.forEach(function(d, i){ if(d) list.push({ slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }); });   /* القديم (للتراجع): var image = { mime:'image/jpeg', data: imgData... } */
-    var ck = shots.map(function(d){ return d ? d.length + ':' + d.slice(-120) : '-'; }).join('|') + '|' + note;
+    var ck = shots.map(function(d){ return d ? d.length + ':' + d.slice(-120) : '-'; }).join('|') + '|' + note + '|' + aud;
 
     if(!step){
       /* المرحلة 1: فحص الصورة + أسئلة استيضاحية */
       setBusy(btn, true, DIAG_LBL); show('', false);
       push('diag', 'user', shotsHtml() + (note ? esc(note) : 'شخّص المشكلة'));
       var ty1 = typing('diag');
-      call('diag_q', { images: list, note: note, ctx: ctx }, ck, function(r){
+      call('diag_q', { images: list, note: note, ctx: ctx, audience: aud }, ck, function(r){
         var live = card.isConnected;
         if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
         if(!r.ok){ settle(ty1, 'diag', esc(errText(r.err)), true); if(live) paintFoot(); return; }
@@ -27795,7 +27810,7 @@ function buildScreen(){
     setBusy(btn, true, DIAG_LBL); show('', false);
     push('diag', 'user', answers.length ? answers.map(function(x){ return esc(x.q) + ': <b>' + esc(x.a) + '</b>'; }).join('<br>') : 'كمّل التشخيص');
     var ty2 = typing('diag');
-    call('diagnose', { images: list, note: note, ctx: ctx, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
+    call('diagnose', { images: list, note: note, ctx: ctx, audience: aud, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
       var live = card.isConnected;
       if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
       settle(ty2, 'diag', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
