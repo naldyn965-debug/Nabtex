@@ -27778,6 +27778,22 @@ window.NbFarmAI = function(view, mc, st){
 }
 </style>
 
+<style id="nb-nav-drop">
+/* ══════════════════════════════════════════════════════════════
+   إنزال الشريط العلوي لتحت بنسبة بسيطة (متناسق) — CSS فقط.
+   --nb-nav-drop = المسافة الإضافية بين الـ status bar وعناصر الشريط.
+   كل حاجة مربوطة بارتفاع الشريط اتزوّد عليها نفس القيمة عشان الصفحة
+   تفضل متناسقة: padding الشريط + padding الـ body (مكان بداية المحتوى)
+   + موضع سايدبار/شريط المزرعة (--fsb-top) + لوحة الإشعارات.
+   للتعديل: غيّر القيمة تحت بس. للتراجع: امسح الـ style ده.
+   ══════════════════════════════════════════════════════════════ */
+:root{--nb-nav-drop:8px}
+.nav{padding-top:calc(env(safe-area-inset-top,0px) + var(--nb-nav-drop))}
+body{padding-top:calc(64px + env(safe-area-inset-top,0px) + var(--nb-nav-drop)) !important}
+#pg-farm{--fsb-top:calc(64px + env(safe-area-inset-top,0px) + var(--nb-nav-drop))}
+.ac-notif-panel{top:calc(118px + var(--nb-nav-drop))}
+</style>
+
 <script id="nb-farm-loc-js">
 (function(){
 'use strict';
