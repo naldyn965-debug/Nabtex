@@ -13480,6 +13480,33 @@ document.addEventListener('click', e => {
     // ═══════════════════════════════════════════════════
     //  RENDER ENTRY
     // ═══════════════════════════════════════════════════
+    /* ── تحميل بيانات المزرعة ثم الرسم (إصلاح الصفحة البيضا/التعليق) ──
+       قبل كده: الكارت كان فاضي وأبيض لحد ما Firestore يرد (مؤشر التحميل كان مخفي)، ولو الرد اتأخر أو فشل الصفحة تفضل بيضا.
+       دلوقتي: بيظهر مؤشر تحميل فورًا، وبعد 10 ثواني من غير رد بتظهر رسالة «الاتصال بطيء» مع زرار إعادة المحاولة،
+       والصفحة بتترسم لحظة وصول البيانات حتى لو متأخرة، وأي خطأ في الرسم بيظهر كرسالة بدل شاشة بيضا. للتراجع: ارجع السطرين القدام (loadUserFarms().then(...)). ── */
+    function farmRenderFail(e) {
+      try { console.error('[Nabtex Farm] render failed:', e); } catch (x) {}
+      var m = document.getElementById('farm-main-content'); if (!m) return;
+      m.style.opacity = '1'; m.style.transform = '';
+      m.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:50vh;flex-direction:column;gap:14px;text-align:center;padding:24px;">' +
+        '<p style="color:var(--muted);font-size:13.5px;line-height:1.9;font-family:var(--f-ui);margin:0;">حصلت مشكلة أثناء تحميل الصفحة.<br>تأكد من الاتصال بالإنترنت وجرّب تاني.</p>' +
+        '<button type="button" class="farm-btn-primary" onclick="FarmRetry()">إعادة المحاولة</button></div>';
+    }
+    window.FarmRetry = function() { renderFarmApp(); };
+    function farmBootRender() {
+      var done = false;
+      showFarmLoader(true);
+      var slow = setTimeout(function() {
+        if (done) return;
+        farmRenderFail(new Error('slow-load'));
+      }, 10000);
+      function go() {
+        done = true; clearTimeout(slow);
+        try { renderFarmView(farmState.currentView); } catch (e) { farmRenderFail(e); }
+      }
+      loadUserFarms().then(go, go);
+    }
+
     function renderFarmApp() {
       var root = document.getElementById('farm-app-root');
       if (!root) return;
@@ -13492,7 +13519,8 @@ document.addEventListener('click', e => {
         farmGate(root, function(sd) {
           root.innerHTML = farmShell();
           fsubBannerRender(sd);
-          loadUserFarms().then(function() { renderFarmView(farmState.currentView); });
+          /* القديم (للتراجع): loadUserFarms().then(function() { renderFarmView(farmState.currentView); }); */
+          farmBootRender();
         });
         return;
       }
@@ -13519,7 +13547,8 @@ document.addEventListener('click', e => {
           farmGate(freshRoot, function(sd) {
             freshRoot.innerHTML = farmShell();
             fsubBannerRender(sd);
-            loadUserFarms().then(function() { renderFarmView(farmState.currentView); });
+            /* القديم (للتراجع): loadUserFarms().then(function() { renderFarmView(farmState.currentView); }); */
+            farmBootRender();
           });
         } else {
           freshRoot.innerHTML = farmAuthWall();
@@ -13690,7 +13719,8 @@ document.addEventListener('click', e => {
         setTimeout(function() {
           var mc2 = document.getElementById('farm-main-content');
           if (mc2) {
-            _doRenderFarmView(mc2, view);
+            /* القديم (للتراجع): _doRenderFarmView(mc2, view); — لو الرسم رمى خطأ كانت الشفافية بتفضل 0 والصفحة بيضا */
+            try { _doRenderFarmView(mc2, view); } catch (e) { farmRenderFail(e); }
             mc2.style.opacity   = '1';
             mc2.style.transform = '';
             farmScrollToTop(mc2);
@@ -13788,7 +13818,8 @@ document.addEventListener('click', e => {
         console.warn('[Nabtex Farm] Firestore failed, loading from cache:', e.message);
         /* Real network failure — try IDB first, then localStorage */
         console.warn('[Nabtex Farm] Firestore failed, loading from local cache:', e.message);
-        idbGet('farmData', 'core').then(function(idbCached) {
+        /* إصلاح: كان من غير return فالرسم بيحصل قبل ما الكاش يتحمّل (بيانات فاضية) */
+        return idbGet('farmData', 'core').then(function(idbCached) {
           var cached = idbCached || farmCacheLoad(); /* IDB first, localStorage fallback */
           if (cached && cached.farms) {
             farmIsOffline = true;
