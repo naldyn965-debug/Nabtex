@@ -26918,6 +26918,13 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbq-n b{font-size:12px;font-weight:700}
 .nbai-ov .nbq-tr{height:6px;box-shadow:none}
 .nbai-ov .nbq-fl{box-shadow:none;opacity:.72}
+/* ── تصغير كارت «رصيدك اليوم» والنص التحذيري تحته لتقليل الزحمة البصرية (CSS فقط، قياسات بس — مفيش تغيير في الـ HTML أو الـ JS أو منطق الحصص). للتراجع: امسح البلوك ده بس. ── */
+.nbai-ov .nbq{margin:0 auto 4px;padding:5px 10px 6px;border-radius:11px}
+.nbai-ov .nbq-h{margin-bottom:4px;gap:8px;font-size:10px;line-height:1.3}
+.nbai-ov .nbq-sp{font-size:9px}
+.nbai-ov .nbq-n b{font-size:10.5px}
+.nbai-ov .nbq-tr{height:4px}
+.nbai-ov .nbq-d{font-size:9.5px;line-height:1.55}
 /* ── إصلاح تداخل الفوتر مع حقل الكتابة لما الكيبورد يفتح (CSS فقط): الواجهة بتصغر لارتفاع الكيبورد فالبانل بتضيق والفوتر (كارت الرصيد + التنبيه) بيطلع فوق حقل الكتابة. فبنخفي الفوتر طول ما أي حقل جوه المساعد عليه فوكس، ويرجع تلقائي أول ما الكيبورد يتقفل. للتراجع: امسح السطر ده بس. ── */
 .nbai-ov:has(.nbai-q:focus) .nbai-f{display:none}
 </style>
@@ -27174,6 +27181,7 @@ function buildScreen(){
     paintQuota(l, tab === 'diag' ? Math.min(LIM.diag_q, LIM.diagnose) : (card.querySelector('.nbai-qi').value.trim() ? LIM.ask : LIM.analyze));
   }
   paintFoot();
+  card._repaint = paintFoot;   /* إصلاح: الشاشة بتتبني مرة واحدة وبتتخفي/تظهر، فبنعيد رسم الشريط كل ما تتفتح (openScreen) عشان الرصيد يرجع من الأول مع بداية اليوم الجديد. للتراجع: امسح السطر ده والسطر اللي في openScreen. */
 
   /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
   var TH = { ask: card.querySelector('.nbai-th[data-th="ask"]'), diag: card.querySelector('.nbai-th[data-th="diag"]') };
@@ -27482,6 +27490,7 @@ function openScreen(opener){
   OPENER = opener || null; OPEN = true;
   PREV_OV = document.body.style.overflow; document.body.style.overflow = 'hidden';
   SCR.hidden = false; syncVV();
+  if(SCR._repaint){ try{ SCR._repaint(); }catch(e){} }   /* إصلاح: تحديث شريط الرصيد عند كل فتح (يوم جديد → يتصفّر ويرجع كامل) */
   try{ history.pushState({ nbai: 1 }, '', location.href); HIST = true; }catch(e){ HIST = false; }   /* زر رجوع الموبايل/المتصفح يقفل الواجهة بدل ما يطلع من الصفحة */
   var b = SCR.querySelector('.nbai-back'); if(b) b.focus({ preventScroll: true });
 }
