@@ -26048,6 +26048,46 @@ document.querySelectorAll('.vcash-overlay').forEach(_watch);
 [data-dark] .nbfw-go{color:var(--brand-l)}
 </style>
 
+<style id="nb-farm-wx-ai">
+/* ═══════════════════════════════════════════════════════════════
+   أزرار «اسأل الذكاء الاصطناعي: هل أروي الآن؟ / هل أرش الآن؟» داخل كارت الطقس — إضافة فقط (كلاسات nbfw-ai*).
+   للتراجع: امسح هذا البلوك بس (مع قسم 4ب في nb-farm-weather-js).
+═══════════════════════════════════════════════════════════════ */
+.nbfw-aiw{margin-top:10px}
+.nbfw-aib{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:10px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--brand) 45%,var(--line));background:color-mix(in srgb,var(--brand) 10%,var(--bg2));color:var(--brand);font-family:inherit;font-size:13px;font-weight:800;line-height:1.5;cursor:pointer;-webkit-tap-highlight-color:transparent}
+[data-dark] .nbfw-aib{color:var(--brand-l)}
+.nbfw-aib:active{transform:scale(.98)}
+.nbfw-aib:focus-visible,.nbfw-aic:focus-visible,.nbfw-aix:focus-visible,.nbfw-aiin:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.nbfw-aib-s{margin-top:8px;min-height:38px;font-size:12.5px;background:var(--bg2);border-color:var(--line);color:var(--ink2)}
+.nbfw-aib-go{flex:1;width:auto}
+.nbfw-aip{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
+.nbfw-aiq{display:block;margin-top:8px;font-size:12px;font-weight:800;color:var(--ink2);line-height:1.7}
+.nbfw-aip>.nbfw-aiq:first-child{margin-top:0}
+.nbfw-aig{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.nbfw-aic{font-family:inherit;font-size:12px;font-weight:700;line-height:1.4;padding:6px 12px;min-height:36px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink2);cursor:pointer}
+.nbfw-aic.on{color:var(--brand);border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,var(--card))}
+[data-dark] .nbfw-aic.on{color:var(--brand-l);border-color:var(--brand-l)}
+.nbfw-aiin{width:100%;box-sizing:border-box;margin-top:6px;padding:9px 12px;min-height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:16px}
+.nbfw-aiac{display:flex;gap:8px;align-items:center;margin-top:12px}
+.nbfw-aix{font-family:inherit;font-size:12.5px;font-weight:700;min-height:44px;padding:0 14px;border:0;background:none;color:var(--muted);cursor:pointer}
+.nbfw-aie{margin-top:8px;padding:8px 12px;border-radius:12px;font-size:12.5px;line-height:1.8;color:#b45309;background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.28)}
+[data-dark] .nbfw-aie{color:#fbbf24}
+.nbfw-aie+.nbfw-aib{margin-top:8px}
+.nbfw-ail{display:flex;align-items:center;gap:10px;padding:12px;border:1px dashed var(--line);border-radius:14px;font-size:12.5px;color:var(--muted);line-height:1.8}
+.nbfw-aisp{flex:none;width:16px;height:16px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--brand);animation:nbfwSp .8s linear infinite}
+@keyframes nbfwSp{to{transform:rotate(360deg)}}
+.nbfw-air{padding:12px 14px;border-radius:14px;border:1px solid rgba(var(--nb),.32);background:rgba(var(--nb),.09)}
+.nbfw-aiv{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--nt);line-height:1.5}
+.nbfw-aiv em{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
+.nbfw-aih{margin-top:6px;font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.8}
+.nbfw-aiwh{margin-top:6px;font-size:12.5px;color:var(--ink2);line-height:1.8}
+.nbfw-aist{margin-top:10px;font-size:12px;font-weight:800;color:var(--slate)}
+.nbfw-aiul{margin:4px 0 0;padding:0 18px 0 0;font-size:12.5px;line-height:1.9;color:var(--ink2)}
+.nbfw-aiwt{margin-top:10px;padding:8px 10px;border-radius:10px;font-size:12.5px;line-height:1.8;color:var(--ink2);background:rgba(var(--nb),.1)}
+.nbfw-aif{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.nbfw-aisp{animation:none}}
+</style>
+
 <script id="nb-farm-weather-js">
 /* ═══════════════════════════════════════════════════════════════
    الطقس وقرار الري والرش — WeatherAPI.com عبر proxy الخادم /api/weather (api/weather.js) — المفتاح WEATHER_API_KEY سري على الخادم فقط
@@ -26480,15 +26520,133 @@ function cardHtml(res){
   h += '<div class="nbfw-sec">قراراتك اليوم</div>';
   h += row(a.irr.tone, 'drop', 'الري: ' + a.irr.title, a.irr.text);
   h += goBtn('irr', '', 'سجّل ري');
+  h += aiWrap('irr', res);
   h += sprayPick(a.stype);
   h += row(a.spray.tone, 'spray', 'الرش: ' + a.spray.title, a.spray.text);
   if(a.spray.tone !== 'danger') h += goBtn('spray', a.stype, 'سجّل رش');
+  h += aiWrap('spray', res);
   h += '<div class="nbfw-f">توقيت الرش ومحاذيره مبنية على توصيات وزارة الزراعة واستصلاح الأراضي والمعمل المركزي للمناخ الزراعي (مركز البحوث الزراعية)، والحدود الرقمية للرياح والحرارة تقديرية.</div>';
   h += res.ctx.pin
     ? '<div class="nbfw-f">إرشادات مبنية على توقعات الطقس لنقطة مزرعتك المحددة على الخريطة، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو.</div>'
     : '<div class="nbfw-f">إرشادات عامة مبنية على توقعات الطقس لمنطقة ' + esc(res.ctx.place) + ' (قد تختلف عن الحقل نفسه)، وتتغيّر حسب المحصول ونوع التربة ومرحلة النمو. حدّد موقع مزرعتك على الخريطة من «إعداد المزرعة» لنتائج أدق.</div>';
   return h + '</div>';
 }
+/* ───────── 4ب) اسأل الذكاء الاصطناعي: «هل أروي الآن؟» / «هل أرش الآن؟» (إضافة) ─────────
+   • الأرقام (حرارة/رطوبة/رياح/مطر/ΔT/ET₀ لساعات الـ 24 الجاية + حكم النظام الحسابي) بتتبعت للخادم، والذكاء الاصطناعي بيفسّرها مش بيخترع قراءات.
+   • الرش: بيسأل عن نوع الرش الأول. الري: نوع التربة والمحصول اختياريين. حكم النظام الحسابي «خطر» ما ينفعش يتحوّل لـ «ارشّ الآن» (مفروضة في الخادم كمان).
+   • الحالة محفوظة على res.ai جوه نتيجة الطقس نفسها، فمفيش تأثير على باقي الكارت. للتراجع: امسح هذا القسم + سطري aiWrap في cardHtml + فرع data-ai في click + مستمع input. */
+var AI_VL = { irr: { yes:'اروِ الآن', wait:'أجّل الري لوقت أنسب', no:'لا تروِ الآن' }, spray: { yes:'ارشّ الآن', wait:'أجّل الرش لوقت أنسب', no:'لا تَرُشّ الآن' } };
+var AI_VT = { yes:'ok', wait:'warn', no:'danger' };
+var AI_ICO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>';
+function aiOK(){ return !!(window.NbFarmAI && typeof window.NbFarmAI.decide === 'function'); }
+function aiS(res){ return res.ai || (res.ai = { crop: String(sGet('nbfw:crop') || '').slice(0, 40), irr: { st:'idle', soil:'' }, spray: { st:'idle', type:null } }); }
+function f0(x){ return (x == null || !isFinite(x)) ? '' : String(Math.round(x)); }
+function f1(x){ return (x == null || !isFinite(x)) ? '' : String(Math.round(x*10)/10); }
+
+/* ملخص الطقس المضغوط للذكاء الاصطناعي: 24 ساعة جاية «يوم-ساعة|حرارة|رطوبة|رياح|هبّات|احتمال مطر|مطر مم|ΔT|d/n» */
+function buildWx(res, aa, kind){
+  var d = res.data, H = d.hourly, D = d.daily, age = ageOf(d, res.ts), i = nowIdx(d, age), nowT = H.time[i];
+  var hours = [], k, hh, rh, dn;
+  for(k = i; k < Math.min(i + 24, H.time.length); k++){
+    hh = parseInt(H.time[k].substr(11, 2), 10);
+    rh = H.relative_humidity_2m ? H.relative_humidity_2m[k] : null;
+    dn = H.is_day ? (H.is_day[k] === 1 ? 'd' : 'n') : ((hh >= 5 && hh <= 19) ? 'd' : 'n');
+    hours.push(dayDiff(H.time[k], nowT) + '-' + (hh < 10 ? '0' : '') + hh + '|' + f0(H.temperature_2m[k]) + '|' + f0(rh) + '|' + f0(H.wind_speed_10m[k]) + '|' + f0(H.wind_gusts_10m[k]) + '|' +
+      f0(H.precipitation_probability ? H.precipitation_probability[k] : null) + '|' + f1(H.precipitation ? H.precipitation[k] : null) + '|' + f1(deltaT(H.temperature_2m[k], rh)) + '|' + dn);
+  }
+  var days = [];
+  for(k = 0; k < D.time.length && k < 3; k++){
+    days.push({ day: dayWord(dayDiff(D.time[k], nowT)), max: f0(D.temperature_2m_max[k]), min: f0(D.temperature_2m_min[k]),
+      rainMm: f1(D.precipitation_sum ? D.precipitation_sum[k] : null), rainPct: f0(D.precipitation_probability_max ? D.precipitation_probability_max[k] : null),
+      et0: f1(D.et0_fao_evapotranspiration ? D.et0_fao_evapotranspiration[k] : null) });
+  }
+  var n0 = aa.now || {}, rule = kind === 'spray' ? aa.spray : aa.irr;
+  return {
+    place: res.ctx.place, pinned: !!res.ctx.pin, localTime: nowT, stale: !!res.stale,
+    now: { temp: f0(n0.temp), rh: f0(n0.hum), wind: f0(n0.wind), gust: f0(n0.gust), dT: f1(deltaT(n0.temp, n0.hum)) },
+    hours: hours, days: days,
+    alerts: (aa.alerts || []).slice(0, 4).map(function(x){ return { title: x.title, text: String(x.text || '').slice(0, 160) }; }),
+    rule: { tone: rule.tone, title: rule.title, text: String(rule.text || '').slice(0, 300) }
+  };
+}
+
+function aiChips(k, s){
+  var list = k === 'spray'
+    ? SPRAY_TYPES.filter(function(o){ return o.v; }).map(function(o){ return [o.v, o.l]; }).concat([['', 'مش متأكد']])
+    : [['رملية', 'رملية'], ['طينية', 'طينية'], ['صفراء', 'صفراء'], ['غير معروفة', 'مش عارف']];
+  var cur = k === 'spray' ? s.type : s.soil;
+  var h = '<div class="nbfw-aig" role="group" aria-label="' + (k === 'spray' ? 'نوع الرش' : 'نوع التربة') + '">';
+  list.forEach(function(o){
+    var on = cur === o[0];
+    h += '<button type="button" class="nbfw-aic' + (on ? ' on' : '') + '" data-ai="pick" data-k="' + k + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(o[1]) + '</button>';
+  });
+  return h + '</div>';
+}
+function aiLi(a){ return '<ul class="nbfw-aiul">' + a.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+function aiDone(k, s, q){
+  var d = s.d, t = AI_VT[d.verdict] || 'warn';
+  var h = '<div class="nbfw-air nbfw-t-' + t + '" role="status" aria-live="polite">' +
+    '<div class="nbfw-aiv">' + ico(k === 'spray' ? 'spray' : 'drop', 18) + '<span>' + esc((AI_VL[k] || AI_VL.irr)[d.verdict] || '') + '</span><em>ثقة ' + esc(d.confidence) + '</em></div>' +
+    '<div class="nbfw-aih">' + esc(d.headline) + '</div>';
+  if(d.when) h += '<div class="nbfw-aiwh"><b>أنسب توقيت:</b> ' + esc(d.when) + '</div>';
+  if(d.why && d.why.length) h += '<div class="nbfw-aist">ليه؟</div>' + aiLi(d.why);
+  if(d.steps && d.steps.length) h += '<div class="nbfw-aist">اعمل إيه؟</div>' + aiLi(d.steps);
+  if(d.watch) h += '<div class="nbfw-aiwt"><b>انتبه:</b> ' + esc(d.watch) + '</div>';
+  var lf = (window.NbFarmAI && window.NbFarmAI.left) ? window.NbFarmAI.left() : null;
+  h += '<div class="nbfw-aif">قرار استرشادي بالذكاء الاصطناعي مبني على طقس موقع مزرعتك' + (s.stale ? ' (بيانات الطقس محفوظة وقد لا تكون محدّثة)' : '') + ' — لا يغني عن فحص الحقل ومراجعة بطاقة المنتج.' + (lf != null ? ' متبقي لك اليوم: ' + lf + '.' : '') + '</div></div>' +
+    '<button type="button" class="nbfw-aib nbfw-aib-s" data-ai="open" data-k="' + k + '">' + AI_ICO + 'اسأل تاني: ' + q + '</button>';
+  return h;
+}
+function aiInner(k, res){
+  var S = aiS(res), s = S[k], q = k === 'spray' ? 'هل أرش الآن؟' : 'هل أروي الآن؟';
+  if(s.st === 'load') return '<div class="nbfw-ail" role="status" aria-live="polite"><span class="nbfw-aisp" aria-hidden="true"></span>بحلّل طقس مزرعتك ' + (k === 'spray' ? 'ونوع الرش' : 'وظروف الري') + '…</div>';
+  if(s.st === 'ask'){
+    var h = '<div class="nbfw-aip"><div class="nbfw-aiq">' + (k === 'spray' ? 'إيه نوع الرش اللي ناوي تعمله؟' : 'نوع التربة (اختياري — بيرفع دقة القرار)') + '</div>' + aiChips(k, s);
+    if(s.hint) h += '<div class="nbfw-aie" role="alert">اختار نوع الرش الأول (أو «مش متأكد»).</div>';
+    h += '<label class="nbfw-aiq" for="nbfw-crop-' + k + '">المحصول (اختياري)</label>' +
+      '<input id="nbfw-crop-' + k + '" class="nbfw-aiin" type="text" maxlength="40" autocomplete="off" placeholder="مثال: طماطم" value="' + esc(S.crop) + '">' +
+      '<div class="nbfw-aiac"><button type="button" class="nbfw-aib nbfw-aib-go" data-ai="run" data-k="' + k + '">' + AI_ICO + 'اعرف القرار</button>' +
+      '<button type="button" class="nbfw-aix" data-ai="cancel" data-k="' + k + '">إلغاء</button></div></div>';
+    return h;
+  }
+  if(s.st === 'done' && s.d) return aiDone(k, s, q);
+  return (s.st === 'err' ? '<div class="nbfw-aie" role="alert">' + esc(s.err) + '</div>' : '') +
+    '<button type="button" class="nbfw-aib" data-ai="open" data-k="' + k + '">' + AI_ICO + 'اسأل الذكاء الاصطناعي: ' + q + '</button>';
+}
+function aiWrap(k, res){
+  if(!aiOK()) return '';
+  return '<div class="nbfw-aiw" data-k="' + k + '">' + aiInner(k, res) + '</div>';
+}
+function aiPaint(card, k){
+  var res = card._res, w = res && card.querySelector('.nbfw-aiw[data-k="' + k + '"]');
+  if(w) w.innerHTML = aiInner(k, res);
+}
+function aiRun(card, k, farm){
+  var res = card._res, S = aiS(res), s = S[k];
+  var aa = k === 'spray' ? assess(res.data, farm, res.ts, s.type) : res.a;
+  var crop = String(S.crop || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  sSet('nbfw:crop', crop);
+  s.st = 'load'; s.hint = false; s.stale = !!res.stale; aiPaint(card, k);
+  window.NbFarmAI.decide(k, buildWx(res, aa, k), { sprayType: s.type || '', soil: s.soil || '', crop: crop }, farm, function(r){
+    if(r && r.ok && r.d){ s.st = 'done'; s.d = r.d; s.err = ''; }
+    else { s.st = 'err'; s.err = (window.NbFarmAI.errText ? window.NbFarmAI.errText(r && r.err) : 'حصلت مشكلة مؤقتة. جرّب تاني بعد شوية.'); }
+    if(card.isConnected && card._res === res) aiPaint(card, k);
+  });
+}
+function aiClick(card, el, farm){
+  var res = card._res; if(!res || !aiOK()) return;
+  var S = aiS(res), act = el.getAttribute('data-ai'), k = el.getAttribute('data-k'), s = S[k];
+  if(!s) return;
+  if(act === 'open'){ s.st = 'ask'; s.hint = false; if(k === 'spray') s.type = res.a.stype ? res.a.stype : null; }
+  else if(act === 'cancel'){ s.st = s.d ? 'done' : 'idle'; }
+  else if(act === 'pick'){ var v = el.getAttribute('data-v') || ''; if(k === 'spray') s.type = v; else s.soil = (s.soil === v ? '' : v); s.hint = false; }
+  else if(act === 'run'){
+    if(k === 'spray' && s.type == null) s.hint = true;
+    else { aiRun(card, k, farm); return; }
+  }
+  aiPaint(card, k);
+}
+
 function hintHtml(res){
   var m = res.err === 'noloc' ? 'أضف موقع المزرعة (المحافظة) من «إعداد المزرعة» لتفعيل تنبيهات الطقس وقرار الري.'
         : res.err === 'geo'   ? 'تعذّر تحديد موقع «' + esc(res.loc) + '» — اكتب اسم المحافظة بوضوح (مثال: الفيوم) في إعداد المزرعة.'
@@ -26519,6 +26677,8 @@ window.NbFarmWx = function(view, mc, st){
           if(sm && card.contains(sm)){ nbfwToggle(card); return; }
           var gb = ev.target && ev.target.closest ? ev.target.closest('.nbfw-go') : null;
           if(gb && card.contains(gb)){ if(window.NbFarmGo) window.NbFarmGo(gb.getAttribute('data-go'), gb.getAttribute('data-st') || ''); return; }
+          var ab = ev.target && ev.target.closest ? ev.target.closest('[data-ai]') : null;
+          if(ab && card.contains(ab)){ aiClick(card, ab, farm); return; }
           var b = ev.target && ev.target.closest ? ev.target.closest('.nbfw-tb') : null;
           if(!b || !card.contains(b) || !card._res) return;
           var t = stNorm(b.getAttribute('data-st') || '');
@@ -26530,6 +26690,10 @@ window.NbFarmWx = function(view, mc, st){
       card.addEventListener('keydown', function(ev){
         var sm = ev.target && ev.target.closest ? ev.target.closest('.nbfw-sum') : null;
         if(sm && (ev.key === 'Enter' || ev.key === ' ')){ ev.preventDefault(); nbfwToggle(card); }
+      });
+      card.addEventListener('input', function(ev){
+        var t = ev.target;
+        if(t && t.classList && t.classList.contains('nbfw-aiin') && card._res) aiS(card._res).crop = String(t.value || '').slice(0, 40);
       });
       load(farm, stNorm(sGet('nbfw:stype') || '')).then(function(res){
         if(!card.isConnected) return;
@@ -26957,7 +27121,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 (function(){
 'use strict';
 
-var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20 };   /* لازم تساوي LIMITS في api/farm-ai.js */
+var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };   /* لازم تساوي LIMITS في api/farm-ai.js */
 var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 800;
 
 function lsGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
@@ -27529,6 +27693,77 @@ function mountDash(mc, farm, st){
   cta.querySelector('.nbai-cta-go').addEventListener('click', function(){ openScreen(this); });
 }
 
+/* ═════════ قرار الري / الرش من الطقس — بيتنده من كارت «الطقس وقرار الري» (NbFarmAI.decide) — إضافة مستقلة، مفيش تغيير في باقي الأوضاع ═════════
+   • الحد اليومي: LIM.decide (نفس رقم LIMITS.decide في الخادم) — كاش 30 دقيقة بس لنفس المدخلات (القرار مرتبط بالطقس الحالي، فمينفعش يتخزّن 6 ساعات)
+   • قراءة فقط من الكاش المحلي لعمليات المزرعة (آخر ري / آخر رش / مرحلة النمو) — لا Firestore ولا أي كتابة. */
+var DEC_TTL = 30*60*1000, DEC_COOLDOWN = 8000, DEC_LAST = {};   /* الفاصل لكل سؤال لوحده (ري / رش) عشان تسأل الاتنين ورا بعض */
+function decCtx(farm, uid){
+  var c = {};
+  if(farm.irrSystem) c.irrSystem = farm.irrSystem;
+  if(farm.waterSource) c.water = farm.waterSource;
+  if(n(farm.area)) c.areaFeddan = n(farm.area);
+  if(farm.location) c.location = String(farm.location).slice(0, 60);
+  var ops = opsOf(farm, uid).slice().sort(function(a, b){ return String(b.date).localeCompare(String(a.date)); });
+  var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  function ago(d){ var t = new Date(d + 'T00:00:00'); return isFinite(t.getTime()) ? Math.max(0, Math.round((t0.getTime() - t.getTime()) / 86400000)) : null; }
+  var stages = [];
+  for(var k = 0; k < ops.length; k++){
+    var d = ops[k].data || {};
+    if(!c.lastIrrigation && (n(d.irr_times) || n(d.irr_hours) || n(d.irr_amount))){
+      c.lastIrrigation = { daysAgo: ago(ops[k].date) };
+      if(d.irr_method) c.lastIrrigation.method = String(d.irr_method).slice(0, 30);
+      if(n(d.irr_hours)) c.lastIrrigation.hours = r1(n(d.irr_hours));
+      if(n(d.irr_amount)) c.lastIrrigation.m3 = r1(n(d.irr_amount));
+    }
+    if(!c.lastSpray && d.spray_name){
+      c.lastSpray = { daysAgo: ago(ops[k].date) };
+      if(d.spray_type) c.lastSpray.type = String(d.spray_type).slice(0, 30);
+    }
+    if(d.cropStage && stages.indexOf(d.cropStage) === -1 && stages.length < 2) stages.push(String(d.cropStage).slice(0, 30));
+  }
+  if(stages.length) c.cropStages = stages;
+  if(!c.lastIrrigation) c.note = 'لا يوجد تسجيل ري خلال آخر 30 يوم';
+  return c;
+}
+function decide(kind, wx, opt, farm, done){
+  try{
+    var u = user();
+    if(!u) return done({ err: 'login' });
+    if(!navigator.onLine) return done({ err: 'offline' });
+    if((kind !== 'irr' && kind !== 'spray') || !wx) return done({ err: 'generic' });
+    opt = opt || {}; farm = farm || {};
+    var body = { mode: 'decide', kind: kind, wx: wx, ctx: decCtx(farm, u.uid) };
+    if(kind === 'spray') body.sprayType = opt.sprayType || ''; else if(opt.soil) body.soil = opt.soil;
+    if(opt.crop) body.crop = opt.crop;
+    var ck = hash(JSON.stringify(body)), key = 'nbai:r:decide:' + kind + ':' + u.uid;
+    var saved = lsGet(key);
+    if(saved && saved.k === ck && saved.d && Date.now() - saved.at < DEC_TTL) return done({ ok: true, d: saved.d, cached: true });
+    var qt = quotaGet(u.uid, 'decide');
+    if(qt.n >= LIM.decide) return done({ err: 'user_limit' });
+    var lk = kind + ':' + u.uid;
+    if(Date.now() - (DEC_LAST[lk] || 0) < DEC_COOLDOWN) return done({ err: 'wait' });
+    DEC_LAST[lk] = Date.now();
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, TMO);
+    u.getIdToken().then(function(tok){
+      return fetch('/api/farm-ai', {
+        method: 'POST', signal: ctl ? ctl.signal : undefined,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify(body)
+      });
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j || {} }; });
+    }).then(function(res){
+      clearTimeout(timer);
+      if(res.ok && res.j.d){
+        if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:decide:' + u.uid, qt); }
+        lsSet(key, { k: ck, at: Date.now(), d: res.j.d });
+        done({ ok: true, d: res.j.d });
+      } else done({ err: res.j.error || 'generic' });
+    }).catch(function(){ clearTimeout(timer); done({ err: 'generic' }); });
+  }catch(e){ done({ err: 'generic' }); }
+}
+
 window.NbFarmAI = function(view, mc, st){
   try{
     if(!mc || view !== 'dashboard') return;
@@ -27537,6 +27772,9 @@ window.NbFarmAI = function(view, mc, st){
     mountDash(mc, farm, st);
   }catch(e){ console.warn('[Nabtex Farm] ai:', e); }
 };
+window.NbFarmAI.decide = decide;
+window.NbFarmAI.errText = errText;
+window.NbFarmAI.left = function(){ return left('decide'); };
 })();
 </script>
 
