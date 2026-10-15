@@ -24553,7 +24553,17 @@ body {
     }
 
     /* Reposition pill on resize (orientation change, etc.) */
-    function _nbHandleViewportResize() {
+    var _nbLastVW = window.innerWidth;
+    function _nbHandleViewportResize(ev) {
+      /* في متصفح الموبايل، 'resize' (و visualViewport resize) بيتطلقوا مع كل
+         طلوع/نزول لشريط العنوان أثناء السكرول — والارتفاع بس هو اللي بيتغير.
+         إعادة بناء النافبار السفلي (position/display + reflow) مع كل حدث
+         كانت سبب الرعشة واللاج عند السكرول وعند الريفريش. هنا بنكمّل بس لو
+         العرض اتغيّر (تدوير حقيقي)، أو لو النداء جاي من إعادة محاولات
+         orientationchange (من غير event) فتفضل شغالة زي ما كانت. */
+      var _w = window.innerWidth;
+      if (ev && ev.type && _w === _nbLastVW) return;
+      _nbLastVW = _w;
       _nbFixBottomNavAfterRotate();
       var active = document.querySelector('#nb-bottom-nav .nb-nav-item.active');
       if (active && !active.classList.contains('nb-center-item')) moveSlidePill(active);
