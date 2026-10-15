@@ -27107,13 +27107,105 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbai-m-ai .nbai-w{animation:none!important}}
 </style>
 
+<style id="nb-farm-ai-shots">
+/* ═══════════════════════════════════════════════════════════════
+   Nabtex AI — معالج التصوير بالخطوات لتشخيص النبات (طبقة فوق nb-farm-ai-v3)
+   • CSS فقط لواجهة .nbai-wz — كل القواعد تحت .nbai-ov، فمفيش أي تأثير على باقي الموقع.
+   • الزر القديم (.nbai-pick) والمعاينة (.nbai-prev) متخبّيين بس (مش محذوفين) — للتراجع: امسح هذا البلوك.
+   • الحركة: transform/opacity بس، ومتوقفة مع prefers-reduced-motion.
+═══════════════════════════════════════════════════════════════ */
+.nbai-ov{--wz-ok:#15803d;--wz-ok-bg:rgba(22,163,74,.1);--wz-ok-br:rgba(22,163,74,.28);--wz-wn:#b45309;--wz-wn-bg:rgba(245,158,11,.13);--wz-wn-br:rgba(217,119,6,.34)}
+[data-dark] .nbai-ov{--wz-ok:#86efac;--wz-ok-bg:rgba(34,197,94,.14);--wz-ok-br:rgba(34,197,94,.35);--wz-wn:#fcd34d;--wz-wn-bg:rgba(245,158,11,.16);--wz-wn-br:rgba(245,158,11,.4)}
+@keyframes nbai5-swap{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes nbai5-pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:none}}
+
+.nbai-ov .nbai-pick,.nbai-ov .nbai-prev{display:none!important}
+.nbai-ov .nbai-pane.nbai-diag-busy .nbai-wz,.nbai-ov .nbai-pane.nbai-diag-step .nbai-wz{display:none}
+.nbai-ov .nbai-wz{margin-top:14px}
+
+/* شريط الخطوات (بيتحوّل لمعاينات مصغّرة بعد التصوير، وكل خانة بتفتح خطوتها للتعديل) */
+.nbai-ov .nbai-wz-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:4px 4px 0}
+.nbai-ov .nbai-wz-dot{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:0;border:0;background:none;font-family:inherit;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-ov .nbai-wz-th{position:relative;display:grid;place-items:center;width:100%;max-width:84px;aspect-ratio:1;border-radius:18px;border:1.5px solid var(--line2);background:var(--bg2);color:var(--slate);overflow:hidden;transition:border-color .25s,box-shadow .25s,transform .2s var(--ai-ease)}
+.nbai-ov .nbai-wz-th b{font-size:18px;font-weight:800;line-height:1}
+.nbai-ov .nbai-wz-th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nbai-ov .nbai-wz-ck{position:absolute;inset-inline-end:5px;bottom:5px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ai-g);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);animation:nbai5-pop .45s var(--ai-spring) backwards}
+.nbai-ov .nbai-wz-lb{max-width:100%;font-size:11.5px;font-weight:700;line-height:1.4;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nbai-ov .nbai-wz-dot:active .nbai-wz-th{transform:scale(.95)}
+.nbai-ov .nbai-wz-dot.is-cur .nbai-wz-th{border-color:var(--ai-tx);color:var(--ai-tx);box-shadow:0 0 0 4px var(--ai-soft)}
+.nbai-ov .nbai-wz-dot.is-cur .nbai-wz-lb{color:var(--ai-tx);font-weight:800}
+.nbai-ov .nbai-wz-dot.is-done:not(.is-cur) .nbai-wz-th{border-color:var(--ai-ring)}
+.nbai-ov .nbai-wz-dot:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:3px;border-radius:14px}
+
+/* كارت الخطوة */
+.nbai-ov .nbai-wz-card{margin-top:14px;padding:16px;border:1px solid var(--line2);border-radius:22px;background:var(--card);box-shadow:var(--ai-sh)}
+.nbai-ov .nbai-wz-in{animation:nbai5-swap .5s var(--ai-ease) backwards}
+.nbai-ov .nbai-wz-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nbai-ov .nbai-wz-n{font-size:12px;font-weight:800;color:var(--ai-tx)}
+.nbai-ov .nbai-wz-req{padding:3px 10px;border-radius:999px;background:var(--bg2);border:1px solid var(--line2);font-size:11px;font-weight:700;color:var(--slate)}
+.nbai-ov .nbai-wz-req.is-req{background:var(--ai-soft);border-color:var(--ai-ring);color:var(--ai-tx)}
+.nbai-ov .nbai-wz-t{margin:10px 0 0;font-size:17px;font-weight:800;line-height:1.5;color:var(--ink)}
+.nbai-ov .nbai-wz-s{margin:2px 0 0;font-size:13px;font-weight:600;line-height:1.7;color:var(--slate)}
+
+/* إطار التصوير (كاميرا) */
+.nbai-ov .nbai-wz-vf{position:relative;display:grid;place-items:center;width:100%;max-width:320px;aspect-ratio:4/3;margin:14px auto 0;border-radius:20px;background:linear-gradient(180deg,var(--ai-soft),transparent 90%),var(--bg2);color:var(--ai-tx);overflow:hidden;isolation:isolate}
+.nbai-ov .nbai-wz-vf>svg{position:relative;z-index:1;width:84px;height:84px;animation:nbai3-float 4.5s ease-in-out infinite}
+.nbai-ov .nbai-wz-vf:not(.has)::after{content:"";position:absolute;inset-inline:0;top:0;height:40%;z-index:0;pointer-events:none;background:linear-gradient(180deg,transparent,var(--ai-soft) 75%,var(--ai-ring));border-bottom:1.5px solid var(--ai-ring);animation:nbai3-scan 3.8s ease-in-out infinite}
+.nbai-ov .nbai-wz-vf.has{background:#0b0f0c}
+.nbai-ov .nbai-wz-vf img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:contain;border-radius:0}
+.nbai-ov .nbai-wz-c{position:absolute;z-index:2;width:22px;height:22px;border:3px solid var(--ai-tx);pointer-events:none;opacity:.9}
+.nbai-ov .nbai-wz-c.a{top:10px;inset-inline-start:10px;border-inline-end:0;border-bottom:0;border-start-start-radius:10px}
+.nbai-ov .nbai-wz-c.b{top:10px;inset-inline-end:10px;border-inline-start:0;border-bottom:0;border-start-end-radius:10px}
+.nbai-ov .nbai-wz-c.c{bottom:10px;inset-inline-start:10px;border-inline-end:0;border-top:0;border-end-start-radius:10px}
+.nbai-ov .nbai-wz-c.d{bottom:10px;inset-inline-end:10px;border-inline-start:0;border-top:0;border-end-end-radius:10px}
+.nbai-ov .nbai-wz-vf.has .nbai-wz-c{border-color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+
+/* نصائح */
+.nbai-ov .nbai-wz-tips{display:grid;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.nbai-ov .nbai-wz-tips li{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;font-weight:600;line-height:1.7;color:var(--ink2)}
+.nbai-ov .nbai-wz-tips li::before{content:"";flex:none;width:7px;height:7px;margin-top:9px;border-radius:50%;background:var(--ai-g);box-shadow:0 0 0 3px var(--ai-soft)}
+
+/* فحص الجودة */
+.nbai-ov .nbai-wz-q{display:flex;align-items:flex-start;gap:8px;margin-top:12px;padding:10px 12px;border-radius:14px;border:1px solid;font-size:12.5px;font-weight:700;line-height:1.7;animation:nbai5-swap .45s var(--ai-ease) .1s backwards}
+.nbai-ov .nbai-wz-q>svg{flex:none;margin-top:4px}
+.nbai-ov .nbai-wz-q.ok{color:var(--wz-ok);background:var(--wz-ok-bg);border-color:var(--wz-ok-br)}
+.nbai-ov .nbai-wz-q.warn{color:var(--wz-wn);background:var(--wz-wn-bg);border-color:var(--wz-wn-br)}
+
+/* الأزرار */
+.nbai-ov .nbai-wz-acts{display:grid;gap:8px;margin-top:14px}
+.nbai-ov .nbai-wz-acts.two{grid-template-columns:1.35fr 1fr}
+.nbai-ov .nbai-wz-cap,.nbai-ov .nbai-wz-next,.nbai-ov .nbai-wz-redo,.nbai-ov .nbai-wz-skip{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 16px;border-radius:16px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink2);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s var(--ai-ease),box-shadow .2s,opacity .2s}
+.nbai-ov .nbai-wz-cap,.nbai-ov .nbai-wz-next{border-color:transparent;background:var(--ai-g);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 14px 26px -14px var(--ai-glow)}
+.nbai-ov .nbai-wz-skip{min-height:44px;border-color:transparent;background:none;color:var(--slate);font-size:13px;font-weight:700;text-decoration:underline}
+.nbai-ov .nbai-wz-done .nbai-wz-redo{background:var(--bg2)}
+.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip):active{transform:scale(.97)}
+.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip)[disabled]{opacity:.6;cursor:default;box-shadow:none}
+.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+.nbai-ov .nbai-wz-hint{margin:12px 4px 0;font-size:12px;font-weight:600;line-height:1.7;text-align:center;color:var(--slate)}
+
+/* حالة «الصور جاهزة» */
+.nbai-ov .nbai-wz-done{text-align:center}
+.nbai-ov .nbai-wz-okc{display:grid;place-items:center;width:56px;height:56px;margin:2px auto 0;border-radius:50%;color:#fff;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 28px -12px var(--ai-glow);animation:nbai5-pop .55s var(--ai-spring) backwards}
+
+/* الصور جوه فقاعة المستخدم */
+.nbai-ov .nbai-m .nbai-shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:min(240px,62vw);margin-bottom:8px}
+.nbai-ov .nbai-m .nbai-shot{margin:0}
+.nbai-ov .nbai-m .nbai-shot img{display:block;width:100%;height:auto;aspect-ratio:1;max-width:none;max-height:none;margin:0;border-radius:12px;object-fit:cover}
+.nbai-ov .nbai-m .nbai-shot figcaption{margin-top:3px;font-size:10.5px;font-weight:700;line-height:1.4;text-align:center;opacity:.9}
+
+@media (prefers-reduced-motion:reduce){
+  .nbai-ov :is(.nbai-wz-in,.nbai-wz-q,.nbai-wz-ck,.nbai-wz-okc,.nbai-wz-vf>svg){animation:none!important}
+  .nbai-ov .nbai-wz-vf::after{animation:none!important;opacity:0}
+}
+</style>
+
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
    الأوضاع: تحليل المزرعة / سؤال حر · تشخيص من صورة — من واجهة مستقلة بتتفتح من كارت Nabtex AI أعلى لوحة التحكم (تحت الهيدر مباشرة)
    • عند الطلب فقط (زر)، مفيش أي استدعاء تلقائي.
    • واجهة شات: فقاعات سؤال/رد، السجل فوق ومربع الكتابة تحت (في الذاكرة بس)، وكل سؤال بيتجاوب عليه لوحده (الخادم بلا ذاكرة).
-   • بيبعت ملخص أرقام مضغوط لآخر 30 يوم (مش سجلات خام) والصورة بتتصغّر في المتصفح (≈800px JPEG) → أقل tokens وبيانات ممكنة.
+   • بيبعت ملخص أرقام مضغوط لآخر 30 يوم (مش سجلات خام) والصور بتتصغّر في المتصفح (≈1280px JPEG، حتى 4 زوايا للنبات) → أعلى وضوح بأقل بيانات ممكنة.
    • حدود لكل وضع (نفس أرقام الخادم) + كاش 6 ساعات لنفس الطلب + فاصل 20 ثانية بين الطلبات.
    • قراءة فقط من الكاش المحلي لعمليات المزرعة (nabtex_farm_ops_v2__<uid>) — لا Firestore ولا أي كتابة في بيانات المزرعة.
    للتراجع: امسح هذا البلوك (style + script) وامسح السطرين اللي فيهم NbFarmAI جوه _doRenderFarmView، وامسح api/farm-ai.js.
@@ -27122,7 +27214,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 'use strict';
 
 var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };   /* لازم تساوي LIMITS في api/farm-ai.js */
-var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 800;
+var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 1280, SHOT_MAX = 340*1024, BLUR_MIN = 35;   /* القديم (للتراجع): IMG_MAX = 800 — الدقة اترفعت لـ 1280px عشان تفاصيل الأعراض (بقع/حشرات صغيرة) تفضل واضحة، وSHOT_MAX سقف حجم كل صورة، وBLUR_MIN حد الوضوح للتحذير */
 
 function lsGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -27254,18 +27346,46 @@ function call(mode, payload, ckExtra, done){
 
 function errText(e){ return e === 'wait' ? 'استنى ثواني قبل الطلب الجاي.' : (MSG[e] || MSG.generic); }
 
-/* تصغير الصورة في المتصفح قبل الإرسال (أقل استهلاك + أسرع) */
+/* تصغير الصورة في المتصفح قبل الإرسال (أقل استهلاك + أسرع) — بقى بيحافظ على الحدة: تصغير على مراحل + جودة JPEG أعلى، وبيرجّع فحص جودة (وضوح/إضاءة/دقة) كتحذير بس */
+function qcOf(cv, ow, oh){
+  try{
+    var P = 160, pts = [[.5,.5],[.3,.3],[.7,.3],[.3,.7],[.7,.7]], best = 0, lum = 0, ctx = cv.getContext('2d');
+    if(cv.width < P + 2 || cv.height < P + 2) return { small: true };
+    pts.forEach(function(p){
+      var x = Math.max(0, Math.min(cv.width - P, Math.round(cv.width * p[0] - P / 2))), y = Math.max(0, Math.min(cv.height - P, Math.round(cv.height * p[1] - P / 2)));
+      var dt = ctx.getImageData(x, y, P, P).data, g = new Float32Array(P * P), i, j, sum = 0, m = 0, m2 = 0, k = 0, v;
+      for(i = 0; i < P * P; i++){ g[i] = .299 * dt[i*4] + .587 * dt[i*4+1] + .114 * dt[i*4+2]; sum += g[i]; }
+      lum += sum / (P * P);
+      for(j = 1; j < P - 1; j++) for(i = 1; i < P - 1; i++){ v = 4 * g[j*P+i] - g[j*P+i-1] - g[j*P+i+1] - g[(j-1)*P+i] - g[(j+1)*P+i]; m += v; m2 += v * v; k++; }
+      var vr = m2 / k - (m / k) * (m / k); if(vr > best) best = vr;   /* تباين لابلاس: أعلى قيمة في 5 مناطق = أوضح جزء في الصورة */
+    });
+    var mean = lum / pts.length;
+    return { blur: best < BLUR_MIN && mean >= 60, dark: mean < 60, bright: mean > 225, small: Math.min(ow, oh) < 600 };
+  }catch(e){ return null; }
+}
 function shrink(file, cb){
   var img = new Image(), url = URL.createObjectURL(file);
   img.onload = function(){
     try{
-      var sc = Math.min(1, IMG_MAX / Math.max(img.width, img.height)), w = Math.round(img.width*sc), h = Math.round(img.height*sc);
-      var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      var q = 0.72, d = cv.toDataURL('image/jpeg', q);
-      while(d.length > 380*1024 && q > 0.4){ q -= 0.12; d = cv.toDataURL('image/jpeg', q); }
+      var ow = img.naturalWidth || img.width, oh = img.naturalHeight || img.height;
+      var sc = Math.min(1, IMG_MAX / Math.max(ow, oh)), w = Math.round(ow * sc), h = Math.round(oh * sc);
+      var srcEl = img, cw = ow, ch = oh;
+      while(cw > w * 2){   /* نصف نصف بدل قفزة واحدة: بيحافظ على حواف البقع والحشرات */
+        var nw = Math.round(cw / 2), nh = Math.round(ch / 2), t = document.createElement('canvas'); t.width = nw; t.height = nh;
+        var tc = t.getContext('2d'); tc.imageSmoothingQuality = 'high'; tc.drawImage(srcEl, 0, 0, nw, nh); srcEl = t; cw = nw; ch = nh;
+      }
+      var cv = document.createElement('canvas'), d = '', qc = null;
+      for(var tries = 0; tries < 4; tries++){
+        cv.width = w; cv.height = h;
+        var c2 = cv.getContext('2d'); c2.imageSmoothingQuality = 'high'; c2.drawImage(srcEl, 0, 0, w, h);
+        if(!tries) qc = qcOf(cv, ow, oh);
+        var q = 0.84; d = cv.toDataURL('image/jpeg', q);
+        while(d.length > SHOT_MAX && q > 0.5){ q -= 0.08; d = cv.toDataURL('image/jpeg', q); }
+        if(d.length <= SHOT_MAX) break;
+        w = Math.round(w * 0.8); h = Math.round(h * 0.8);
+      }
       URL.revokeObjectURL(url);
-      cb(d.length > 400*1024 ? null : d);
+      cb(d.length > SHOT_MAX + 20*1024 ? null : d, qc);
     }catch(e){ cb(null); }
   };
   img.onerror = function(){ URL.revokeObjectURL(url); cb(null); };
@@ -27305,6 +27425,7 @@ function buildScreen(){
       '<input type="file" accept="image/*" class="nbai-file" hidden>' +
       '<button type="button" class="nbai-pick"><span class="nbai-pick-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span><span class="nbai-pick-s">ورقة / ثمرة / ساق</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
+      '<div class="nbai-wz"></div>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
       '<button type="button" class="nbai-go nbai-go-diag" disabled>شخّص المشكلة</button>' +
@@ -27316,7 +27437,7 @@ function buildScreen(){
   document.body.appendChild(card);
 
   var out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f');
-  var tab = 'ask', imgData = null, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة';
+  var tab = 'ask', shots = [null, null, null, null], qcs = [null, null, null, null], cur = 0, pend = 0, wzLoad = false, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة';
   function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
   /* شريط رصيد المساعد اليومي: بيتبني مرة واحدة وبعدها بيتحدّث بس، فعرض الشريط بيتسحب بنعومة مع كل استخدام. النقاط = نفس عدّاد الحد اليومي (left/LIM)، فمفيش أي تغيير في منطق الحصص. */
   function paintQuota(l, mx){
@@ -27352,7 +27473,8 @@ function buildScreen(){
   var GREET = {
     /* القديم (للتراجع): ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.', */
     ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.',
-    diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
+    /* القديم (للتراجع): diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.' */
+    diag: 'صوّر النبات المصاب من 4 زوايا بالخطوات دي، وأنا أفحصها وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
   };
   function mkMsg(r, h, e){ var d = document.createElement('div'); d.className = 'nbai-m nbai-m-' + r + (e ? ' err' : ''); d.innerHTML = h; return d; }
   /* الحاوية اللي بتسكرول: الشات في الاستشارة، والبانل كله في التشخيص */
@@ -27444,21 +27566,113 @@ function buildScreen(){
   card.querySelector('.nbai-qi').addEventListener('keydown', function(ev){
     if(ev.key === 'Enter' && !ev.isComposing){ ev.preventDefault(); sendAsk(); }
   });
+  /* ═════════ معالج التصوير بالخطوات (إضافة): الصورة الواحدة اتبدلت بـ 4 زوايا للنبات — الورقة من الأمام ثم الخلف (مطلوبتين) ثم الساق/الثمرة ثم النبات كامل (اختياريتين) ═════════
+     • نفس input الملف ونفس سلوك الاختيار (من غير capture)، نفس shrink، ونفس مراحل الأسئلة والتشخيص — اتغيّر بس عدد الصور المبعوتة.
+     • بعد كل صورة بيتعمل فحص جودة محلي (وضوح/إضاءة/دقة) كتحذير بس، والمزارع هو اللي يقرر يعيد أو يكمّل.
+     للتراجع: امسح الكتلة دي والـ <div class="nbai-wz"> من القالب وبلوك nb-farm-ai-shots، وارجع لسطور imgData القديمة (متسجّلة في تعليقات المراحل تحت). */
+  var VF_C = '<i class="nbai-wz-c a"></i><i class="nbai-wz-c b"></i><i class="nbai-wz-c c"></i><i class="nbai-wz-c d"></i>';
+  var IC_CAM = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+  var IC_OK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var IC_WARN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>';
+  var LEAF = 'M8 40C8 21 21 8 40 8C40 27 27 40 8 40Z';
+  var STEPS = [
+    { t: 'الورقة من الأمام', sh: 'أمام', rl: 'أمام', s: 'صوّر الوجه العلوي للورقة المصابة', req: true,
+      tips: ['صوّر في ضوء النهار من غير فلاش', 'قرّب لحد ما الورقة تملا الإطار', 'ثبّت إيدك ثانية لحد ما الصورة تركّز'],
+      ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + LEAF + '"/><path d="M8 40L32 16"/><path d="M16 32l5 5M22 26l7 7M28 20l7 7M16 32l-5-5M22 26l-5-5M28 20l-5-5" opacity=".6"/></svg>' },
+    { t: 'الورقة من الخلف', sh: 'خلف', rl: 'خلف', s: 'اقلب نفس الورقة وصوّر وجهها السفلي', req: true,
+      tips: ['الحشرات والبثور والبودرة بتظهر غالبًا هنا', 'نفس الورقة ونفس الضوء', 'ابعد ظل إيدك أو الموبايل عن الورقة'],
+      ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + LEAF + '" stroke-dasharray="3 4"/><path d="M8 40L32 16M16 32l5 5M22 26l7 7M28 20l7 7M16 32l-5-5M22 26l-5-5M28 20l-5-5" stroke-width="3"/><path d="M33 5c6 1 10 5 10 11M38 13l5 4 4-5" opacity=".7"/></svg>' },
+    { t: 'الساق أو الثمرة', sh: 'ساق / ثمرة', rl: 'ساق / ثمرة', s: 'قرّب على الساق أو الفرع أو الثمرة اللي فيها أعراض', req: false,
+      tips: ['لو مفيش أعراض عليهم تقدر تتخطى الخطوة دي', 'صوّر مكان بداية الإصابة وحدودها', 'قرّب من غير ما تغطي الضوء'],
+      ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 5v14"/><circle cx="24" cy="30" r="11"/><path d="M19 21l5 3.5 5-3.5"/><path d="M20 33c1 2 3 3 5 3" opacity=".6"/></svg>' },
+    { t: 'النبات كامل', sh: 'كامل', rl: 'كامل', s: 'ارجع خطوتين وصوّر النبات كله', req: false,
+      tips: ['صوّر من الجنب ويبان مستوى الأرض', 'وضّح انتشار الأعراض بين النباتات اللي حواليه', 'خلّي النبات في منتصف الإطار'],
+      ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 42h34"/><path d="M24 42V15"/><path d="M24 34c-8 0-12-5-12-11 8 0 12 4 12 11z"/><path d="M24 27c8 0 12-5 12-11-8 0-12 4-12 11z"/><path d="M24 15c0-4 2-7 5-9" opacity=".6"/></svg>' }
+  ];
+  var wz = card.querySelector('.nbai-wz');
+  wz.innerHTML = '<div class="nbai-wz-rail"></div><div class="nbai-wz-card"></div><p class="nbai-wz-hint" role="status"></p>';
+  var wzRail = wz.querySelector('.nbai-wz-rail'), wzCard = wz.querySelector('.nbai-wz-card'), wzHint = wz.querySelector('.nbai-wz-hint');
+
+  function ready(){ return !!(shots[0] && shots[1]); }
+  function qcInfo(q){
+    if(!q) return { ok: true, m: 'تم تجهيز الصورة' };
+    var w = [];
+    if(q.blur) w.push('الصورة مش واضحة — ثبّت الموبايل وانتظر التركيز');
+    if(q.dark) w.push('الإضاءة ضعيفة — صوّر في ضوء النهار');
+    if(q.bright) w.push('الإضاءة قوية أو فيه انعكاس — ابعد عن الشمس المباشرة');
+    if(q.small) w.push('دقة الصورة قليلة — قرّب أكتر');
+    return w.length ? { ok: false, m: w.join('<br>') } : { ok: true, m: 'الصورة واضحة ومناسبة للتحليل' };
+  }
+  function shotsHtml(){
+    var h = '';
+    shots.forEach(function(d, i){ if(d) h += '<figure class="nbai-shot"><img src="' + d + '" alt="' + esc(STEPS[i].t) + '"><figcaption>' + esc(STEPS[i].sh) + '</figcaption></figure>'; });
+    return '<div class="nbai-shots">' + h + '</div>';
+  }
+  function sync(){
+    var go = card.querySelector('.nbai-go-diag'), nw = card.querySelector('.nbai-new');
+    go.disabled = busy || !ready();
+    nw.hidden = !shots.some(Boolean);
+  }
+  function paintWz(){
+    var had = wz.contains(document.activeElement), n = STEPS.length, got = shots.filter(Boolean).length;
+    wzRail.innerHTML = STEPS.map(function(st, i){
+      var done = !!shots[i], on = i === cur;
+      return '<button type="button" class="nbai-wz-dot' + (on ? ' is-cur' : '') + (done ? ' is-done' : '') + '" data-s="' + i + '"' + (on ? ' aria-current="step"' : '') + ' aria-label="الخطوة ' + (i + 1) + ': ' + esc(st.t) + (done ? ' — تم التصوير' : (st.req ? ' — مطلوبة' : ' — اختيارية')) + '">' +
+        '<span class="nbai-wz-th">' + (done ? '<img src="' + shots[i] + '" alt="">' + '<span class="nbai-wz-ck">' + IC_OK + '</span>' : '<b>' + (i + 1) + '</b>') + '</span>' +
+        '<span class="nbai-wz-lb">' + esc(st.rl) + '</span></button>';
+    }).join('');
+    var h;
+    if(cur >= n){
+      h = '<div class="nbai-wz-in nbai-wz-done"><span class="nbai-wz-okc">' + IC_OK.replace('width="14" height="14"', 'width="26" height="26"') + '</span><h3 class="nbai-wz-t">الصور جاهزة</h3>' +
+        '<p class="nbai-wz-s">اتجهّز لك ' + got + ' من ' + n + ' صور. اكتب ملاحظة لو حابب، وبعدها دوس «شخّص المشكلة».</p>' +
+        '<div class="nbai-wz-acts"><button type="button" class="nbai-wz-redo nbai-wz-main" data-a="first">مراجعة الصور أو تعديلها</button></div></div>';
+    } else {
+      var st = STEPS[cur], sh = shots[cur], last = cur === n - 1;
+      h = '<div class="nbai-wz-in"><div class="nbai-wz-top"><span class="nbai-wz-n">الخطوة <bdi dir="ltr">' + (cur + 1) + ' / ' + n + '</bdi></span><span class="nbai-wz-req' + (st.req ? ' is-req' : '') + '">' + (st.req ? 'مطلوبة' : 'اختيارية — بتزوّد الدقة') + '</span></div>' +
+        '<h3 class="nbai-wz-t">' + esc(st.t) + '</h3><p class="nbai-wz-s">' + esc(st.s) + '</p>';
+      if(sh){
+        var qi = qcInfo(qcs[cur]);
+        h += '<div class="nbai-wz-vf has"><img src="' + sh + '" alt="' + esc(st.t) + '">' + VF_C + '</div>' +
+          '<div class="nbai-wz-q ' + (qi.ok ? 'ok' : 'warn') + '">' + (qi.ok ? IC_OK : IC_WARN) + '<span>' + qi.m + '</span></div>' +
+          '<div class="nbai-wz-acts two"><button type="button" class="nbai-wz-next nbai-wz-main" data-a="next">' + (last ? 'تمام، خلّصت' : 'التالي') + '</button>' +
+          '<button type="button" class="nbai-wz-redo" data-a="redo"' + (wzLoad ? ' disabled' : '') + '>' + (wzLoad ? 'جارٍ التجهيز…' : 'إعادة التصوير') + '</button></div>';
+      } else {
+        h += '<div class="nbai-wz-vf">' + st.ic + VF_C + '</div><ul class="nbai-wz-tips">' + st.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+          '<div class="nbai-wz-acts"><button type="button" class="nbai-wz-cap nbai-wz-main" data-a="cap"' + (wzLoad ? ' disabled aria-busy="true"' : '') + '>' + IC_CAM + '<span>' + (wzLoad ? 'جارٍ تجهيز الصورة…' : 'صوّر أو اختر الصورة') + '</span></button>' +
+          (st.req ? '' : '<button type="button" class="nbai-wz-skip" data-a="skip">تخطي الخطوة دي</button>') + '</div>';
+      }
+      h += '</div>';
+    }
+    wzCard.innerHTML = h;
+    wzHint.textContent = ready() ? 'تمام ✓ تقدر تبدأ التشخيص دلوقتي، أو تضيف زوايا زيادة لدقة أعلى.' : 'لازم تصوّر الورقة من الأمام ومن الخلف الأول عشان نبدأ التشخيص.';
+    sync();
+    if(had){ var mb = wzCard.querySelector('.nbai-wz-main'); if(mb) try{ mb.focus({ preventScroll: true }); }catch(e){} }
+  }
+  wz.addEventListener('click', function(ev){
+    var d = ev.target.closest && ev.target.closest('.nbai-wz-dot');
+    if(d){ if(busy || wzLoad) return; cur = +d.getAttribute('data-s'); paintWz(); return; }
+    var b = ev.target.closest && ev.target.closest('[data-a]'); if(!b || b.disabled || busy || wzLoad) return;
+    var a = b.getAttribute('data-a');
+    if(a === 'cap' || a === 'redo'){ pend = cur; card.querySelector('.nbai-file').click(); return; }
+    if(a === 'next' || a === 'skip'){ cur = Math.min(STEPS.length, cur + 1); paintWz(); return; }
+    if(a === 'first'){ cur = 0; paintWz(); }
+  });
   card.querySelector('.nbai-file').addEventListener('change', function(){
     var f = this.files && this.files[0]; if(!f) return;
     try{ this.value = ''; }catch(e){}   /* يسمح باختيار نفس الصورة تاني */
+    var slot = pend; wzLoad = true; paintWz();
     show('جارٍ تجهيز الصورة...', false);
-    shrink(f, function(d){
+    shrink(f, function(d, qc){
       if(!card.isConnected) return;
-      if(!d){ imgData = null; show('ما قدرتش أقرأ الصورة دي. جرّب صورة تانية.', true); return; }
-      imgData = d; resetSteps(); show('', false);
-      var pv = card.querySelector('.nbai-prev'); pv.src = d; pv.hidden = false;
-      card.querySelector('.nbai-go-diag').disabled = false;
-      card.querySelector('.nbai-new').hidden = false;
+      wzLoad = false;
+      if(!d){ show('ما قدرتش أقرأ الصورة دي. جرّب صورة تانية.', true); paintWz(); return; }
+      shots[slot] = d; qcs[slot] = qc || null; cur = slot; resetSteps(); show('', false);
+      paintWz();
     });
   });
+  paintWz();
 
-  function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !imgData); btn.textContent = on ? 'جارٍ التحليل...' : label;
+  function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;
     if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
 
   function sendAsk(){
@@ -27496,11 +27710,11 @@ function buildScreen(){
   }
 
   function resetComposer(){
-    imgData = null; resetSteps();
+    /* القديم (للتراجع): imgData = null; resetSteps(); ... */
+    shots = [null, null, null, null]; qcs = [null, null, null, null]; cur = 0; wzLoad = false; resetSteps();
     var pv = card.querySelector('.nbai-prev'); pv.hidden = true; pv.removeAttribute('src');
     card.querySelector('.nbai-note').value = '';
-    card.querySelector('.nbai-go-diag').disabled = true;
-    card.querySelector('.nbai-new').hidden = true;
+    paintWz();
   }
 
   function resetSteps(){
@@ -27542,19 +27756,19 @@ function buildScreen(){
   }
 
   function runDiag(){
-    if(busy || !imgData) return;
+    if(busy || !ready()) return;
     var u = user(), btn = card.querySelector('.nbai-go-diag');
     if(!u){ show(esc(MSG.login), true); return; }
     var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(curFarm(), u.uid);
-    var image = { mime: 'image/jpeg', data: imgData.replace(/^data:image\/jpeg;base64,/, '') };
-    var ck = imgData.length + ':' + imgData.slice(-200) + '|' + note;
+    var list = []; shots.forEach(function(d, i){ if(d) list.push({ slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }); });   /* القديم (للتراجع): var image = { mime:'image/jpeg', data: imgData... } */
+    var ck = shots.map(function(d){ return d ? d.length + ':' + d.slice(-120) : '-'; }).join('|') + '|' + note;
 
     if(!step){
       /* المرحلة 1: فحص الصورة + أسئلة استيضاحية */
       setBusy(btn, true, DIAG_LBL); show('', false);
-      push('diag', 'user', '<img src="' + imgData + '" alt="الصورة المرسلة">' + (note ? esc(note) : 'شخّص المشكلة'));
+      push('diag', 'user', shotsHtml() + (note ? esc(note) : 'شخّص المشكلة'));
       var ty1 = typing('diag');
-      call('diag_q', { image: image, note: note, ctx: ctx }, ck, function(r){
+      call('diag_q', { images: list, note: note, ctx: ctx }, ck, function(r){
         var live = card.isConnected;
         if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
         if(!r.ok){ settle(ty1, 'diag', esc(errText(r.err)), true); if(live) paintFoot(); return; }
@@ -27581,7 +27795,7 @@ function buildScreen(){
     setBusy(btn, true, DIAG_LBL); show('', false);
     push('diag', 'user', answers.length ? answers.map(function(x){ return esc(x.q) + ': <b>' + esc(x.a) + '</b>'; }).join('<br>') : 'كمّل التشخيص');
     var ty2 = typing('diag');
-    call('diagnose', { image: image, note: note, ctx: ctx, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
+    call('diagnose', { images: list, note: note, ctx: ctx, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
       var live = card.isConnected;
       if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
       settle(ty2, 'diag', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
