@@ -26687,6 +26687,8 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
 /* تعديل: لما الكيبورد يفتح على حقل جوه المساعد نخفي (بالـ visibility فقط — بدون تغيير أي مقاسات أو سكرول) باقي الصفحة اللي ورا عشان ما تبانش من فوق الكيبورد */
 body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibility:hidden}
+/* تعديل: قفل سكرول الصفحة اللي ورا الواجهة فعليًا. body{overflow:hidden} (في openScreen) مابيشتغلش لأن html عليه overflow-x:hidden فالـ overflow مابيتنقلش للـ viewport، فكانت الصفحة ورا بتتسكرول مع السحب → شريط Safari بيطلع وينزل → ارتفاع الواجهة بيتغير والمحتوى بيرتعش. القاعدة دي CSS بس وتشتغل طول ما الواجهة مفتوحة وبتنفك أوتوماتيك لما تتقفل. */
+html:has(.nbai-ov:not([hidden])){overflow:hidden}
 /* تعديل: أثناء تحليل الصورة نخفي أدوات الإدخال مؤقتًا (الصورة بالفعل ظاهرة في المحادثة) عشان فقاعة «بيحلّل» تبان كاملة */
 .nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-pick,.nbai-prev,.nbai-note,.nbai-qs,.nbai-new){display:none}
 /* تعديل: بعد الفحص الأولي للصورة (نبات واضح) نفضّل أدوات اختيار الصورة/المعاينة/الملاحظات مخفية لحد التشخيص النهائي أو «إلغاء وتشخيص جديد» */
@@ -27420,6 +27422,15 @@ function curFarm(){ return (STATE && STATE.farms && STATE.farms[0]) || (STATE &&
 function syncVV(){
   var vv = window.visualViewport;
   if(!vv || !SCR || !OPEN) return;
+  /* تعديل: التعديل على الارتفاع/الموضع بس لما الكيبورد مفتوح (حقل جوه الواجهة عليه فوكس).
+     من غير كده (سحب/سكرول وشريط Safari بيتحرك) كل حدث resize/scroll كان بيغيّر ارتفاع الواجهة
+     لحظيًا ويعمل رعشة — فبنسيب الارتفاع للـ CSS (100dvh) وبنشيل أي قيمة قديمة. */
+  var _a = document.activeElement;
+  if(!(_a && SCR.contains(_a) && (_a.tagName === 'INPUT' || _a.tagName === 'TEXTAREA'))){
+    if(SCR.style.height) SCR.style.height = '';
+    if(SCR.style.top) SCR.style.top = '';
+    return;
+  }
   SCR.style.height = vv.height + 'px'; SCR.style.top = vv.offsetTop + 'px';   /* الكيبورد على آيفون */
 }
 function onKey(ev){
