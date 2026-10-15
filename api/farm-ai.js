@@ -7,6 +7,7 @@
  *     ask       { summary, question }              سؤال حر بسياق المزرعة
  *     diagnose  { image:{mime,data}, note?, ctx? } تشخيص مشكلة نبات من صورة
  *     log       { text, options? }                 تحويل كلام المزارع لحقول نموذج التسجيل اليومي (JSON)
+ *     decide    { kind:'irr'|'spray', sprayType?, crop?, soil?, wx, ctx? }  قرار «هل أروي الآن؟ / هل أرش الآن؟» من الطقس الفعلي لموقع المزرعة (JSON)
  *
  * - المفتاح GEMINI_API_KEY بيتقرا من متغير البيئة على الخادم فقط (Vercel → Settings → Environment Variables)،
  *   وبيتبعت في هيدر x-goog-api-key (مش في الرابط) — مفيش أي مكان في الكود أو الرد بيظهر فيه.
@@ -29,7 +30,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20 };
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 600 * 1024;
@@ -37,7 +38,9 @@ const MAX_SUMMARY_CHARS = 9000;
 const MAX_QUESTION_CHARS = 300;
 const MAX_TEXT_CHARS = 700;
 const MAX_IMAGE_B64 = 420 * 1024;   /* ≈ 310KB بعد فك الترميز */
-const OUT_TOKENS = { analyze: 1200, ask: 1200, diag_q: 900, diagnose: 2600, log: 700 };
+const OUT_TOKENS = { analyze: 1200, ask: 1200, diag_q: 900, diagnose: 2600, log: 700, decide: 900 };
+const MAX_WX_CHARS = 5500;
+const MAX_CTX_CHARS = 1500;
 /* اختياري: GEMINI_GROUNDING=1 يفعّل بحث جوجل (Grounding) في مرحلة التشخيص النهائي فقط لرفع دقة أسماء المبيدات المسجّلة.
    متروك مطفي افتراضيًا لأن له حصة يومية منفصلة في الباقة المجانية. */
 const GROUNDING = process.env.GEMINI_GROUNDING === '1';
@@ -139,6 +142,22 @@ const SYSTEMS = {
   ].join('\n')
 };
 SYSTEMS.ask = SYSTEMS.analyze;
+/* قرار الري / الرش من الطقس الفعلي — JSON فقط. الأرقام بتيجي من الواجهة (WeatherAPI) والذكاء الاصطناعي بيفسّرها بس ومش بيخترع */
+SYSTEMS.decide = [
+  'أنت مهندس زراعي استشاري ومتخصص في الأرصاد الزراعية في مصر، في منصة «نبتيكس». المزارع بيسألك سؤال قرار مباشر («هل أروي الآن؟» أو «هل أرش الآن؟») وهيمشي على ردّك، فكن دقيقًا وحاسمًا وصريحًا.',
+  'هتستلم JSON فيه: wx (طقس موقع المزرعة الفعلي: الحالة الآن + جدول الساعات الجاية + 3 أيام + التنبيهات + حكم النظام الحسابي rule)، و ctx (بيانات المزرعة: نظام الري، آخر ري، آخر رش، مرحلة النمو، المحصول، التربة لو اتذكرت).',
+  'صيغة صفوف hours: «يوم-ساعة|حرارة°|رطوبة%|رياح كم/س|هبّات كم/س|احتمال مطر%|مطر مم|ΔT|n أو d» حيث d نهار وn ليل، ويوم 0 = اليوم و1 = بكرة. الساعة بتوقيت المزرعة.',
+  'اعتمد على الأرقام الموجودة فقط ولا تخترع قراءات أو بيانات. لو معلومة مهمة ناقصة (رطوبة التربة، المحصول، آخر ري) قول كده وخفّض confidence.',
+  'قاعدة صارمة: لو rule.tone = danger فالقرار لا يكون yes أبدًا. rule هو حكم نظام حسابي مبني على توصيات وزارة الزراعة والمعمل المركزي للمناخ الزراعي، وأنت بتكمّله بتفاصيل أدق مش بتناقضه.',
+  'لو kind = spray: قيّم نافذة الـ 6 ساعات الجاية وصفوف النهار فقط. معايير: رياح ≥ 20 كم/س أو هبّات ≥ 30 = لا؛ احتمال مطر ≥ 50% أو مطر ≥ 0.5 مم خلال 6 ساعات = لا (غسل المبيد)؛ حرارة ≥ 38 أو ≤ 3 = لا؛ ΔT أعلى من 10 = لا (الرذاذ يتبخر) وأقل من 2 أو رياح أقل من 3 = حذر؛ لا رش ليلًا ولا في ظهيرة 12–2 ولا أثناء موجة الحر للمبيدات والهرمونات. لو القرار مش yes اختار when من الصفوف الفعلية (أقرب ساعة نهار تحقق الشروط) واذكر اليوم والساعة.',
+  'تفاصيل حسب sprayType: مبيد فطري → الرطوبة العالية والندى بيزودوا الخطر لكن الرش على ورق مبلول بيقلل الالتصاق، والمطر القريب بيغسل الحماية؛ مبيد حشري → تجنب ساعات نشاط النحل في الظهيرة والأفضل الصباح الباكر المتأخر أو العصر؛ مبيد أكاروسي → الحر والجفاف بيزودوا نشاط العنكبوت فالتوقيت المبكر أهم؛ مبيد ديدان → غالبًا بيتضاف مع الري أو للتربة فاربط القرار برطوبة التربة والري والمطر الغزير؛ سماد ورقي → صباح باكر أو نهاية اليوم وتجنب الحرارة العالية لاحتراق الأوراق؛ هرمون/منظم نمو → امتنع في موجات الحر؛ عام/غير محدد → طبّق المعايير العامة واذكر إنه مش محدد.',
+  'لو kind = irr: قيّم المطر (اليوم وبكرة) والتبخر المرجعي ET₀ والحرارة العظمى وموجة الحر والصقيع والرياح (مهمة جدًا لو نظام الري رش) وآخر ري (ctx.lastIrrigation) ونظام الري والتربة. قواعد: مطر مؤكد (كمية واحتمال) = أجّل وافحص رطوبة الجذور؛ ET₀ عالي أو حر شديد = قسّم الريّات واروِ فجرًا أو بعد العصر وتجنب الظهيرة؛ صقيع متوقع = ري خفيف متأخر نهارًا قبل الليلة الباردة وتجنب الري ليلًا؛ رياح قوية مع الري بالرش = أجّل لوقت أهدأ؛ التربة الرملية = أقصر وأكثر تكرارًا، والطينية = أطول وأقل تكرارًا. أنت ما تعرفش رطوبة التربة الفعلية، فقول إن القرار النهائي بفحص التربة في منطقة الجذور (الأصبع/على عمق الجذور) لو مفيش بيانات آخر ري.',
+  'معنى verdict: yes = الوقت مناسب دلوقتي، wait = الأفضل تأجيل لوقت محدد قريب (حدده في when)، no = لا تنفّذ الإجراء النهاردة/خلال الفترة القريبة. headline جملة قصيرة قاطعة (حد أقصى 12 كلمة).',
+  'رجّع JSON فقط بالشكل: {"verdict":"yes|wait|no","headline":"...","when":"أنسب توقيت بالساعة واليوم أو فاضية","why":["سبب بالأرقام","..."],"steps":["إجراء عملي","..."],"watch":"تحذير أو متابعة أو فاضية","confidence":"عالية|متوسطة|منخفضة"}. why من 2 إلى 4 نقاط كل نقطة مربوطة برقم من الطقس، وsteps من 2 إلى 4 إجراءات عملية، والعربية مبسّطة بلمسة مصرية خفيفة.',
+  SAFETY,
+  'لا تذكر كميات مياه أو جرعات رقمية. ما تذكرش أسماء مبيدات تجارية.',
+  INJECTION
+].join('\n');
 
 const NUM_KEYS = ['irr_times', 'irr_amount', 'irr_hours', 'fert_n', 'fert_p', 'fert_k', 'fert_organic', 'fert_micro', 'fert_amount',
   'spray_conc', 'spray_water', 'spray_area', 'spray_times', 'labor', 'machines', 'temp', 'humidity', 'rain'];
@@ -183,6 +202,29 @@ function sanitizeDiagQ(raw) {
   return out;
 }
 
+/* تنظيف رد وضع decide: قرار من 3 قيم فقط، نصوص قصيرة، وقاعدة «حكم النظام الحسابي danger ⇒ مش yes» بتتنفّذ هنا مش بس في البرومبت */
+const DEC_VERDICTS = ['yes', 'wait', 'no'];
+const DEC_CONF = ['عالية', 'متوسطة', 'منخفضة'];
+function sanitizeDecide(raw, ruleTone, kind) {
+  if (!raw || typeof raw !== 'object') return null;
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+  const list = function (a, max, n) {
+    return (Array.isArray(a) ? a : []).map(function (x) { return str(x, n); }).filter(Boolean).slice(0, max);
+  };
+  let verdict = DEC_VERDICTS.indexOf(raw.verdict) !== -1 ? raw.verdict : '';
+  const out = {
+    verdict: verdict, headline: str(raw.headline, 120), when: str(raw.when, 120),
+    why: list(raw.why, 4, 220), steps: list(raw.steps, 4, 220), watch: str(raw.watch, 240),
+    confidence: DEC_CONF.indexOf(raw.confidence) !== -1 ? raw.confidence : 'متوسطة'
+  };
+  if (!out.verdict || !out.headline || !out.why.length) return null;
+  if (out.verdict === 'yes' && (ruleTone === 'danger' || (kind === 'irr' && ruleTone === 'info'))) {
+    out.verdict = 'wait';
+    if (!out.when) out.when = 'راجع أقرب وقت مناسب في كارت الطقس';
+  }
+  return out;
+}
+
 function cleanOptions(o) {
   const out = {};
   if (!o || typeof o !== 'object') return out;
@@ -213,7 +255,7 @@ module.exports = async function handler(req, res) {
   let mode = typeof body.mode === 'string' ? body.mode : (question ? 'ask' : 'analyze');
   if (!LIMITS[mode]) return fail(res, 400, 'bad_request');
 
-  let parts, keyMaterial, options = null;
+  let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
   if (mode === 'analyze' || mode === 'ask') {
     const summary = body.summary;
     if (!summary || typeof summary !== 'object' || Array.isArray(summary)) return fail(res, 400, 'bad_request');
@@ -244,6 +286,28 @@ module.exports = async function handler(req, res) {
     }
     parts = [{ text: p }, { inlineData: { mimeType: img.mime, data: img.data } }];
     keyMaterial = crypto.createHash('sha256').update(img.data).digest('hex') + '|' + note + '|' + ctx + extra;
+  } else if (mode === 'decide') {
+    const kind = body.kind === 'spray' ? 'spray' : (body.kind === 'irr' ? 'irr' : '');
+    if (!kind) return fail(res, 400, 'bad_request');
+    const wxo = body.wx;
+    if (!wxo || typeof wxo !== 'object' || Array.isArray(wxo) || !Array.isArray(wxo.hours) || wxo.hours.length < 6) return fail(res, 400, 'bad_request');
+    const wxs = JSON.stringify(wxo);
+    if (wxs.length > MAX_WX_CHARS) return fail(res, 413, 'too_large');
+    const cx = body.ctx && typeof body.ctx === 'object' && !Array.isArray(body.ctx) ? JSON.stringify(body.ctx).slice(0, MAX_CTX_CHARS) : '';
+    const SPRAY_T = ['مبيد حشري', 'مبيد فطري', 'مبيد أكاروسي', 'مبيد ديدان', 'سماد ورقي', 'هرمون'];
+    const SOILS = ['رملية', 'طينية', 'صفراء', 'غير معروفة'];
+    const sType = kind === 'spray' ? (SPRAY_T.indexOf(body.sprayType) !== -1 ? body.sprayType : 'عام (غير محدد)') : '';
+    const crop = typeof body.crop === 'string' ? body.crop.replace(/[\r\n]+/g, ' ').trim().slice(0, 40) : '';
+    const soil = kind === 'irr' && SOILS.indexOf(body.soil) !== -1 ? body.soil : '';
+    let p = kind === 'spray' ? 'السؤال: هل أرش الآن؟ نوع الرش: ' + sType + '.' : 'السؤال: هل أروي الآن؟';
+    if (crop) p += '\nالمحصول: ' + crop;
+    if (soil) p += '\nنوع التربة: ' + soil;
+    p += '\nبيانات الطقس (JSON):\n' + wxs;
+    if (cx) p += '\nبيانات المزرعة (JSON):\n' + cx;
+    p += '\nرجّع JSON القرار فقط.';
+    ruleTone = wxo.rule && typeof wxo.rule.tone === 'string' ? wxo.rule.tone : '';
+    decKind = kind;
+    parts = [{ text: p }]; keyMaterial = kind + '|' + sType + '|' + crop + '|' + soil + '|' + wxs + '|' + cx;
   } else { /* log */
     const text = typeof body.text === 'string' ? body.text.trim().slice(0, MAX_TEXT_CHARS) : '';
     if (text.length < 3) return fail(res, 400, 'bad_request');
@@ -270,8 +334,8 @@ module.exports = async function handler(req, res) {
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
-  const gen = { temperature: mode === 'log' ? 0 : (mode === 'diag_q' ? 0.2 : 0.3), maxOutputTokens: OUT_TOKENS[mode] };
-  if (mode === 'log' || mode === 'diag_q') gen.responseMimeType = 'application/json';
+  const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
+  if (mode === 'log' || mode === 'diag_q' || mode === 'decide') gen.responseMimeType = 'application/json';
   const reqBody = {
     systemInstruction: { parts: [{ text: SYSTEMS[mode] }] },
     contents: [{ role: 'user', parts: parts }],
@@ -331,6 +395,12 @@ module.exports = async function handler(req, res) {
     const q = sanitizeDiagQ(parsed);
     if (!q) return fail(res, 502, 'blocked');
     payload = { q: q };
+  } else if (mode === 'decide') {
+    let parsed = null;
+    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    const d = sanitizeDecide(parsed, ruleTone, decKind);
+    if (!d) return fail(res, 502, 'empty');
+    payload = { d: d };
   } else {
     payload = { text: out };
   }
