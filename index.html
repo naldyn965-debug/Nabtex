@@ -27486,7 +27486,7 @@ function buildScreen(){
   var TH = { ask: card.querySelector('.nbai-th[data-th="ask"]'), diag: card.querySelector('.nbai-th[data-th="diag"]') };
   var GREET = {
     /* القديم (للتراجع): ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.', */
-    get ask(){ return src === 'any' ? 'اسألني عن أي حاجة في الزراعة — مزرعة أو نباتات في البيت. اكتب سؤالك كامل وهجاوبك عليه.' : 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.'; },
+    get ask(){ return src === 'any' ? 'اسألني عن أي حاجة في الزراعة — مزرعة أو نباتات في البيت، ولو مزرعتك مسجّلة على نبتكس اسألني عنها كمان. وهكمّل معاك الكلام من حيث وقفنا.' : 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.'; },
     /* القديم (للتراجع): diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.' */
     diag: 'صوّر النبات المصاب من 4 زوايا بالخطوات دي، وأنا أفحصها وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
   };
@@ -27716,6 +27716,19 @@ function buildScreen(){
     runAsk();
   }
 
+  /* سجل «سؤال عن أي حاجة» كنص عادي للخادم (الخادم بلا ذاكرة): آخر 6 رسائل ناجحة، وسؤال فشل رده بيتشال عشان ما يتكررش. للتراجع: امسح الدالة دي وكل ما فيه hist جوه runAsk. */
+  function histOf(){
+    var out = [], L = CHAT.ask;
+    for(var i = 0; i < L.length; i++){
+      var m = L[i];
+      if(m.e || (m.r === 'user' && L[i + 1] && L[i + 1].e)) continue;
+      var d = document.createElement('div'); d.innerHTML = String(m.h).replace(/<br\s*\/?>/gi, '\n');
+      var t = (d.textContent || '').trim().slice(0, 900);
+      if(t) out.push({ r: m.r === 'user' ? 'u' : 'a', t: t });
+    }
+    return out.slice(-6);
+  }
+
   /* ov: نص جاهز من شريحة اقتراح ('' = تحليل المزرعة)؛ بدونه بيتاخد من مربع الكتابة */
   function runAsk(ov){
     if(busy) return;
@@ -27724,21 +27737,22 @@ function buildScreen(){
     var fromInput = typeof ov !== 'string';
     var q = (fromInput ? inp.value : ov).trim().slice(0, 300);
     var any = src === 'any';   /* «مش مسجّل — أسأل عن أي حاجة»: من غير بيانات مزرعة */
-    var summary = any ? {} : buildSummary(curFarm(), u.uid);
+    var summary = any ? (curFarm() ? buildSummary(curFarm(), u.uid) : {}) : buildSummary(curFarm(), u.uid);   /* القديم (للتراجع): any ? {} : ... — دلوقتي «سؤال عن أي حاجة» بتبعت ملخص المزرعة لو المستخدم عنده مزرعة عشان يقدر يسأل عنها */
     if(any && !q){ freshAsk(); push('ask', 'ai', 'اكتب سؤالك الأول.', true); return; }
     if(!any && !summary.operations && !q){ freshAsk(); push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
     function lock(on){ busy = on; btn.disabled = on; card.querySelectorAll('.nbai-chip').forEach(function(c){ c.disabled = on; }); }
-    freshAsk(); setSolo(true);
+    var hist = any ? histOf() : null;
+    if(!any){ freshAsk(); setSolo(true); }   /* «مزرعتي على نبتكس» رسالة برسالة زي الأول؛ «سؤال عن أي حاجة» شات بيكمّل من حيث وقف */
     push('ask', 'user', q ? esc(q) : 'حلّل مزرعتي');
     var ty = typing('ask');
     if(fromInput) inp.value = '';
     lock(true); paintFoot();
-    call(q ? 'ask' : 'analyze', any ? { summary: summary, question: q, general: true } : { summary: summary, question: q }, JSON.stringify(summary) + '|' + q + (any ? '|any' : ''), function(r){
+    call(q ? 'ask' : 'analyze', any ? { summary: summary, question: q, general: true, history: hist } : { summary: summary, question: q }, JSON.stringify(summary) + '|' + q + (any ? '|any|' + JSON.stringify(hist) : ''), function(r){
       var live = card.isConnected;
       if(live) lock(false); else busy = false;
       settle(ty, 'ask', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
       if(live){
-        if(r.ok){ again.hidden = false; if(OPEN){ try{ again.focus({ preventScroll: true }); }catch(e){} } }
+        if(r.ok){ if(!any){ again.hidden = false; if(OPEN){ try{ again.focus({ preventScroll: true }); }catch(e){} } } }
         else setSolo(false);   /* فشل → مربع الكتابة يرجع عشان يتبعت تاني */
         if(!r.ok && fromInput && q && !inp.value) inp.value = q;   /* فشل → السؤال يرجع للمربع عشان يتبعت تاني */
         paintFoot();
