@@ -4363,6 +4363,10 @@ body.modal-open { overflow: hidden; }
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8"/></svg>
             مزرعتي
           </a>
+          <a href="#" class="ud-item" onclick="showPage('market'); closeMob(); closeUserDropdown(); return false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            السوق الزراعي
+          </a>
           <a href="#" class="ud-item" onclick="showPage('market'); MKT.showPanel('seller'); closeMob(); closeUserDropdown(); return false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             منتجاتي
@@ -4382,6 +4386,7 @@ body.modal-open { overflow: hidden; }
     <a href="#" class="nl" onclick="showPage('goals');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>أهداف المنصة</a>
     <a href="#" class="nl" onclick="showPage('privacy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>سياسة الخصوصية</a>
     <a href="#" class="nl" onclick="showPage('ip-policy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>الملكية الفكرية</a>
+    <a href="#" class="nl" onclick="showPage('market');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>السوق الزراعي</a>
     <!-- زرار تحميل التطبيق: Android → مباشر | iOS → تعليمات -->
     <a href="#" class="nl nb-dl-btn" id="mob-install-app" onclick="closeMob();setTimeout(openPwaModal,180);return false">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2v13"/><path d="M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>حمّل تطبيق نبتيكس
@@ -18140,6 +18145,8 @@ document.addEventListener('click', e => {
       /* exposed for tests / diagnostics */
       _derive: fsubDerive
     };
+    /* بوابة الوصول لتاب AI (إضافة فقط): نفس فحص الاشتراك/التجربة اللي بتستخدمه صفحة المزرعة (fsubLoad) من غير أي تغيير في منطقه */
+    window.FarmSub.hasAccess = function(cb) { try { fsubLoad(false, function(d) { cb(!!(d && d.hasAccess)); }); } catch (e) { cb(false); } };
 
 
   })(); // end FarmSystem
@@ -23539,18 +23546,18 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
       </span>
       <span class="nb-lbl">الرئيسية</span>
     </button>
-    <!-- Farm -->
-    <button class="nb-nav-item" data-page="farm"
-            onclick="showPage('farm');window.scrollTo(0,0);" aria-label="مزرعتي">
+    <!-- AI (Nabtex AI) — بدل «مزرعتي» في الموضع الثاني؛ بيفتح واجهة المساعد المستقلة (NbFarmAI.open) بنفس شرط الوصول القديم -->
+    <button class="nb-nav-item" data-page="ai"
+            onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open==='function'){window.NbFarmAI.open(this);}" aria-label="المساعد الذكي Nabtex AI" aria-haspopup="dialog">
       <span class="nb-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
              aria-hidden="true" focusable="false">
-          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/>
-          <path d="M5 20c2-3 5-5 7-8"/>
+          <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>
+          <path d="M19 15v4M17 17h4"/>
         </svg>
       </span>
-      <span class="nb-lbl">مزرعتي</span>
+      <span class="nb-lbl">AI</span>
     </button>
     <!-- Academy (الكورسات) -->
     <button class="nb-nav-item" data-page="academy"
@@ -23565,7 +23572,20 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
       </span>
       <span class="nb-lbl">الكورسات</span>
     </button>
-    <!-- Market -->
+    <!-- Farm — اتنقل لمكان تاب السوق -->
+    <button class="nb-nav-item" data-page="farm"
+            onclick="showPage('farm');window.scrollTo(0,0);" aria-label="مزرعتي">
+      <span class="nb-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" focusable="false">
+          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/>
+          <path d="M5 20c2-3 5-5 7-8"/>
+        </svg>
+      </span>
+      <span class="nb-lbl">مزرعتي</span>
+    </button>
+    <!-- القديم (للتراجع) — تاب السوق (السوق بقى في القائمة المنسدلة بالشريط العلوي):
     <button class="nb-nav-item" data-page="market"
             onclick="showPage('market');window.scrollTo(0,0);" aria-label="السوق الزراعي">
       <span class="nb-ico">
@@ -23579,6 +23599,7 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
       </span>
       <span class="nb-lbl">السوق</span>
     </button>
+    -->
     <!-- Profile -->
     <button class="nb-nav-item" data-page="profile"
             onclick="showPage('profile');window.scrollTo(0,0);" aria-label="ملفي الشخصي">
@@ -27748,7 +27769,7 @@ function buildScreen(){
     var fromInput = typeof ov !== 'string';
     var q = (fromInput ? inp.value : ov).trim().slice(0, 300);
     var any = src === 'any';   /* «مش مسجّل — أسأل عن أي حاجة»: من غير بيانات مزرعة */
-    var summary = any ? (curFarm() ? buildSummary(curFarm(), u.uid) : {}) : buildSummary(curFarm(), u.uid);   /* القديم (للتراجع): any ? {} : ... — دلوقتي «سؤال عن أي حاجة» بتبعت ملخص المزرعة لو المستخدم عنده مزرعة عشان يقدر يسأل عنها */
+    var summary = any ? (curFarm() ? buildSummary(curFarm(), u.uid) : {}) : buildSummary(curFarm() || {}, u.uid);   /* (إضافة: المساعد بقى بيتفتح من تاب AI حتى لو مفيش مزرعة متحمّلة → حماية من null) القديم (للتراجع): any ? {} : ... — دلوقتي «سؤال عن أي حاجة» بتبعت ملخص المزرعة لو المستخدم عنده مزرعة عشان يقدر يسأل عنها */
     if(any && !q){ freshAsk(); push('ask', 'ai', 'اكتب سؤالك الأول.', true); return; }
     if(!any && !summary.operations && !q){ freshAsk(); push('ask', 'ai', 'سجّل عملية واحدة على الأقل من «تسجيل يومي» عشان أقدر أحلّل، أو اكتب سؤالك.', true); return; }
     function lock(on){ busy = on; btn.disabled = on; card.querySelectorAll('.nbai-chip').forEach(function(c){ c.disabled = on; }); }
@@ -27821,7 +27842,7 @@ function buildScreen(){
     if(busy || !ready()) return;
     var u = user(), btn = card.querySelector('.nbai-go-diag');
     if(!u){ show(esc(MSG.login), true); return; }
-    var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(curFarm(), u.uid);
+    var note = card.querySelector('.nbai-note').value.trim().slice(0, 300), ctx = diagCtx(curFarm() || {}, u.uid);
     var list = []; shots.forEach(function(d, i){ if(d) list.push({ slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }); });   /* القديم (للتراجع): var image = { mime:'image/jpeg', data: imgData... } */
     var ck = shots.map(function(d){ return d ? d.length + ':' + d.slice(-120) : '-'; }).join('|') + '|' + note + '|' + aud;
 
@@ -28051,6 +28072,26 @@ window.NbFarmAI = function(view, mc, st){
 window.NbFarmAI.decide = decide;
 window.NbFarmAI.errText = errText;
 window.NbFarmAI.left = function(){ return left('decide'); };
+/* فتح واجهة المساعد من تاب «AI» في الشريط السفلي (إضافة فقط) — نفس شرط الوصول القديم (تسجيل دخول + اشتراك/تجربة المزرعة)؛ لو مش متحقق بنوجّه لصفحة المزرعة اللي بتعرض شاشة الدخول/الاشتراك الأصلية.
+   ولو صفحة المزرعة لسه ما اتفتحتش بنجيب بيانات المزرعة من النسخة المحلية (قراءة فقط، بدون Firestore). */
+window.NbFarmAI.open = function(opener){
+  try{
+    var u = user();
+    var gate = function(){ if(typeof showPage === 'function') showPage('farm'); };
+    if(!u || !window.FarmSub || typeof window.FarmSub.hasAccess !== 'function'){ gate(); return; }
+    window.FarmSub.hasAccess(function(ok){
+      try{
+        if(!ok){ gate(); return; }
+        var f = curFarm();
+        if(!f || (f.userId && f.userId !== u.uid)){
+          var c = lsGet('nabtex_farm_cache_v2__' + u.uid);
+          STATE = (c && c.farms && c.farms.length) ? { farms: c.farms, currentFarm: c.farms[0] } : null;
+        }
+        openScreen(opener && opener.isConnected ? opener : null);
+      }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
+    });
+  }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
+};
 })();
 </script>
 
