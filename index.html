@@ -27580,6 +27580,17 @@ function buildScreen(){
   card.querySelector('.nbai-qi').addEventListener('keydown', function(ev){
     if(ev.key === 'Enter' && !ev.isComposing){ ev.preventDefault(); sendAsk(); }
   });
+  /* إصلاح آيفون: الضغطة على «إرسال» أو شريحة اقتراح والكيبورد مفتوح كانت بتقفل الكيبورد وتحرّك الواجهة قبل ما الضغطة تتسجّل، فالمستخدم يضغط مرتين.
+     دلوقتي الإرسال بيتم لحظة رفع الإصبع (من غير ما الفوكس يتحرك)، وبعدها الكيبورد بيتقفل عشان الرد يبان. حركة إصبع أكبر من 10px (سكرول) بتتتجاهل. للتراجع: امسح الكتلة دي بس. */
+  var tp = null;
+  card.addEventListener('touchstart', function(ev){ var t = ev.touches && ev.touches[0]; tp = (t && ev.touches.length === 1) ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+  card.addEventListener('touchend', function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest('.nbai-go-ask,.nbai-chip') : null, c = ev.changedTouches && ev.changedTouches[0], p = tp; tp = null;
+    if(!b || !p || !c || !card.contains(b) || b.disabled || Math.abs(c.clientX - p.x) > 10 || Math.abs(c.clientY - p.y) > 10) return;
+    ev.preventDefault();   /* بيمنع الـ click التاني فمفيش إرسال مزدوج */
+    if(b.classList.contains('nbai-go-ask')) sendAsk(); else runAsk(b.getAttribute('data-q') || '');
+    var a = document.activeElement; if(busy && a && a.tagName === 'INPUT') a.blur();
+  }, { passive: false });
   /* ═════════ معالج التصوير بالخطوات (إضافة): الصورة الواحدة اتبدلت بـ 4 زوايا للنبات — الورقة من الأمام ثم الخلف (مطلوبتين) ثم الساق/الثمرة ثم النبات كامل (اختياريتين) ═════════
      • نفس input الملف ونفس سلوك الاختيار (من غير capture)، نفس shrink، ونفس مراحل الأسئلة والتشخيص — اتغيّر بس عدد الصور المبعوتة.
      • بعد كل صورة بيتعمل فحص جودة محلي (وضوح/إضاءة/دقة) كتحذير بس، والمزارع هو اللي يقرر يعيد أو يكمّل.
