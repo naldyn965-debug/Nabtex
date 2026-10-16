@@ -12,6 +12,11 @@
  *
  * - المفتاح GEMINI_API_KEY بيتقرا من متغير البيئة على الخادم فقط (Vercel → Settings → Environment Variables)،
  *   وبيتبعت في هيدر x-goog-api-key (مش في الرابط) — مفيش أي مكان في الكود أو الرد بيظهر فيه.
+ * - راوتر الـ backends (اختياري): backend #0 = المفتاح المحلي على Vercel، وبعده relays على سحابات تانية
+ *   (GEMINI_RELAY_URLS بالترتيب: Supabase, Netlify, Cloudflare + GEMINI_RELAY_SECRET). تناوب دائري 0→1→2→3→0،
+ *   وعند 429/خطأ مؤقت بينتقل تلقائيًا للتالي في نفس الطلب. من غير relays السلوك زي ما كان بالظبط.
+ *   السياق (history ≤ 6 رسائل + ملخص المزرعة) بيجي من الواجهة في كل طلب، فتبديل الـ backend ما بيأثرش عليه.
+ *   اختياري: UPSTASH_REDIS_REST_URL/TOKEN لعدّاد تناوب مشترك بين كل instances (من غيره العدّاد محلي لكل instance).
  * - الموديل: GEMINI_MODEL (اختياري) — الافتراضي gemini-3.5-flash-lite (الأخف والأعلى حدودًا في الباقة المجانية).
  * - حماية الباقة المجانية (best-effort على مستوى instance الخادم، + حدود الواجهة):
  *     1) لازم مستخدم مسجّل (تحقق من Firebase ID token عبر Identity Toolkit — مجاني)
@@ -49,6 +54,85 @@ const MAX_CTX_CHARS = 1500;
    متروك مطفي افتراضيًا لأن له حصة يومية منفصلة في الباقة المجانية. */
 const GROUNDING = process.env.GEMINI_GROUNDING === '1';
 const UPSTREAM_TIMEOUT_MS = 50000;   /* + maxDuration 60 في vercel.json */
+
+/* ── راوتر الـ backends: تناوب دائري + تخطي تلقائي ── */
+const RELAY_SECRET = process.env.GEMINI_RELAY_SECRET || '';
+const RELAY_URLS = (process.env.GEMINI_RELAY_URLS || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); });
+const UPSTASH_URL = (process.env.UPSTASH_REDIS_REST_URL || '').replace(/\/+$/, '');
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
+const ATTEMPT_CAP_MS = 25000;   /* أقصى وقت لمحاولة واحدة لو فيه backend تاني بعدها (الميزانية الكلية = UPSTREAM_TIMEOUT_MS) */
+const cooldown = new Map();     /* backend name → وقت انتهاء التبريد (ms) — best-effort على مستوى الـ instance */
+let rrLocal = 0;
+
+function buildBackends() {
+  const list = [];
+  const k = process.env.GEMINI_API_KEY;
+  if (k) list.push({ name: 'local', key: k });
+  if (RELAY_SECRET) RELAY_URLS.forEach(function (u, i) { list.push({ name: 'relay' + (i + 1), url: u }); });
+  return list;
+}
+
+/* نقطة البداية في الدور: عدّاد مشترك (Upstash) لو متظبط، وإلا عدّاد محلي يبدأ من backend #0 */
+async function nextStart(n) {
+  if (n < 2) return 0;
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    const c = new AbortController();
+    const t = setTimeout(function () { c.abort(); }, 1500);
+    try {
+      const r = await fetch(UPSTASH_URL + '/incr/nbx:gemini:rr', { headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN }, signal: c.signal });
+      const j = r.ok ? await r.json() : null;
+      if (j && Number.isFinite(j.result) && j.result > 0) return (j.result - 1) % n;
+    } catch (e) { /* نكمّل بالعدّاد المحلي */ } finally { clearTimeout(t); }
+  }
+  const s = rrLocal % n;
+  rrLocal = (rrLocal + 1) % 1000000000;
+  return s;
+}
+
+/* ترتيب المحاولات: اللي مش في تبريد بالترتيب الدائري من نقطة البداية؛ لو الكل في تبريد نجرّب الأقرب انتهاءً بس */
+function pickOrder(backends, start) {
+  const now = Date.now(), ready = [], cooling = [];
+  for (let i = 0; i < backends.length; i++) {
+    const b = backends[(start + i) % backends.length];
+    const until = cooldown.get(b.name) || 0;
+    if (until <= now) ready.push(b); else cooling.push({ b: b, until: until });
+  }
+  if (ready.length) return ready;
+  cooling.sort(function (a, c) { return a.until - c.until; });
+  return cooling.slice(0, 1).map(function (x) { return x.b; });
+}
+
+function callBackend(b, bodyObj, signal) {
+  if (b.url) {   /* relay: بيحمل مفتاحه محليًا وبيرجّع نفس status ونص جيميناي */
+    return fetch(b.url, {
+      method: 'POST', signal: signal,
+      headers: { 'Content-Type': 'application/json', 'x-relay-secret': RELAY_SECRET },
+      body: JSON.stringify({ model: MODEL, body: bodyObj })
+    });
+  }
+  return fetch(GEMINI_URL + encodeURIComponent(MODEL) + ':generateContent', {
+    method: 'POST', signal: signal,
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': b.key },
+    body: JSON.stringify(bodyObj)
+  });
+}
+
+/* null = نجاح؛ وإلا { next: هل نجرّب backend تاني, cool: مدة تبريد الـ backend ده (ms) } */
+function judgeUpstream(status, text) {
+  if (status >= 200 && status < 300) return null;
+  if (status === 429) {
+    let ms = 60000;
+    const m = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(text || '');
+    if (m) ms = Math.min(120000, Math.max(5000, Math.ceil(parseFloat(m[1]) * 1000)));
+    if (/PerDay/i.test(text || '')) ms = 30 * 60000;   /* حصة يومية خلصت: نعيد الفحص كل نص ساعة */
+    return { next: true, cool: ms };
+  }
+  if (status === 400 && /api key/i.test(text || '')) return { next: true, cool: 30 * 60000 };   /* مفتاح غلط/متعطّل */
+  if (status === 401 || status === 403) return { next: true, cool: 30 * 60000 };
+  if (status === 413) return { next: true, cool: 0 };
+  if (status >= 500) return { next: true, cool: 15000 };
+  return { next: false, cool: 0 };   /* 400 عادي = الطلب نفسه غلط، تغيير الـ backend مش هيفيد */
+}
 
 const usage = new Map();   /* uid|mode → { day, n } */
 const cache = new Map();   /* hash → { at, payload } */
@@ -261,8 +345,8 @@ module.exports = async function handler(req, res) {
   const site = String((req.headers && req.headers['sec-fetch-site']) || '');
   if (site === 'cross-site') return fail(res, 403, 'forbidden');
 
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) { console.error('[farm-ai] GEMINI_API_KEY is not set'); return fail(res, 503, 'not_configured'); }
+  const backends = buildBackends();
+  if (!backends.length) { console.error('[farm-ai] no backend configured (GEMINI_API_KEY / relays)'); return fail(res, 503, 'not_configured'); }
 
   const auth = String((req.headers && req.headers.authorization) || '');
   const m = /^Bearer\s+(\S{20,4000})$/.exec(auth);
@@ -401,36 +485,49 @@ module.exports = async function handler(req, res) {
   const useGround = GROUNDING && mode === 'diagnose';
   if (useGround) reqBody.tools = [{ google_search: {} }];
 
-  const ctl = new AbortController();
-  const timer = setTimeout(function () { ctl.abort(); }, UPSTREAM_TIMEOUT_MS);
-  let up, text;
-  try {
-    const call = function (bodyObj) {
-      return fetch(GEMINI_URL + encodeURIComponent(MODEL) + ':generateContent', {
-        method: 'POST', signal: ctl.signal,
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify(bodyObj)
-      });
-    };
-    up = await call(reqBody);
-    if (!up.ok && up.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
-      console.error('[farm-ai] grounding rejected, retrying without it');
-      delete reqBody.tools;
-      up = await call(reqBody);
-    }
-    text = await up.text();
-  } catch (e) {
-    console.error('[farm-ai] upstream unreachable:', e && e.name);
+  /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
+  const order = pickOrder(backends, await nextStart(backends.length));
+  const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
+  let up = null, text = '', rateLimited = false, lastErr = null;
+  for (let bi = 0; bi < order.length; bi++) {
+    const b = order[bi];
+    const remain = deadline - Date.now();
+    if (bi > 0 && remain < 3000) break;
+    const ctl = new AbortController();
+    const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(ATTEMPT_CAP_MS, remain) : remain);
+    try {
+      let r = await callBackend(b, reqBody, ctl.signal);
+      if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
+        console.error('[farm-ai] grounding rejected, retrying without it');
+        delete reqBody.tools;
+        r = await callBackend(b, reqBody, ctl.signal);
+      }
+      const t = await r.text();
+      const v = judgeUpstream(r.status, t);
+      up = r; text = t; lastErr = null;
+      if (!v) break;   /* نجاح */
+      console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status);
+      if (r.status === 429) rateLimited = true;
+      if (v.cool) cooldown.set(b.name, Date.now() + v.cool);
+      if (!v.next) break;
+    } catch (e) {
+      lastErr = e; up = null;
+      console.error('[farm-ai] backend ' + b.name + ' unreachable:', e && e.name);
+      cooldown.set(b.name, Date.now() + 15000);
+    } finally { clearTimeout(timer); }
+  }
+  if (!up) {
+    if (rateLimited) return fail(res, 429, 'busy', { 'Retry-After': '600' });
     u.n--; globalUse.n--;   /* الطلب ما وصلش → ما يتحسبش */
-    return fail(res, e && e.name === 'AbortError' ? 504 : 502, 'unreachable');
-  } finally { clearTimeout(timer); }
+    return fail(res, lastErr && lastErr.name === 'AbortError' ? 504 : 502, 'unreachable');
+  }
 
   let j = null;
   try { j = JSON.parse(text); } catch (e) { /* غير JSON */ }
 
   if (!up.ok) {
     console.error('[farm-ai] upstream error: http', up.status, j && j.error && j.error.status);
-    if (up.status === 429) return fail(res, 429, 'busy', { 'Retry-After': '600' });
+    if (up.status === 429 || rateLimited) return fail(res, 429, 'busy', { 'Retry-After': '600' });
     return fail(res, 502, 'upstream_error');
   }
 
