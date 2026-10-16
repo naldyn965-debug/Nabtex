@@ -27125,13 +27125,13 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 /* اختيار نوع المستخدم: صاحب مزرعة / نباتات في البيت (بيتخبّى وقت الأسئلة والتحليل زي المعالج) */
 .nbai-ov .nbai-pane.nbai-diag-busy .nbai-aud,.nbai-ov .nbai-pane.nbai-diag-step .nbai-aud{display:none}
 .nbai-ov .nbai-aud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;padding:4px;border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
-.nbai-ov .nbai-aud-b{min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
+.nbai-ov .nbai-aud-b{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;text-wrap:balance;min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
 .nbai-ov .nbai-aud-b.is-on{background:var(--card);border-color:var(--ai-ring);color:var(--ai-tx);font-weight:800}
 .nbai-ov .nbai-aud-b:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
 /* اختيار نوع الاستشارة: مزرعة مسجّلة على نبتكس / سؤال عن أي حاجة (بيتخبّى بعد الرد زي الشرائح) */
 .nbai-ov .nbai-pane.nbai-solo .nbai-src{display:none}
 .nbai-ov .nbai-src{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding:4px;border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
-.nbai-ov .nbai-src-b{min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
+.nbai-ov .nbai-src-b{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;text-wrap:balance;min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
 .nbai-ov .nbai-src-b.is-on{background:var(--card);border-color:var(--ai-ring);color:var(--ai-tx);font-weight:800}
 .nbai-ov .nbai-src-b:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
 
@@ -27427,7 +27427,7 @@ function buildScreen(){
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
       '<div class="nbai-th" data-th="ask" role="log" aria-live="polite" aria-label="محادثة المساعد"></div>' +
-      '<div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي مسجّلة على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">مش مسجّل — أسأل عن أي حاجة</button></div>' +
+      '<div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">سؤال عن أي حاجة</button></div>' +
       '<div class="nbai-chips"><button type="button" class="nbai-chip" data-q="">حلّل مزرعتي</button><button type="button" class="nbai-chip" data-q="إزاي أحسّن الري؟">إزاي أحسّن الري؟</button><button type="button" class="nbai-chip" data-q="إزاي أوفّر في التسميد؟">إزاي أوفّر في التسميد؟</button></div>' +
       '<div class="nbai-cm"><input class="nbai-q nbai-qi" type="text" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي">' +
       '<button type="button" class="nbai-go nbai-go-ask" aria-label="إرسال"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button></div>' +
