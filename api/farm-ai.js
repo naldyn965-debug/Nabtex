@@ -152,6 +152,16 @@ const SYSTEMS = {
   ].join('\n')
 };
 SYSTEMS.ask = SYSTEMS.analyze;
+/* استشارة عامة: المستخدم مش مسجّل مزرعته على نبتكس (body.general) — من غير ملخص مزرعة */
+SYSTEMS.general = [
+  'أنت مهندس زراعي استشاري في منصة «نبتيكس»، بتجاوب على أي سؤال في الزراعة والنباتات من مستخدمين ممكن يكونوا مزارعين أو مهندسين زراعيين (محاصيل في حقل أو صوبة)، وممكن يكونوا ناس عادية عندهم نباتات في البيت أو البلكونة أو الحديقة. المستخدم هنا مش مسجّل مزرعته على المنصة، فمفيش بيانات مزرعة: اعتمد على سؤاله بس ولا تخترع بيانات عنه.',
+  'اكتب بالعربية المبسّطة (ممكن لمسة مصرية خفيفة) وبشكل عملي في حدود 250 كلمة: ابدأ بالإجابة المباشرة وبعدها النقاط العملية بالترتيب. لو السؤال ناقص معلومة مهمة (المحصول أو المرحلة أو المنطقة) اذكر افتراضك أو اسأل سؤالًا واحدًا في الآخر.',
+  'لو السؤال عن مشكلة أو مرض أو آفة أو نقص عنصر: اذكر اسمها صراحةً بالاسم العربي والاسم العلمي/الإنجليزي بين قوسين، وسبب حدوثها، وطريقة الوقاية والعلاج، ولا تكتفي بوصف الأعراض. ولو مش متأكد اذكر الاحتمالات بترتيب ترجيحها وإيه اللي يفرّق بينها.',
+  'طابق أسلوبك مع المستخدم من سؤاله: للمزارع التزم بالتفاصيل الفنية ورتّب البدائل (زراعية ثم حيوية ثم كيماوية لو لازمة) واذكر المواد الفعّالة مش الأسماء التجارية ونبّه لفترة الأمان قبل الحصاد ووجّه للمبيدات المسجّلة رسميًا في مصر؛ ولمن يزرع في البيت اشرح السبب والعلاج ببساطة وابدأ بالحلول الآمنة، ولا توصي بمبيد كيماوي إلا لو لازم فعلًا مع تحذيره من الأطفال والحيوانات الأليفة، ومن غير ذكر فترة الأمان قبل الحصاد ولا لجنة المبيدات.',
+  'لو السؤال مالوش علاقة بالزراعة والنباتات اعتذر بجملة قصيرة ووجّه المستخدم لسؤال زراعي. ولو الحالة محتاجة مهندس أو تحليل معمل قول كده بوضوح، ولا تجزم لو مش متأكد.',
+  'لا تذكر جرعات أو تركيزات مبيدات أو أسمدة محددة بالمللي/الجرام؛ وجّه لقراءة بطاقة المنتج.',
+  INJECTION
+].join('\n');
 /* قرار الري / الرش من الطقس الفعلي — JSON فقط. الأرقام بتيجي من الواجهة (WeatherAPI) والذكاء الاصطناعي بيفسّرها بس ومش بيخترع */
 SYSTEMS.decide = [
   'أنت مهندس زراعي استشاري ومتخصص في الأرصاد الزراعية في مصر، في منصة «نبتيكس». المزارع بيسألك سؤال قرار مباشر («هل أروي الآن؟» أو «هل أرش الآن؟») وهيمشي على ردّك، فكن دقيقًا وحاسمًا وصريحًا.',
@@ -263,11 +273,16 @@ module.exports = async function handler(req, res) {
   /* التوافق مع النسخة الأولى: لو مفيش mode → analyze/ask حسب وجود سؤال */
   const question = typeof body.question === 'string' ? body.question.trim().slice(0, MAX_QUESTION_CHARS) : '';
   let mode = typeof body.mode === 'string' ? body.mode : (question ? 'ask' : 'analyze');
+  let generalAsk = false;   /* استشارة عامة من غير مزرعة مسجّلة */
   let homeUser = false;   /* اختيار «نباتات في البيت» — بيشيل السطر الختامي الخاص بالمزارع من تعليمات التشخيص */
   if (!LIMITS[mode]) return fail(res, 400, 'bad_request');
 
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
-  if (mode === 'analyze' || mode === 'ask') {
+  if (mode === 'ask' && body.general === true) {
+    if (!question) return fail(res, 400, 'bad_request');
+    generalAsk = true;
+    parts = [{ text: 'سؤال المستخدم: ' + question }]; keyMaterial = 'general|' + question;
+  } else if (mode === 'analyze' || mode === 'ask') {
     const summary = body.summary;
     if (!summary || typeof summary !== 'object' || Array.isArray(summary)) return fail(res, 400, 'bad_request');
     const s = JSON.stringify(summary);
@@ -365,7 +380,7 @@ module.exports = async function handler(req, res) {
   const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
   if (mode === 'log' || mode === 'diag_q' || mode === 'decide') gen.responseMimeType = 'application/json';
   const reqBody = {
-    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : SYSTEMS[mode] }] },
+    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : SYSTEMS[generalAsk ? 'general' : mode] }] },
     contents: [{ role: 'user', parts: parts }],
     generationConfig: gen
   };
