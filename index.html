@@ -18159,8 +18159,9 @@ document.addEventListener('click', e => {
     /* AI-SUB:START */
     var AI_TRIAL_MS = 2 * 24 * 3600 * 1000;
     var AI_PLANS = {
-      plan1: { price: 149, chat: 10, diag: 5, label: 'الباقة الأولى' },
-      plan2: { price: 199, chat: 15, diag: 10, label: 'الباقة الثانية' },
+      /* AI-PLAN-NAMES — القديم (للتراجع): label: 'الباقة الأولى' / 'الباقة الثانية' */
+      plan1: { price: 149, chat: 10, diag: 5, label: 'Basic' },
+      plan2: { price: 199, chat: 15, diag: 10, label: 'Plus' },
       plan3: { price: 300, chat: 20, diag: 15, label: 'باقة البرو' }
     };
     var aiMem = { uid: null, d: null, at: 0, day: '' };
@@ -28687,17 +28688,17 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 .aipw-tag{background:linear-gradient(120deg,#f2c34a 0%,#fff1b0 30%,#f7d062 52%,#fff0ad 74%,#f0c04a 100%);background-size:220% 100%;color:#5c3f00;text-shadow:0 1px 0 rgba(255,255,255,.55);box-shadow:0 2px 9px rgba(240,185,50,.5),inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(176,120,0,.18);animation:aipwGoldTag 2.8s ease-in-out infinite alternate}
 .aipw-pro{position:relative;overflow:hidden;isolation:isolate;border-color:#f1d27c;background:linear-gradient(135deg,#fffdf3 0%,#fff6d6 50%,#fffcf4 100%);box-shadow:0 8px 20px -10px rgba(240,185,50,.6),inset 0 1px 0 rgba(255,255,255,.9)}
 .aipw-pro::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:0;width:42%;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.8) 50%,rgba(255,255,255,0) 100%);transform:translateX(-130%) skewX(-18deg);animation:aipwGoldSweep 5s ease-in-out 1.2s infinite;pointer-events:none}
-.aipw-pro .aipw-pp b{background:linear-gradient(120deg,#e0a218 0%,#f8cf52 34%,#ffe38a 50%,#f4bd36 72%,#e2a51c 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#e8b02a;filter:drop-shadow(0 1px 0 rgba(140,90,0,.42))}
+.aipw-pro .aipw-pp b{background:linear-gradient(172deg,#f8d765 0%,#e5a81b 52%,#c58609 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#d9a017;filter:drop-shadow(0 1px 0 #8f5f00) drop-shadow(0 3px 4px rgba(140,90,0,.3))}
 .aipw-pro .aipw-pc i{background:rgba(240,185,50,.16)}
 .aipw-pro .aipw-pc .aipw-dly{background:transparent}
 .aipw-pro.on{border-color:#f0c23f;background:linear-gradient(135deg,#fffbe4 0%,#ffefb0 50%,#fffaf0 100%);box-shadow:0 10px 26px -8px rgba(240,185,50,.6),0 0 0 3px rgba(240,185,50,.22),inset 0 1px 0 rgba(255,255,255,.9)}
 .aipw-pro.on .aipw-rd{border-color:#e9b52a;background-color:#f3c64a;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c3f00' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7'/%3E%3C/svg%3E")}
 .aipw-pro.on .aipw-pc i{background:rgba(240,185,50,.26)}
-.aipw-pro.on .aipw-pp b{background-image:linear-gradient(120deg,#d6940f 0%,#f3c13c 34%,#ffe07e 50%,#f0b72d 72%,#d9980f 100%)}
+.aipw-pro.on .aipw-pp b{background-image:linear-gradient(172deg,#fbd964 0%,#e2a216 52%,#bd7f08 100%)}
 .aipw-box[data-p="plan3"] .aipw-cta{background:linear-gradient(135deg,#f5cc57 0%,#ffe8a0 48%,#f0bb36 100%);color:#4d3300;box-shadow:0 10px 26px rgba(240,185,50,.45),inset 0 1px 0 rgba(255,255,255,.65)}
 [data-dark] .aipw-pro{border-color:#e0b64a;background:linear-gradient(135deg,rgba(247,207,85,.2),var(--card) 85%);box-shadow:0 8px 20px -10px rgba(240,185,50,.35),inset 0 1px 0 rgba(255,236,170,.16)}
 [data-dark] .aipw-pro::before{background:linear-gradient(105deg,rgba(255,236,170,0) 0%,rgba(255,236,170,.28) 50%,rgba(255,236,170,0) 100%)}
-[data-dark] .aipw-pro .aipw-pp b{background-image:linear-gradient(120deg,#f2bf3f 0%,#ffe7a0 45%,#f5c94d 75%,#f0b429 100%);filter:drop-shadow(0 1px 0 rgba(0,0,0,.35))}
+[data-dark] .aipw-pro .aipw-pp b{background-image:linear-gradient(172deg,#fff0b3 0%,#f5c94d 52%,#e2a21c 100%);filter:drop-shadow(0 1px 0 rgba(0,0,0,.5)) drop-shadow(0 2px 6px rgba(240,185,50,.28))}
 [data-dark] .aipw-pro .aipw-pc i{background:rgba(240,185,50,.14)}
 [data-dark] .aipw-pro.on{border-color:#f6cf5a;background:linear-gradient(135deg,rgba(247,207,85,.3),var(--card) 85%);box-shadow:0 10px 26px -8px rgba(240,185,50,.45),0 0 0 3px rgba(240,185,50,.2),inset 0 1px 0 rgba(255,236,170,.2)}
 [data-dark] .aipw-pro.on .aipw-pc i{background:rgba(240,185,50,.24)}
