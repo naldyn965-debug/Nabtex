@@ -290,6 +290,82 @@ function sanitizeLog(raw, options) {
 }
 
 /* تنظيف رد أسئلة الاستيضاح: نصوص قصيرة وعدد محدود فقط */
+/* ═══ اشتراك المساعد الذكي + النقاط اليومية (إضافة) ═══════════════════════════════════════════
+   الحالة (ai_subscriptions) والاستهلاك اليومي (ai_usage) بيتقروا ويتكتبوا بتوكن المستخدم نفسه عبر Firestore REST،
+   فقواعد firestore.rules هي اللي بتفرض الحدود فعليًا (مش بس الكود ده) ومفيش حاجة بتتخزّن عند العميل بتتحسب.
+   النقاط: chat = analyze + ask (نقطة شات)، diag = بداية التشخيص بالصورة (diag_q)، والمرحلة النهائية (diagnose) مرتبطة بنقطة اتصرفت.
+   المصادر (بنفس منطق firestore.rules aiLim): باقة 1 = 10 شات + 5 تشخيص · باقة 2 = 15 + 10 · باقة 3 (برو) = 20 + 15 · تجربة يومين = 3 + 2 · اشتراك إدارة المزرعة (تجربة/مدفوع) = 3 + 3 — الأعلى لكل نوع.
+   للتراجع: امسح الكتلة دي وسطور aiPts* جوه handler. */
+const FS_PROJECT = process.env.FIREBASE_PROJECT_ID || 'nabtex-b8475';
+const FS_DOCS = 'https://firestore.googleapis.com/v1/projects/' + FS_PROJECT + '/databases/(default)/documents';
+const AI_POINT = { analyze: 'chat', ask: 'chat', diag_q: 'diag', diagnose: 'fin' };
+const AI_TRIAL_MS = 2 * 86400000;
+const FARM_TRIAL_MS = 7 * 86400000;
+
+function cairoDay() {
+  try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+  catch (e) { return today(); }
+}
+function fsVal(f) {
+  if (!f) return null;
+  if (f.timestampValue) return Date.parse(f.timestampValue);
+  if (f.integerValue !== undefined) return parseInt(f.integerValue, 10);
+  if (f.stringValue !== undefined) return f.stringValue;
+  return null;
+}
+/* {} = المستند مش موجود · null = فشلت القراءة */
+async function fsRead(path, tok) {
+  const ctl = new AbortController();
+  const t = setTimeout(function () { ctl.abort(); }, 6000);
+  try {
+    const r = await fetch(FS_DOCS + '/' + path, { headers: { Authorization: 'Bearer ' + tok }, signal: ctl.signal });
+    if (r.status === 404) return {};
+    if (!r.ok) return null;
+    const j = await r.json(), o = {};
+    Object.keys(j.fields || {}).forEach(function (k) { o[k] = fsVal(j.fields[k]); });
+    return o;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+function aiAllowance(ai, farm, now) {
+  const paid = ai.paidUntil > now;
+  const aiTrial = !!ai.trialStartedAt && ai.trialStartedAt + AI_TRIAL_MS > now;
+  const farmOk = (!!farm.trialStartedAt && farm.trialStartedAt + FARM_TRIAL_MS > now) || farm.paidUntil > now;
+  if (paid && ai.plan === 'plan3') return { chat: 20, diag: 15 };
+  if (paid && ai.plan === 'plan2') return { chat: 15, diag: 10 };
+  if (paid && ai.plan === 'plan1') return { chat: 10, diag: 5 };
+  return { chat: (aiTrial || farmOk) ? 3 : 0, diag: farmOk ? 3 : (aiTrial ? 2 : 0) };
+}
+/* قبل الاتصال بجيميناي: فحص الاشتراك + الرصيد المتبقي. بيرجّع { err } أو { day, lim, used } */
+async function aiPointsCheck(tok, uid, kind) {
+  const day = cairoDay();
+  const r = await Promise.all([fsRead('ai_subscriptions/' + uid, tok), fsRead('farm_subscriptions/' + uid, tok), fsRead('ai_usage/' + uid + '_' + day, tok)]);
+  if (!r[0] || !r[1] || !r[2]) return { err: 'sub_check' };
+  const lim = aiAllowance(r[0], r[1], Date.now());
+  const used = { chat: r[2].chat || 0, diag: r[2].diag || 0, fin: r[2].diagFin || 0 };
+  const cap = kind === 'chat' ? lim.chat : lim.diag;
+  if (!cap) return { err: 'sub_required' };
+  if (kind === 'fin' ? used.fin >= used.diag * 2 : used[kind] >= cap) return { err: 'user_limit' };
+  return { day: day, lim: lim, used: used };
+}
+/* بعد نجاح الرد: صرف نقطة واحدة (increment) — القواعد بترفض أي تجاوز للحد، فالرد بيتشال لو اترفض */
+async function aiCharge(tok, uid, day, kind) {
+  const ctl = new AbortController();
+  const t = setTimeout(function () { ctl.abort(); }, 6000);
+  try {
+    const r = await fetch(FS_DOCS + ':commit', {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify({ writes: [{
+        update: { name: 'projects/' + FS_PROJECT + '/databases/(default)/documents/ai_usage/' + uid + '_' + day, fields: { uid: { stringValue: uid }, day: { stringValue: day } } },
+        updateMask: { fieldPaths: ['uid', 'day'] },
+        updateTransforms: [{ fieldPath: kind === 'chat' ? 'chat' : (kind === 'diag' ? 'diag' : 'diagFin'), increment: { integerValue: '1' } }]
+      }] })
+    });
+    if (r.ok) return 'ok';
+    return (r.status === 403 || r.status === 409) ? 'denied' : 'error';
+  } catch (e) { return 'error'; } finally { clearTimeout(t); }
+}
+
 function sanitizeDiagQ(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
@@ -466,12 +542,20 @@ module.exports = async function handler(req, res) {
   const hit = cache.get(h);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return send(res, 200, Object.assign({ cached: true }, hit.payload));
 
+  /* اشتراك المساعد الذكي + النقاط اليومية (شات / تشخيص): لازم اشتراك أو تجربة أو اشتراك إدارة المزرعة، وفيه رصيد اليوم */
+  const aiPtsKind = AI_POINT[mode] || '';
+  let aiPts = null;
+  if (aiPtsKind) {
+    aiPts = await aiPointsCheck(m[1], uid, aiPtsKind);
+    if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
+  }
+
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
   const uk = uid + '|' + mode;
   let u = usage.get(uk);
   if (!u || u.day !== day) { u = { day: day, n: 0 }; usage.set(uk, u); }
   if (globalUse.day !== day) globalUse = { day: day, n: 0 };
-  if (u.n >= LIMITS[mode]) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });
+  if (!aiPtsKind && u.n >= LIMITS[mode]) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });   /* أوضاع النقاط (شات/تشخيص) حدودها من Firestore مش من الذاكرة */
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
@@ -559,7 +643,19 @@ module.exports = async function handler(req, res) {
     payload = { text: out };
   }
 
-  cache.set(h, { at: Date.now(), payload: payload });
+  /* صرف النقطة (تشخيص غير نباتي isPlant=false مش بيتحسب) + رصيد اليوم بعدها للواجهة */
+  let ptsOut = null;
+  if (aiPts) {
+    if (!(mode === 'diag_q' && payload.q && payload.q.isPlant === false)) {
+      const ch = await aiCharge(m[1], uid, aiPts.day, aiPtsKind);
+      if (ch === 'denied') return fail(res, 429, 'user_limit');
+      if (ch === 'ok') { if (aiPtsKind === 'fin') aiPts.used.fin++; else aiPts.used[aiPtsKind]++; }
+      else console.error('[farm-ai] point charge failed (non-denied)');
+    }
+    ptsOut = { chat: { left: Math.max(0, aiPts.lim.chat - aiPts.used.chat), max: aiPts.lim.chat }, diag: { left: Math.max(0, aiPts.lim.diag - aiPts.used.diag), max: aiPts.lim.diag } };
+  }
+
+  cache.set(h, { at: Date.now(), payload: payload });   /* الكاش من غير points عشان الرصيد ما يتكرّرش قديم */
   if (cache.size > 200) cache.delete(cache.keys().next().value);
-  send(res, 200, Object.assign({ left: Math.max(0, LIMITS[mode] - u.n) }, payload));
+  send(res, 200, Object.assign({ left: Math.max(0, LIMITS[mode] - u.n) }, payload, ptsOut ? { points: ptsOut } : {}));
 };
