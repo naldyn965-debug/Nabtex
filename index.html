@@ -27217,67 +27217,7 @@ window.NbFarmWx.locate = locate;
 </script>
 
 <style id="nb-farm-ai-css">
-.nbai-tabs{display:flex;gap:6px;margin-top:12px}
-.nbai-tab{flex:1;font-family:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:8px 10px;min-height:38px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-tab[aria-selected="true"]{color:#9333ea;border-color:#9333ea;background:rgba(147,51,234,.1)}
-[data-dark] .nbai-tab[aria-selected="true"]{color:#c084fc;border-color:#c084fc}
-.nbai-tab:focus-visible,.nbai-go:focus-visible,.nbai-pick:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-pane[hidden]{display:none}
-.nbai-q{display:block;width:100%;box-sizing:border-box;margin-top:12px;padding:10px 12px;min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);color:var(--ink);font-family:inherit;font-size:13px;line-height:1.6}
-textarea.nbai-q{resize:vertical;min-height:84px}
-.nbai-q:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-go{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:9px 18px;min-height:42px;border-radius:999px;border:0;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-go:active{transform:scale(.97)}
-.nbai-go[disabled]{opacity:.6;cursor:default}
-.nbai-pick{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:14px;min-height:72px;border:1.5px dashed var(--line2);border-radius:14px;background:var(--bg2);color:var(--ink2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;width:100%;box-sizing:border-box}
-.nbai-prev{display:block;max-width:100%;max-height:220px;margin:12px auto 0;border-radius:12px;border:1px solid var(--line)}
-.nbai-prev[hidden]{display:none}
-.nbai-qs{margin-top:12px}
-.nbai-qs[hidden]{display:none}
-.nbai-qb{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
-.nbai-qt{font-size:13px;font-weight:800;line-height:1.7;color:var(--ink)}
-.nbai-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.nbai-opt{font-family:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:7px 12px;min-height:36px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink2);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-opt[aria-pressed="true"]{color:#fff;border-color:var(--brand);background:var(--brand)}
-.nbai-opt:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-out{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);font-size:13px;line-height:1.95;color:var(--ink2);word-break:break-word}
-.nbai-out:empty{display:none}
-.nbai-out.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
-[data-dark] .nbai-out.err{color:#fbbf24}
-.nbai-f{margin-top:10px;font-size:11px;line-height:1.8;color:var(--muted)}
-@media (max-width:480px){.nbai-go{width:100%}}
-/* شات المساعد — إضافة فقط: كل الكلاسات nbai-th / nbai-m / nbai-chip / nbai-cm / nbai-new / nbai-dots */
-.nbai-th{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:min(55vh,440px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px}
-.nbai-m{max-width:92%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.95;overflow-wrap:anywhere;word-break:break-word}
-.nbai-m-ai{align-self:flex-end;background:var(--bg2);border:1px solid var(--line);color:var(--ink2);border-end-end-radius:6px}
-.nbai-m-user{align-self:flex-start;max-width:85%;background:var(--brand);color:#fff;border-end-start-radius:6px}
-.nbai-m.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.09)}
-[data-dark] .nbai-m.err{color:#fbbf24}
-.nbai-m img{display:block;max-width:150px;max-height:150px;border-radius:10px;margin-bottom:6px}
-.nbai-dots{display:inline-flex;align-items:center;gap:4px;min-height:22px}
-.nbai-dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:nbai-dot 1.2s infinite ease-in-out}
-.nbai-dots i:nth-child(2){animation-delay:.18s}
-.nbai-dots i:nth-child(3){animation-delay:.36s}
-@keyframes nbai-dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
-@media (prefers-reduced-motion:reduce){.nbai-dots i{animation:none;opacity:.7}}
-.nbai-chips{display:flex;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.nbai-chips::-webkit-scrollbar{display:none}
-.nbai-chip{flex:none;font-family:inherit;font-size:12.5px;font-weight:700;line-height:1.4;padding:7px 12px;min-height:36px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-.nbai-chip:focus-visible,.nbai-new:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-chip[disabled]{opacity:.6;cursor:default}
-.nbai-cm{display:flex;align-items:center;gap:8px;margin-top:10px}
-.nbai-cm .nbai-q{margin-top:0;flex:1;min-width:0;border-radius:999px;padding-inline:16px}
-.nbai-cm .nbai-go{flex:none;width:44px;height:44px;min-height:44px;padding:0;margin-top:0}
-.nbai-go-ask svg{transform:scaleX(-1)}
-.nbai-new{display:block;margin:8px auto 0;padding:0 8px;min-height:36px;background:none;border:0;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-new[hidden]{display:none}
-/* استشارة «رسالة برسالة»: سؤال واحد + رده، وزر «تحليل جديد» تحت يرجّع مربع الكتابة */
-.nbai-pane.nbai-solo .nbai-chips,.nbai-pane.nbai-solo .nbai-cm{display:none}
-.nbai-again{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:10px;padding:0 18px;min-height:46px;border:0;border-radius:999px;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-again:active{transform:scale(.97)}
-.nbai-again:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-again[hidden]{display:none}
-
+/* كارت Nabtex AI المدمج في لوحة التحكم فقط — تصميم الواجهة المستقلة (.nbai-ov) كله في nb-farm-ai-ux تحت */
 /* ── كارت Nabtex AI المدمج (أعلى صفحة المزرعة، تحت الهيدر مباشرة — مش sticky) ── */
 .nbai-cta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px 12px;margin:0 0 16px;padding:14px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.09),rgba(124,58,237,0) 58%),var(--card);box-shadow:0 10px 28px -22px rgba(7,59,36,.55)}
 .nbai-cta-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 8px 16px -8px rgba(124,58,237,.7)}
@@ -27287,237 +27227,16 @@ textarea.nbai-q{resize:vertical;min-height:84px}
 .nbai-cta-go:active{transform:scale(.97)}
 .nbai-cta-go:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
 @media (max-width:379px){.nbai-cta{grid-template-columns:auto minmax(0,1fr)}.nbai-cta-go{grid-column:1/-1;width:100%}}
-
-/* ── واجهة المساعد المستقلة (شاشة كاملة داخل المنصة) ── */
-.nbai-ov{position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:9000;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);overscroll-behavior:contain;animation:nbai-ov-in .22s cubic-bezier(.22,1,.36,1)}
-.nbai-ov[hidden]{display:none}
-@keyframes nbai-ov-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.nbai-ov{animation:none}}
-.nbai-ov-in{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box;padding:0 14px max(12px,env(safe-area-inset-bottom,0px))}
-.nbai-bar{flex:none;display:flex;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top,0px)) 0 10px}
-.nbai-back{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-back:active{transform:scale(.97)}
-.nbai-back:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
-.nbai-bar-id{display:flex;align-items:center;gap:10px;min-width:0}
-.nbai-bar-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#a855f7)}
-.nbai-bar-t{font-size:15px;font-weight:800;line-height:1.4;color:var(--ink)}
-.nbai-bar-s{font-size:11.5px;line-height:1.5;color:var(--muted)}
-.nbai-ov .nbai-tabs{flex:none;margin-top:0}
-.nbai-ov .nbai-pane{flex:1;min-height:0;display:flex;flex-direction:column}
-.nbai-ov .nbai-pane[hidden]{display:none}
-.nbai-ov .nbai-pane[data-p="ask"]>:not(.nbai-th){flex:none}
-.nbai-ov .nbai-pane[data-p="ask"] .nbai-th{flex:1;min-height:0;max-height:none}
-.nbai-ov .nbai-pane[data-p="diag"]{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.nbai-ov .nbai-pane[data-p="diag"]>*{flex:none}
-.nbai-ov .nbai-pane[data-p="diag"] .nbai-th{max-height:none;overflow:visible}
-.nbai-ov .nbai-out,.nbai-ov .nbai-f{flex:none}
-.nbai-ov .nbai-f{margin-top:8px}
-
-</style>
-
-<style id="nb-farm-ai-pro">
-/* ═══════════════════════════════════════════════════════════════
-   Nabtex AI — تصميم احترافي للواجهة المستقلة. CSS فقط، كل القواعد تحت .nbai-ov (مفيش أي تأثير على باقي الموقع).
-   • نفس الكلاسات ونفس الـ JS — طبقة تصميم فوق nb-farm-ai-css بس. للتراجع: امسح هذا البلوك (style) والـ span/svg جوه زر .nbai-pick.
-   • خلفية الواجهة على ::before (مش على العنصر الـ fixed نفسه) — نفس إصلاح iOS Liquid Glass المستخدم في #ldr، عشان Safari ما يطبّعش ضبابية فوق الهيدر.
-═══════════════════════════════════════════════════════════════ */
-.nbai-ov{--ai-g:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);--ai-tx:#6d28d9;--ai-soft:rgba(124,58,237,.08);--ai-ring:rgba(124,58,237,.3);--ai-glow:rgba(109,40,217,.8);--ai-sh:0 1px 2px rgba(16,24,40,.05),0 12px 30px -16px rgba(16,24,40,.24);--ai-ease:cubic-bezier(.16,1,.3,1);background:none}
-[data-dark] .nbai-ov{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.16);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.75);--ai-sh:0 1px 2px rgba(0,0,0,.4),0 14px 32px -16px rgba(0,0,0,.75)}
-.nbai-ov::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(72% 36% at 90% -6%,rgba(124,58,237,.14),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.11),transparent 72%),var(--bg)}
-[data-dark] .nbai-ov::before{background:radial-gradient(72% 36% at 90% -6%,rgba(168,85,247,.22),transparent 72%),radial-gradient(62% 34% at 4% 106%,rgba(27,107,58,.24),transparent 72%),var(--bg)}
-/* تعديل: لو الكيبورد غيّر الارتفاع بعد القياس، الخلفية تمتد تحت الواجهة فمايظهرش محتوى الصفحة اللي ورا */
-.nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
-/* تعديل: لما الكيبورد يفتح على حقل جوه المساعد نخفي (بالـ visibility فقط — بدون تغيير أي مقاسات أو سكرول) باقي الصفحة اللي ورا عشان ما تبانش من فوق الكيبورد */
-body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibility:hidden}
-/* تعديل: قفل سكرول الصفحة اللي ورا الواجهة فعليًا. body{overflow:hidden} (في openScreen) مابيشتغلش لأن html عليه overflow-x:hidden فالـ overflow مابيتنقلش للـ viewport، فكانت الصفحة ورا بتتسكرول مع السحب → شريط Safari بيطلع وينزل → ارتفاع الواجهة بيتغير والمحتوى بيرتعش. القاعدة دي CSS بس وتشتغل طول ما الواجهة مفتوحة وبتنفك أوتوماتيك لما تتقفل. */
-html:has(.nbai-ov:not([hidden])){overflow:hidden}
-/* تعديل: أثناء تحليل الصورة نخفي أدوات الإدخال مؤقتًا (الصورة بالفعل ظاهرة في المحادثة) عشان فقاعة «بيحلّل» تبان كاملة */
-.nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-pick,.nbai-prev,.nbai-note,.nbai-qs,.nbai-new){display:none}
-/* تعديل: بعد الفحص الأولي للصورة (نبات واضح) نفضّل أدوات اختيار الصورة/المعاينة/الملاحظات مخفية لحد التشخيص النهائي أو «إلغاء وتشخيص جديد» */
-.nbai-ov .nbai-pane.nbai-diag-step :is(.nbai-pick,.nbai-prev,.nbai-note){display:none}
-.nbai-ov .nbai-ov-in{padding-inline:16px}
-
-/* الهيدر */
-.nbai-ov .nbai-bar{gap:12px;padding-bottom:14px}
-.nbai-ov .nbai-back{min-height:42px;background:var(--card);border-color:var(--line2);box-shadow:var(--ai-sh);transition:transform .15s var(--ai-ease),box-shadow .2s}
-.nbai-ov .nbai-bar-ic{width:44px;height:44px;border-radius:15px;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 4px var(--ai-soft),0 12px 24px -10px var(--ai-glow)}
-.nbai-ov .nbai-bar-t{font-size:16.5px;letter-spacing:.01em}
-.nbai-ov .nbai-bar-s{font-size:12px;color:var(--slate)}
-
-/* التبويبات: segmented control */
-.nbai-ov .nbai-tabs{padding:4px;gap:4px;background:var(--bg3);border:1px solid var(--line);border-radius:16px}
-.nbai-ov .nbai-tab{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--slate);font-size:13px;transition:background .22s var(--ai-ease),color .22s,box-shadow .22s}
-.nbai-ov .nbai-tab[aria-selected="true"]{background:var(--card);color:var(--ai-tx);box-shadow:0 1px 2px rgba(16,24,40,.08),0 8px 16px -8px rgba(16,24,40,.22),inset 0 0 0 1px var(--ai-ring)}
-[data-dark] .nbai-ov .nbai-tab[aria-selected="true"]{background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
-
-/* المحادثة: رسالة برسالة */
-.nbai-ov .nbai-th{gap:14px;padding:10px 2px 14px;scrollbar-width:none}
-.nbai-ov .nbai-th::-webkit-scrollbar{display:none}
-.nbai-ov .nbai-m{animation:nbai-pop .34s var(--ai-ease) both}
-@keyframes nbai-pop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
-.nbai-ov .nbai-m-user{padding:11px 17px;border-radius:20px;border-end-start-radius:6px;background:var(--ai-g);color:#fff;font-size:14px;font-weight:700;box-shadow:0 14px 26px -14px var(--ai-glow)}
-.nbai-ov .nbai-m-ai{max-width:100%;padding:15px 18px 14px;border-radius:22px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:14px;line-height:2;box-shadow:var(--ai-sh)}
-.nbai-ov .nbai-m-ai::before{content:"✦  Nabtex AI";display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--ai-tx)}
-.nbai-ov .nbai-m-ai b{font-weight:800}
-.nbai-ov .nbai-m.err{background:rgba(217,119,6,.09);border-color:rgba(217,119,6,.35)}
-.nbai-ov .nbai-m.err::before{color:inherit}
-.nbai-ov .nbai-m img{border-radius:14px}
-.nbai-ov .nbai-dots i{background:var(--ai-tx)}
-/* الحالة الفاضية (رسالة الترحيب لوحدها): شاشة ترحيب في النص */
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err){align-self:center;margin:auto;max-width:330px;padding:10px 4px;border:0;background:none;box-shadow:none;text-align:center;color:var(--slate);font-size:14.5px;line-height:2}
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{content:"";width:68px;height:68px;margin:0 auto 18px;border-radius:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z'/%3E%3Cpath d='M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z'/%3E%3C/svg%3E") center/32px 32px no-repeat,var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 8px var(--ai-soft),0 18px 36px -12px var(--ai-glow)}
-@media (max-height:560px){.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}}
-
-/* الاقتراحات + مربع الكتابة */
-.nbai-ov .nbai-chips{flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px;overflow:visible}
-.nbai-ov .nbai-chip{min-height:38px;padding:8px 15px;border:1px solid var(--line2);background:var(--card);color:var(--ink2);box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .15s var(--ai-ease),background .2s,border-color .2s,color .2s}
-.nbai-ov .nbai-chip:first-child{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}
-.nbai-ov .nbai-chip:first-child::before{content:"✦";margin-inline-end:7px;font-size:11px}
-.nbai-ov .nbai-chip:active{transform:scale(.96)}
-@media (hover:hover){.nbai-ov .nbai-chip:hover{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}}
-.nbai-ov .nbai-cm{gap:6px;margin-top:12px;padding:6px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:var(--ai-sh);transition:border-color .2s,box-shadow .2s}
-.nbai-ov .nbai-cm:focus-within{border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft),var(--ai-sh)}
-.nbai-ov .nbai-cm .nbai-q{min-height:44px;padding-inline:14px;border:0;background:transparent;outline:0}
-.nbai-ov .nbai-q{border-color:var(--line2);background:var(--card);font-size:16px}   /* 16px: يمنع zoom التلقائي على iOS عند الكتابة */
-.nbai-ov .nbai-q::placeholder{font-size:12.5px}
-.nbai-ov .nbai-note{border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
-.nbai-ov .nbai-note:focus{border-color:var(--ai-ring);outline:0;box-shadow:0 0 0 4px var(--ai-soft)}
-.nbai-ov .nbai-cm .nbai-go{width:44px;height:44px;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 10px 20px -10px var(--ai-glow)}
-
-/* زر «تحليل جديد» + زر التشخيص */
-.nbai-ov .nbai-again,.nbai-ov .nbai-go-diag{min-height:50px;border-radius:16px;background:var(--ai-g);font-size:14px;letter-spacing:.01em;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 14px 26px -14px var(--ai-glow);transition:transform .15s var(--ai-ease),box-shadow .2s}
-.nbai-ov .nbai-again{margin-top:12px;border-radius:999px}
-.nbai-ov .nbai-go-diag{margin-top:14px}
-.nbai-ov .nbai-go-diag[disabled]{box-shadow:none}
-@media (min-width:481px){.nbai-ov .nbai-go-diag{width:100%}}
-
-/* تبويب التشخيص */
-.nbai-ov .nbai-pick{flex-direction:column;gap:4px;min-height:156px;margin-top:14px;padding:22px 16px;border:1.5px dashed var(--ai-ring);border-radius:22px;background:linear-gradient(180deg,var(--ai-soft),transparent 80%),var(--card);color:var(--ink);transition:transform .15s var(--ai-ease),border-color .2s}
-.nbai-ov .nbai-pick:active{transform:scale(.985)}
-.nbai-ov .nbai-pick-ic{display:grid;place-items:center;width:56px;height:56px;margin-bottom:8px;border-radius:18px;color:#fff;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 28px -12px var(--ai-glow)}
-.nbai-ov .nbai-pick-t{font-size:14px;font-weight:800;line-height:1.6}
-.nbai-ov .nbai-pick-s{font-size:12px;font-weight:600;color:var(--slate)}
-.nbai-ov .nbai-prev{border-radius:20px;box-shadow:var(--ai-sh)}
-.nbai-ov .nbai-qb{padding:14px;border:1px solid var(--line2);border-radius:18px;background:var(--card);box-shadow:var(--ai-sh)}
-.nbai-ov .nbai-opt{border-color:var(--line2);background:var(--bg2);transition:background .2s,color .2s,border-color .2s}
-.nbai-ov .nbai-opt[aria-pressed="true"]{border-color:transparent;background:var(--ai-g);color:#fff}
-.nbai-ov .nbai-new{color:var(--slate)}
-.nbai-ov .nbai-out{border-radius:16px;border-color:var(--line2);background:var(--card);color:var(--ink2)}
-.nbai-ov .nbai-out.err{background:rgba(217,119,6,.09);border-color:rgba(217,119,6,.35)}
-
-/* الفوتر + التركيز */
-.nbai-ov .nbai-f{margin-top:10px;font-size:11px;line-height:1.9;text-align:center;color:var(--slate);text-wrap:balance}
-.nbai-ov :is(.nbai-tab,.nbai-chip,.nbai-back,.nbai-go,.nbai-again,.nbai-pick,.nbai-opt,.nbai-new):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-m{animation:none}.nbai-ov *{transition:none!important}}
 </style>
 
 <style id="nb-farm-ai-v3">
-/* ═══════════════════════════════════════════════════════════════
-   Nabtex AI — الجيل الثالث من التصميم والحركة (طبقة فوق nb-farm-ai-css و nb-farm-ai-pro)
-   • CSS فقط + استبدال أيقونة اللوجو (SVG) في مكانين جوه nb-farm-ai-js. مفيش أي تغيير في المنطق أو الـ IDs أو الـ handlers.
-   • كل القواعد تحت .nbai-ov و .nbai-cta بس — مفيش أي تأثير على باقي الموقع.
-   • الحركة: transform/opacity بس (GPU)، وكلها متوقفة تمامًا مع prefers-reduced-motion.
-   • .nbai-cta نفسه ما عليهوش animation (عشان دخول لوحة التحكم farm-enter/fmRise يفضل شغال) — الحركة على أبنائه والـ ::after بس.
-   للتراجع: امسح هذا البلوك، ورجّع الـ SVG القديم (النجمة) جوه .nbai-cta-ic و .nbai-bar-ic.
-═══════════════════════════════════════════════════════════════ */
-.nbai-ov,.nbai-cta{--ai-g:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);--ai-tx:#6d28d9;--ai-soft:rgba(124,58,237,.08);--ai-ring:rgba(124,58,237,.3);--ai-glow:rgba(109,40,217,.8);--ai-ease:cubic-bezier(.16,1,.3,1);--ai-spring:cubic-bezier(.34,1.56,.64,1)}
-[data-dark] .nbai-ov,[data-dark] .nbai-cta{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.16);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.75)}
-
-/* ── حركات مشتركة ── */
-@keyframes nbai3-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes nbai3-in{from{opacity:0;transform:translateY(24px) scale(.985)}to{opacity:1;transform:none}}
-@keyframes nbai3-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* Nabtex AI — الحركة والتصميم لكارت .nbai-cta في لوحة التحكم فقط (الواجهة المستقلة في nb-farm-ai-ux). الحركة: transform/opacity بس ومتوقفة مع prefers-reduced-motion. */
+.nbai-cta{--ai-g:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);--ai-tx:#6d28d9;--ai-soft:rgba(124,58,237,.08);--ai-ring:rgba(124,58,237,.3);--ai-glow:rgba(109,40,217,.8);--ai-ease:cubic-bezier(.16,1,.3,1)}
+[data-dark] .nbai-cta{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.16);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.75)}
 @keyframes nbai3-halo{0%{opacity:.7;transform:scale(.92)}70%,100%{opacity:0;transform:scale(1.32)}}
-@keyframes nbai3-ripple{0%{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 8px var(--ai-soft),0 0 0 8px var(--ai-ring),0 18px 36px -12px var(--ai-glow)}75%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 8px var(--ai-soft),0 0 0 30px transparent,0 18px 36px -12px var(--ai-glow)}}
-@keyframes nbai3-scan{0%{transform:translateY(-110%);opacity:0}18%,82%{opacity:1}100%{transform:translateY(230%);opacity:0}}
 @keyframes nbai3-sheen{0%,62%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
-@keyframes nbai3-pop{0%{transform:scale(.9)}55%{transform:scale(1.05)}100%{transform:none}}
-@keyframes nbai3-wave{0%,60%,100%{transform:translateY(0) scale(.85);opacity:.35}30%{transform:translateY(-5px) scale(1);opacity:1}}
-
-/* ── اللوجو: رمز نبتيكس الرسمي (نبتة بفرعين) بنفس مسارات لوجو الهيدر والـ loader ── */
-.nbai-ov .nbai-bar-ic,.nbai-cta .nbai-cta-ic{position:relative}
-.nbai-ov .nbai-bar-ic::after,.nbai-cta .nbai-cta-ic::after{content:"";position:absolute;inset:-3px;border-radius:inherit;border:1.5px solid var(--ai-ring);opacity:0;pointer-events:none;animation:nbai3-halo 3.4s ease-out 1s infinite}
-
-/* ── الفتح: الشاشة + دخول متتابع للعناصر ── */
-.nbai-ov{animation:nbai3-in .45s var(--ai-ease) backwards}
-.nbai-ov .nbai-bar{animation:nbai3-rise .55s var(--ai-ease) .05s backwards}
-.nbai-ov .nbai-tabs{animation:nbai3-rise .55s var(--ai-ease) .11s backwards}
-.nbai-ov .nbai-pane:not([hidden]){animation:nbai3-rise .55s var(--ai-ease) .17s backwards}
-.nbai-ov .nbai-f{animation:nbai3-rise .55s var(--ai-ease) .32s backwards}
-.nbai-ov .nbai-chip{animation:nbai3-rise .5s var(--ai-ease) backwards}
-.nbai-ov .nbai-chip:nth-child(1){animation-delay:.26s}
-.nbai-ov .nbai-chip:nth-child(2){animation-delay:.32s}
-.nbai-ov .nbai-chip:nth-child(3){animation-delay:.38s}
-.nbai-ov .nbai-cm{animation:nbai3-rise .55s var(--ai-ease) .3s backwards}
-
-/* ── الهيدر ── */
-/* نزول الهيدر: مسافة علوية إضافية تحت شريط الحالة/النوتش (36px في المتصفح، ومنطقة الأمان + 16px في وضع التطبيق) */
-.nbai-ov .nbai-bar{padding-top:calc(max(env(safe-area-inset-top,0px),20px) + 16px);padding-bottom:16px}
-.nbai-ov .nbai-bar-id{gap:12px}
-.nbai-ov .nbai-bar-t{font-size:17px;font-weight:800;letter-spacing:.02em}
-@media (hover:hover){.nbai-ov .nbai-back:hover{border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft),var(--ai-sh)}}
-
-/* ── التبويبات: مؤشر منزلق بدل تبديل الخلفية (لو المتصفح يدعم :has — غير كده يفضل التصميم القديم) ── */
-@supports selector(:has(a)){
-  .nbai-ov .nbai-tabs{position:relative;isolation:isolate}
-  .nbai-ov .nbai-tabs::before{content:"";position:absolute;z-index:-1;top:4px;bottom:4px;inset-inline-start:4px;width:calc(50% - 6px);border-radius:12px;background:var(--card);box-shadow:0 1px 2px rgba(16,24,40,.08),0 8px 16px -8px rgba(16,24,40,.22),inset 0 0 0 1px var(--ai-ring);transition:inset-inline-start .42s var(--ai-ease)}
-  [data-dark] .nbai-ov .nbai-tabs::before{background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
-  .nbai-ov .nbai-tabs:has(.nbai-tab[data-t="diag"][aria-selected="true"])::before{inset-inline-start:calc(50% + 2px)}
-  .nbai-ov .nbai-tab[aria-selected="true"],[data-dark] .nbai-ov .nbai-tab[aria-selected="true"]{background:transparent;box-shadow:none}
-}
-
-/* ── المحادثة ── */
-.nbai-ov .nbai-th{padding:12px 3px 16px}
-.nbai-ov .nbai-th[data-th="ask"]{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 16px);mask-image:linear-gradient(180deg,transparent 0,#000 16px)}
-.nbai-ov .nbai-m{animation:nbai3-rise .45s var(--ai-ease) backwards}
-.nbai-ov .nbai-m-user{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 14px 26px -14px var(--ai-glow)}
-.nbai-ov .nbai-m-ai{position:relative;background:linear-gradient(180deg,var(--ai-soft),transparent 54px),var(--card)}
-.nbai-ov .nbai-m-ai b{color:var(--ai-tx)}
-/* شارة اللوجو الصغيرة جنب اسم المساعد في كل رد */
-.nbai-ov .nbai-m-ai::before{content:"Nabtex AI";padding-inline-start:25px;letter-spacing:.04em;line-height:18px}
-.nbai-ov .nbai-m-ai::after{content:"";position:absolute;inset-inline-start:18px;top:15px;width:18px;height:18px;border-radius:6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 4 20 20' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/svg%3E") center/13px 13px no-repeat,var(--ai-g)}
-.nbai-ov .nbai-m-ai.err{background:rgba(217,119,6,.09)}
-.nbai-ov .nbai-m-ai.err::before{content:"✦  Nabtex AI";padding-inline-start:0;line-height:inherit}
-.nbai-ov .nbai-m-ai.err::after{display:none}
-
-/* حالة الكتابة: فقاعة مدمجة بنقط متموّجة */
-.nbai-ov .nbai-m-ai:has(.nbai-dots){align-self:flex-end;width:fit-content;min-width:170px;padding-block:13px 12px}
-.nbai-ov .nbai-dots{gap:5px;min-height:24px}
-.nbai-ov .nbai-dots i{width:8px;height:8px;opacity:.35;animation:nbai3-wave 1.3s infinite ease-in-out}
-.nbai-ov .nbai-dots i:nth-child(2){animation-delay:.16s}
-.nbai-ov .nbai-dots i:nth-child(3){animation-delay:.32s}
-.nbai-ov .nbai-dots::after{content:"بيحلّل…";margin-inline-start:8px;font-size:12px;font-weight:700;color:var(--slate)}
-
-/* شاشة الترحيب: لوجو كبير عايم بنبض هادي */
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err){background:none}
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::after{display:none}
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{content:"";width:72px;height:72px;margin:0 auto 20px;padding:0;line-height:0;border-radius:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0.3 0.8 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(-1.2 1.4)'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/g%3E%3Cpath d='M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/40px 40px no-repeat,var(--ai-g);animation:nbai3-float 5s ease-in-out infinite,nbai3-ripple 3s ease-out infinite}
-@media (max-height:560px){.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}}
-
-/* ── الاقتراحات + مربع الكتابة ── */
-.nbai-ov .nbai-chip{padding:8px 16px}
-.nbai-ov .nbai-cm{transition:border-color .25s,box-shadow .25s}
-.nbai-ov .nbai-cm .nbai-go{transition:transform .35s var(--ai-spring),opacity .25s,box-shadow .25s}
-.nbai-ov .nbai-cm:has(.nbai-qi:placeholder-shown) .nbai-go-ask{opacity:.5;transform:scale(.92);box-shadow:none}
-.nbai-ov .nbai-cm .nbai-go-ask:active{transform:scale(.9)}
-@media (hover:hover){.nbai-ov .nbai-cm:has(.nbai-qi:not(:placeholder-shown)) .nbai-go-ask:hover{transform:scale(1.06)}}
-
-/* ── تبويب التشخيص ── */
-.nbai-ov .nbai-pick{position:relative;overflow:hidden;isolation:isolate;transition:transform .15s var(--ai-ease),border-color .25s,box-shadow .25s}
-.nbai-ov .nbai-pick::after{content:"";position:absolute;inset-inline:0;top:0;height:44%;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,var(--ai-soft) 72%,var(--ai-ring));border-bottom:1.5px solid var(--ai-ring);animation:nbai3-scan 3.8s ease-in-out infinite}
-.nbai-ov .nbai-pick-ic{animation:nbai3-float 4.5s ease-in-out infinite}
-@media (hover:hover){.nbai-ov .nbai-pick:hover{border-style:solid;border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft)}}
-.nbai-ov .nbai-prev{animation:nbai3-rise .45s var(--ai-ease) backwards}
-.nbai-ov .nbai-note{margin-top:14px}
-.nbai-ov .nbai-qb{animation:nbai3-rise .5s var(--ai-ease) backwards}
-.nbai-ov .nbai-qb:nth-child(2){animation-delay:.08s}
-.nbai-ov .nbai-qb:nth-child(3){animation-delay:.16s}
-.nbai-ov .nbai-qb:nth-child(n+4){animation-delay:.24s}
-.nbai-ov .nbai-opt[aria-pressed="true"]{animation:nbai3-pop .32s var(--ai-ease);box-shadow:0 8px 16px -8px var(--ai-glow)}
-.nbai-ov .nbai-opt[aria-pressed="true"]::before{content:"✓";margin-inline-end:6px;font-size:11px}
-.nbai-ov .nbai-out:not(:empty){animation:nbai3-rise .4s var(--ai-ease) backwards}
-
-/* ── كارت Nabtex AI في لوحة التحكم ── */
+.nbai-cta .nbai-cta-ic{position:relative}
+.nbai-cta .nbai-cta-ic::after{content:"";position:absolute;inset:-3px;border-radius:inherit;border:1.5px solid var(--ai-ring);opacity:0;pointer-events:none;animation:nbai3-halo 3.4s ease-out 1s infinite}
 .nbai-cta{position:relative;overflow:hidden;isolation:isolate;gap:10px 14px;padding:16px;border:1px solid transparent;border-radius:22px;background:radial-gradient(120% 150% at 100% 0,rgba(124,58,237,.13),transparent 62%) padding-box,linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,rgba(124,58,237,.5),rgba(27,107,58,.28) 58%,rgba(124,58,237,.22)) border-box;box-shadow:0 14px 32px -22px rgba(76,29,149,.55)}
 [data-dark] .nbai-cta{background:radial-gradient(120% 150% at 100% 0,rgba(168,85,247,.2),transparent 62%) padding-box,linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,rgba(168,85,247,.55),rgba(27,107,58,.35) 58%,rgba(168,85,247,.28)) border-box}
 .nbai-cta::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.34) 50%,transparent 60%);transform:translateX(-130%);animation:nbai3-sheen 7.5s ease-in-out 1.8s infinite}
@@ -27533,159 +27252,317 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 }
 .nbai-cta .nbai-cta-go:focus-visible{outline-color:var(--ai-tx)}
 @media (max-width:480px){.nbai-cta .nbai-cta-go{padding:0 14px;font-size:12.5px}}
-
-/* ── تقليل الحركة ── */
 @media (prefers-reduced-motion:reduce){
-  .nbai-ov,.nbai-ov *,.nbai-ov *::before,.nbai-ov *::after,.nbai-cta *,.nbai-cta *::before,.nbai-cta *::after,.nbai-cta::after{animation:none!important;transition:none!important}
-  .nbai-ov .nbai-dots i{opacity:.7}
+  .nbai-cta *,.nbai-cta *::before,.nbai-cta *::after,.nbai-cta::after{animation:none!important;transition:none!important}
   .nbai-cta::after{display:none}
 }
-
-/* ── شريط رصيد المساعد اليومي (بديل نص «متبقي لك اليوم»): إضافة فقط — كلاسات nbq-* ── */
-.nbai-ov .nbq{margin:2px auto 10px;padding:11px 14px 12px;border:1px solid var(--line2);border-radius:16px;background:var(--card);box-shadow:var(--ai-sh);text-align:start}
-.nbai-ov .nbq-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:12px;line-height:1.4;font-weight:800}
-.nbai-ov .nbq-t{display:inline-flex;align-items:center;gap:6px;color:var(--ai-tx);letter-spacing:.02em}
-.nbai-ov .nbq-sp{font-size:11px;line-height:1}
-.nbai-ov .nbq-n{color:var(--slate);font-weight:700;font-variant-numeric:tabular-nums}
-.nbai-ov .nbq-n b{color:var(--ink);font-size:13px;font-weight:800}
-.nbai-ov .nbq-r{margin-inline-start:6px;font-weight:700;color:var(--ai-tx)}
-.nbai-ov .nbq-tr{position:relative;height:9px;border-radius:999px;background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring)}
-.nbai-ov .nbq-fl{display:block;height:100%;width:0;border-radius:inherit;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 12px -3px var(--ai-glow);transition:width .7s var(--ai-ease)}
-.nbai-ov .nbq-d{font-size:11px;line-height:1.9;color:var(--slate);text-wrap:balance}
-/* ── تهدئة بصرية لكارت «رصيدك اليوم» (CSS فقط): شيلنا الظل الكبير والخلفية البيضا والتوهّج وخفّفنا الأوزان والألوان عشان الكارت يتناسق مع الشيبس وصندوق الكتابة. مفيش أي تغيير في الـ HTML أو الـ JS أو منطق الحصص. للتراجع: امسح البلوك ده بس. ── */
-.nbai-ov .nbq{padding:8px 12px 9px;border-color:var(--line);border-radius:14px;background:transparent;box-shadow:none}
-.nbai-ov .nbq-h{margin-bottom:7px;font-size:11.5px;font-weight:700}
-.nbai-ov .nbq-t{color:var(--slate);font-weight:700}
-.nbai-ov .nbq-sp{color:var(--ai-tx);opacity:.7}
-.nbai-ov .nbq-n b{font-size:12px;font-weight:700}
-.nbai-ov .nbq-tr{height:6px;box-shadow:none}
-.nbai-ov .nbq-fl{box-shadow:none;opacity:.72}
-/* ── تصغير كارت «رصيدك اليوم» والنص التحذيري تحته لتقليل الزحمة البصرية (CSS فقط، قياسات بس — مفيش تغيير في الـ HTML أو الـ JS أو منطق الحصص). للتراجع: امسح البلوك ده بس. ── */
-.nbai-ov .nbq{margin:0 auto 4px;padding:5px 10px 6px;border-radius:11px}
-.nbai-ov .nbq-h{margin-bottom:4px;gap:8px;font-size:10px;line-height:1.3}
-.nbai-ov .nbq-sp{font-size:9px}
-.nbai-ov .nbq-n b{font-size:10.5px}
-.nbai-ov .nbq-tr{height:4px}
-.nbai-ov .nbq-d{font-size:9.5px;line-height:1.55}
-/* ── إصلاح تداخل الفوتر مع حقل الكتابة لما الكيبورد يفتح (CSS فقط): الواجهة بتصغر لارتفاع الكيبورد فالبانل بتضيق والفوتر (كارت الرصيد + التنبيه) بيطلع فوق حقل الكتابة. فبنخفي الفوتر طول ما أي حقل جوه المساعد عليه فوكس، ويرجع تلقائي أول ما الكيبورد يتقفل. للتراجع: امسح السطر ده بس. ── */
-.nbai-ov:has(.nbai-q:focus) .nbai-f{display:none}
 </style>
 
 <style id="nb-farm-ai-reveal">
-/* ═══════════════════════════════════════════════════════════════
-   Nabtex AI — ظهور الرد بنعومة (طبقة فوق nb-farm-ai-v3)
-   • الفقاعة بتتفتح من حجم "بيحلّل…" لحجمها الكامل (clip-path)، والكلمات بتظهر تباعًا بتركيز ناعم (opacity + blur).
-   • الـ JS: دالتين جوه nb-farm-ai-js (wordsIn / reveal) بتتندهوا من settle() بس. مفيش تغيير في المنطق أو الـ API.
-   • مفيش transform/inline-block على الكلمات عشان اتجاه النص (عربي/إنجليزي/أرقام) يفضل زي ما هو.
-   • متوقف تمامًا مع prefers-reduced-motion.
-   للتراجع: امسح هذا البلوك، وامسح الدالتين و سطر reveal(d, r0) من settle().
-═══════════════════════════════════════════════════════════════ */
-@keyframes nbai4-w{from{opacity:0;filter:blur(5px)}to{opacity:1;filter:blur(0)}}
-.nbai-ov .nbai-m-ai .nbai-w{animation:nbai4-w .7s var(--ai-ease,cubic-bezier(.16,1,.3,1)) var(--wd,0s) backwards}
+/* Nabtex AI — ظهور الرد بنعومة: الفقاعة بتتفتح من حجم "بيحلّل…" لحجمها الكامل (clip-path) والكلمات بتظهر تباعًا (opacity فقط — بدون blur عشان الأداء). الـ JS: wordsIn / reveal جوه nb-farm-ai-js. متوقف مع prefers-reduced-motion. */
+@keyframes nbai4-w{from{opacity:0}to{opacity:1}}
+.nbai-ov .nbai-m-ai .nbai-w{animation:nbai4-w .4s var(--ai-ease,cubic-bezier(.22,1,.36,1)) var(--wd,0s) backwards}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbai-m-ai .nbai-w{animation:none!important}}
 </style>
 
-<style id="nb-farm-ai-shots">
+<style id="nb-farm-ai-ux">
 /* ═══════════════════════════════════════════════════════════════
-   Nabtex AI — معالج التصوير بالخطوات لتشخيص النبات (طبقة فوق nb-farm-ai-v3)
-   • CSS فقط لواجهة .nbai-wz — كل القواعد تحت .nbai-ov، فمفيش أي تأثير على باقي الموقع.
-   • الزر القديم (.nbai-pick) والمعاينة (.nbai-prev) متخبّيين بس (مش محذوفين) — للتراجع: امسح هذا البلوك.
-   • الحركة: transform/opacity بس، ومتوقفة مع prefers-reduced-motion.
+   Nabtex AI — واجهة موحّدة (Mobile-first Premium) — بتحل محل طبقات التصميم القديمة (css / pro / v3 / shots / ai-sub nbq / empty-logo) للواجهة المستقلة .nbai-ov بس.
+   • كل القواعد تحت .nbai-ov — مفيش أي تأثير على باقي الموقع. كارت .nbai-cta في لوحة التحكم بيفضل في nb-farm-ai-css و nb-farm-ai-v3 زي ما هو.
+   • الحركة: transform/opacity بس (180–300ms)، من غير مكتبات، ومتوقفة تمامًا مع prefers-reduced-motion.
+   • مفيش تغيير في الـ IDs ولا الـ handlers ولا منطق الحصص/الاشتراك — بس القالب والعرض.
 ═══════════════════════════════════════════════════════════════ */
-.nbai-ov{--wz-ok:#15803d;--wz-ok-bg:rgba(22,163,74,.1);--wz-ok-br:rgba(22,163,74,.28);--wz-wn:#b45309;--wz-wn-bg:rgba(245,158,11,.13);--wz-wn-br:rgba(217,119,6,.34)}
-[data-dark] .nbai-ov{--wz-ok:#86efac;--wz-ok-bg:rgba(34,197,94,.14);--wz-ok-br:rgba(34,197,94,.35);--wz-wn:#fcd34d;--wz-wn-bg:rgba(245,158,11,.16);--wz-wn-br:rgba(245,158,11,.4)}
-@keyframes nbai5-swap{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
-@keyframes nbai5-pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:none}}
+.nbai-ov{
+  --ai-g:linear-gradient(135deg,#6d28d9 0%,#8b3fe6 100%);--ai-tx:#6d28d9;--ai-soft:rgba(124,58,237,.08);--ai-soft2:rgba(124,58,237,.14);--ai-ring:rgba(124,58,237,.28);--ai-glow:rgba(109,40,217,.5);
+  --ai-ease:cubic-bezier(.22,1,.36,1);--ai-spring:cubic-bezier(.34,1.4,.64,1);--ai-sh:0 1px 2px rgba(16,24,40,.04);
+  --wz-ok:#15803d;--wz-ok-bg:rgba(22,163,74,.09);--wz-ok-br:rgba(22,163,74,.26);--wz-wn:#b45309;--wz-wn-bg:rgba(245,158,11,.12);--wz-wn-br:rgba(217,119,6,.32);
+  position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:9000;display:flex;flex-direction:column;background:none;color:var(--ink);font-family:inherit;overscroll-behavior:contain;
+  animation:nbux-in 260ms var(--ai-ease) backwards
+}
+[data-dark] .nbai-ov{--ai-tx:#c4b5fd;--ai-soft:rgba(168,85,247,.14);--ai-soft2:rgba(168,85,247,.22);--ai-ring:rgba(168,85,247,.4);--ai-glow:rgba(147,51,234,.55);--wz-ok:#86efac;--wz-ok-bg:rgba(34,197,94,.13);--wz-ok-br:rgba(34,197,94,.34);--wz-wn:#fcd34d;--wz-wn-bg:rgba(245,158,11,.15);--wz-wn-br:rgba(245,158,11,.4)}
+.nbai-ov[hidden]{display:none}
+.nbai-ov [hidden]{display:none!important}
+.nbai-ov *,.nbai-ov *::before,.nbai-ov *::after{box-sizing:border-box}
+.nbai-ov button{font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+/* الخلفية على ::before (مش على العنصر الـ fixed نفسه) — إصلاح iOS Liquid Glass */
+.nbai-ov::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 30% at 92% -4%,rgba(124,58,237,.1),transparent 72%),radial-gradient(60% 28% at 6% 104%,rgba(27,107,58,.08),transparent 72%),var(--bg)}
+[data-dark] .nbai-ov::before{background:radial-gradient(70% 30% at 92% -4%,rgba(168,85,247,.18),transparent 72%),radial-gradient(60% 28% at 6% 104%,rgba(27,107,58,.2),transparent 72%),var(--bg)}
+/* لو الكيبورد غيّر الارتفاع بعد القياس، الخلفية تمتد تحت الواجهة */
+.nbai-ov::after{content:'';position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:var(--bg)}
+/* الكيبورد مفتوح على حقل جوه المساعد: نخفي باقي الصفحة (visibility فقط) + نقفل سكرول الصفحة اللي ورا */
+body:has(.nbai-ov:not([hidden]) :is(input,textarea):focus)>:not(.nbai-ov){visibility:hidden}
+html:has(.nbai-ov:not([hidden])){overflow:hidden}
 
-.nbai-ov .nbai-pick,.nbai-ov .nbai-prev{display:none!important}
-.nbai-ov .nbai-pane.nbai-diag-busy .nbai-wz,.nbai-ov .nbai-pane.nbai-diag-step .nbai-wz{display:none}
-.nbai-ov .nbai-wz{margin-top:14px}
-/* اختيار نوع المستخدم: صاحب مزرعة / نباتات في البيت (بيتخبّى وقت الأسئلة والتحليل زي المعالج) */
-.nbai-ov .nbai-pane.nbai-diag-busy .nbai-aud,.nbai-ov .nbai-pane.nbai-diag-step .nbai-aud{display:none}
-.nbai-ov .nbai-aud{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;padding:4px;border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
-.nbai-ov .nbai-aud-b{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;text-wrap:balance;min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
-.nbai-ov .nbai-aud-b.is-on{background:var(--card);border-color:var(--ai-ring);color:var(--ai-tx);font-weight:800}
-.nbai-ov .nbai-aud-b:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
-/* اختيار نوع الاستشارة: مزرعة مسجّلة على نبتكس / سؤال عن أي حاجة (بيتخبّى بعد الرد زي الشرائح) */
-.nbai-ov .nbai-pane.nbai-solo .nbai-src{display:none}
-.nbai-ov .nbai-src{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding:4px;border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
-.nbai-ov .nbai-src-b{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;text-wrap:balance;min-width:0;padding:10px 8px;border:1.5px solid transparent;border-radius:12px;background:none;font-family:inherit;font-size:13px;font-weight:700;line-height:1.4;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s}
-.nbai-ov .nbai-src-b.is-on{background:var(--card);border-color:var(--ai-ring);color:var(--ai-tx);font-weight:800}
-.nbai-ov .nbai-src-b:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+.nbai-ov-in{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:640px;margin:0 auto;padding:0 max(14px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+/* الكيبورد مفتوح: منطقة الأمان السفلية بتبقى وراه فمنشيل مسافتها */
+.nbai-ov:has(.nbai-q:focus) .nbai-ov-in{padding-bottom:8px}
 
-/* شريط الخطوات (بيتحوّل لمعاينات مصغّرة بعد التصوير، وكل خانة بتفتح خطوتها للتعديل) */
-.nbai-ov .nbai-wz-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:4px 4px 0}
-.nbai-ov .nbai-wz-dot{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:0;border:0;background:none;font-family:inherit;color:var(--slate);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-ov .nbai-wz-th{position:relative;display:grid;place-items:center;width:100%;max-width:84px;aspect-ratio:1;border-radius:18px;border:1.5px solid var(--line2);background:var(--bg2);color:var(--slate);overflow:hidden;transition:border-color .25s,box-shadow .25s,transform .2s var(--ai-ease)}
-.nbai-ov .nbai-wz-th b{font-size:18px;font-weight:800;line-height:1}
-.nbai-ov .nbai-wz-th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.nbai-ov .nbai-wz-ck{position:absolute;inset-inline-end:5px;bottom:5px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ai-g);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);animation:nbai5-pop .45s var(--ai-spring) backwards}
-.nbai-ov .nbai-wz-lb{max-width:100%;font-size:11.5px;font-weight:700;line-height:1.4;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nbai-ov .nbai-wz-dot:active .nbai-wz-th{transform:scale(.95)}
-.nbai-ov .nbai-wz-dot.is-cur .nbai-wz-th{border-color:var(--ai-tx);color:var(--ai-tx);box-shadow:0 0 0 4px var(--ai-soft)}
-.nbai-ov .nbai-wz-dot.is-cur .nbai-wz-lb{color:var(--ai-tx);font-weight:800}
-.nbai-ov .nbai-wz-dot.is-done:not(.is-cur) .nbai-wz-th{border-color:var(--ai-ring)}
-.nbai-ov .nbai-wz-dot:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:3px;border-radius:14px}
+/* ── الهيدر المدمج: الهوية + مؤشر الرصيد + رجوع ── */
+.nbai-bar{flex:none;display:flex;flex-direction:row;align-items:center;gap:10px;min-height:52px;padding:calc(env(safe-area-inset-top,0px) + 8px) 0 8px}
+.nbai-bar-id{flex:1;min-width:0;display:flex;align-items:center;gap:9px}
+.nbai-bar-ic{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:11px;color:#fff;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 14px -8px var(--ai-glow)}
+.nbai-bar-ic svg{width:22px;height:22px}
+.nbai-bar-id>div{min-width:0}
+.nbai-bar-t{font-size:15px;font-weight:800;line-height:1.3;color:var(--ink);letter-spacing:.01em;white-space:nowrap}
+.nbai-bar-s{font-size:11px;line-height:1.35;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:359px){.nbai-bar{gap:7px}.nbai-bar-s{display:none}}
+.nbai-hq{flex:none;display:flex;align-items:center;gap:6px}
+.nbai-back{flex:none;position:relative;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--line2);border-radius:50%;background:var(--card);color:var(--ink);cursor:pointer;transition:transform 180ms var(--ai-ease),border-color 180ms,background 180ms}
+.nbai-back span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.nbai-back:active{transform:scale(.92)}
+@media (hover:hover){.nbai-back:hover{border-color:var(--ai-ring);background:var(--ai-soft)}}
+
+/* مؤشر الرصيد الصغير (بدل الكارت الكبير تحت) */
+.nbq{position:relative;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:12px;font-weight:800;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;overflow:hidden;transition:border-color 200ms,background 200ms}
+.nbq-sp{font-size:10px;color:var(--ai-tx)}
+.nbq-n{display:inline-flex;align-items:center;gap:1px}
+.nbq-n b{font-weight:800}
+.nbq-sl,.nbq-m{color:var(--muted);font-weight:700}
+.nbq-tr{position:absolute;inset-inline:10px;bottom:4px;height:3px;border-radius:2px;background:var(--ai-soft2);overflow:hidden}
+.nbq-fl{display:block;height:100%;width:0;border-radius:inherit;background:var(--ai-g);transition:width 320ms var(--ai-ease),background 200ms}
+.nbq.is-low .nbq-fl,.nbq.is-empty .nbq-fl{background:#d97706}
+.nbq.is-empty{border-color:rgba(217,119,6,.4);background:rgba(217,119,6,.07)}
+.nbq-up{flex:none;display:inline-flex;align-items:center;height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:12px;font-weight:800;line-height:1;white-space:nowrap;cursor:pointer;transition:transform 180ms var(--ai-ease),opacity 180ms}
+.nbq-up:active{transform:scale(.95)}
+@media (max-width:389px){.nbq-up-x{display:none}}
+
+/* ── التبويبات: segmented بمؤشر منزلق ── */
+.nbai-tabs{flex:none;position:relative;isolation:isolate;display:grid;grid-template-columns:1fr 1fr;padding:3px;margin:0;border:1px solid var(--line);border-radius:14px;background:var(--bg3)}
+.nbai-tab{height:36px;padding:0 8px;border:0;border-radius:11px;background:transparent;color:var(--slate);font-size:13px;font-weight:700;line-height:1;cursor:pointer;transition:color 180ms,background 180ms}
+.nbai-tab[aria-selected="true"]{color:var(--ai-tx);background:var(--card);box-shadow:0 1px 2px rgba(16,24,40,.08),inset 0 0 0 1px var(--ai-ring)}
+[data-dark] .nbai-tab[aria-selected="true"]{background:var(--ai-soft)}
+@supports selector(:has(a)){
+  .nbai-tabs::before{content:"";position:absolute;z-index:-1;top:3px;bottom:3px;inset-inline-start:3px;width:calc(50% - 3px);border-radius:11px;background:var(--card);box-shadow:0 1px 2px rgba(16,24,40,.08),inset 0 0 0 1px var(--ai-ring);transition:transform 260ms var(--ai-ease)}
+  [data-dark] .nbai-tabs::before{background:var(--ai-soft)}
+  .nbai-tabs:has(.nbai-tab[data-t="diag"][aria-selected="true"])::before{transform:translateX(-100%)}
+  .nbai-tab[aria-selected="true"],[data-dark] .nbai-tab[aria-selected="true"]{background:transparent;box-shadow:none}
+}
+.nbai-ov :is(.nbai-tab,.nbai-chip,.nbai-back,.nbai-go,.nbai-again,.nbai-opt,.nbai-new,.nbai-src-b,.nbai-aud-b,.nbai-wz-dot,.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip,.nbai-wz-prev,.nbq-up):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+
+/* ── البانلات ── */
+.nbai-pane{flex:1;min-height:0;display:flex;flex-direction:column;padding-top:10px;animation:nbux-rise 220ms var(--ai-ease) backwards}
+.nbai-pane[hidden]{display:none}
+.nbai-pane>*{flex:none}
+.nbai-pane[data-p="ask"]>.nbai-th{flex:1 1 auto}
+.nbai-pane[data-p="diag"]{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nbai-pane[data-p="diag"]::-webkit-scrollbar{display:none}
+
+/* اختيار السياق (استشارة: مزرعتي / أي حاجة — تشخيص: صاحب مزرعة / نباتات في البيت) */
+.nbai-src-w{display:grid;grid-template-rows:1fr;margin-bottom:6px;transition:grid-template-rows 240ms var(--ai-ease),opacity 200ms,margin 240ms var(--ai-ease)}
+.nbai-src-w>.nbai-src{min-height:0;overflow:hidden}
+.nbai-pane.nbai-solo .nbai-src-w{grid-template-rows:0fr;opacity:0;margin-bottom:0;pointer-events:none}
+.nbai-src,.nbai-aud{display:flex;flex-wrap:wrap;gap:6px}
+.nbai-src-b,.nbai-aud-b{display:inline-flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;min-height:34px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--slate);font-size:12.5px;font-weight:700;line-height:1.3;text-align:center;text-wrap:balance;cursor:pointer;transition:background 180ms,color 180ms,border-color 180ms,transform 160ms var(--ai-ease)}
+.nbai-src-b:active,.nbai-aud-b:active{transform:scale(.97)}
+.nbai-src-b.is-on,.nbai-aud-b.is-on{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx);font-weight:800}
+.nbai-aud{margin-top:2px}
+
+/* ── المحادثة ── */
+.nbai-th{position:relative;display:flex;flex-direction:column;gap:10px;min-height:0;padding:6px 2px 10px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nbai-th::-webkit-scrollbar{display:none}
+.nbai-pane[data-p="diag"] .nbai-th{overflow:visible;padding-bottom:4px}
+.nbai-m{max-width:100%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.9;overflow-wrap:anywhere;word-break:break-word;animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbai-m-user{align-self:flex-start;max-width:86%;border-end-start-radius:6px;background:var(--ai-g);color:#fff;font-weight:700;line-height:1.8;box-shadow:0 8px 18px -12px var(--ai-glow)}
+.nbai-m-ai{position:relative;align-self:flex-end;border:1px solid var(--line);border-end-end-radius:6px;background:var(--card);color:var(--ink);box-shadow:var(--ai-sh)}
+.nbai-m-ai::before{content:"Nabtex AI";display:block;margin-bottom:3px;padding-inline-start:24px;font-size:11px;font-weight:800;line-height:18px;letter-spacing:.03em;color:var(--ai-tx)}
+.nbai-m-ai::after{content:"";position:absolute;inset-inline-start:14px;top:11px;width:18px;height:18px;border-radius:6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 4 20 20' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/svg%3E") center/13px 13px no-repeat,var(--ai-g)}
+.nbai-m-ai b{font-weight:800;color:var(--ai-tx)}
+.nbai-m.err{border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08);color:#b45309}
+[data-dark] .nbai-m.err{color:#fbbf24}
+.nbai-m.err::before{content:"تنبيه";padding-inline-start:0;color:inherit}
+.nbai-m.err::after{display:none}
+.nbai-m img{border-radius:12px}
+/* حالة الكتابة */
+.nbai-m-ai:has(.nbai-dots){width:fit-content;min-width:150px;padding-block:10px 9px}
+.nbai-dots{display:inline-flex;align-items:center;gap:5px;min-height:22px}
+.nbai-dots i{width:7px;height:7px;border-radius:50%;background:var(--ai-tx);opacity:.35;animation:nbux-wave 1.2s infinite ease-in-out}
+.nbai-dots i:nth-child(2){animation-delay:.15s}
+.nbai-dots i:nth-child(3){animation-delay:.3s}
+.nbai-dots::after{content:"بيحلّل…";margin-inline-start:8px;font-size:12px;font-weight:700;color:var(--slate)}
+/* صور التشخيص جوه فقاعة المستخدم */
+.nbai-m .nbai-shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:min(236px,66vw);margin-bottom:8px}
+.nbai-m .nbai-shot{margin:0}
+.nbai-m .nbai-shot img{display:block;width:100%;height:auto;aspect-ratio:1;max-width:none;max-height:none;margin:0;border-radius:10px;object-fit:cover}
+.nbai-m .nbai-shot figcaption{margin-top:2px;font-size:9.5px;font-weight:700;line-height:1.3;text-align:center;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* شاشة الترحيب (الشات فاضي): لوجو + عنوان + شرح */
+.nbai-greet:not(:only-child){display:none}
+.nbai-th>.nbai-greet:only-child{display:flex;flex-direction:column;align-items:center;align-self:center;gap:4px;max-width:320px;margin:auto;padding:6px 4px;border:0;background:none;box-shadow:none;text-align:center;color:var(--slate);animation:nbux-rise 320ms var(--ai-ease) backwards}
+.nbai-th>.nbai-greet:only-child::before{content:"";display:block;width:52px;height:52px;margin:0 auto 10px;padding:0;border-radius:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0.3 0.8 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(-1.2 1.4)'%3E%3Cpath d='M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6'/%3E%3Cpath d='M5 20c2-3 5-5 7-8' opacity='.5'/%3E%3C/g%3E%3Cpath d='M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/32px 32px no-repeat,var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 6px var(--ai-soft),0 12px 24px -12px var(--ai-glow)}
+.nbai-th>.nbai-greet:only-child::after{display:none}
+.nbai-gt{display:block;font-size:17px;font-weight:800;line-height:1.5;color:var(--ink)}
+.nbai-gs{display:block;font-size:13px;line-height:1.85;color:var(--slate)}
+@media (max-height:600px){.nbai-th>.nbai-greet:only-child::before{display:none}}
+/* مقدمة التشخيص: سطر شرح خفيف بدل شاشة ترحيب كبيرة */
+.nbai-pane[data-p="diag"] .nbai-th>.nbai-greet:only-child{align-self:stretch;align-items:flex-start;max-width:none;margin:0;padding:2px 2px 6px;text-align:start;font-size:12.5px;line-height:1.8;animation:none}
+.nbai-pane[data-p="diag"] .nbai-th>.nbai-greet:only-child::before{display:none}
+
+/* اقتراحات الأسئلة: كروت في الترحيب، وشرائح أفقية بعد بداية المحادثة */
+.nbai-chips{display:flex;gap:8px;padding:2px 2px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nbai-chips::-webkit-scrollbar{display:none}
+.nbai-chip{flex:none;display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 13px 0 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink2);font-size:12.5px;font-weight:700;line-height:1.35;white-space:nowrap;cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms,border-color 180ms,color 180ms,opacity 180ms}
+.nbai-chip-ic{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx)}
+.nbai-chip-ic svg{width:13px;height:13px}
+.nbai-chip:active{transform:scale(.96)}
+.nbai-chip[disabled]{opacity:.55;cursor:default}
+@media (hover:hover){.nbai-chip:hover:not([disabled]){border-color:var(--ai-ring);background:var(--ai-soft)}}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible;padding:2px 0 8px}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip{min-height:50px;padding:8px 10px;border-radius:14px;white-space:normal;text-align:start;gap:9px;animation:nbux-rise 300ms var(--ai-ease) backwards}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip-ic{width:30px;height:30px}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip-ic svg{width:16px;height:16px}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip:nth-child(2){animation-delay:50ms}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip:nth-child(3){animation-delay:90ms}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip:nth-child(4){animation-delay:130ms}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip:nth-child(5){animation-delay:170ms}
+.nbai-chip[data-q=""]{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}
+.nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip[data-q=""]{grid-column:1/-1}
+.nbai-chip[data-q=""] .nbai-chip-ic{background:var(--ai-g);color:#fff}
+/* الكيبورد مفتوح على شاشة الترحيب: نخفي الكروت عشان تفضل مساحة للشات */
+.nbai-ov:has(.nbai-q:focus) .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chips{display:none}
+/* استشارة «رسالة برسالة»: سؤال واحد + رده، وزر «تحليل جديد» بدل مربع الكتابة */
+.nbai-pane.nbai-solo .nbai-chips,.nbai-pane.nbai-solo .nbai-cm{display:none}
+
+/* مربع الكتابة */
+.nbai-cm{display:flex;align-items:flex-end;gap:6px;margin-top:2px;padding:4px;border:1px solid var(--line2);border-radius:26px;background:var(--card);transition:border-color 200ms,box-shadow 200ms}
+.nbai-cm:focus-within{border-color:var(--ai-ring);box-shadow:0 0 0 3px var(--ai-soft)}
+.nbai-q{display:block;width:100%;min-height:42px;padding:9px 14px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--ink);font-family:inherit;font-size:16px;line-height:1.6;outline:0;transition:border-color 200ms,box-shadow 200ms}   /* 16px: يمنع zoom التلقائي على iOS */
+.nbai-q::placeholder{font-size:13px;color:var(--muted);opacity:1;text-overflow:ellipsis}
+.nbai-cm .nbai-q{flex:1;min-width:0;max-height:112px;padding:9px 12px;border:0;border-radius:0;background:transparent;resize:none;overflow-y:auto}
+.nbai-note:focus{border-color:var(--ai-ring);box-shadow:0 0 0 3px var(--ai-soft)}
+.nbai-go{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;color:#fff;background:var(--ai-g);font-size:14px;font-weight:800;line-height:1;cursor:pointer;transition:transform 180ms var(--ai-ease),opacity 180ms,box-shadow 200ms}
+.nbai-go:active{transform:scale(.96)}
+.nbai-go[disabled]{opacity:.5;cursor:default}
+.nbai-go-ask{flex:none;width:40px;height:40px;padding:0;border-radius:50%;box-shadow:0 6px 14px -8px var(--ai-glow)}
+.nbai-go-ask svg{transform:scaleX(-1)}
+.nbai-cm:has(.nbai-qi:placeholder-shown) .nbai-go-ask{opacity:.45;transform:scale(.92);box-shadow:none}
+@media (hover:hover){.nbai-cm:has(.nbai-qi:not(:placeholder-shown)) .nbai-go-ask:hover{transform:scale(1.05)}}
+.nbai-cm .nbai-go-ask:active{transform:scale(.9)}
+.nbai-again{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin-top:2px;padding:0 18px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px var(--ai-glow);animation:nbux-rise 260ms var(--ai-ease) backwards;transition:transform 180ms var(--ai-ease)}
+.nbai-again:active{transform:scale(.97)}
+
+/* ── التشخيص: الستيبر المدمج ── */
+.nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-wz,.nbai-aud,.nbai-note,.nbai-qs,.nbai-new),.nbai-ov .nbai-pane.nbai-diag-step :is(.nbai-wz,.nbai-aud,.nbai-note){display:none}
+.nbai-pick,.nbai-prev{display:none!important}
+.nbai-wz{margin-top:10px}
+.nbai-wz-rail{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0}
+.nbai-wz-line{position:absolute;top:17px;inset-inline:12.5%;height:3px;border-radius:2px;background:var(--line2);overflow:hidden}
+.nbai-wz-fill{position:absolute;top:0;bottom:0;inset-inline-start:0;width:0;border-radius:inherit;background:var(--ai-g);transition:width 300ms var(--ai-ease)}
+.nbai-wz-dot{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;min-height:56px;padding:0;border:0;background:none;color:var(--slate);cursor:pointer}
+.nbai-wz-th{position:relative;display:grid;place-items:center;width:36px;height:36px;border:2px solid var(--line2);border-radius:50%;background:var(--card);color:var(--slate);overflow:visible;transition:border-color 220ms,background 220ms,color 220ms,box-shadow 220ms,transform 180ms var(--ai-ease)}
+.nbai-wz-th b{font-size:13px;font-weight:800;line-height:1}
+.nbai-wz-th img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;animation:nbux-fade 240ms ease both}
+.nbai-wz-ck{position:absolute;inset-inline-end:-3px;bottom:-3px;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--ai-g);color:#fff;box-shadow:0 0 0 2px var(--card);animation:nbux-pop 280ms var(--ai-spring) backwards}
+.nbai-wz-ck svg{width:9px;height:9px}
+.nbai-wz-lb{max-width:100%;font-size:11px;font-weight:700;line-height:1.3;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color 200ms}
+.nbai-wz-dot:active .nbai-wz-th{transform:scale(.92)}
+.nbai-wz-dot.is-cur .nbai-wz-th{border-color:var(--ai-tx);color:var(--ai-tx);box-shadow:0 0 0 4px var(--ai-soft2)}
+.nbai-wz-dot.is-cur .nbai-wz-lb{color:var(--ai-tx);font-weight:800}
+.nbai-wz-dot.is-done .nbai-wz-th{border-color:var(--ai-ring)}
+.nbai-wz-dot.is-skip .nbai-wz-th{border-style:dashed;color:var(--muted)}
+.nbai-wz-dot.is-skip .nbai-wz-lb{color:var(--muted)}
 
 /* كارت الخطوة */
-.nbai-ov .nbai-wz-card{margin-top:14px;padding:16px;border:1px solid var(--line2);border-radius:22px;background:var(--card);box-shadow:var(--ai-sh)}
-.nbai-ov .nbai-wz-in{animation:nbai5-swap .5s var(--ai-ease) backwards}
-.nbai-ov .nbai-wz-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.nbai-ov .nbai-wz-n{font-size:12px;font-weight:800;color:var(--ai-tx)}
-.nbai-ov .nbai-wz-req{padding:3px 10px;border-radius:999px;background:var(--bg2);border:1px solid var(--line2);font-size:11px;font-weight:700;color:var(--slate)}
-.nbai-ov .nbai-wz-req.is-req{background:var(--ai-soft);border-color:var(--ai-ring);color:var(--ai-tx)}
-.nbai-ov .nbai-wz-t{margin:10px 0 0;font-size:17px;font-weight:800;line-height:1.5;color:var(--ink)}
-.nbai-ov .nbai-wz-s{margin:2px 0 0;font-size:13px;font-weight:600;line-height:1.7;color:var(--slate)}
-
-/* إطار التصوير (كاميرا) */
-.nbai-ov .nbai-wz-vf{position:relative;display:grid;place-items:center;width:100%;max-width:320px;aspect-ratio:4/3;margin:14px auto 0;border-radius:20px;background:linear-gradient(180deg,var(--ai-soft),transparent 90%),var(--bg2);color:var(--ai-tx);overflow:hidden;isolation:isolate}
-.nbai-ov .nbai-wz-vf>svg{position:relative;z-index:1;width:84px;height:84px;animation:nbai3-float 4.5s ease-in-out infinite}
-.nbai-ov .nbai-wz-vf:not(.has)::after{content:"";position:absolute;inset-inline:0;top:0;height:40%;z-index:0;pointer-events:none;background:linear-gradient(180deg,transparent,var(--ai-soft) 75%,var(--ai-ring));border-bottom:1.5px solid var(--ai-ring);animation:nbai3-scan 3.8s ease-in-out infinite}
-.nbai-ov .nbai-wz-vf.has{background:#0b0f0c}
-.nbai-ov .nbai-wz-vf img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:contain;border-radius:0}
-.nbai-ov .nbai-wz-c{position:absolute;z-index:2;width:22px;height:22px;border:3px solid var(--ai-tx);pointer-events:none;opacity:.9}
-.nbai-ov .nbai-wz-c.a{top:10px;inset-inline-start:10px;border-inline-end:0;border-bottom:0;border-start-start-radius:10px}
-.nbai-ov .nbai-wz-c.b{top:10px;inset-inline-end:10px;border-inline-start:0;border-bottom:0;border-start-end-radius:10px}
-.nbai-ov .nbai-wz-c.c{bottom:10px;inset-inline-start:10px;border-inline-end:0;border-top:0;border-end-start-radius:10px}
-.nbai-ov .nbai-wz-c.d{bottom:10px;inset-inline-end:10px;border-inline-start:0;border-top:0;border-end-end-radius:10px}
-.nbai-ov .nbai-wz-vf.has .nbai-wz-c{border-color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-
-/* نصائح */
-.nbai-ov .nbai-wz-tips{display:grid;gap:8px;margin:14px 0 0;padding:0;list-style:none}
-.nbai-ov .nbai-wz-tips li{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;font-weight:600;line-height:1.7;color:var(--ink2)}
-.nbai-ov .nbai-wz-tips li::before{content:"";flex:none;width:7px;height:7px;margin-top:9px;border-radius:50%;background:var(--ai-g);box-shadow:0 0 0 3px var(--ai-soft)}
-
-/* فحص الجودة */
-.nbai-ov .nbai-wz-q{display:flex;align-items:flex-start;gap:8px;margin-top:12px;padding:10px 12px;border-radius:14px;border:1px solid;font-size:12.5px;font-weight:700;line-height:1.7;animation:nbai5-swap .45s var(--ai-ease) .1s backwards}
-.nbai-ov .nbai-wz-q>svg{flex:none;margin-top:4px}
-.nbai-ov .nbai-wz-q.ok{color:var(--wz-ok);background:var(--wz-ok-bg);border-color:var(--wz-ok-br)}
-.nbai-ov .nbai-wz-q.warn{color:var(--wz-wn);background:var(--wz-wn-bg);border-color:var(--wz-wn-br)}
-
+.nbai-wz-card{margin-top:2px;padding:12px 14px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--ai-sh)}
+.nbai-wz-in{animation:nbux-swap 240ms var(--ai-ease) backwards}
+.nbai-wz-in.bk{--dx:14px}
+.nbai-wz-in.fwd{--dx:-14px}
+.nbai-wz-in.is-still{animation:none}
+.nbai-wz-top{display:flex;align-items:center;gap:8px;min-height:24px}
+.nbai-wz-n{font-size:12px;font-weight:800;color:var(--ai-tx)}
+.nbai-wz-req{padding:2px 9px;border:1px solid var(--line2);border-radius:999px;background:var(--bg2);font-size:10.5px;font-weight:700;line-height:1.6;color:var(--slate)}
+.nbai-wz-req.is-req{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx)}
+.nbai-wz-prev{margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 6px;border:0;border-radius:10px;background:none;color:var(--slate);font-size:12px;font-weight:700;cursor:pointer;transition:color 180ms,background 180ms}
+.nbai-wz-prev svg{width:13px;height:13px}
+@media (hover:hover){.nbai-wz-prev:hover{background:var(--ai-soft);color:var(--ai-tx)}}
+.nbai-wz-t{margin:4px 0 0;font-size:16px;font-weight:800;line-height:1.5;color:var(--ink)}
+.nbai-wz-s{margin:1px 0 0;font-size:12.5px;font-weight:600;line-height:1.7;color:var(--slate)}
+/* إطار التصوير */
+.nbai-wz-vf{position:relative;display:grid;place-items:center;width:100%;height:clamp(100px,16dvh,140px);margin-top:10px;border-radius:14px;background:linear-gradient(180deg,var(--ai-soft),transparent 90%),var(--bg2);color:var(--ai-tx);overflow:hidden;isolation:isolate}
+.nbai-wz-vf>svg{position:relative;z-index:1;width:54px;height:54px}
+.nbai-wz-vf.has{background:#0b0f0c}
+.nbai-wz-vf img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:contain;border-radius:0;transition:opacity 220ms}
+.nbai-wz-vf.is-fresh img{animation:nbux-fade 280ms ease both}
+.nbai-wz-vf.is-load img{opacity:.35}
+.nbai-wz-c{position:absolute;z-index:2;width:18px;height:18px;border:2.5px solid var(--ai-tx);pointer-events:none;opacity:.85}
+.nbai-wz-c.a{top:8px;inset-inline-start:8px;border-inline-end:0;border-bottom:0;border-start-start-radius:8px}
+.nbai-wz-c.b{top:8px;inset-inline-end:8px;border-inline-start:0;border-bottom:0;border-start-end-radius:8px}
+.nbai-wz-c.c{bottom:8px;inset-inline-start:8px;border-inline-end:0;border-top:0;border-end-start-radius:8px}
+.nbai-wz-c.d{bottom:8px;inset-inline-end:8px;border-inline-start:0;border-top:0;border-end-end-radius:8px}
+.nbai-wz-vf.has .nbai-wz-c{border-color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+/* حالة التحميل: لمعة هادية + سبينر */
+.nbai-wz-vf.is-load::before{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(120%);animation:nbux-sheen 1.2s ease-in-out infinite}
+.nbai-wz-spin{position:absolute;z-index:3;width:26px;height:26px;border:3px solid var(--ai-soft2);border-top-color:var(--ai-tx);border-radius:50%;animation:nbux-spin .7s linear infinite}
+.nbai-wz-vf.has .nbai-wz-spin{border-color:rgba(255,255,255,.35);border-top-color:#fff}
+/* نصائح / فحص الجودة (نفس المساحة عشان مفيش قفزة) */
+.nbai-wz-mid{min-height:68px;margin-top:10px}
+.nbai-wz-tips{display:grid;gap:3px;margin:0;padding:0;list-style:none}
+.nbai-wz-tips li{display:flex;align-items:flex-start;gap:8px;font-size:12px;font-weight:600;line-height:1.65;color:var(--ink2)}
+.nbai-wz-tips li::before{content:"";flex:none;width:6px;height:6px;margin-top:8px;border-radius:50%;background:var(--ai-g)}
+.nbai-wz-q{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1px solid;border-radius:12px;font-size:12.5px;font-weight:700;line-height:1.65;animation:nbux-fade 240ms ease both}
+.nbai-wz-q>svg{flex:none;margin-top:4px}
+.nbai-wz-q.ok{color:var(--wz-ok);background:var(--wz-ok-bg);border-color:var(--wz-ok-br)}
+.nbai-wz-q.warn{color:var(--wz-wn);background:var(--wz-wn-bg);border-color:var(--wz-wn-br)}
 /* الأزرار */
-.nbai-ov .nbai-wz-acts{display:grid;gap:8px;margin-top:14px}
-.nbai-ov .nbai-wz-acts.two{grid-template-columns:1.35fr 1fr}
-.nbai-ov .nbai-wz-cap,.nbai-ov .nbai-wz-next,.nbai-ov .nbai-wz-redo,.nbai-ov .nbai-wz-skip{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 16px;border-radius:16px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink2);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s var(--ai-ease),box-shadow .2s,opacity .2s}
-.nbai-ov .nbai-wz-cap,.nbai-ov .nbai-wz-next{border-color:transparent;background:var(--ai-g);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 14px 26px -14px var(--ai-glow)}
-.nbai-ov .nbai-wz-skip{min-height:44px;border-color:transparent;background:none;color:var(--slate);font-size:13px;font-weight:700;text-decoration:underline}
-.nbai-ov .nbai-wz-done .nbai-wz-redo{background:var(--bg2)}
-.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip):active{transform:scale(.97)}
-.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip)[disabled]{opacity:.6;cursor:default;box-shadow:none}
-.nbai-ov :is(.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
-.nbai-ov .nbai-wz-hint{margin:12px 4px 0;font-size:12px;font-weight:600;line-height:1.7;text-align:center;color:var(--slate)}
+.nbai-wz-acts{display:grid;gap:8px;margin-top:10px}
+.nbai-wz-acts.two{grid-template-columns:1.5fr 1fr}
+.nbai-wz-cap,.nbai-wz-next,.nbai-wz-redo,.nbai-wz-skip{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 14px;border:1px solid var(--line2);border-radius:14px;background:var(--bg2);color:var(--ink2);font-size:13.5px;font-weight:800;line-height:1.2;cursor:pointer;transition:transform 160ms var(--ai-ease),opacity 180ms,background 180ms}
+.nbai-wz-cap,.nbai-wz-next{border-color:transparent;background:var(--ai-g);color:#fff;box-shadow:0 8px 16px -12px var(--ai-glow)}
+.nbai-wz-skip{color:var(--slate);font-weight:700}
+.nbai-wz-cap svg{width:18px;height:18px}
+.nbai-wz-acts button:active{transform:scale(.97)}
+.nbai-wz-acts button[disabled]{opacity:.6;cursor:default}
+.nbai-wz-hint{margin:8px 2px 0;font-size:11.5px;font-weight:600;line-height:1.65;text-align:center;color:var(--muted)}
+/* الصور جاهزة */
+.nbai-wz-done{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 12px}
+.nbai-wz-done>div:nth-child(2){min-width:0}
+.nbai-wz-done .nbai-wz-acts{grid-column:1/-1}
+.nbai-wz-okc{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:#fff;background:var(--ai-g);animation:nbux-pop 320ms var(--ai-spring) backwards}
+.nbai-wz-okc svg{width:22px;height:22px}
 
-/* حالة «الصور جاهزة» */
-.nbai-ov .nbai-wz-done{text-align:center}
-.nbai-ov .nbai-wz-okc{display:grid;place-items:center;width:56px;height:56px;margin:2px auto 0;border-radius:50%;color:#fff;background:var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 28px -12px var(--ai-glow);animation:nbai5-pop .55s var(--ai-spring) backwards}
+/* ملاحظات + أسئلة التشخيص + زر التشخيص */
+.nbai-note{margin-top:10px;min-height:44px}
+.nbai-qs{margin-top:2px}
+.nbai-qb{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--ai-sh);animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbai-qb:nth-child(2){animation-delay:60ms}
+.nbai-qb:nth-child(n+3){animation-delay:110ms}
+.nbai-qt{font-size:13.5px;font-weight:800;line-height:1.7;color:var(--ink)}
+.nbai-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.nbai-opt{min-height:36px;padding:0 13px;border:1px solid var(--line2);border-radius:999px;background:var(--bg2);color:var(--ink2);font-size:12.5px;font-weight:700;line-height:1.3;cursor:pointer;transition:background 180ms,color 180ms,border-color 180ms,transform 160ms var(--ai-ease)}
+.nbai-opt:active{transform:scale(.96)}
+.nbai-opt[aria-pressed="true"]{border-color:transparent;background:var(--ai-g);color:#fff;animation:nbux-pop 240ms var(--ai-spring)}
+.nbai-opt[aria-pressed="true"]::before{content:"✓";margin-inline-end:5px;font-size:11px}
+.nbai-act{position:sticky;bottom:0;z-index:2;margin:6px -14px 0;padding:14px 14px 2px;background:linear-gradient(to top,var(--bg) 72%,transparent)}
+.nbai-go-diag{width:100%;min-height:48px;border-radius:16px;box-shadow:0 10px 20px -14px var(--ai-glow)}
+.nbai-go-diag[disabled]{opacity:1;border:1px solid var(--line2);background:var(--bg3);color:var(--muted);box-shadow:none}
+.nbai-go.is-busy::after{content:"";width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:nbux-spin .7s linear infinite}
+.nbai-new{display:block;margin:2px auto 4px;padding:0 10px;min-height:38px;border:0;background:none;color:var(--slate);font-size:12.5px;font-weight:700;text-decoration:underline;cursor:pointer}
 
-/* الصور جوه فقاعة المستخدم */
-.nbai-ov .nbai-m .nbai-shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:min(240px,62vw);margin-bottom:8px}
-.nbai-ov .nbai-m .nbai-shot{margin:0}
-.nbai-ov .nbai-m .nbai-shot img{display:block;width:100%;height:auto;aspect-ratio:1;max-width:none;max-height:none;margin:0;border-radius:12px;object-fit:cover}
-.nbai-ov .nbai-m .nbai-shot figcaption{margin-top:3px;font-size:10.5px;font-weight:700;line-height:1.4;text-align:center;opacity:.9}
+/* الحالة/الأخطاء + الفوتر */
+.nbai-out{flex:none;margin-top:8px;padding:10px 13px;border:1px solid var(--line2);border-radius:14px;background:var(--card);font-size:13px;line-height:1.8;color:var(--ink2);word-break:break-word}
+.nbai-out:empty{display:none}
+.nbai-out:not(:empty){animation:nbux-rise 240ms var(--ai-ease) backwards}
+.nbai-out.err{color:#b45309;border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08)}
+[data-dark] .nbai-out.err{color:#fbbf24}
+.nbai-f{flex:none;margin-top:6px;text-align:center}
+.nbq-st{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:1px;font-size:10.5px;font-weight:700;line-height:1.5;color:var(--slate)}
+.nbq-r{color:#b45309}
+[data-dark] .nbq-r{color:#fbbf24}
+.nbq-d{font-size:10px;line-height:1.6;color:var(--muted);text-wrap:balance}
+/* الكيبورد مفتوح: الفوتر يتخبّى عشان ما يطلعش فوق الحقل */
+.nbai-ov:has(.nbai-q:focus) .nbai-f{display:none}
 
+/* ── الحركة ── */
+@keyframes nbux-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes nbux-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes nbux-fade{from{opacity:0}to{opacity:1}}
+@keyframes nbux-swap{from{opacity:0;transform:translateX(var(--dx,0px)) translateY(var(--dy,6px))}to{opacity:1;transform:none}}
+@keyframes nbux-pop{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.08)}100%{transform:none}}
+@keyframes nbux-wave{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+@keyframes nbux-spin{to{transform:rotate(360deg)}}
+@keyframes nbux-sheen{to{transform:translateX(-120%)}}
 @media (prefers-reduced-motion:reduce){
-  .nbai-ov :is(.nbai-wz-in,.nbai-wz-q,.nbai-wz-ck,.nbai-wz-okc,.nbai-wz-vf>svg){animation:none!important}
-  .nbai-ov .nbai-wz-vf::after{animation:none!important;opacity:0}
+  .nbai-ov,.nbai-ov *,.nbai-ov *::before,.nbai-ov *::after{animation:none!important;transition:none!important}
+  .nbai-dots i{opacity:.7}
 }
 </style>
 
@@ -27908,34 +27785,43 @@ function buildScreen(){
   var card = document.createElement('div');
   card.className = 'nbai-ov'; card.hidden = true; card._uid = uid0;
   card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'nbai-ov-t');
+  /* أيقونات اقتراحات الأسئلة (SVG خطّي صغير) */
+  function ci(d){ return '<span class="nbai-chip-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>'; }
   card.innerHTML =
     '<div class="nbai-ov-in">' +
     '<header class="nbai-bar">' +
-      '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
       '<div class="nbai-bar-id"><span class="nbai-bar-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><div><div class="nbai-bar-t" id="nbai-ov-t"><bdi dir="ltr">Nabtex AI</bdi></div><div class="nbai-bar-s">مهندسك الزراعي الذكي</div></div></div>' +
+      '<div class="nbai-hq"></div>' +
+      '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
     '</header>' +
     '<div class="nbai-tabs" role="tablist">' +
       '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">استشارة زراعية</button>' +
       '<button type="button" class="nbai-tab" role="tab" data-t="diag" aria-selected="false">تشخيص بالصورة</button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
+      '<div class="nbai-src-w"><div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">سؤال عن أي حاجة</button></div></div>' +
       '<div class="nbai-th" data-th="ask" role="log" aria-live="polite" aria-label="محادثة المساعد"></div>' +
-      '<div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">سؤال عن أي حاجة</button></div>' +
-      '<div class="nbai-chips"><button type="button" class="nbai-chip" data-q="">حلّل مزرعتي</button><button type="button" class="nbai-chip" data-q="إزاي أحسّن الري؟">إزاي أحسّن الري؟</button><button type="button" class="nbai-chip" data-q="إزاي أوفّر في التسميد؟">إزاي أوفّر في التسميد؟</button></div>' +
-      '<div class="nbai-cm"><input class="nbai-q nbai-qi" type="text" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي">' +
+      '<div class="nbai-chips">' +
+        '<button type="button" class="nbai-chip" data-q="">' + ci('<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>') + 'حلّل مزرعتي</button>' +
+        '<button type="button" class="nbai-chip" data-q="إزاي أحسّن الري؟">' + ci('<path d="M12 3s6 6.2 6 10.5a6 6 0 0 1-12 0C6 9.2 12 3 12 3z"/>') + 'إزاي أحسّن الري؟</button>' +
+        '<button type="button" class="nbai-chip" data-q="إزاي أوفّر في التسميد؟">' + ci('<path d="M12 21v-8"/><path d="M12 13c0-4-3-6.5-7-6.5 0 4 3 6.5 7 6.5z"/><path d="M12 15c0-3 2.2-5 6-5 0 3-2.2 5-6 5z"/>') + 'إزاي أوفّر في التسميد؟</button>' +
+        '<button type="button" class="nbai-chip" data-q="ليه أوراق النبات بتصفرّ؟">' + ci('<path d="M5 19C5 10.5 11 4 20 4c0 8.5-6 15-15 15z"/><path d="M5 19 13 11"/>') + 'ليه أوراق النبات بتصفرّ؟</button>' +
+        '<button type="button" class="nbai-chip" data-q="إزاي أكافح الحشرات بأمان؟">' + ci('<rect x="8" y="8" width="8" height="11" rx="4"/><path d="M12 8V5M9.5 5.5 12 4l2.5 1.5M4 12l4 1M20 12l-4 1M4 18l4-2M20 18l-4-2"/>') + 'إزاي أكافح الحشرات بأمان؟</button>' +
+      '</div>' +
+      '<div class="nbai-cm"><textarea class="nbai-q nbai-qi" rows="1" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي" enterkeyhint="send"></textarea>' +
       '<button type="button" class="nbai-go nbai-go-ask" aria-label="إرسال"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button></div>' +
-    '<button type="button" class="nbai-again" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>تحليل جديد</span></button>' +
+      '<button type="button" class="nbai-again" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>تحليل جديد</span></button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="diag" hidden>' +
       '<div class="nbai-th" data-th="diag" role="log" aria-live="polite" aria-label="محادثة التشخيص"></div>' +
       '<input type="file" accept="image/*" class="nbai-file" hidden>' +
-      '<button type="button" class="nbai-pick"><span class="nbai-pick-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span><span class="nbai-pick-s">ورقة / ثمرة / ساق</span></button>' +
+      '<button type="button" class="nbai-pick" hidden><span class="nbai-pick-ic" aria-hidden="true"></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
       '<div class="nbai-aud" role="radiogroup" aria-label="نوع المستخدم"><button type="button" class="nbai-aud-b" data-aud="farm" role="radio">صاحب مزرعة</button><button type="button" class="nbai-aud-b" data-aud="home" role="radio">نباتات في البيت</button></div>' +
       '<div class="nbai-wz"></div>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
-      '<button type="button" class="nbai-go nbai-go-diag" disabled>شخّص المشكلة</button>' +
+      '<div class="nbai-act"><button type="button" class="nbai-go nbai-go-diag" disabled>شخّص المشكلة</button></div>' +
       '<button type="button" class="nbai-new" hidden>إلغاء وتشخيص جديد</button>' +
     '</div>' +
     '<div class="nbai-out" role="status" aria-live="polite"></div>' +
@@ -27951,28 +27837,33 @@ function buildScreen(){
     var q = foot._q;
     if(!q){
       foot.textContent = '';
-      var box = document.createElement('div'); box.className = 'nbq';
+      var hq = card.querySelector('.nbai-hq');
+      var box = document.createElement('div'); box.className = 'nbq'; box.setAttribute('role', 'group');
       box.innerHTML =
-        '<div class="nbq-h"><span class="nbq-t"><span class="nbq-sp" aria-hidden="true">✦</span>رصيدك اليوم</span>' +
-        '<span class="nbq-n"><bdi dir="ltr"><b class="nbq-v"></b> / <span class="nbq-m"></span></bdi> نقطة<span class="nbq-r" hidden>· يتجدد بكرة</span></span></div>' +
-        '<div class="nbq-tr" role="progressbar" aria-label="رصيد المساعد الذكي اليوم" aria-valuemin="0"><i class="nbq-fl"></i></div>' +
-        '<div class="nbq-ft" hidden><span class="nbq-s"></span><button type="button" class="nbq-up">رقّي الباقة</button></div>';   /* AI-SUB: حالة الاشتراك + زر الترقية */
+        '<span class="nbq-sp" aria-hidden="true">✦</span>' +
+        '<span class="nbq-n"><bdi dir="ltr"><b class="nbq-v"></b><span class="nbq-sl">/</span><span class="nbq-m"></span></bdi></span>' +
+        '<span class="nbq-tr" role="progressbar" aria-label="رصيد المساعد الذكي اليوم" aria-valuemin="0"><i class="nbq-fl"></i></span>';
+      var up = document.createElement('button'); up.type = 'button'; up.className = 'nbq-up'; up.hidden = true; up.setAttribute('aria-label', 'رقّي الباقة');
+      up.innerHTML = 'رقّي<span class="nbq-up-x">&nbsp;الباقة</span>';   /* AI-SUB: زر الترقية */
+      hq.appendChild(box); hq.appendChild(up);
+      var st = document.createElement('div'); st.className = 'nbq-st'; st.hidden = true;
+      st.innerHTML = '<span class="nbq-s"></span><span class="nbq-r" hidden>· رصيدك خلص — بيتجدد بكرة</span>';
       var note = document.createElement('div'); note.className = 'nbq-d';
       note.textContent = 'الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.';
-      foot.appendChild(box); foot.appendChild(note);
-      q = foot._q = { tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: box.querySelector('.nbq-r'), ft: box.querySelector('.nbq-ft'), s: box.querySelector('.nbq-s'), up: box.querySelector('.nbq-up') };
-      q.up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true }); });   /* AI-SUB */
+      foot.appendChild(st); foot.appendChild(note);
+      q = foot._q = { box: box, tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: st.querySelector('.nbq-r'), ft: st, s: st.querySelector('.nbq-s'), up: up };
+      up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true }); });   /* AI-SUB */
     }
     var pct = mx > 0 ? Math.max(0, Math.min(100, l / mx * 100)) : 0;
     q.v.textContent = l; q.m.textContent = mx; q.r.hidden = l > 0;
+    q.box.classList.toggle('is-empty', l <= 0); q.box.classList.toggle('is-low', l > 0 && mx > 1 && l / mx <= 0.34);
+    q.box.setAttribute('aria-label', 'رصيدك اليوم: ' + l + ' من ' + mx + ' نقطة'); q.box.title = 'رصيدك اليوم';
     q.tr.setAttribute('aria-valuemax', mx); q.tr.setAttribute('aria-valuenow', l);
     q.fl.style.width = pct + '%';
     /* AI-SUB: سطر الاشتراك + زر «رقّي الباقة» (مخفي لو على باقة البرو) */
-    if(q.ft){
-      var sl = (window.AiSub && window.AiSub.status) ? window.AiSub.status() : '';
-      q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
-      q.ft.hidden = !sl && q.up.hidden;
-    }
+    var sl = (window.AiSub && window.AiSub.status) ? window.AiSub.status() : '';
+    q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
+    q.ft.hidden = !sl && l > 0;
   }
   function paintFoot(){
     var ap = window.AiSub ? window.AiSub.pts(tab === 'diag' ? 'diag' : 'chat') : null;   /* AI-SUB: الرصيد الحقيقي من اشتراك المساعد (شات = استشارة+تحليل، تشخيص = بالصور) */
@@ -27983,17 +27874,20 @@ function buildScreen(){
     paintQuota(l, tab === 'diag' ? Math.min(LIM.diag_q, LIM.diagnose) : ((src === 'any' || card.querySelector('.nbai-qi').value.trim()) ? LIM.ask : LIM.analyze));
   }
   paintFoot();
+  card._enter = function(){ var q = foot._q; if(!q) return; var w = q.fl.style.width; q.fl.style.transition = 'none'; q.fl.style.width = '0%'; void q.fl.offsetWidth; q.fl.style.transition = ''; q.fl.style.width = w; };   /* حركة ملء المؤشر عند الفتح فقط */
   card._repaint = paintFoot;   /* إصلاح: الشاشة بتتبني مرة واحدة وبتتخفي/تظهر، فبنعيد رسم الشريط كل ما تتفتح (openScreen) عشان الرصيد يرجع من الأول مع بداية اليوم الجديد. للتراجع: امسح السطر ده والسطر اللي في openScreen. */
 
   /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
   var TH = { ask: card.querySelector('.nbai-th[data-th="ask"]'), diag: card.querySelector('.nbai-th[data-th="diag"]') };
+  function gr(h, s){ return '<span class="nbai-gt">' + h + '</span><span class="nbai-gs">' + s + '</span>'; }
   var GREET = {
     /* القديم (للتراجع): ask: 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل.', */
-    get ask(){ return src === 'any' ? 'اسألني عن أي حاجة في الزراعة — مزرعة أو نباتات في البيت، ولو مزرعتك مسجّلة على نبتكس اسألني عنها كمان. وهكمّل معاك الكلام من حيث وقفنا.' : 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.'; },
+    get ask(){ return src === 'any' ? gr('إزاي أقدر أساعدك النهارده؟', 'اسألني عن أي حاجة في الزراعة — مزرعة أو نباتات في البيت، ولو مزرعتك مسجّلة على نبتكس اسألني عنها كمان. وهكمّل معاك الكلام من حيث وقفنا.') : gr('مهندسك الزراعي جاهز', 'اسألني أي حاجة عن مزرعتك، أو دوس «حلّل مزرعتي». كل سؤال بيتجاوب عليه لوحده، فاكتبه كامل. ولازم تسجّل عمليات مزرعتك اليومية لفترة طويلة عشان تطلع لك نتائج أدق.'); },
     /* القديم (للتراجع): diag: 'صوّر النبات المصاب (ورقة / ثمرة / ساق) وأنا أفحصه، وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.' */
     diag: 'صوّر النبات المصاب من 4 زوايا بالخطوات دي، وأنا أفحصها وأسألك كام سؤال، وبعدها أديك التشخيص وخطة العلاج.'
   };
   function mkMsg(r, h, e){ var d = document.createElement('div'); d.className = 'nbai-m nbai-m-' + r + (e ? ' err' : ''); d.innerHTML = h; return d; }
+  function greet(k){ var d = mkMsg('ai', GREET[k], false); d.classList.add('nbai-greet'); return d; }   /* رسالة الترحيب: بتظهر لوحدها بس (الـ CSS بيخبّيها أول ما المحادثة تبدأ) */
   /* الحاوية اللي بتسكرول: الشات في الاستشارة، والبانل كله في التشخيص */
   function scroller(t){ return t === 'diag' ? card.querySelector('.nbai-pane[data-p="diag"]') : TH.ask; }
   function toEnd(t){ var el = scroller(t); if(el) el.scrollTop = el.scrollHeight; }
@@ -28031,7 +27925,7 @@ function buildScreen(){
     try{
       wordsIn(d);
       var b = d.getBoundingClientRect().height - r0.height;
-      if(b > 8) d.animate([{ clipPath: 'inset(0px 0px ' + b + 'px 0px round 22px)' }, { clipPath: 'inset(-40px round 22px)' }], { duration: 650, easing: 'cubic-bezier(.16,1,.3,1)' });
+      if(b > 8) d.animate([{ clipPath: 'inset(0px 0px ' + b + 'px 0px round 18px)' }, { clipPath: 'inset(-40px round 18px)' }], { duration: 650, easing: 'cubic-bezier(.16,1,.3,1)' });
     }catch(x){}
   }
   function settle(d, t, h, e){
@@ -28047,7 +27941,7 @@ function buildScreen(){
   function setSolo(on){ askPane.classList.toggle('nbai-solo', on); again.hidden = true; }
   function freshAsk(){ TH.ask.innerHTML = ''; CHAT.ask.length = 0; }
   ['ask', 'diag'].forEach(function(t){
-    TH[t].appendChild(mkMsg('ai', GREET[t], false));
+    TH[t].appendChild(greet(t));
     CHAT[t].forEach(function(m){ TH[t].appendChild(mkMsg(m.r, m.h, m.e)); });
     toEnd(t);
   });
@@ -28072,16 +27966,17 @@ function buildScreen(){
     if(ev.target.closest && ev.target.closest('.nbai-go-ask')) return sendAsk();
     if(ev.target.closest && ev.target.closest('.nbai-again')){
       if(busy) return;
-      freshAsk(); TH.ask.appendChild(mkMsg('ai', GREET.ask, false)); setSolo(false); paintFoot();
+      freshAsk(); TH.ask.appendChild(greet('ask')); setSolo(false); paintFoot();
       var qi = card.querySelector('.nbai-qi'); if(qi) qi.focus({ preventScroll: true });
       return;
     }
     if(ev.target.closest && ev.target.closest('.nbai-new')){ if(!busy){ resetComposer(); show('', false); } return; }
     if(ev.target.closest && ev.target.closest('.nbai-go-diag')) return runDiag();
   });
-  card.querySelector('.nbai-qi').addEventListener('input', paintFoot);
+  function fit(){ var i = card.querySelector('.nbai-qi'); if(!i) return; i.style.height = 'auto'; var h = i.scrollHeight; i.style.height = h ? Math.min(h, 112) + 'px' : ''; }   /* ارتفاع حقل الكتابة بيكبر لحد 4 سطور */
+  card.querySelector('.nbai-qi').addEventListener('input', function(){ fit(); paintFoot(); });
   card.querySelector('.nbai-qi').addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter' && !ev.isComposing){ ev.preventDefault(); sendAsk(); }
+    if(ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing){ ev.preventDefault(); sendAsk(); }
   });
   /* إصلاح آيفون: الضغطة على «إرسال» أو شريحة اقتراح والكيبورد مفتوح كانت بتقفل الكيبورد وتحرّك الواجهة قبل ما الضغطة تتسجّل، فالمستخدم يضغط مرتين.
      دلوقتي الإرسال بيتم لحظة رفع الإصبع (من غير ما الفوكس يتحرك)، وبعدها الكيبورد بيتقفل عشان الرد يبان. حركة إصبع أكبر من 10px (سكرول) بتتتجاهل. للتراجع: امسح الكتلة دي بس. */
@@ -28092,7 +27987,7 @@ function buildScreen(){
     if(!b || !p || !c || !card.contains(b) || b.disabled || Math.abs(c.clientX - p.x) > 10 || Math.abs(c.clientY - p.y) > 10) return;
     ev.preventDefault();   /* بيمنع الـ click التاني فمفيش إرسال مزدوج */
     if(b.classList.contains('nbai-go-ask')) sendAsk(); else runAsk(b.getAttribute('data-q') || '');
-    var a = document.activeElement; if(busy && a && a.tagName === 'INPUT') a.blur();
+    var a = document.activeElement; if(busy && a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
   }, { passive: false });
   /* ═════════ معالج التصوير بالخطوات (إضافة): الصورة الواحدة اتبدلت بـ 4 زوايا للنبات — الورقة من الأمام ثم الخلف (مطلوبتين) ثم الساق/الثمرة ثم النبات كامل (اختياريتين) ═════════
      • نفس input الملف ونفس سلوك الاختيار (من غير capture)، نفس shrink، ونفس مراحل الأسئلة والتشخيص — اتغيّر بس عدد الصور المبعوتة.
@@ -28118,8 +28013,17 @@ function buildScreen(){
       ic: '<svg width="64" height="64" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 42h34"/><path d="M24 42V15"/><path d="M24 34c-8 0-12-5-12-11 8 0 12 4 12 11z"/><path d="M24 27c8 0 12-5 12-11-8 0-12 4-12 11z"/><path d="M24 15c0-4 2-7 5-9" opacity=".6"/></svg>' }
   ];
   var wz = card.querySelector('.nbai-wz');
-  wz.innerHTML = '<div class="nbai-wz-rail"></div><div class="nbai-wz-card"></div><p class="nbai-wz-hint" role="status"></p>';
-  var wzRail = wz.querySelector('.nbai-wz-rail'), wzCard = wz.querySelector('.nbai-wz-card'), wzHint = wz.querySelector('.nbai-wz-hint');
+  wz.innerHTML = '<div class="nbai-wz-rail" role="group" aria-label="خطوات التصوير"><i class="nbai-wz-line" aria-hidden="true"><i class="nbai-wz-fill"></i></i></div><div class="nbai-wz-card"></div><p class="nbai-wz-hint" role="status"></p>';
+  var wzRail = wz.querySelector('.nbai-wz-rail'), wzFill = wz.querySelector('.nbai-wz-fill'), wzCard = wz.querySelector('.nbai-wz-card'), wzHint = wz.querySelector('.nbai-wz-hint');
+  var IC_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  var SPIN = '<span class="nbai-wz-spin" aria-hidden="true"></span>';
+  /* الستيبر بيتبني مرة واحدة وبعدها بيتحدّث بس → انتقالات ناعمة للتقدّم والمعاينات */
+  var wzDots = STEPS.map(function(st, i){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'nbai-wz-dot'; b.setAttribute('data-s', i);
+    b.innerHTML = '<span class="nbai-wz-th"><b>' + (i + 1) + '</b><img alt="" hidden><span class="nbai-wz-ck" hidden>' + IC_OK + '</span></span><span class="nbai-wz-lb">' + esc(st.rl) + '</span>';
+    wzRail.appendChild(b); return b;
+  });
+  var wzLast = -1, wzFresh = -1;
 
   function ready(){ return shots.some(Boolean); }
   function qcInfo(q){
@@ -28142,36 +28046,41 @@ function buildScreen(){
     nw.hidden = !shots.some(Boolean);
   }
   function paintWz(){
-    var had = wz.contains(document.activeElement), n = STEPS.length, got = shots.filter(Boolean).length;
-    wzRail.innerHTML = STEPS.map(function(st, i){
-      var done = !!shots[i], on = i === cur;
-      return '<button type="button" class="nbai-wz-dot' + (on ? ' is-cur' : '') + (done ? ' is-done' : '') + '" data-s="' + i + '"' + (on ? ' aria-current="step"' : '') + ' aria-label="الخطوة ' + (i + 1) + ': ' + esc(st.t) + (done ? ' — تم التصوير' : (st.req ? ' — مطلوبة' : ' — اختيارية')) + '">' +
-        '<span class="nbai-wz-th">' + (done ? '<img src="' + shots[i] + '" alt="">' + '<span class="nbai-wz-ck">' + IC_OK + '</span>' : '<b>' + (i + 1) + '</b>') + '</span>' +
-        '<span class="nbai-wz-lb">' + esc(st.rl) + '</span></button>';
-    }).join('');
+    var had = wzCard.contains(document.activeElement), n = STEPS.length, got = shots.filter(Boolean).length;
+    var anim = cur !== wzLast, inCls = 'nbai-wz-in ' + (anim ? (cur > wzLast ? 'fwd' : 'bk') : 'is-still');
+    wzDots.forEach(function(b, i){
+      var st = STEPS[i], d = shots[i], on = i === cur, im = b.querySelector('img'), ck = b.querySelector('.nbai-wz-ck');
+      b.classList.toggle('is-cur', on); b.classList.toggle('is-done', !!d); b.classList.toggle('is-skip', !d && i < cur && !st.req);
+      if(on) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      b.setAttribute('aria-label', 'الخطوة ' + (i + 1) + ': ' + st.t + (d ? ' — تم التصوير' : (st.req ? ' — مطلوبة' : ' — اختيارية')));
+      if(d){ if(im.getAttribute('src') !== d) im.src = d; im.hidden = false; ck.hidden = false; }
+      else { im.hidden = true; im.removeAttribute('src'); ck.hidden = true; }
+    });
+    wzFill.style.width = (Math.min(cur, n - 1) / (n - 1) * 100) + '%';
     var h;
     if(cur >= n){
-      h = '<div class="nbai-wz-in nbai-wz-done"><span class="nbai-wz-okc">' + IC_OK.replace('width="14" height="14"', 'width="26" height="26"') + '</span><h3 class="nbai-wz-t">الصور جاهزة</h3>' +
-        '<p class="nbai-wz-s">اتجهّز لك ' + got + ' من ' + n + ' صور. اكتب ملاحظة لو حابب، وبعدها دوس «شخّص المشكلة».</p>' +
+      h = '<div class="' + inCls + ' nbai-wz-done"><span class="nbai-wz-okc">' + IC_OK + '</span><div><h3 class="nbai-wz-t">الصور جاهزة</h3>' +
+        '<p class="nbai-wz-s">اتجهّز لك ' + got + ' من ' + n + ' صور. اكتب ملاحظة لو حابب، وبعدها دوس «شخّص المشكلة».</p></div>' +
         '<div class="nbai-wz-acts"><button type="button" class="nbai-wz-redo nbai-wz-main" data-a="first">مراجعة الصور أو تعديلها</button></div></div>';
     } else {
-      var st = STEPS[cur], sh = shots[cur], last = cur === n - 1;
-      h = '<div class="nbai-wz-in"><div class="nbai-wz-top"><span class="nbai-wz-n">الخطوة <bdi dir="ltr">' + (cur + 1) + ' / ' + n + '</bdi></span><span class="nbai-wz-req' + (st.req ? ' is-req' : '') + '">' + (st.req ? 'مطلوبة' : 'اختيارية — بتزوّد الدقة') + '</span></div>' +
-        '<h3 class="nbai-wz-t">' + esc(st.t) + '</h3><p class="nbai-wz-s">' + esc(st.s) + '</p>';
+      var st = STEPS[cur], sh = shots[cur], last = cur === n - 1, ld = wzLoad;
+      h = '<div class="' + inCls + '"><div class="nbai-wz-top"><span class="nbai-wz-n">الخطوة <bdi dir="ltr">' + (cur + 1) + ' / ' + n + '</bdi></span><span class="nbai-wz-req' + (st.req ? ' is-req' : '') + '">' + (st.req ? 'مطلوبة' : 'اختيارية — بتزوّد الدقة') + '</span>' +
+        (cur > 0 ? '<button type="button" class="nbai-wz-prev" data-a="prev" aria-label="الخطوة السابقة">' + IC_BACK + 'السابق</button>' : '') + '</div>' +
+        '<h3 class="nbai-wz-t">' + esc(st.t) + '</h3><p class="nbai-wz-s">' + esc(st.s) + '</p>' +
+        '<div class="nbai-wz-vf' + (sh ? ' has' : '') + (sh && wzFresh === cur ? ' is-fresh' : '') + (ld ? ' is-load' : '') + '"' + (ld ? ' aria-busy="true"' : '') + '>' + (sh ? '<img src="' + sh + '" alt="' + esc(st.t) + '">' : st.ic) + VF_C + (ld ? SPIN : '') + '</div>';
       if(sh){
         var qi = qcInfo(qcs[cur]);
-        h += '<div class="nbai-wz-vf has"><img src="' + sh + '" alt="' + esc(st.t) + '">' + VF_C + '</div>' +
-          '<div class="nbai-wz-q ' + (qi.ok ? 'ok' : 'warn') + '">' + (qi.ok ? IC_OK : IC_WARN) + '<span>' + qi.m + '</span></div>' +
+        h += '<div class="nbai-wz-mid"><div class="nbai-wz-q ' + (qi.ok ? 'ok' : 'warn') + '">' + (qi.ok ? IC_OK : IC_WARN) + '<span>' + qi.m + '</span></div></div>' +
           '<div class="nbai-wz-acts two"><button type="button" class="nbai-wz-next nbai-wz-main" data-a="next">' + (last ? 'تمام، خلّصت' : 'التالي') + '</button>' +
-          '<button type="button" class="nbai-wz-redo" data-a="redo"' + (wzLoad ? ' disabled' : '') + '>' + (wzLoad ? 'جارٍ التجهيز…' : 'إعادة التصوير') + '</button></div>';
+          '<button type="button" class="nbai-wz-redo" data-a="redo"' + (ld ? ' disabled' : '') + '>' + (ld ? 'جارٍ التجهيز…' : 'إعادة التصوير') + '</button></div>';
       } else {
-        h += '<div class="nbai-wz-vf">' + st.ic + VF_C + '</div><ul class="nbai-wz-tips">' + st.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
-          '<div class="nbai-wz-acts"><button type="button" class="nbai-wz-cap nbai-wz-main" data-a="cap"' + (wzLoad ? ' disabled aria-busy="true"' : '') + '>' + IC_CAM + '<span>' + (wzLoad ? 'جارٍ تجهيز الصورة…' : 'صوّر أو اختر الصورة') + '</span></button>' +
-          (st.req ? '' : '<button type="button" class="nbai-wz-skip" data-a="skip">تخطي الخطوة دي</button>') + '</div>';
+        h += '<div class="nbai-wz-mid"><ul class="nbai-wz-tips">' + st.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
+          '<div class="nbai-wz-acts' + (st.req ? '' : ' two') + '"><button type="button" class="nbai-wz-cap nbai-wz-main" data-a="cap"' + (ld ? ' disabled aria-busy="true"' : '') + '>' + IC_CAM + '<span>' + (ld ? 'جارٍ تجهيز الصورة…' : 'صوّر أو اختر الصورة') + '</span></button>' +
+          (st.req ? '' : '<button type="button" class="nbai-wz-skip" data-a="skip" aria-label="تخطي هذه الخطوة">تخطي</button>') + '</div>';
       }
       h += '</div>';
     }
-    wzCard.innerHTML = h;
+    wzCard.innerHTML = h; wzLast = cur; wzFresh = -1;
     wzHint.textContent = ready() ? 'تمام ✓ تقدر تبدأ التشخيص دلوقتي، أو تضيف زوايا زيادة لدقة أعلى.' : 'صوّر الجزء المصاب الأول عشان نبدأ التشخيص — صورة واحدة كفاية.';
     sync();
     if(had){ var mb = wzCard.querySelector('.nbai-wz-main'); if(mb) try{ mb.focus({ preventScroll: true }); }catch(e){} }
@@ -28183,18 +28092,18 @@ function buildScreen(){
     var a = b.getAttribute('data-a');
     if(a === 'cap' || a === 'redo'){ pend = cur; card.querySelector('.nbai-file').click(); return; }
     if(a === 'next' || a === 'skip'){ cur = Math.min(STEPS.length, cur + 1); paintWz(); return; }
+    if(a === 'prev'){ cur = Math.max(0, cur - 1); paintWz(); return; }
     if(a === 'first'){ cur = 0; paintWz(); }
   });
   card.querySelector('.nbai-file').addEventListener('change', function(){
     var f = this.files && this.files[0]; if(!f) return;
     try{ this.value = ''; }catch(e){}   /* يسمح باختيار نفس الصورة تاني */
     var slot = pend; wzLoad = true; paintWz();
-    show('جارٍ تجهيز الصورة...', false);
     shrink(f, function(d, qc){
       if(!card.isConnected) return;
       wzLoad = false;
       if(!d){ show('ما قدرتش أقرأ الصورة دي. جرّب صورة تانية.', true); paintWz(); return; }
-      shots[slot] = d; qcs[slot] = qc || null; cur = slot; resetSteps(); show('', false);
+      shots[slot] = d; qcs[slot] = qc || null; cur = slot; wzFresh = slot; resetSteps(); show('', false);
       paintWz();
     });
   });
@@ -28221,7 +28130,7 @@ function buildScreen(){
   });
   paintSrc();
 
-  function setBusy(btn, on, label){ busy = on; btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;
+  function setBusy(btn, on, label){ busy = on; btn.classList.toggle('is-busy', !!on); btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;
     if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
 
   function sendAsk(){
@@ -28259,7 +28168,7 @@ function buildScreen(){
     if(!any){ freshAsk(); setSolo(true); }   /* «مزرعتي على نبتكس» رسالة برسالة زي الأول؛ «سؤال عن أي حاجة» شات بيكمّل من حيث وقف */
     push('ask', 'user', q ? esc(q) : 'حلّل مزرعتي');
     var ty = typing('ask');
-    if(fromInput) inp.value = '';
+    if(fromInput){ inp.value = ''; fit(); }
     lock(true); paintFoot();
     call(q ? 'ask' : 'analyze', any ? { summary: summary, question: q, general: true, history: hist } : { summary: summary, question: q }, JSON.stringify(summary) + '|' + q + (any ? '|any|' + JSON.stringify(hist) : ''), function(r){
       var live = card.isConnected;
@@ -28268,7 +28177,7 @@ function buildScreen(){
       if(live){
         if(r.ok){ if(!any){ again.hidden = false; if(OPEN){ try{ again.focus({ preventScroll: true }); }catch(e){} } } }
         else setSolo(false);   /* فشل → مربع الكتابة يرجع عشان يتبعت تاني */
-        if(!r.ok && fromInput && q && !inp.value) inp.value = q;   /* فشل → السؤال يرجع للمربع عشان يتبعت تاني */
+        if(!r.ok && fromInput && q && !inp.value){ inp.value = q; fit(); }   /* فشل → السؤال يرجع للمربع عشان يتبعت تاني */
         paintFoot();
       }
     });
@@ -28393,7 +28302,7 @@ function onKey(ev){
   if(!OPEN || !SCR) return;
   if(ev.key === 'Escape'){ ev.preventDefault(); closeScreen(); return; }
   if(ev.key !== 'Tab') return;
-  var f = [].slice.call(SCR.querySelectorAll('button,input,[tabindex]')).filter(function(el){ return !el.disabled && !el.hidden && el.getAttribute('tabindex') !== '-1' && el.offsetParent !== null; });
+  var f = [].slice.call(SCR.querySelectorAll('button,input,textarea,[tabindex]')).filter(function(el){ return !el.disabled && !el.hidden && el.getAttribute('tabindex') !== '-1' && el.offsetParent !== null; });
   if(!f.length) return;
   var first = f[0], last = f[f.length - 1], a = document.activeElement;
   if(!SCR.contains(a)){ ev.preventDefault(); first.focus(); }
@@ -28420,7 +28329,7 @@ function openScreen(opener){
     /* تعديل: لما حقل جوه المساعد ياخد الفوكس، نسكرول البانل لحد ما الحقل يبقى ظاهر فوق الكيبورد */
     document.addEventListener('focusin', function(ev){
       var el = ev.target;
-      if(!OPEN || !SCR || !el || !SCR.contains(el) || el.tagName !== 'INPUT') return;
+      if(!OPEN || !SCR || !el || !SCR.contains(el) || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
       [250, 500, 900].forEach(function(t){ setTimeout(function(){
         if(!OPEN || document.activeElement !== el) return;
         var pane = el.closest('.nbai-pane');
@@ -28433,7 +28342,8 @@ function openScreen(opener){
   OPENER = opener || null; OPEN = true;
   PREV_OV = document.body.style.overflow; document.body.style.overflow = 'hidden';
   SCR.hidden = false; syncVV();
-  if(SCR._repaint){ try{ SCR._repaint(); }catch(e){} }   /* إصلاح: تحديث شريط الرصيد عند كل فتح (يوم جديد → يتصفّر ويرجع كامل) */
+  if(SCR._repaint){ try{ SCR._repaint(); }catch(e){} }
+  if(SCR._enter){ try{ SCR._enter(); }catch(e){} }   /* إصلاح: تحديث شريط الرصيد عند كل فتح (يوم جديد → يتصفّر ويرجع كامل) */
   try{ history.pushState({ nbai: 1 }, '', location.href); HIST = true; }catch(e){ HIST = false; }   /* زر رجوع الموبايل/المتصفح يقفل الواجهة بدل ما يطلع من الصفحة */
   var b = SCR.querySelector('.nbai-back'); if(b) b.focus({ preventScroll: true });
 }
@@ -28595,14 +28505,7 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 </script>
 
 <style id="ai-sub-css">
-/* اشتراك المساعد الذكي (إضافة فقط): سطر حالة الاشتراك + زر «رقّي الباقة» داخل كارت رصيد اليوم. للتراجع: امسح هذا البلوك. */
-.nbai-ov .nbq-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
-.nbai-ov .nbq-ft[hidden]{display:none}
-.nbai-ov .nbq-s{min-width:0;font-size:10px;line-height:1.4;font-weight:700;color:var(--slate)}
-.nbai-ov .nbq-up{flex:none;margin-inline-start:auto;border:0;border-radius:999px;padding:4px 11px;font-family:inherit;font-size:10.5px;font-weight:800;line-height:1.4;color:#fff;background:var(--ai-g);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nbai-ov .nbq-up[hidden]{display:none}
-.nbai-ov .nbq-up:active{opacity:.8}
-.nbai-ov .nbq-up:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+/* شاشة اشتراك المساعد الذكي (aipw-*) — مؤشر الرصيد وزر الترقية جوه الواجهة بقوا في nb-farm-ai-ux. */
 /* ═══ شاشة اشتراك المساعد (بريميوم، مدمجة): Bottom sheet بزر إغلاق — كلاسات aipw-* فقط ═══ */
 .aipw{position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,20,12,.58);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:aipwFade .25s ease both;font-family:var(--f-ui)}
 .aipw-box{position:relative;width:100%;max-width:440px;max-height:96vh;max-height:96dvh;overflow-y:auto;overscroll-behavior:contain;direction:rtl;background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;padding:20px 16px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -14px 60px rgba(10,40,20,.28);animation:aipwUp .45s cubic-bezier(.22,1,.36,1) both}
@@ -28706,11 +28609,6 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @keyframes aipwGoldSweep{0%,55%{transform:translateX(-130%) skewX(-18deg)}100%{transform:translateX(330%) skewX(-18deg)}}
 @keyframes aipwGoldTag{from{background-position:100% 0}to{background-position:0 0}}
 @media (prefers-reduced-motion:reduce){.aipw-tag,.aipw-pro::before{animation:none}}
-</style>
-
-<style id="ai-empty-logo-css">
-/* إخفاء اللوجو الكبير من حالة «الشات الفاضي» في الاستشارة والتشخيص (كان بياخد مساحة بدون وظيفة). الرسالة الترحيبية بتفضل زي ما هي. للتراجع: امسح هذا البلوك. */
-.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}
 </style>
 
 <style id="nb-farm-hub">
