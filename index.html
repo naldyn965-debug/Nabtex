@@ -18565,6 +18565,8 @@ document.addEventListener('click', e => {
       plan: function() { return aiMem.d ? aiMem.d.plan : null; },
       applyPoints: aiApplyPoints,
       invalidate: function() { aiMem.at = 0; },
+      /* آخر حالة محمّلة لنفس المستخدم واليوم (من غير أي استعلام) — للفتح الفوري لواجهة المساعد */
+      peek: function() { var d = aiMem.d; return (d && aiMem.uid === uid() && aiMem.day === aiDay()) ? d : null; },
       onChange: function(fn) { if (typeof fn === 'function') aiListeners.push(fn); },
       paywall: function(opt) {
         aiLoad(true, function(d) {
@@ -28475,15 +28477,24 @@ window.NbFarmAI.open = function(opener){
     var gate = function(){ if(typeof showPage === 'function') showPage('farm'); };
     /* AI-SUB: البوابة الجديدة — تجربة يومين / باقة المساعد / اشتراك إدارة المزرعة؛ غير كده شاشة اشتراك المساعد (مش شاشة المزرعة). القديم (للتراجع): FarmSub.hasAccess بس */
     if(u && window.AiSub && typeof window.AiSub.get === 'function'){
+      var enter = function(){
+        var f = curFarm();
+        if(!f || (f.userId && f.userId !== u.uid)){
+          var c = lsGet('nabtex_farm_cache_v2__' + u.uid);
+          STATE = (c && c.farms && c.farms.length) ? { farms: c.farms, currentFarm: c.farms[0] } : null;
+        }
+        openScreen(opener && opener.isConnected ? opener : null);
+      };
+      var d0 = window.AiSub.peek ? window.AiSub.peek() : null, early = false;
+      if(d0 && d0.hasAccess){ early = true; try{ enter(); }catch(e){ console.warn('[Nabtex Farm] ai open:', e); } }   /* فتح فوري من الحالة المحمّلة */
       window.AiSub.get(function(d){
         try{
-          if(!d || !d.hasAccess){ window.AiSub.paywall({}); return; }
-          var f = curFarm();
-          if(!f || (f.userId && f.userId !== u.uid)){
-            var c = lsGet('nabtex_farm_cache_v2__' + u.uid);
-            STATE = (c && c.farms && c.farms.length) ? { farms: c.farms, currentFarm: c.farms[0] } : null;
+          if(early){   /* تحقق الخلفية: لو الصلاحية خلصت فعلًا (مش مجرد خطأ شبكة) نقفل ونعرض الاشتراك */
+            if(OPEN && d && !d.hasAccess && d.state !== 'error' && !d.noUser){ hideScreen(); window.AiSub.paywall({}); }
+            return;
           }
-          openScreen(opener && opener.isConnected ? opener : null);
+          if(!d || !d.hasAccess){ window.AiSub.paywall({}); return; }
+          enter();
         }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
       }, true);
       return;
