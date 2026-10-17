@@ -18148,6 +18148,447 @@ document.addEventListener('click', e => {
     /* بوابة الوصول لتاب AI (إضافة فقط): نفس فحص الاشتراك/التجربة اللي بتستخدمه صفحة المزرعة (fsubLoad) من غير أي تغيير في منطقه */
     window.FarmSub.hasAccess = function(cb) { try { fsubLoad(false, function(d) { cb(!!(d && d.hasAccess)); }); } catch (e) { cb(false); } };
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    //  AI ASSISTANT SUBSCRIPTION — اشتراك المساعد الذكي (إضافة مستقلة تمامًا عن FarmSub)
+    //  • تجربة مجانية يومين (3 شات + 2 تشخيص) · الباقة الأولى 149ج (10 شات + 5 تشخيص) · الثانية 199ج (15 + 10) · البرو 300ج (20 + 15) — النقاط بتتجدد يوميًا (يوم القاهرة).
+    //  • المساعد ضمن اشتراك إدارة المزرعة (تجربة/مدفوع) = 3 شات + 3 تشخيص؛ للزيادة يشترك في باقة (الأعلى لكل نوع هو اللي بيتطبّق).
+    //  • الحماية الحقيقية: firestore.rules (ai_subscriptions / ai_subscription_payments / ai_usage) + api/farm-ai.js — الواجهة هنا عرض وطلب فقط.
+    //  • الدفع منفصل عن إدارة المزرعة (مجموعات farm_* ما اتلمستش) وبنفس شيت الدفع والتصميم.
+    //  للتراجع: امسح الكتلة دي (AI-SUB:START → AI-SUB:END) وكتلة CSS (ai-sub-css) وارجع سطور الربط في nb-farm-ai-js (كلها معلّمة بـ AI-SUB).
+    // ═══════════════════════════════════════════════════════════════════════════════
+    /* AI-SUB:START */
+    var AI_TRIAL_MS = 2 * 24 * 3600 * 1000;
+    var AI_PLANS = {
+      plan1: { price: 149, chat: 10, diag: 5, label: 'الباقة الأولى' },
+      plan2: { price: 199, chat: 15, diag: 10, label: 'الباقة الثانية' },
+      plan3: { price: 300, chat: 20, diag: 15, label: 'باقة البرو' }
+    };
+    var aiMem = { uid: null, d: null, at: 0, day: '' };
+    var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false };
+    var aiListeners = [];
+
+    function aiDay() { return fsubFmtDate(Date.now()); }
+    function aiEmit() { aiListeners.forEach(function(f) { try { f(); } catch (e) {} }); }
+    function aiCacheKey(u) { return 'nabtex_ai_sub_v1__' + u; }
+
+    function aiRaw(sub, pays) {
+      return {
+        sub: sub ? { trialStartedAt: fsubTs(sub.trialStartedAt), paidUntil: fsubTs(sub.paidUntil), plan: sub.plan || null } : null,
+        pays: (pays || []).map(function(p) {
+          return { id: p.id, status: p.status, plan: p.plan, createdAt: fsubTs(p.createdAt), rejectionNote: p.rejectionNote || '', refKey: p.refKey || '' };
+        })
+      };
+    }
+
+    /* نفس أرقام firestore.rules (aiChatLim/aiDiagLim) و api/farm-ai.js (aiAllowance): الأعلى لكل نوع */
+    function aiDerive(raw, farmOk, used, nowMs) {
+      var sub = raw && raw.sub, pays = (raw && raw.pays) || [];
+      var trialEnd = sub && sub.trialStartedAt ? sub.trialStartedAt + AI_TRIAL_MS : null;
+      var paidUntil = sub && sub.paidUntil || null;
+      var paid = !!(paidUntil && paidUntil > nowMs), plan = (paid && AI_PLANS[sub.plan]) ? sub.plan : null;
+      var trial = !!(trialEnd && trialEnd > nowMs);
+      var lim = { chat: 0, diag: 0 };
+      if (plan) { lim.chat = AI_PLANS[plan].chat; lim.diag = AI_PLANS[plan].diag; }
+      else { lim.chat = (trial || farmOk) ? 3 : 0; lim.diag = farmOk ? 3 : (trial ? 2 : 0); }
+      var sorted = pays.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      var pending = sorted.filter(function(p) { return p.status === 'pending'; })[0] || null;
+      var latest = sorted[0] || null;
+      var d = {
+        state: 'none', hasAccess: !!(lim.chat || lim.diag), lim: lim,
+        used: { chat: used.chat || 0, diag: used.diag || 0 }, left: { chat: 0, diag: 0 },
+        plan: plan, paidUntil: paidUntil, trialEnd: trialEnd, endsAt: null, msLeft: 0, daysLeft: 0,
+        pending: pending, rejected: (!pending && latest && latest.status === 'rejected') ? latest : null,
+        farmOk: !!farmOk, canStartTrial: !sub && !farmOk
+      };
+      if (plan) { d.state = 'active'; d.endsAt = paidUntil; }
+      else if (trial) { d.state = 'trial'; d.endsAt = trialEnd; }
+      else if (farmOk) d.state = 'farm';
+      else if (pending) d.state = 'pending';
+      else if (d.rejected) d.state = 'rejected';
+      else if (sub) d.state = 'expired';
+      if (d.endsAt) { d.msLeft = d.endsAt - nowMs; d.daysLeft = Math.ceil(d.msLeft / 86400000); }
+      d.left.chat = Math.max(0, lim.chat - d.used.chat);
+      d.left.diag = Math.max(0, lim.diag - d.used.diag);
+      return d;
+    }
+
+    function aiFinish(u, raw, farmOk, used, offline, cb) {
+      var d = aiDerive(raw, farmOk, used, Date.now());
+      d.offline = !!offline;
+      aiMem = { uid: u, d: d, at: Date.now(), day: aiDay() };
+      cb(d); aiEmit();
+    }
+
+    /* 3 قراءات (الاشتراك + طلباته + استهلاك اليوم) + حالة المزرعة (مخزّنة 60 ث). كاش 60 ث في الذاكرة. */
+    function aiLoad(force, cb) {
+      var u = uid();
+      if (!u) { cb({ state: 'none', hasAccess: false, noUser: true, lim: { chat: 0, diag: 0 }, used: { chat: 0, diag: 0 }, left: { chat: 0, diag: 0 } }); return; }
+      var day = aiDay();
+      if (!force && aiMem.uid === u && aiMem.d && aiMem.day === day && (Date.now() - aiMem.at) < 60000) { cb(aiMem.d); return; }
+      fsubLoad(false, function(fd) {
+        var farmOk = !!(fd && fd.hasAccess);
+        Promise.all([
+          db.collection('ai_subscriptions').doc(u).get(),
+          db.collection('ai_subscription_payments').where('uid', '==', u).get(),
+          db.collection('ai_usage').doc(u + '_' + day).get()
+        ]).then(function(r) {
+          var pays = r[1].docs.map(function(x) { var o = x.data(); o.id = x.id; return o; });
+          var raw = aiRaw(r[0].exists ? r[0].data() : null, pays);
+          try { localStorage.setItem(aiCacheKey(u), JSON.stringify(raw)); } catch (e) {}
+          var us = r[2].exists ? r[2].data() : {};
+          aiFinish(u, raw, farmOk, { chat: us.chat || 0, diag: us.diag || 0 }, false, cb);
+        }).catch(function(e) {
+          console.warn('[Nabtex AiSub] load failed:', e && e.message);
+          var cached = null; try { cached = JSON.parse(localStorage.getItem(aiCacheKey(u)) || 'null'); } catch (x) {}
+          if (cached) aiFinish(u, cached, farmOk, { chat: 0, diag: 0 }, true, cb);
+          else cb({ state: 'error', hasAccess: false, lim: { chat: 0, diag: 0 }, used: { chat: 0, diag: 0 }, left: { chat: 0, diag: 0 } });
+        });
+      });
+    }
+
+    /* رصيد اليوم من رد الخادم (points) — بعد كل استخدام ناجح */
+    function aiApplyPoints(p) {
+      var d = aiMem.d; if (!p || !d || aiMem.uid !== uid()) return;
+      ['chat', 'diag'].forEach(function(k) {
+        if (p[k] && typeof p[k].max === 'number' && typeof p[k].left === 'number') {
+          d.lim[k] = p[k].max; d.left[k] = Math.max(0, p[k].left); d.used[k] = Math.max(0, p[k].max - p[k].left);
+        }
+      });
+      aiMem.day = aiDay(); aiMem.at = Date.now();
+      aiEmit();
+    }
+
+    function aiPlanLine(p) {
+      return '<b>' + p.chat + '</b> نقاط استشارة زراعية + <b>' + p.diag + '</b> نقاط تشخيص أمراض بالصور — يوميًا';
+    }
+    function aiStatusLine(d) {
+      if (!d || !d.hasAccess) return '';
+      if (d.state === 'active') return AI_PLANS[d.plan].label + ' — حتى ' + fsubFmtDate(d.endsAt);
+      if (d.state === 'trial') return 'تجربة مجانية — متبقي ' + fsubLeftText(d);
+      return 'ضمن اشتراك إدارة المزرعة';
+    }
+
+    function aiPlansHTML(d) {
+      var cur = d && d.plan, h = '<div class="fsub-lbl-h">اختر الباقة</div><div class="fsub-plans" role="radiogroup" aria-label="الباقات">';
+      ['plan1', 'plan2', 'plan3'].forEach(function(k) {
+        var p = AI_PLANS[k];
+        h += '<div class="fsub-plan' + (k === 'plan3' ? ' fsub-plan--pro' : '') + (aiUI.plan === k ? ' on' : '') + '" data-plan="' + k + '" role="radio" tabindex="0" onclick="AiSub.pick(\'' + k + '\')">' +
+          (k === 'plan3' ? '<span class="fsub-badge fsub-badge--pro">PRO</span>' : '') +
+          '<div class="fsub-plan-name">' + p.label + (cur === k ? ' (باقتك الحالية)' : '') + '</div>' +
+          '<div class="fsub-plan-price">' + p.price + ' <small>ج.م / شهر</small></div>' +
+          '<div class="fsub-plan-note">' + aiPlanLine(p) + '</div></div>';
+      });
+      return h + '</div>';
+    }
+
+    function aiPaywallHTML(d, opt) {
+      var head, body = '';
+      var top = d && d.state === 'active' && d.plan === 'plan3';
+      if (d && d.state === 'error') {
+        head = fsubHead('تعذّر التحقق من الاشتراك', 'تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.');
+        body = '<button class="farm-btn-primary" onclick="AiSub.retry()">إعادة المحاولة</button>';
+      } else if (d && d.state === 'pending' && !d.hasAccess) {
+        head = fsubHead('طلب الدفع قيد المراجعة', 'هنفعّل اشتراكك فور التحقق من الدفع.');
+        body = aiPendingHTML(d.pending) + '<div class="fco-vars">' + fcoTimelineHTML() + '</div>';
+      } else if (top) {
+        head = fsubHead('أنت على أعلى باقة', 'نقاطك بتتجدد كل يوم — لو خلصت نقاط النهاردة تقدر تكمل بكرة.');
+      } else {
+        if (opt && opt.limit) head = fsubHead('عايز نقاط أكتر؟', 'نقاطك بتتجدد كل يوم — اختر الباقة اللي تناسبك وكمّل.');
+        else if (d && d.state === 'expired') head = fsubHead('انتهت فترة اشتراكك', 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.');
+        else if (d && d.state === 'rejected') head = fsubHead('تعذّر تفعيل طلبك الأخير', 'راجع بيانات الدفع وابعت طلبًا جديدًا.');
+        else head = fsubHead('اشترك في المساعد الذكي', 'استشارة زراعية وتشخيص أمراض النبات بالصور — بنقاط بتتجدد يوميًا.');
+        if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="fsub-note fsub-note--bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
+        if (d && d.pending) body += aiPendingHTML(d.pending);
+        if (d && d.canStartTrial) {
+          body += '<button class="farm-btn-primary fsub-trial" id="ai-trial" onclick="AiSub.startTrial()">ابدأ التجربة المجانية — يومين</button>' +
+                  '<div class="fsub-note fsub-note--info">التجربة: <b>3</b> نقاط استشارة + <b>2</b> نقطة تشخيص بالصور يوميًا.</div>' +
+                  '<div class="fsub-or"><span>تجربة واحدة لكل حساب — أو اشترك مباشرة</span></div>';
+        }
+        if (d && d.farmOk) body += '<div class="fsub-note fsub-note--info">اشتراك إدارة المزرعة بيشمل <b>3</b> نقاط استشارة + <b>3</b> نقاط تشخيص يوميًا — الباقات دي للزيادة.</div>';
+        body += aiPlansHTML(d) + fsubCtaHTML().replace('FarmSub.openPay()', 'AiSub.openPay()').replace('id="fsub-cta"', 'id="ai-cta"');
+      }
+      return '<div class="fsub-wrap"><div class="fsub-card">' + head + body +
+        '<button class="farm-back-btn fsub-back" onclick="AiSub.closePaywall()">← رجوع</button></div></div>';
+    }
+    function aiPendingHTML(p) {
+      if (!p) return '';
+      var pl = AI_PLANS[p.plan], when = p.createdAt ? fsubFmtDate(p.createdAt) : '';
+      return '<div class="fsub-note fsub-note--info"><b>طلب قيد المراجعة</b><br>' + (pl ? pl.label : '') + (when ? ' — أُرسل ' + when : '') + (p.refKey ? ' — مرجع …' + fsubEsc(p.refKey.slice(-4)) : '') + '</div>';
+    }
+
+    function aiClosePaywall() {
+      var o = document.getElementById('ai-pw');
+      if (o && o.parentNode) o.parentNode.removeChild(o);
+      if (o && o._prevOv !== undefined) document.body.style.overflow = o._prevOv;
+    }
+    function aiShowPaywall(d, opt) {
+      var o = document.getElementById('ai-pw');
+      if (!o) {
+        o = document.createElement('div');
+        o.id = 'ai-pw'; o.className = 'fsub-overlay'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
+        o._prevOv = document.body.style.overflow; document.body.style.overflow = 'hidden';
+        document.body.appendChild(o);
+      }
+      if (opt) o._opt = opt;
+      o.innerHTML = '<div class="fsub-overlay-in">' + aiPaywallHTML(d, o._opt) + '</div>';
+    }
+    function aiRefreshPaywall() {
+      if (!document.getElementById('ai-pw')) return;
+      aiLoad(true, function(d) { aiShowPaywall(d); });
+    }
+
+    function aiSetBusy(b) {
+      aiUI.busy = b;
+      var el = document.getElementById('ai-trial'); if (el) el.disabled = b;
+    }
+
+    /* ══ AI CHECKOUT SHEET — نفس شيت دفع المزرعة (fcoHTML) بنصوص/باقات/مجموعات الاشتراك الخاصة بالمساعد ══ */
+    function aiCoClose() {
+      var o = document.getElementById('ai-co');
+      if (o && o._unwatch) o._unwatch();
+      if (o && o.parentNode) o.parentNode.removeChild(o);
+    }
+    function aiCoOpen() {
+      if (document.getElementById('ai-co')) return;
+      var u = uid();
+      if (!u) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
+      var I = FCO_I;
+      var ov = document.createElement('div');
+      ov.id = 'ai-co'; ov.className = 'fco-ov';
+      ov.innerHTML = '<div class="fco-box"><div class="nbco" data-st="pay">' + fcoHTML() + '</div></div>';
+      document.body.appendChild(ov);
+
+      var root = ov.querySelector('.nbco');
+      var st = { s: 'pay', busy: false, m: aiUI.method === 'instapay' ? 'ip' : 'vf', un: null, snd: 0, ref: '', base: (aiMem.d && aiMem.d.paidUntil) || 0 };
+      var Q = function(a) { return root.querySelector('[data-f=' + a + ']'); };
+      /* نصوص خاصة بالمساعد (باقي الشيت زي ما هو) */
+      var plm = Q('plm'), pla = Q('pla');
+      plm.setAttribute('data-a', 'p-plan1'); plm.textContent = 'الأولى';
+      pla.setAttribute('data-a', 'p-plan2'); pla.textContent = 'الثانية';
+      var pl3 = pla.cloneNode(false); pl3.setAttribute('data-a', 'p-plan3'); pl3.setAttribute('data-f', 'pl3'); pl3.textContent = 'البرو'; pl3.classList.remove('on'); pla.parentNode.appendChild(pl3);
+      var t1 = root.querySelector('[data-s=received] [data-a=close] span'); if (t1) t1.textContent = 'العودة إلى المساعد';
+      var t2 = root.querySelector('[data-s=active] .nbco-p'); if (t2) t2.textContent = 'يمكنك الآن استخدام المساعد الذكي بنقاط باقتك.';
+      var t3 = root.querySelector('[data-s=active] [data-a=go] span'); if (t3) t3.textContent = 'العودة إلى المساعد';
+      var secs = root.querySelectorAll('.nbco-s'), prog = root.querySelector('.nbco-prog'),
+          back = root.querySelector('.nbco-ib'),
+          fFrom = document.getElementById('fco-from'), fRef = document.getElementById('fco-ref');
+
+      function clr(inp) { inp.classList.remove('err'); if (inp.nextElementSibling) inp.nextElementSibling.textContent = ''; }
+      function bad(inp, msg) { inp.classList.remove('err'); void inp.offsetWidth; inp.classList.add('err'); inp.nextElementSibling.textContent = msg; try { inp.focus(); } catch (e) {} return false; }
+      [fFrom, fRef].forEach(function(f) { f.addEventListener('input', function() { clr(f); }); });
+
+      var IPA_RE = /^[A-Za-z0-9._@+-]{3,60}$/;
+      function ipa(s) { return fsubNormDigits(s).replace(/\s+/g, ''); }
+      function ipRows() {
+        var rows = [['معرّف InstaPay', FSUB_IP_INFO.handle], ['رقم الموبايل المرتبط', FSUB_IP_INFO.mobile], ['رقم الحساب (IBAN)', FSUB_IP_INFO.iban]], h = '';
+        rows.forEach(function(r) {
+          if (r[1]) h += '<div class="nbco-idrow"><div><small>' + fsubEsc(r[0]) + '</small><span class="nbco-num">' + fsubEsc(r[1]) + '</span></div><button type="button" class="nbco-cp" data-a="cpv" data-v="' + fsubEsc(r[1]) + '">' + I.cp + '<span>نسخ</span></button></div>';
+        });
+        Q('ipr').innerHTML = h || '<div class="nbco-ipmsg">تواصل مع الدعم للحصول على بيانات التحويل</div>';
+        Q('pip').querySelector('.nbco-hint').hidden = !h;
+      }
+      function progHTML(n) {
+        var L = ['الدفع', 'التحقق', 'البيانات'], h = '';
+        for (var i = 1; i <= 3; i++) {
+          h += '<div class="nbco-pn ' + (i < n ? 'd' : i === n ? 'c' : '') + '"><i>' + (i < n ? I.ck : i) + '</i><span>' + L[i - 1] + '</span></div>';
+          if (i < 3) h += '<div class="nbco-pl' + (i < n ? ' f' : '') + '"></div>';
+        }
+        return h;
+      }
+      function go(s) {
+        st.s = s; root.setAttribute('data-st', s);
+        for (var i = 0; i < secs.length; i++) secs[i].classList.toggle('on', secs[i].getAttribute('data-s') === s);
+        var n = s === 'verify' ? 2 : s === 'data' ? 3 : 0;
+        prog.hidden = !n; if (n) prog.innerHTML = progHTML(n);
+        back.innerHTML = s === 'pay' ? I.x : I.bk; back.setAttribute('data-a', s === 'pay' ? 'close' : 'back');
+        root.scrollTop = 0;
+      }
+      function busy(b) { st.busy = b; var c = root.querySelector('[data-a=send]'); c.disabled = b; c.classList.toggle('ld', b); back.disabled = b; }
+
+      function refresh() {
+        var pl = aiUI.plan, p = AI_PLANS[pl];
+        Q('title').textContent = 'المساعد الذكي — ' + p.label;
+        Q('sub').textContent = p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';
+        Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
+        Q('off').hidden = true;
+        ['plan1', 'plan2', 'plan3'].forEach(function(k) { var b = Q(k === 'plan1' ? 'plm' : (k === 'plan2' ? 'pla' : 'pl3')); b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
+        Q('numvf').textContent = FSUB_PAY.vcash; ipRows();
+      }
+      function setM(m) {
+        st.m = m === 'ip' ? 'ip' : 'vf'; var ip = st.m === 'ip';
+        aiUI.method = ip ? 'instapay' : 'vodafone_cash';
+        var tb = Q('tabs'); tb.setAttribute('data-m', st.m);
+        [].forEach.call(tb.querySelectorAll('.nbco-tab'), function(b) { var on = b.getAttribute('data-a') === 'm-' + st.m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+        Q('pvf').hidden = ip; Q('pip').hidden = !ip;
+        Q('vp').textContent = ip ? 'أدخل اسم حساب انستاباي (Username / IPA) الذي أرسلت منه المبلغ.' : 'أدخل رقم Vodafone Cash الذي أرسلت منه المبلغ.';
+        Q('vl').textContent = ip ? 'اسم حساب انستاباي المرسل منه' : 'رقم Vodafone Cash المرسل منه';
+        Q('vn').textContent = ip ? 'استخدم نفس الحساب الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.' : 'استخدم نفس الرقم الذي تم إرسال المبلغ منه للتحقق من عملية الدفع.';
+        var f = fFrom;
+        f.type = ip ? 'text' : 'tel'; f.setAttribute('inputmode', ip ? 'email' : 'numeric'); f.maxLength = ip ? 60 : 16;
+        f.setAttribute('autocomplete', ip ? 'off' : 'tel'); f.placeholder = ip ? 'example@instapay' : '01012345678';
+        f.setAttribute('autocapitalize', 'none'); f.setAttribute('autocorrect', 'off'); f.spellcheck = false;
+        f.value = ''; clr(f);
+      }
+      function setP(pl) { if (!AI_PLANS[pl]) return; aiUI.plan = pl; refresh(); }
+
+      function unwatch() { if (st.un) { try { st.un(); } catch (e) {} st.un = null; } }
+      ov._unwatch = unwatch;
+      function activate() { unwatch(); go('active'); }
+      function watch() {
+        unwatch();
+        try {
+          st.un = db.collection('ai_subscriptions').doc(u).onSnapshot(function(snap) {
+            var pu = fsubTs(snap.exists ? snap.data().paidUntil : null);
+            if (pu && pu > Date.now() && pu > st.base && document.getElementById('ai-co')) activate();
+          }, function() {});
+        } catch (e) {}
+      }
+      function celebrate() {
+        if (!st.snd || Date.now() - st.snd > 20000) return; st.snd = 0;
+        fcoSndSuccess(); try { if (navigator.vibrate) navigator.vibrate([14, 50, 26]); } catch (e) {}
+        var rg = root.querySelector('[data-s=received] .nbco-ring'); if (rg) { rg.classList.remove('pop'); void rg.offsetWidth; rg.classList.add('pop'); }
+      }
+      function received(ref) {
+        st.ref = ref || '';
+        var o = Q('ord'); o.textContent = st.ref ? '#' + st.ref.toUpperCase() : ''; o.parentNode.hidden = !st.ref;
+        if (st.s !== 'active') go('received'); watch(); celebrate();
+      }
+
+      function send() {
+        var ref = fsubNormRef(fRef.value);
+        if (!/^[A-Za-z0-9]{6,40}$/.test(ref)) return bad(fRef, 'رقم العملية لازم يكون حروف وأرقام (من 6 إلى 40)');
+        var isIP = st.m === 'ip', phone = isIP ? ipa(fFrom.value) : fsubNormPhone(fFrom.value);
+        if (isIP ? !IPA_RE.test(phone) : !/^[0-9+]{10,15}$/.test(phone)) { go('verify'); return bad(fFrom, isIP ? 'برجاء إدخال اسم حساب انستاباي بشكل صحيح' : 'برجاء إدخال رقم الهاتف المُحوَّل منه بشكل صحيح'); }
+        var plan = aiUI.plan, method = aiUI.method;
+        if (!AI_PLANS[plan]) return;
+        busy(true); st.snd = Date.now(); fcoSndUnlock();
+        Promise.resolve().then(function() {
+          var data = {
+            uid: u, email: (currentUser && currentUser.email) || '',
+            plan: plan, amount: AI_PLANS[plan].price, currency: 'EGP',   /* القواعد بتتحقق من السعر — ده للعرض فقط */
+            phone: phone, transactionRef: ref, refKey: ref.toLowerCase(),
+            paymentMethod: method, status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          return db.collection('ai_subscription_payments').doc(u + '_' + data.refKey).set(data).then(function() { return data; });
+        }).then(function(data) {
+          try {
+            fetch(FSUB_PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ courseLabel: 'اشتراك المساعد الذكي — ' + AI_PLANS[plan].label, amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
+          } catch (e) {}
+          busy(false);
+          if (!document.getElementById('ai-co')) return;
+          received(ref);
+          aiRefreshPaywall();
+        }).catch(function(e) {
+          busy(false); st.snd = 0;
+          var msg = 'تعذّر إرسال الطلب — حاول مرة أخرى';
+          if (e && e.code === 'permission-denied') msg = 'رقم العملية ده اتبعت قبل كده، أو البيانات غير صحيحة';
+          else if (e && (e.code === 'unavailable' || e.code === 'network-request-failed')) msg = 'خطأ في الاتصال — تحقق من الإنترنت وأعد المحاولة';
+          bad(fRef, msg);
+        });
+      }
+
+      root.addEventListener('click', function(e) {
+        var t = e.target.closest('[data-a]'); if (!t || st.busy) return; var a = t.getAttribute('data-a');
+        if (a === 'close') aiCoClose();
+        else if (a === 'back') go(st.s === 'data' ? 'verify' : 'pay');
+        else if (a === 'copy' || a === 'cpv') {
+          var v = a === 'cpv' ? t.getAttribute('data-v') : (st.m === 'ip' ? FSUB_PAY.instapay : FSUB_PAY.vcash), c = t.querySelector('span');
+          if (navigator.clipboard) navigator.clipboard.writeText(v).catch(function() {});
+          else { try { var ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (x) {} }
+          c.textContent = 'تم النسخ'; t.classList.add('ok'); setTimeout(function() { c.textContent = 'نسخ'; t.classList.remove('ok'); }, 1800);
+        }
+        else if (a === 'cord') { if (navigator.clipboard) navigator.clipboard.writeText(st.ref).catch(function() {}); }
+        else if (a === 'm-vf' || a === 'm-ip') setM(a.slice(2));
+        else if (a === 'p-plan1' || a === 'p-plan2' || a === 'p-plan3') setP(a.slice(2));
+        else if (a === 'sent') { go('verify'); setTimeout(function() { try { fFrom.focus({ preventScroll: true }); } catch (x) {} }, 420); }
+        else if (a === 'no') { aiCoClose(); farmToast('يمكنك العودة لإتمام الاشتراك بعد التحويل', 'info'); }
+        else if (a === 'next') {
+          if (st.m === 'ip') {
+            var iv = ipa(fFrom.value);
+            if (iv.length < 3) return bad(fFrom, 'برجاء إدخال اسم حساب انستاباي');
+            if (!IPA_RE.test(iv)) return bad(fFrom, 'اسم الحساب غير صحيح — حروف إنجليزية وأرقام و @ . _ - فقط، مثال: example@instapay');
+            fFrom.value = iv; go('data'); setTimeout(function() { try { fRef.focus({ preventScroll: true }); } catch (x) {} }, 420);
+            return;
+          }
+          var ph = fsubNormPhone(fFrom.value);
+          if (!ph) return bad(fFrom, 'برجاء إدخال رقم Vodafone Cash الذي أرسلت منه المبلغ');
+          if (!/^[0-9+]{10,15}$/.test(ph)) return bad(fFrom, 'برجاء إدخال رقم هاتف صحيح (10 أرقام على الأقل)');
+          fFrom.value = ph; go('data'); setTimeout(function() { try { fRef.focus({ preventScroll: true }); } catch (x) {} }, 420);
+        }
+        else if (a === 'send') send();
+        else if (a === 'go') { aiCoClose(); aiClosePaywall(); aiLoad(true, function() {}); }
+      });
+      root.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return; e.preventDefault();
+        var b = root.querySelector('[data-a=' + (e.target === fFrom ? 'next' : 'send') + ']'); if (b) b.click();
+      });
+
+      refresh(); setM(st.m);
+      var pend = aiMem.d && aiMem.d.pending;
+      if (pend) { go('received'); var o = Q('ord'); var rk = pend.refKey || ''; o.textContent = rk ? '#' + rk.toUpperCase() : ''; o.parentNode.hidden = !rk; st.ref = rk; watch(); }
+      else go('pay');
+    }
+
+    window.AiSub = {
+      /* حالة الاشتراك والنقاط (cb(d)) — force لتجاوز كاش الـ 60 ثانية */
+      get: function(cb, force) { try { aiLoad(!!force, cb); } catch (e) { cb({ state: 'error', hasAccess: false, lim: { chat: 0, diag: 0 }, used: { chat: 0, diag: 0 }, left: { chat: 0, diag: 0 } }); } },
+      /* رصيد نوع (chat | diag) من آخر حالة محمّلة، أو null لو لسه ما اتحمّلتش */
+      pts: function(kind) {
+        var d = aiMem.d; if (!d || aiMem.uid !== uid() || !d.lim || d.lim[kind] == null) return null;
+        var fresh = aiMem.day === aiDay();
+        return { left: fresh ? d.left[kind] : d.lim[kind], max: d.lim[kind] };
+      },
+      /* فحص سريع قبل الطلب (الخادم/القواعد هم الحكم النهائي): '' = كمّل */
+      gate: function(mode) {
+        var d = aiMem.d; if (!d || aiMem.uid !== uid() || aiMem.day !== aiDay() || mode === 'diagnose') return '';
+        var k = mode === 'diag_q' ? 'diag' : 'chat';
+        if (!d.lim[k]) return 'sub_required';
+        return d.left[k] <= 0 ? 'user_limit' : '';
+      },
+      status: function() { return aiStatusLine(aiMem.d); },
+      plan: function() { return aiMem.d ? aiMem.d.plan : null; },
+      applyPoints: aiApplyPoints,
+      invalidate: function() { aiMem.at = 0; },
+      onChange: function(fn) { if (typeof fn === 'function') aiListeners.push(fn); },
+      paywall: function(opt) {
+        aiLoad(true, function(d) {
+          if (d && d.plan === 'plan1') aiUI.plan = 'plan2'; else if (d && d.plan === 'plan2') aiUI.plan = 'plan3';   /* الافتراضي: الباقة الأعلى من باقته */
+          aiShowPaywall(d, opt || {});
+        });
+      },
+      closePaywall: aiClosePaywall,
+      retry: function() { aiRefreshPaywall(); },
+      pick: function(plan) {
+        if (!AI_PLANS[plan]) return;
+        aiUI.plan = plan;
+        Array.prototype.forEach.call(document.querySelectorAll('#ai-pw .fsub-plan'), function(el) { el.classList.toggle('on', el.getAttribute('data-plan') === plan); });
+      },
+      openPay: function() { aiCoOpen(); },
+      startTrial: function() {
+        var u = uid();
+        if (!u) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
+        if (aiUI.busy) return;
+        aiSetBusy(true);
+        /* القواعد: create-only + trialStartedAt مربوط بوقت الخادم → مستحيل تجربة تانية */
+        db.collection('ai_subscriptions').doc(u).set({
+          uid: u,
+          trialStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          farmToast('بدأت تجربتك المجانية لمدة يومين', 'success');
+        }).catch(function(e) {
+          if (e && e.code === 'permission-denied') farmToast('التجربة المجانية متاحة مرة واحدة لكل حساب', 'warning');
+          else farmToast('تعذّر بدء التجربة: ' + ((e && e.message) || ''), 'error');
+        }).then(function() {
+          aiSetBusy(false);
+          aiLoad(true, function(d) { if (d.hasAccess) { aiClosePaywall(); try { if (window.NbFarmAI && window.NbFarmAI.open) window.NbFarmAI.open(); } catch (e) {} } else aiShowPaywall(d); });
+        });
+      }
+    };
+    /* AI-SUB:END */
+
 
   })(); // end FarmSystem
 
@@ -27247,6 +27688,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 'use strict';
 
 var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };   /* لازم تساوي LIMITS في api/farm-ai.js */
+var PTS = { analyze: 1, ask: 1, diag_q: 1, diagnose: 1 };   /* AI-SUB: الأوضاع اللي نقاطها من اشتراك المساعد (window.AiSub) مش من LIM المحلي */
 var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 1280, SHOT_MAX = 340*1024, BLUR_MIN = 35;   /* القديم (للتراجع): IMG_MAX = 800 — الدقة اترفعت لـ 1280px عشان تفاصيل الأعراض (بقع/حشرات صغيرة) تفضل واضحة، وSHOT_MAX سقف حجم كل صورة، وBLUR_MIN حد الوضوح للتحذير */
 
 function lsGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
@@ -27273,6 +27715,8 @@ var MSG = {
   too_large: 'الحجم كبير. جرّب صورة أصغر أو نص أقصر.',
   blocked: 'ما قدرتش أحلّل الصورة دي. جرّب صورة تانية أوضح.',
   nothing_found: 'ما لقيتش بيانات أقدر أسجّلها من الكلام ده. اكتب بتفاصيل أكتر (مثلًا: روينا 3 ساعات وسمّدنا نترات كالسيوم 20 كجم).',
+  sub_required: 'اشترك في المساعد الذكي عشان تكمل.',   /* AI-SUB */
+  sub_check: 'تعذّر التحقق من اشتراكك دلوقتي. جرّب بعد شوية.',   /* AI-SUB */
   generic: 'حصلت مشكلة مؤقتة. جرّب تاني بعد شوية.'
 };
 
@@ -27355,7 +27799,9 @@ function call(mode, payload, ckExtra, done){
   var saved = lsGet(key);
   if(saved && saved.k === ck && Date.now() - saved.at < TTL) return done({ ok: true, j: saved.j, cached: true });
   var qt = quotaGet(u.uid, mode);
-  if(qt.n >= LIM[mode]) return done({ err: 'user_limit' });
+  var aiPt = !!(window.AiSub && PTS[mode]);   /* AI-SUB: نقاط الشات/التشخيص من اشتراك المساعد (الحكم النهائي: الخادم + firestore.rules) */
+  if(aiPt){ var ge = window.AiSub.gate(mode); if(ge) return done({ err: ge }); }
+  else if(qt.n >= LIM[mode]) return done({ err: 'user_limit' });
   if(Date.now() - qt.last < COOLDOWN) return done({ err: 'wait' });
   var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
   var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, TMO);
@@ -27371,13 +27817,23 @@ function call(mode, payload, ckExtra, done){
     clearTimeout(timer);
     if(res.ok && (res.j.text || res.j.fields || res.j.q)){
       if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:' + mode + ':' + u.uid, qt); }
+      if(aiPt && res.j.points && !res.j.cached) window.AiSub.applyPoints(res.j.points);   /* AI-SUB */
       lsSet(key, { k: ck, at: Date.now(), j: { text: res.j.text, fields: res.j.fields, q: res.j.q } });
       done({ ok: true, j: res.j });
-    } else done({ err: res.j.error || 'generic' });
+    } else {
+      if(aiPt && (res.j.error === 'user_limit' || res.j.error === 'sub_required')){ try{ window.AiSub.get(function(){}, true); }catch(x){} }   /* AI-SUB: الرصيد الحقيقي من السيرفر */
+      done({ err: res.j.error || 'generic' });
+    }
   }).catch(function(){ clearTimeout(timer); done({ err: 'generic' }); });
 }
 
 function errText(e){ return e === 'wait' ? 'استنى ثواني قبل الطلب الجاي.' : (MSG[e] || MSG.generic); }
+/* AI-SUB: رسالة الشات/التشخيص عند انتهاء النقاط + فتح شاشة الاشتراك لو الاشتراك خلص */
+function aiErr(e){
+  if(e === 'sub_required'){ try{ if(window.AiSub) window.AiSub.paywall({}); }catch(x){} }
+  if(e !== 'user_limit') return errText(e);
+  return (window.AiSub && window.AiSub.plan && window.AiSub.plan() === 'plan3') ? 'خلّصت نقاطك النهاردة — بتتجدد بكرة.' : 'خلّصت نقاطك النهاردة — بتتجدد بكرة. ولو عايز نقاط أكتر دوس «رقّي الباقة».';
+}
 
 /* تصغير الصورة في المتصفح قبل الإرسال (أقل استهلاك + أسرع) — بقى بيحافظ على الحدة: تصغير على مراحل + جودة JPEG أعلى، وبيرجّع فحص جودة (وضوح/إضاءة/دقة) كتحذير بس */
 function qcOf(cv, ow, oh){
@@ -27483,18 +27939,28 @@ function buildScreen(){
       box.innerHTML =
         '<div class="nbq-h"><span class="nbq-t"><span class="nbq-sp" aria-hidden="true">✦</span>رصيدك اليوم</span>' +
         '<span class="nbq-n"><bdi dir="ltr"><b class="nbq-v"></b> / <span class="nbq-m"></span></bdi> نقطة<span class="nbq-r" hidden>· يتجدد بكرة</span></span></div>' +
-        '<div class="nbq-tr" role="progressbar" aria-label="رصيد المساعد الذكي اليوم" aria-valuemin="0"><i class="nbq-fl"></i></div>';
+        '<div class="nbq-tr" role="progressbar" aria-label="رصيد المساعد الذكي اليوم" aria-valuemin="0"><i class="nbq-fl"></i></div>' +
+        '<div class="nbq-ft" hidden><span class="nbq-s"></span><button type="button" class="nbq-up">رقّي الباقة</button></div>';   /* AI-SUB: حالة الاشتراك + زر الترقية */
       var note = document.createElement('div'); note.className = 'nbq-d';
       note.textContent = 'الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.';
       foot.appendChild(box); foot.appendChild(note);
-      q = foot._q = { tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: box.querySelector('.nbq-r') };
+      q = foot._q = { tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: box.querySelector('.nbq-r'), ft: box.querySelector('.nbq-ft'), s: box.querySelector('.nbq-s'), up: box.querySelector('.nbq-up') };
+      q.up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true }); });   /* AI-SUB */
     }
     var pct = mx > 0 ? Math.max(0, Math.min(100, l / mx * 100)) : 0;
     q.v.textContent = l; q.m.textContent = mx; q.r.hidden = l > 0;
     q.tr.setAttribute('aria-valuemax', mx); q.tr.setAttribute('aria-valuenow', l);
     q.fl.style.width = pct + '%';
+    /* AI-SUB: سطر الاشتراك + زر «رقّي الباقة» (مخفي لو على باقة البرو) */
+    if(q.ft){
+      var sl = (window.AiSub && window.AiSub.status) ? window.AiSub.status() : '';
+      q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
+      q.ft.hidden = !sl && q.up.hidden;
+    }
   }
   function paintFoot(){
+    var ap = window.AiSub ? window.AiSub.pts(tab === 'diag' ? 'diag' : 'chat') : null;   /* AI-SUB: الرصيد الحقيقي من اشتراك المساعد (شات = استشارة+تحليل، تشخيص = بالصور) */
+    if(ap){ paintQuota(ap.left, ap.max); return; }
     var m = tab === 'diag' ? 'diagnose' : 'ask';
     var l = tab === 'diag' ? Math.min(left('diag_q'), left('diagnose')) : ((src === 'any' || card.querySelector('.nbai-qi').value.trim()) ? left('ask') : left('analyze'));
     /* القديم (للتراجع): foot.textContent = 'متبقي لك اليوم: ' + l + ' — الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.'; */
@@ -27782,7 +28248,7 @@ function buildScreen(){
     call(q ? 'ask' : 'analyze', any ? { summary: summary, question: q, general: true, history: hist } : { summary: summary, question: q }, JSON.stringify(summary) + '|' + q + (any ? '|any|' + JSON.stringify(hist) : ''), function(r){
       var live = card.isConnected;
       if(live) lock(false); else busy = false;
-      settle(ty, 'ask', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
+      settle(ty, 'ask', r.ok ? fmt(r.j.text) : esc(aiErr(r.err)), !r.ok);
       if(live){
         if(r.ok){ if(!any){ again.hidden = false; if(OPEN){ try{ again.focus({ preventScroll: true }); }catch(e){} } } }
         else setSolo(false);   /* فشل → مربع الكتابة يرجع عشان يتبعت تاني */
@@ -27854,7 +28320,7 @@ function buildScreen(){
       call('diag_q', { images: list, note: note, ctx: ctx, audience: aud }, ck, function(r){
         var live = card.isConnected;
         if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
-        if(!r.ok){ settle(ty1, 'diag', esc(errText(r.err)), true); if(live) paintFoot(); return; }
+        if(!r.ok){ settle(ty1, 'diag', esc(aiErr(r.err)), true); if(live) paintFoot(); return; }
         var q = r.j.q; if(!q && r.j.text){ try{ q = JSON.parse(r.j.text); }catch(e){} }
         if(!q){ settle(ty1, 'diag', esc(MSG.blocked), true); if(live) paintFoot(); return; }
         settle(ty1, 'diag', prelimHtml(q), !q.isPlant);
@@ -27881,7 +28347,7 @@ function buildScreen(){
     call('diagnose', { images: list, note: note, ctx: ctx, audience: aud, cands: cands, answers: answers }, ck + '|' + JSON.stringify(answers), function(r){
       var live = card.isConnected;
       if(live) setBusy(btn, false, DIAG_LBL); else busy = false;
-      settle(ty2, 'diag', r.ok ? fmt(r.j.text) : esc(errText(r.err)), !r.ok);
+      settle(ty2, 'diag', r.ok ? fmt(r.j.text) : esc(aiErr(r.err)), !r.ok);
       if(live){ if(r.ok) resetComposer(); paintFoot(); }   /* بعد التشخيص النهائي الفورم بيتفضّى لتشخيص جديد */
     });
   }
@@ -27987,7 +28453,7 @@ function mountDash(mc, farm, st){
     '<div class="nbai-cta-tx"><div class="nbai-cta-t"><bdi dir="ltr">Nabtex AI</bdi></div><p class="nbai-cta-d">استشارة زراعية وتشخيص أمراض النبات بدقة بالصورة.</p></div>' +
     '<button type="button" class="nbai-cta-go">افتح المساعد<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>';
   hdr.insertAdjacentElement('afterend', cta);   /* أعلى ترتيب الصفحة: بعد الهيدر مباشرة وقبل باقي الأقسام */
-  cta.querySelector('.nbai-cta-go').addEventListener('click', function(){ openScreen(this); });
+  cta.querySelector('.nbai-cta-go').addEventListener('click', function(){ if(window.AiSub && window.NbFarmAI && typeof window.NbFarmAI.open === 'function') window.NbFarmAI.open(this); else openScreen(this); });   /* AI-SUB: نفس بوابة الاشتراك/النقاط */
 }
 
 /* ═════════ قرار الري / الرش من الطقس — بيتنده من كارت «الطقس وقرار الري» (NbFarmAI.decide) — إضافة مستقلة، مفيش تغيير في باقي الأوضاع ═════════
@@ -28078,6 +28544,21 @@ window.NbFarmAI.open = function(opener){
   try{
     var u = user();
     var gate = function(){ if(typeof showPage === 'function') showPage('farm'); };
+    /* AI-SUB: البوابة الجديدة — تجربة يومين / باقة المساعد / اشتراك إدارة المزرعة؛ غير كده شاشة اشتراك المساعد (مش شاشة المزرعة). القديم (للتراجع): FarmSub.hasAccess بس */
+    if(u && window.AiSub && typeof window.AiSub.get === 'function'){
+      window.AiSub.get(function(d){
+        try{
+          if(!d || !d.hasAccess){ window.AiSub.paywall({}); return; }
+          var f = curFarm();
+          if(!f || (f.userId && f.userId !== u.uid)){
+            var c = lsGet('nabtex_farm_cache_v2__' + u.uid);
+            STATE = (c && c.farms && c.farms.length) ? { farms: c.farms, currentFarm: c.farms[0] } : null;
+          }
+          openScreen(opener && opener.isConnected ? opener : null);
+        }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
+      }, true);
+      return;
+    }
     if(!u || !window.FarmSub || typeof window.FarmSub.hasAccess !== 'function'){ gate(); return; }
     window.FarmSub.hasAccess(function(ok){
       try{
@@ -28092,8 +28573,33 @@ window.NbFarmAI.open = function(opener){
     });
   }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
 };
+/* AI-SUB: أي تغيير في الرصيد/الاشتراك (استخدام، شراء، يوم جديد) يعيد رسم شريط الرصيد */
+if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onChange(function(){ if(SCR && SCR._repaint){ try{ SCR._repaint(); }catch(e){} } });
 })();
 </script>
+
+<style id="ai-sub-css">
+/* اشتراك المساعد الذكي (إضافة فقط): سطر حالة الاشتراك + زر «رقّي الباقة» داخل كارت رصيد اليوم. للتراجع: امسح هذا البلوك. */
+.nbai-ov .nbq-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.nbai-ov .nbq-ft[hidden]{display:none}
+.nbai-ov .nbq-s{min-width:0;font-size:10px;line-height:1.4;font-weight:700;color:var(--slate)}
+.nbai-ov .nbq-up{flex:none;margin-inline-start:auto;border:0;border-radius:999px;padding:4px 11px;font-family:inherit;font-size:10.5px;font-weight:800;line-height:1.4;color:#fff;background:var(--ai-g);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbai-ov .nbq-up[hidden]{display:none}
+.nbai-ov .nbq-up:active{opacity:.8}
+.nbai-ov .nbq-up:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+/* باقة البرو: لون ذهبي مميّز في كارت الباقة والشارة (إضافة فقط) */
+.fsub-plan--pro{border-color:#e0b24a;background:linear-gradient(135deg,#fff8e6,var(--card) 85%)}
+.fsub-plan--pro:hover{border-color:#c98f12}
+.fsub-plan--pro .fsub-plan-price{color:#9a6700}
+.fsub-plan--pro .fsub-plan-note b{color:#b7791f}
+.fsub-plan--pro.on{border-color:#c98f12;background:linear-gradient(135deg,#fff3cf,var(--card) 85%);box-shadow:0 12px 28px rgba(201,143,18,.22),0 0 0 3px rgba(201,143,18,.14)}
+.fsub-plan--pro.on::before{border-color:#c98f12;background-color:#c98f12}
+.fsub-badge--pro{background:linear-gradient(135deg,#b7791f,#f0b429);color:#3b2600;box-shadow:0 4px 12px rgba(201,143,18,.35);letter-spacing:.06em}
+[data-dark] .fsub-plan--pro{border-color:#8a6a1f;background:linear-gradient(135deg,rgba(240,180,41,.14),var(--card) 85%)}
+[data-dark] .fsub-plan--pro .fsub-plan-price{color:#f0c35a}
+[data-dark] .fsub-plan--pro .fsub-plan-note b{color:#f0c35a}
+[data-dark] .fsub-plan--pro.on{border-color:#f0b429;background:linear-gradient(135deg,rgba(240,180,41,.22),var(--card) 85%)}
+</style>
 
 <style id="nb-farm-hub">
 /* ═══════════════════════════════════════════════════════════════

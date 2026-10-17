@@ -593,6 +593,8 @@ body[data-light] #mkdt-delete-btn{color:#dc2626!important}
 .fsa-tabs{display:flex;gap:6px;margin-bottom:8px}
 .fsa-tab{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--border-md);background:transparent;color:var(--muted);font:700 11.5px inherit;font-family:inherit;cursor:pointer}
 .fsa-tab.on{background:var(--approved-bg);color:var(--emerald);border-color:var(--emerald)}
+.asa-tab{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--border-md);background:transparent;color:var(--muted);font:700 11.5px inherit;font-family:inherit;cursor:pointer}
+.asa-tab.on{background:var(--approved-bg);color:var(--emerald);border-color:var(--emerald)}
 .fsa-card{background:rgba(255,255,255,.022);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:7px;font-size:12px;line-height:1.7}
 .fsa-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .fsa-mail{font-weight:800;word-break:break-all}
@@ -711,6 +713,16 @@ body[data-light] .fsa-card{background:#f3faf4}
         <div id="fsub-admin-list"><div class="fsa-empty">جاري التحميل...</div></div>
         <div class="courses-heading" style="padding-top:12px">سجل العمليات (Audit)</div>
         <div id="fsub-admin-audit"><div class="fsa-empty">جاري التحميل...</div></div>
+      </div>
+      <div class="sidebar-courses" data-atab="home" id="aisub-admin-block">
+        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/></svg>اشتراكات المساعد الذكي <span id="aisub-admin-count" class="fsa-badge pending" style="display:none"></span></div>
+        <div class="fsa-tabs">
+          <button class="asa-tab on" data-asf="pending" onclick="aiAdminFilter('pending')">قيد المراجعة</button>
+          <button class="asa-tab" data-asf="all" onclick="aiAdminFilter('all')">الكل</button>
+        </div>
+        <div id="aisub-admin-list"><div class="fsa-empty">جاري التحميل...</div></div>
+        <div class="courses-heading" style="padding-top:12px">سجل عمليات المساعد (Audit)</div>
+        <div id="aisub-admin-audit"><div class="fsa-empty">جاري التحميل...</div></div>
       </div>
       <div class="sidebar-courses" data-atab="home" id="freg-block">
         <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>سجل المزارع</div>
@@ -1082,6 +1094,7 @@ auth.onAuthStateChanged(async function(user) {
   startBroadcastLogListener();
   xpAdminLoad();
   startFarmSubListeners();
+  startAiSubListeners();
   startFarmsCountListener();
 });
 
@@ -2193,6 +2206,10 @@ async function confirmAction() {
       await doFarmSubAction('approve', pendingAction.docId, '');
     } else if (pendingAction.type === 'fsub-reject') {
       await doFarmSubAction('reject', pendingAction.docId, (document.getElementById('confirm-note').value || '').trim());
+    } else if (pendingAction.type === 'aisub-approve') {
+      await doAiSubAction('approve', pendingAction.docId, '');
+    } else if (pendingAction.type === 'aisub-reject') {
+      await doAiSubAction('reject', pendingAction.docId, (document.getElementById('confirm-note').value || '').trim());
     } else if (pendingAction.type === 'send-notif') {
       await doSendBroadcast(pendingAction);
     } else if (pendingAction.type === 'settle-marketer') {
@@ -2786,6 +2803,142 @@ async function doFarmSubAction(action, paymentId, note) {
   if (!res.ok) throw new Error(data.message || data.error || ('HTTP ' + res.status));
   showToast(action === 'approve' ? '✅ تم تفعيل الاشتراك — ينتهي ' + new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(data.periodEnd)) : '❌ تم رفض الطلب وإشعار المستخدم', 'ok');
   return data;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   اشتراكات المساعد الذكي (ai_subscription_payments / ai_subscriptions) — منفصلة عن اشتراكات إدارة المزرعة.
+   الاعتماد/الرفض بيتم هنا مباشرة بحساب الأدمن (firestore.rules بتسمح بالتحديث للأدمن فقط: isAdmin) في Transaction واحدة
+   مع سجل Audit. مدة الباقة شهر ميلادي من (الآن أو انتهاء الاشتراك الحالي لو لسه شغال → تجديد متراكم) والباقة المشتراة بتبقى هي الفعّالة فورًا.
+   ══════════════════════════════════════════════════════════════ */
+const AISUB_PLAN_LABEL = { plan1: 'الباقة الأولى (149ج)', plan2: 'الباقة الثانية (199ج)', plan3: 'باقة البرو (300ج)' };
+let aiAdminPays = [], aiAdminFilterVal = 'pending', aiAdminPaysUnsub = null, aiAdminAuditUnsub = null;
+
+function aiAddMonth(ms) {
+  const d = new Date(ms), day = d.getUTCDate();
+  d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + 1);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, last));
+  return d.getTime();
+}
+
+function startAiSubListeners() {
+  if (aiAdminPaysUnsub) { aiAdminPaysUnsub(); aiAdminPaysUnsub = null; }
+  if (aiAdminAuditUnsub) { aiAdminAuditUnsub(); aiAdminAuditUnsub = null; }
+  aiAdminPaysUnsub = db.collection('ai_subscription_payments').orderBy('createdAt', 'desc').limit(150)
+    .onSnapshot(function(snap) {
+      aiAdminPays = snap.docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
+      renderAiSubAdmin();
+    }, function(e) {
+      document.getElementById('aisub-admin-list').innerHTML = '<div class="fsa-empty">تعذّر التحميل: ' + fsubEsc(e.message) + '<br>(تأكد من نشر firestore.rules الجديدة)</div>';
+    });
+  aiAdminAuditUnsub = db.collection('ai_subscription_audit').orderBy('at', 'desc').limit(10)
+    .onSnapshot(function(snap) {
+      const el = document.getElementById('aisub-admin-audit');
+      if (!snap.docs.length) { el.innerHTML = '<div class="fsa-empty">لا عمليات بعد</div>'; return; }
+      el.innerHTML = snap.docs.map(function(d) {
+        const a = d.data();
+        return '<div class="fsa-audit">' + (a.action === 'approve' ? '✅ قبول' : '❌ رفض') + ' — ' + fsubEsc(AISUB_PLAN_LABEL[a.plan] || a.plan || '') +
+          ' — ' + fsubFmtTs(a.at) + '<br>UID: ' + fsubEsc((a.uid || '').slice(0, 10)) + '… · بواسطة ' + fsubEsc(a.byEmail || (a.by || '').slice(0, 8)) +
+          (a.action === 'approve' && a.paidUntil ? '<br>ينتهي: ' + fsubFmtDay(a.paidUntil) + (a.stacking ? ' (تجديد متراكم)' : '') : '') +
+          (a.note ? '<br>ملاحظة: ' + fsubEsc(a.note) : '') + '</div>';
+      }).join('');
+    }, function() { document.getElementById('aisub-admin-audit').innerHTML = '<div class="fsa-empty">—</div>'; });
+}
+
+function aiAdminFilter(f) {
+  aiAdminFilterVal = f;
+  document.querySelectorAll('.asa-tab').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-asf') === f); });
+  renderAiSubAdmin();
+}
+
+function renderAiSubAdmin() {
+  const pend = aiAdminPays.filter(function(p) { return p.status === 'pending'; });
+  const cnt = document.getElementById('aisub-admin-count');
+  cnt.textContent = pend.length; cnt.style.display = pend.length ? 'inline-block' : 'none';
+  const list = aiAdminFilterVal === 'pending' ? pend : aiAdminPays.slice(0, 60);
+  const host = document.getElementById('aisub-admin-list');
+  if (!list.length) { host.innerHTML = '<div class="fsa-empty">' + (aiAdminFilterVal === 'pending' ? 'لا طلبات قيد المراجعة' : 'لا طلبات') + '</div>'; return; }
+  host.innerHTML = list.map(function(p) {
+    const st = p.status === 'approved' ? 'مقبول' : p.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة';
+    const method = p.paymentMethod === 'instapay' ? 'InstaPay' : 'فودافون كاش';
+    const id = fsubEsc(p._id);
+    let actions = '';
+    if (p.status === 'pending') actions = '<button class="fsa-btn" onclick="aiAskApprove(\'' + id + '\')">قبول وتفعيل</button><button class="fsa-btn rej" onclick="aiAskReject(\'' + id + '\')">رفض</button>';
+    else if (p.status === 'rejected') actions = '<button class="fsa-btn" onclick="aiAskApprove(\'' + id + '\')">قبول (تجاوز الرفض)</button>';
+    return '<div class="fsa-card"><div class="fsa-top"><div class="fsa-mail">' + fsubEsc(p.email || p.uid) + '</div><span class="fsa-badge ' + fsubEsc(p.status) + '">' + st + '</span></div>' +
+      '<div><b>' + fsubEsc(AISUB_PLAN_LABEL[p.plan] || p.plan) + '</b> — ' + fsubEsc(p.amount) + ' ج — ' + method + '</div>' +
+      '<div class="fsa-meta">' + (p.paymentMethod === 'instapay' ? 'حساب InstaPay: ' : 'هاتف: ') + fsubEsc(p.phone) + ' · مرجع: ' + fsubEsc(p.transactionRef) + '</div>' +
+      '<div class="fsa-meta">' + fsubFmtTs(p.createdAt) + (p.status === 'approved' && p.periodEnd ? ' · ينتهي ' + fsubFmtDay(p.periodEnd) : '') + '</div>' +
+      (p.status === 'rejected' && p.rejectionNote ? '<div class="fsa-meta">السبب: ' + fsubEsc(p.rejectionNote) + '</div>' : '') +
+      (actions ? '<div class="fsa-actions">' + actions + '</div>' : '') + '</div>';
+  }).join('');
+}
+
+function aiAskApprove(paymentId) {
+  const p = aiAdminPays.find(function(x) { return x._id === paymentId; });
+  if (!p) return;
+  const dup = aiAdminPays.some(function(x) { return x._id !== paymentId && x.status === 'approved' && x.refKey && x.refKey === p.refKey; });
+  pendingAction = { type: 'aisub-approve', docId: paymentId };
+  document.getElementById('confirm-ico').innerHTML   = IC3.check;
+  document.getElementById('confirm-title').textContent = 'تفعيل اشتراك المساعد الذكي';
+  document.getElementById('confirm-msg').textContent   = (AISUB_PLAN_LABEL[p.plan] || p.plan) + ' (' + p.amount + ' جنيه) للحساب ' + (p.email || p.uid) +
+    '. المدة شهر ميلادي من الآن (أو من انتهاء الاشتراك الحالي لو لسه شغال)، والباقة دي هتبقى الفعّالة فورًا. اتأكد إن التحويل وصل فعلًا بنفس المبلغ والمرجع.' +
+    (dup ? ' ⚠️ نفس المرجع اتقبل قبل كده في طلب تاني — هيتم رفض التفعيل.' : '');
+  document.getElementById('confirm-note').style.display = 'none';
+  document.getElementById('confirm-price-wrap').style.display = 'none';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.check + ' قبول وتفعيل';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--approved)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+function aiAskReject(paymentId) {
+  pendingAction = { type: 'aisub-reject', docId: paymentId };
+  document.getElementById('confirm-ico').innerHTML   = IC3.x;
+  document.getElementById('confirm-title').textContent = 'رفض طلب اشتراك المساعد الذكي';
+  document.getElementById('confirm-msg').textContent   = 'هل تريد رفض هذا الطلب؟ سيظهر للمستخدم سبب الرفض في شاشة الاشتراك.';
+  document.getElementById('confirm-note').style.display = 'block';
+  document.getElementById('confirm-note').value = '';
+  document.getElementById('confirm-price-wrap').style.display = 'none';
+  document.getElementById('confirm-ok-btn').innerHTML = IC2.x + ' رفض الطلب';
+  document.getElementById('confirm-ok-btn').style.background = 'var(--rejected)';
+  document.getElementById('confirm-overlay').classList.add('on');
+}
+
+async function doAiSubAction(action, paymentId, note) {
+  const admin = auth.currentUser;
+  if (!admin) throw new Error('سجّل دخول الأدمن الأول');
+  const FV = firebase.firestore.FieldValue;
+  const payRef = db.collection('ai_subscription_payments').doc(paymentId);
+  const local = aiAdminPays.find(function(x) { return x._id === paymentId; });
+  if (action === 'approve' && local && local.refKey) {
+    const dupSnap = await db.collection('ai_subscription_payments').where('refKey', '==', local.refKey).where('status', '==', 'approved').limit(1).get();
+    if (!dupSnap.empty && dupSnap.docs[0].id !== paymentId) throw new Error('نفس رقم العملية اتقبل قبل كده في طلب تاني');
+  }
+  let endMs = 0;
+  await db.runTransaction(async function(tx) {
+    const ps = await tx.get(payRef);
+    if (!ps.exists) throw new Error('الطلب مش موجود');
+    const p = ps.data();
+    const audit = db.collection('ai_subscription_audit').doc();
+    if (action === 'approve') {
+      if (p.status === 'approved') throw new Error('الطلب ده اتقبل قبل كده');
+      if (!AISUB_PLAN_LABEL[p.plan]) throw new Error('باقة غير معروفة');
+      const subRef = db.collection('ai_subscriptions').doc(p.uid);
+      const ss = await tx.get(subRef);
+      const curEnd = ss.exists && ss.data().paidUntil && ss.data().paidUntil.toMillis ? ss.data().paidUntil.toMillis() : 0;
+      const stacking = curEnd > Date.now();
+      endMs = aiAddMonth(Math.max(Date.now(), curEnd));
+      const endTs = firebase.firestore.Timestamp.fromMillis(endMs);
+      tx.update(payRef, { status: 'approved', approvedAt: FV.serverTimestamp(), approvedBy: admin.uid, periodEnd: endTs });
+      tx.set(subRef, { uid: p.uid, plan: p.plan, paidUntil: endTs, lastPaymentId: paymentId, updatedAt: FV.serverTimestamp() }, { merge: true });
+      tx.set(audit, { action: 'approve', paymentId: paymentId, uid: p.uid, plan: p.plan, amount: p.amount, by: admin.uid, byEmail: admin.email || '', at: FV.serverTimestamp(), paidUntil: endTs, stacking: stacking, note: '' });
+    } else {
+      if (p.status !== 'pending') throw new Error('الطلب مش قيد المراجعة');
+      tx.update(payRef, { status: 'rejected', rejectionNote: String(note || '').slice(0, 300), rejectedAt: FV.serverTimestamp(), rejectedBy: admin.uid });
+      tx.set(audit, { action: 'reject', paymentId: paymentId, uid: p.uid, plan: p.plan, amount: p.amount, by: admin.uid, byEmail: admin.email || '', at: FV.serverTimestamp(), note: String(note || '').slice(0, 300) });
+    }
+  });
+  showToast(action === 'approve' ? '✅ تم تفعيل اشتراك المساعد — ينتهي ' + new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(endMs)) : '❌ تم رفض الطلب', 'ok');
 }
 
 /* ══════════════════════════════════════════════════════════════

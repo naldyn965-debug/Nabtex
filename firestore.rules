@@ -27,6 +27,33 @@ service cloud.firestore {
     }
     function fsPrice(plan) { return plan == 'monthly' ? 149 : (plan == 'annual' ? 999 : -1); }
 
+    // ── AI ASSISTANT SUBSCRIPTIONS (المساعد الذكي) — منفصلة عن اشتراكات إدارة المزرعة ─────────────
+    // ai_subscriptions/{uid}: trial = 2 days (client creates it ONCE, pinned to server time); paidUntil/plan are written by admin only.
+    // Daily points (ai_usage) are capped HERE, so the limits hold even if someone bypasses the UI or calls Firestore directly.
+    //   plan1 (149 EGP): 10 chat + 5 diagnosis · plan2 (199 EGP): 15 + 10 · plan3 PRO (300 EGP): 20 + 15 · 2-day trial: 3 + 2 · Farm Management access (trial/paid): 3 + 3
+    //   per kind the highest applicable source wins. Keep these numbers identical to aiAllowance() in api/farm-ai.js.
+    function aiDoc(uid) { return /databases/$(database)/documents/ai_subscriptions/$(uid); }
+    function aiPrice(plan) { return plan == 'plan1' ? 149 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 300 : -1)); }
+    function aiPlanIs(uid, p) {
+      return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
+        && get(aiDoc(uid)).data.get('plan', '') == p;
+    }
+    function aiTrialOk(uid) {
+      return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(2, 'd') > request.time;
+    }
+    function aiFarmOk(uid) {
+      return exists(fsDoc(uid)) && (
+        get(fsDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(7, 'd') > request.time
+        || get(fsDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time);
+    }
+    function aiChatLim(uid) { return aiPlanIs(uid, 'plan3') ? 20 : (aiPlanIs(uid, 'plan2') ? 15 : (aiPlanIs(uid, 'plan1') ? 10 : ((aiTrialOk(uid) || aiFarmOk(uid)) ? 3 : 0))); }
+    function aiDiagLim(uid) { return aiPlanIs(uid, 'plan3') ? 15 : (aiPlanIs(uid, 'plan2') ? 10 : (aiPlanIs(uid, 'plan1') ? 5 : (aiFarmOk(uid) ? 3 : (aiTrialOk(uid) ? 2 : 0)))); }
+    function aiUN(k) { return request.resource.data.get(k, 0); }
+    function aiUO(k) { return resource.data.get(k, 0); }
+    function aiUsageBounds(uid) {
+      return aiUN('chat') <= aiChatLim(uid) && aiUN('diag') <= aiDiagLim(uid) && aiUN('diagFin') <= 2 * aiUN('diag');
+    }
+
     // ── USERS: access fields (paidCourses / suspendedCourses) are no longer self-editable ──
     // Admin: unrestricted. Student: every other field stays freely writable, but paidCourses may grow by
     // exactly ONE course, and only in the same write that creates a brand-new reward_redemption event
@@ -450,6 +477,81 @@ service cloud.firestore {
     match /farm_subscription_audit/{logId} {
       allow read: if isAdmin();
       allow write: if false;
+    }
+
+    // ── AI ASSISTANT SUBSCRIPTIONS ──
+    match /ai_subscriptions/{uid} {
+      allow read:   if isSelf(uid) || isAdmin();
+      // one-time 2-day trial: create-only for the user (a second set() is an update → denied); admin may create/update (paid plan activation)
+      allow create: if isAdmin()
+                    || (isSelf(uid)
+                        && request.resource.data.keys().hasOnly(['uid', 'trialStartedAt', 'createdAt'])
+                        && request.resource.data.keys().hasAll(['uid', 'trialStartedAt', 'createdAt'])
+                        && request.resource.data.uid == uid
+                        && request.resource.data.trialStartedAt == request.time
+                        && request.resource.data.createdAt == request.time);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Manual payment requests for the AI assistant. Doc id = {uid}_{refKey}; price pinned by the rule; status starts as 'pending';
+    // only an admin can approve/reject (update).
+    match /ai_subscription_payments/{pid} {
+      allow read:   if (isAuth() && resource.data.uid == request.auth.uid) || isAdmin();
+      allow create: if isAuth()
+                    && request.resource.data.keys().hasOnly(['uid','email','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
+                    && request.resource.data.keys().hasAll(['uid','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.plan in ['plan1', 'plan2', 'plan3']
+                    && request.resource.data.amount == aiPrice(request.resource.data.plan)
+                    && request.resource.data.currency == 'EGP'
+                    && request.resource.data.phone is string
+                    && (
+                         (request.resource.data.paymentMethod == 'vodafone_cash' && request.resource.data.phone.matches('[0-9+]{10,15}'))
+                      || (request.resource.data.paymentMethod == 'instapay' && request.resource.data.phone.matches('[A-Za-z0-9._@+-]{3,60}'))
+                       )
+                    && request.resource.data.transactionRef is string
+                    && request.resource.data.transactionRef.matches('[A-Za-z0-9]{6,40}')
+                    && request.resource.data.refKey == request.resource.data.transactionRef.lower()
+                    && pid == request.auth.uid + '_' + request.resource.data.refKey
+                    && request.resource.data.paymentMethod in ['vodafone_cash', 'instapay']
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.get('email', '') is string
+                    && request.resource.data.get('email', '').size() <= 160;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Audit trail for AI subscription approvals (admin only)
+    match /ai_subscription_audit/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Daily AI points: doc id = {uid}_{YYYY-MM-DD (Cairo)}. The server (api/farm-ai.js) spends points with the user's own token;
+    // a write can only add exactly ONE point and never beyond the user's allowance. No decrement, no delete.
+    match /ai_usage/{uday} {
+      allow read:   if isAuth() && uday.matches(request.auth.uid + '_.*');
+      allow create: if isAuth()
+                    && request.resource.data.keys().hasOnly(['uid', 'day', 'chat', 'diag', 'diagFin'])
+                    && request.resource.data.keys().hasAll(['uid', 'day'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.day is string
+                    && request.resource.data.day.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+                    && uday == request.auth.uid + '_' + request.resource.data.day
+                    && aiUN('chat') + aiUN('diag') + aiUN('diagFin') == 1
+                    && aiUsageBounds(request.auth.uid);
+      allow update: if isAuth()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'day', 'chat', 'diag', 'diagFin'])
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.day == resource.data.day
+                    && ((aiUN('chat') == aiUO('chat') + 1 && aiUN('diag') == aiUO('diag') && aiUN('diagFin') == aiUO('diagFin'))
+                     || (aiUN('diag') == aiUO('diag') + 1 && aiUN('chat') == aiUO('chat') && aiUN('diagFin') == aiUO('diagFin'))
+                     || (aiUN('diagFin') == aiUO('diagFin') + 1 && aiUN('chat') == aiUO('chat') && aiUN('diag') == aiUO('diag')))
+                    && aiUsageBounds(request.auth.uid);
+      allow delete: if false;
     }
 
     match /{document=**} {
