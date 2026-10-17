@@ -18268,47 +18268,55 @@ document.addEventListener('click', e => {
       return 'ضمن اشتراك إدارة المزرعة';
     }
 
+    var AIPW_X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    var AIPW_SPARK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/></svg>';
+
     function aiPlansHTML(d) {
-      var cur = d && d.plan, h = '<div class="fsub-lbl-h">اختر الباقة</div><div class="fsub-plans" role="radiogroup" aria-label="الباقات">';
+      var cur = d && d.plan, h = '<div class="aipw-pls" role="radiogroup" aria-label="الباقات">';
       ['plan1', 'plan2', 'plan3'].forEach(function(k) {
-        var p = AI_PLANS[k];
-        h += '<div class="fsub-plan' + (k === 'plan3' ? ' fsub-plan--pro' : '') + (aiUI.plan === k ? ' on' : '') + '" data-plan="' + k + '" role="radio" tabindex="0" onclick="AiSub.pick(\'' + k + '\')">' +
-          (k === 'plan3' ? '<span class="fsub-badge fsub-badge--pro">PRO</span>' : '') +
-          '<div class="fsub-plan-name">' + p.label + (cur === k ? ' (باقتك الحالية)' : '') + '</div>' +
-          '<div class="fsub-plan-price">' + p.price + ' <small>ج.م / شهر</small></div>' +
-          '<div class="fsub-plan-note">' + aiPlanLine(p) + '</div></div>';
+        var p = AI_PLANS[k], on = aiUI.plan === k;
+        h += '<button type="button" class="aipw-pl' + (k === 'plan3' ? ' aipw-pro' : '') + (on ? ' on' : '') + '" data-plan="' + k + '" role="radio" aria-checked="' + on + '" onclick="AiSub.pick(\'' + k + '\')">' +
+          '<span class="aipw-rd" aria-hidden="true"></span>' +
+          '<span class="aipw-pn">' + p.label + (k === 'plan3' ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
+          '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
+          '<span class="aipw-pc"><i><b>' + p.chat + '</b> استشارة</i><i><b>' + p.diag + '</b> تشخيص بالصور</i><i class="aipw-dly">يوميًا</i></span>' +
+        '</button>';
       });
       return h + '</div>';
     }
 
     function aiPaywallHTML(d, opt) {
-      var head, body = '';
+      var title, sub, body = '', plans = false;
       var top = d && d.state === 'active' && d.plan === 'plan3';
       if (d && d.state === 'error') {
-        head = fsubHead('تعذّر التحقق من الاشتراك', 'تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.');
-        body = '<button class="farm-btn-primary" onclick="AiSub.retry()">إعادة المحاولة</button>';
+        title = 'تعذّر التحقق من الاشتراك'; sub = 'تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.';
+        body = '<button type="button" class="aipw-cta" onclick="AiSub.retry()"><span>إعادة المحاولة</span></button>';
       } else if (d && d.state === 'pending' && !d.hasAccess) {
-        head = fsubHead('طلب الدفع قيد المراجعة', 'هنفعّل اشتراكك فور التحقق من الدفع.');
+        title = 'طلب الدفع قيد المراجعة'; sub = 'هنفعّل اشتراكك فور التحقق من الدفع.';
         body = aiPendingHTML(d.pending) + '<div class="fco-vars">' + fcoTimelineHTML() + '</div>';
       } else if (top) {
-        head = fsubHead('أنت على أعلى باقة', 'نقاطك بتتجدد كل يوم — لو خلصت نقاط النهاردة تقدر تكمل بكرة.');
+        title = 'أنت على باقة البرو'; sub = 'أعلى باقة — نقاطك بتتجدد كل يوم.';
       } else {
-        if (opt && opt.limit) head = fsubHead('عايز نقاط أكتر؟', 'نقاطك بتتجدد كل يوم — اختر الباقة اللي تناسبك وكمّل.');
-        else if (d && d.state === 'expired') head = fsubHead('انتهت فترة اشتراكك', 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.');
-        else if (d && d.state === 'rejected') head = fsubHead('تعذّر تفعيل طلبك الأخير', 'راجع بيانات الدفع وابعت طلبًا جديدًا.');
-        else head = fsubHead('اشترك في المساعد الذكي', 'استشارة زراعية وتشخيص أمراض النبات بالصور — بنقاط بتتجدد يوميًا.');
-        if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="fsub-note fsub-note--bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
+        plans = true;
+        if (opt && opt.limit) { title = 'عايز نقاط أكتر؟'; sub = 'نقاطك بتتجدد كل يوم — اختر الباقة المناسبة.'; }
+        else if (d && d.state === 'expired') { title = 'انتهت فترة اشتراكك'; sub = 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.'; }
+        else if (d && d.state === 'rejected') { title = 'تعذّر تفعيل طلبك الأخير'; sub = 'راجع بيانات الدفع وابعت طلبًا جديدًا.'; }
+        else { title = 'اشترك في المساعد الذكي'; sub = 'استشارة زراعية وتشخيص أمراض بالصور — بنقاط يومية.'; }
+        if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="aipw-note aipw-bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         if (d && d.pending) body += aiPendingHTML(d.pending);
+        body += aiPlansHTML(d);
+        var pr = AI_PLANS[aiUI.plan] ? AI_PLANS[aiUI.plan].price : 149;
+        body += '<button type="button" class="aipw-cta" id="ai-cta" onclick="AiSub.openPay()"><span>متابعة إلى الدفع — <b id="ai-cta-price">' + pr + '</b> جنيه</span>' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>';
         if (d && d.canStartTrial) {
-          body += '<button class="farm-btn-primary fsub-trial" id="ai-trial" onclick="AiSub.startTrial()">ابدأ التجربة المجانية — يومين</button>' +
-                  '<div class="fsub-note fsub-note--info">التجربة: <b>3</b> نقاط استشارة + <b>2</b> نقطة تشخيص بالصور يوميًا.</div>' +
-                  '<div class="fsub-or"><span>تجربة واحدة لكل حساب — أو اشترك مباشرة</span></div>';
+          body += '<button type="button" class="aipw-trial" id="ai-trial" onclick="AiSub.startTrial()">جرّب مجانًا لمدة يومين<small>3 استشارة + 2 تشخيص يوميًا · مرة واحدة لكل حساب</small></button>';
         }
-        if (d && d.farmOk) body += '<div class="fsub-note fsub-note--info">اشتراك إدارة المزرعة بيشمل <b>3</b> نقاط استشارة + <b>3</b> نقاط تشخيص يوميًا — الباقات دي للزيادة.</div>';
-        body += aiPlansHTML(d) + fsubCtaHTML().replace('FarmSub.openPay()', 'AiSub.openPay()').replace('id="fsub-cta"', 'id="ai-cta"');
+        if (d && d.farmOk) body += '<div class="aipw-fn">اشتراك إدارة المزرعة بيشمل 3 استشارة + 3 تشخيص يوميًا.</div>';
+        body += '<div class="aipw-sec"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg>بياناتك آمنة ومشفرة</div>';
       }
-      return '<div class="fsub-wrap"><div class="fsub-card">' + head + body +
-        '<button class="farm-back-btn fsub-back" onclick="AiSub.closePaywall()">← رجوع</button></div></div>';
+      if (!plans) body += '<button type="button" class="aipw-trial" onclick="AiSub.closePaywall()">إغلاق</button>';
+      return '<button type="button" class="aipw-x" onclick="AiSub.closePaywall()" aria-label="إغلاق">' + AIPW_X + '</button>' +
+        '<div class="aipw-hd"><span class="aipw-ic">' + AIPW_SPARK + '</span><h2 class="aipw-t" id="ai-pw-t">' + title + '</h2><p class="aipw-s">' + sub + '</p></div>' + body;
     }
     function aiPendingHTML(p) {
       if (!p) return '';
@@ -18316,8 +18324,10 @@ document.addEventListener('click', e => {
       return '<div class="fsub-note fsub-note--info"><b>طلب قيد المراجعة</b><br>' + (pl ? pl.label : '') + (when ? ' — أُرسل ' + when : '') + (p.refKey ? ' — مرجع …' + fsubEsc(p.refKey.slice(-4)) : '') + '</div>';
     }
 
+    function aiPwKey(ev) { if (ev.key === 'Escape') aiClosePaywall(); }
     function aiClosePaywall() {
       var o = document.getElementById('ai-pw');
+      document.removeEventListener('keydown', aiPwKey);
       if (o && o.parentNode) o.parentNode.removeChild(o);
       if (o && o._prevOv !== undefined) document.body.style.overflow = o._prevOv;
     }
@@ -18325,12 +18335,14 @@ document.addEventListener('click', e => {
       var o = document.getElementById('ai-pw');
       if (!o) {
         o = document.createElement('div');
-        o.id = 'ai-pw'; o.className = 'fsub-overlay'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
+        o.id = 'ai-pw'; o.className = 'aipw'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'ai-pw-t');
         o._prevOv = document.body.style.overflow; document.body.style.overflow = 'hidden';
+        o.addEventListener('click', function(ev) { if (ev.target === o) aiClosePaywall(); });
+        document.addEventListener('keydown', aiPwKey);
         document.body.appendChild(o);
       }
       if (opt) o._opt = opt;
-      o.innerHTML = '<div class="fsub-overlay-in">' + aiPaywallHTML(d, o._opt) + '</div>';
+      o.innerHTML = '<div class="aipw-box" data-p="' + aiUI.plan + '">' + aiPaywallHTML(d, o._opt) + '</div>';
     }
     function aiRefreshPaywall() {
       if (!document.getElementById('ai-pw')) return;
@@ -18563,7 +18575,9 @@ document.addEventListener('click', e => {
       pick: function(plan) {
         if (!AI_PLANS[plan]) return;
         aiUI.plan = plan;
-        Array.prototype.forEach.call(document.querySelectorAll('#ai-pw .fsub-plan'), function(el) { el.classList.toggle('on', el.getAttribute('data-plan') === plan); });
+        var box = document.querySelector('#ai-pw .aipw-box'); if (box) box.setAttribute('data-p', plan);
+        Array.prototype.forEach.call(document.querySelectorAll('#ai-pw .aipw-pl'), function(el) { var on = el.getAttribute('data-plan') === plan; el.classList.toggle('on', on); el.setAttribute('aria-checked', on); });
+        var c = document.getElementById('ai-cta-price'); if (c) c.textContent = AI_PLANS[plan].price;
       },
       openPay: function() { aiCoOpen(); },
       startTrial: function() {
@@ -28587,6 +28601,58 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 .nbai-ov .nbq-up[hidden]{display:none}
 .nbai-ov .nbq-up:active{opacity:.8}
 .nbai-ov .nbq-up:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+/* ═══ شاشة اشتراك المساعد (بريميوم، مدمجة): Bottom sheet بزر إغلاق — كلاسات aipw-* فقط ═══ */
+.aipw{position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,20,12,.58);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:aipwFade .25s ease both;font-family:var(--f-ui)}
+.aipw-box{position:relative;width:100%;max-width:440px;max-height:96vh;max-height:96dvh;overflow-y:auto;overscroll-behavior:contain;direction:rtl;background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;padding:20px 16px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -14px 60px rgba(10,40,20,.28);animation:aipwUp .45s cubic-bezier(.22,1,.36,1) both}
+@media (min-width:560px){.aipw{align-items:center;padding:20px}.aipw-box{border-radius:28px}}
+.aipw-x{position:absolute;top:12px;inset-inline-start:12px;width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--bg3);color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,transform .15s}
+.aipw-x:hover{color:var(--ink)}.aipw-x:active{transform:scale(.92)}
+.aipw-x:focus-visible,.aipw-pl:focus-visible,.aipw-cta:focus-visible,.aipw-trial:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+.aipw-hd{text-align:center;padding:2px 36px 14px}
+.aipw-ic{width:52px;height:52px;margin:0 auto 10px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#34a862,#0f552e);box-shadow:0 8px 20px rgba(27,107,58,.3),inset 0 1px 0 rgba(255,255,255,.28)}
+.aipw-t{margin:0 0 4px;font-size:19px;font-weight:900;line-height:1.4;color:var(--ink)}
+.aipw-s{margin:0;font-size:12.5px;line-height:1.7;color:var(--muted)}
+.aipw-pls{display:flex;flex-direction:column;gap:9px}
+.aipw-pl{position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"rd pn pp" ". pc pc";align-items:center;column-gap:11px;row-gap:7px;width:100%;padding:13px 14px;text-align:right;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .25s,background .25s,box-shadow .25s,transform .15s}
+.aipw-pl:active{transform:scale(.985)}
+.aipw-rd{grid-area:rd;width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);background:center/12px no-repeat;transition:background-color .25s,border-color .25s}
+.aipw-pn{grid-area:pn;display:flex;align-items:center;gap:6px;min-width:0;font-size:14.5px;font-weight:800;line-height:1.4}
+.aipw-tag{font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 8px;border-radius:99px;background:linear-gradient(135deg,#b7791f,#f0b429);color:#3b2600}
+.aipw-cur{font-style:normal;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--brand-mist);color:var(--brand)}
+.aipw-pp{grid-area:pp;display:flex;align-items:baseline;gap:4px;white-space:nowrap}
+.aipw-pp b{font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.aipw-pp small{font-size:10.5px;font-weight:700;color:var(--muted)}
+.aipw-pc{grid-area:pc;display:flex;flex-wrap:wrap;gap:6px}
+.aipw-pc i{font-style:normal;font-size:11.5px;font-weight:700;line-height:1.3;padding:4px 10px;border-radius:99px;background:var(--bg3);color:var(--muted)}
+.aipw-pc i b{color:var(--ink);font-weight:900}
+.aipw-pc .aipw-dly,.aipw-pl.on .aipw-pc .aipw-dly,.aipw-pro.on .aipw-pc .aipw-dly{background:transparent;padding-inline:2px;color:var(--muted);font-weight:600}
+.aipw-pl.on{border-color:var(--brand);background:linear-gradient(135deg,var(--brand-mist),var(--card) 85%);box-shadow:0 8px 22px rgba(27,107,58,.15),0 0 0 3px rgba(27,107,58,.08)}
+.aipw-pl.on .aipw-rd{border-color:var(--brand);background-color:var(--brand);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7'/%3E%3C/svg%3E")}
+.aipw-pl.on .aipw-pc i{background:rgba(27,107,58,.1)}
+.aipw-pro{border-color:#e0b24a;background:linear-gradient(135deg,#fff8e6,var(--card) 85%)}
+.aipw-pro .aipw-pp b{color:#9a6700}
+.aipw-pro.on{border-color:#c98f12;background:linear-gradient(135deg,#fff3cf,var(--card) 85%);box-shadow:0 8px 22px rgba(201,143,18,.24),0 0 0 3px rgba(201,143,18,.14)}
+.aipw-pro.on .aipw-rd{border-color:#c98f12;background-color:#c98f12}
+.aipw-pro.on .aipw-pc i{background:rgba(201,143,18,.16)}
+.aipw-cta{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:54px;margin-top:14px;padding:0 20px;border:0;border-radius:99px;font:inherit;font-size:15px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand-l));box-shadow:0 10px 24px rgba(27,107,58,.3);-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .25s}
+.aipw-cta:active{transform:scale(.985)}
+.aipw-cta::after{content:"";position:absolute;top:0;bottom:0;right:-80px;width:60px;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:fsubShine 3.2s infinite;pointer-events:none}
+.aipw-box[data-p="plan3"] .aipw-cta{background:linear-gradient(135deg,#b7791f,#f0b429);color:#2e1d00;box-shadow:0 10px 24px rgba(201,143,18,.38)}
+.aipw-trial{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;margin-top:8px;padding:9px 12px;border:0;background:transparent;font:inherit;font-size:13.5px;font-weight:800;color:var(--brand);cursor:pointer;border-radius:14px;-webkit-tap-highlight-color:transparent}
+.aipw-trial small{font-size:10.5px;font-weight:600;color:var(--muted)}
+.aipw-trial:disabled{opacity:.55}
+.aipw-fn{margin-top:4px;text-align:center;font-size:11px;line-height:1.6;color:var(--muted)}
+.aipw-sec{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:6px;font-size:10.5px;color:var(--muted)}
+.aipw-note{margin:0 0 10px;padding:10px 12px;border-radius:14px;font-size:12px;line-height:1.7;background:var(--brand-mist);color:var(--ink)}
+.aipw-bad{background:rgba(220,38,38,.09)}
+.aipw-box .fsub-note{margin:0 0 10px}
+@keyframes aipwUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.aipw,.aipw-box{animation:none}.aipw-cta::after{animation:none}}
+[data-dark] .aipw-box{box-shadow:0 -14px 60px rgba(0,0,0,.6)}
+[data-dark] .aipw-pro{border-color:#8a6a1f;background:linear-gradient(135deg,rgba(240,180,41,.14),var(--card) 85%)}
+[data-dark] .aipw-pro .aipw-pp b{color:#f0c35a}
+[data-dark] .aipw-pro.on{border-color:#f0b429;background:linear-gradient(135deg,rgba(240,180,41,.22),var(--card) 85%)}
 /* باقة البرو: لون ذهبي مميّز في كارت الباقة والشارة (إضافة فقط) */
 .fsub-plan--pro{border-color:#e0b24a;background:linear-gradient(135deg,#fff8e6,var(--card) 85%)}
 .fsub-plan--pro:hover{border-color:#c98f12}
