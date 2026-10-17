@@ -18377,9 +18377,9 @@ document.addEventListener('click', e => {
       var Q = function(a) { return root.querySelector('[data-f=' + a + ']'); };
       /* نصوص خاصة بالمساعد (باقي الشيت زي ما هو) */
       var plm = Q('plm'), pla = Q('pla');
-      plm.setAttribute('data-a', 'p-plan1'); plm.textContent = 'الأولى';
-      pla.setAttribute('data-a', 'p-plan2'); pla.textContent = 'الثانية';
-      var pl3 = pla.cloneNode(false); pl3.setAttribute('data-a', 'p-plan3'); pl3.setAttribute('data-f', 'pl3'); pl3.textContent = 'البرو'; pl3.classList.remove('on'); pla.parentNode.appendChild(pl3);
+      plm.setAttribute('data-a', 'p-plan1'); plm.textContent = 'Basic' /* AI-PLAN-NAMES — القديم (للتراجع): 'الأولى' */;
+      pla.setAttribute('data-a', 'p-plan2'); pla.textContent = 'Plus' /* القديم: 'الثانية' */;
+      var pl3 = pla.cloneNode(false); pl3.setAttribute('data-a', 'p-plan3'); pl3.setAttribute('data-f', 'pl3'); pl3.textContent = 'Pro' /* القديم: 'البرو' */; pl3.classList.remove('on'); pla.parentNode.appendChild(pl3);
       var t1 = root.querySelector('[data-s=received] [data-a=close] span'); if (t1) t1.textContent = 'العودة إلى المساعد';
       var t2 = root.querySelector('[data-s=active] .nbco-p'); if (t2) t2.textContent = 'يمكنك الآن استخدام المساعد الذكي بنقاط باقتك.';
       var t3 = root.querySelector('[data-s=active] [data-a=go] span'); if (t3) t3.textContent = 'العودة إلى المساعد';
@@ -18421,7 +18421,7 @@ document.addEventListener('click', e => {
 
       function refresh() {
         var pl = aiUI.plan, p = AI_PLANS[pl];
-        Q('title').textContent = 'المساعد الذكي — ' + p.label;
+        Q('title').textContent = 'Nabtex AI — ' + p.label; /* AI-PLAN-NAMES — القديم (للتراجع): 'المساعد الذكي — ' + p.label */
         Q('sub').textContent = p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';
         Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
         Q('off').hidden = true;
