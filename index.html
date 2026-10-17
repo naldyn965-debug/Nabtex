@@ -27355,7 +27355,8 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-src-b,.nbai-aud-b{display:inline-flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;min-height:34px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--slate);font-size:12.5px;font-weight:700;line-height:1.3;text-align:center;text-wrap:balance;cursor:pointer;transition:background 180ms,color 180ms,border-color 180ms,transform 160ms var(--ai-ease)}
 .nbai-src-b:active,.nbai-aud-b:active{transform:scale(.97)}
 .nbai-src-b.is-on,.nbai-aud-b.is-on{border-color:var(--ai-ring);background:var(--ai-soft);color:var(--ai-tx);font-weight:800}
-.nbai-aud{margin-top:2px}
+.nbai-aud-w{margin-top:2px}
+.nbai-aud-q{margin:0 2px 6px;font-size:13px;font-weight:800;line-height:1.6;color:var(--ink)}
 
 /* ── المحادثة ── */
 .nbai-th{overflow-x:hidden;position:relative;display:flex;flex-direction:column;gap:10px;min-height:0;padding:6px 2px 10px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -27441,7 +27442,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-again:active{transform:scale(.97)}
 
 /* ── التشخيص: الستيبر المدمج ── */
-.nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-wz,.nbai-aud,.nbai-note,.nbai-qs,.nbai-new),.nbai-ov .nbai-pane.nbai-diag-step :is(.nbai-wz,.nbai-aud,.nbai-note){display:none}
+.nbai-ov .nbai-pane.nbai-diag-busy :is(.nbai-wz,.nbai-aud-w,.nbai-note,.nbai-qs,.nbai-new),.nbai-ov .nbai-pane.nbai-diag-step :is(.nbai-wz,.nbai-aud-w,.nbai-note){display:none}
 .nbai-pick,.nbai-prev{display:none!important}
 .nbai-wz{margin-top:10px}
 .nbai-wz-rail{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0}
@@ -27817,7 +27818,7 @@ function buildScreen(){
       '<input type="file" accept="image/*" class="nbai-file" hidden>' +
       '<button type="button" class="nbai-pick" hidden><span class="nbai-pick-ic" aria-hidden="true"></span><span class="nbai-pick-t">صوّر أو اختر صورة للنبات المصاب</span></button>' +
       '<img class="nbai-prev" alt="الصورة المختارة" hidden>' +
-      '<div class="nbai-aud" role="radiogroup" aria-label="نوع المستخدم"><button type="button" class="nbai-aud-b" data-aud="farm" role="radio">صاحب مزرعة</button><button type="button" class="nbai-aud-b" data-aud="home" role="radio">نباتات في البيت</button></div>' +
+      '<div class="nbai-aud-w"><div class="nbai-aud-q" id="nbai-aud-q">النبات المصاب موجود فين؟</div><div class="nbai-aud" role="radiogroup" aria-labelledby="nbai-aud-q"><button type="button" class="nbai-aud-b" data-aud="farm" role="radio">نبات في مزرعة</button><button type="button" class="nbai-aud-b" data-aud="home" role="radio">نبات في البيت</button></div></div>' +
       '<div class="nbai-wz"></div>' +
       '<input class="nbai-q nbai-note" type="text" maxlength="300" placeholder="المحصول والأعراض (اختياري) — مثال: طماطم، بقع بنية من أسبوع" aria-label="ملاحظات عن المشكلة">' +
       '<div class="nbai-qs" hidden></div>' +
@@ -27849,9 +27850,8 @@ function buildScreen(){
       var st = document.createElement('div'); st.className = 'nbq-st'; st.hidden = true;
       st.innerHTML = '<span class="nbq-s"></span><span class="nbq-r" hidden>· رصيدك خلص — بيتجدد بكرة</span>';
       var note = document.createElement('div'); note.className = 'nbq-d';
-      note.textContent = 'الرد من الذكاء الاصطناعي للاسترشاد فقط وليس بديلًا عن مهندس مختص، وراجع بطاقة أي منتج قبل الاستخدام.';
       foot.appendChild(st); foot.appendChild(note);
-      q = foot._q = { box: box, tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: st.querySelector('.nbq-r'), ft: st, s: st.querySelector('.nbq-s'), up: up };
+      q = foot._q = { box: box, tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: st.querySelector('.nbq-r'), ft: st, s: st.querySelector('.nbq-s'), up: up, d: note };
       up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true }); });   /* AI-SUB */
     }
     var pct = mx > 0 ? Math.max(0, Math.min(100, l / mx * 100)) : 0;
@@ -27864,6 +27864,9 @@ function buildScreen(){
     var sl = (window.AiSub && window.AiSub.status) ? window.AiSub.status() : '';
     q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
     q.ft.hidden = !sl && l > 0;
+    /* سطر الفوتر: في التشخيص بالصورة بس — الدقة بتزيد بزيادة زوايا التصوير */
+    q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : '';
+    q.d.hidden = !q.d.textContent;
   }
   function paintFoot(){
     var ap = window.AiSub ? window.AiSub.pts(tab === 'diag' ? 'diag' : 'chat') : null;   /* AI-SUB: الرصيد الحقيقي من اشتراك المساعد (شات = استشارة+تحليل، تشخيص = بالصور) */
