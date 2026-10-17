@@ -18162,7 +18162,7 @@ document.addEventListener('click', e => {
       /* AI-PLAN-NAMES — القديم (للتراجع): label: 'الباقة الأولى' / 'الباقة الثانية' */
       plan1: { price: 149, chat: 10, diag: 5, label: 'Basic' },
       plan2: { price: 199, chat: 15, diag: 10, label: 'Plus' },
-      plan3: { price: 300, chat: 20, diag: 15, label: 'باقة البرو' }
+      plan3: { price: 300, chat: 20, diag: 15, label: 'Pro' }   /* AI-PLAN-NAMES — القديم (للتراجع): label: 'باقة البرو' */
     };
     var aiMem = { uid: null, d: null, at: 0, day: '' };
     var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false };
@@ -18303,7 +18303,7 @@ document.addEventListener('click', e => {
         if (opt && opt.limit) { title = 'عايز نقاط أكتر؟'; sub = 'نقاطك بتتجدد كل يوم — اختر الباقة المناسبة.'; }
         else if (d && d.state === 'expired') { title = 'انتهت فترة اشتراكك'; sub = 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.'; }
         else if (d && d.state === 'rejected') { title = 'تعذّر تفعيل طلبك الأخير'; sub = 'راجع بيانات الدفع وابعت طلبًا جديدًا.'; }
-        else { title = 'اشترك في المساعد الذكي'; sub = 'استشارة زراعية وتشخيص أمراض بالصور — بنقاط يومية.'; }
+        else { title = 'اشترك في <bdi dir="ltr">Nabtex AI</bdi>' /* القديم (للتراجع): 'اشترك في المساعد الذكي' */; sub = 'استشارة زراعية وتشخيص أمراض بالصور — بنقاط يومية.'; }
         if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="aipw-note aipw-bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         if (d && d.pending) body += aiPendingHTML(d.pending);
         body += aiPlansHTML(d);
