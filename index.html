@@ -28708,6 +28708,11 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @media (prefers-reduced-motion:reduce){.aipw-tag,.aipw-pro::before{animation:none}}
 </style>
 
+<style id="ai-empty-logo-css">
+/* إخفاء اللوجو الكبير من حالة «الشات الفاضي» في الاستشارة والتشخيص (كان بياخد مساحة بدون وظيفة). الرسالة الترحيبية بتفضل زي ما هي. للتراجع: امسح هذا البلوك. */
+.nbai-ov .nbai-th>.nbai-m-ai:only-child:not(.err)::before{display:none}
+</style>
+
 <style id="nb-farm-hub">
 /* ═══════════════════════════════════════════════════════════════
    مركز القرار (لوحة التحكم): ملخص المزرعة + قسم المميزات المطوي
