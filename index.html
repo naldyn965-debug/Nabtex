@@ -25532,7 +25532,8 @@ function nbFmtDate(date){
   color:var(--ink);font-size:16px;font-family:inherit;font-weight:600;
   padding:0 14px 0 6px;
 }
-.nb-h2-search-inp::placeholder{color:var(--slate);font-size:14px;font-weight:500;opacity:1}
+.nb-h2-search-inp::placeholder{color:#5a7a66;font-size:14px;font-weight:400;opacity:1;transition:color .25s}  /* أخف من --slate (7:1) لكن لسه 4.5:1 = حد WCAG AA. القديم: color:var(--slate);font-weight:500 */
+[data-dark] .nb-h2-search-inp::placeholder{color:#6f9580}  /* 4.5:1 على أفتح خلفية في الداكن */
 .nb-h2-search-btn{
   width:36px;height:36px;flex-shrink:0;border-radius:50%;border:none;cursor:pointer;
   background:linear-gradient(145deg,#2d9a58 0%,#1B6B3A 62%,#0f552e 100%);color:#fff;overflow:hidden;position:relative;
