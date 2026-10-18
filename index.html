@@ -10165,6 +10165,27 @@ const App = {
         '</button>'+
       '</div>'+
     '</div>'+
+    /* ── اختصارات سريعة (إضافة مستقلة — كلاسات nb-qa-* فقط، نفس وجهات التنقّل بتاعة الشريط السفلي) ──
+       للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-home-quick-actions ── */
+    '<section class="nb-h2-courses-sec nb-qa" aria-labelledby="nb-qa-title">'+
+      '<div class="nb-h2-courses-head">'+
+        '<h2 class="nb-h2-courses-title" id="nb-qa-title">ماذا تريد أن تنجز اليوم؟</h2>'+
+      '</div>'+
+      '<div class="nb-qa-grid">'+
+        '<button type="button" class="nb-qa-card nb-qa-card--ai" style="--qa-i:0" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open===\'function\'){window.NbFarmAI.open(this);}">'+
+          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="28" height="28" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+          '<span class="nb-qa-tx"><span class="nb-qa-t"><bdi dir="ltr">Nabtex AI</bdi></span><span class="nb-qa-d">استشارة زراعية وتشخيص أمراض النبات بالصورة</span></span>'+
+        '</button>'+
+        '<button type="button" class="nb-qa-card nb-qa-card--farm" style="--qa-i:1" onclick="showPage(\'farm\');window.scrollTo(0,0);">'+
+          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 15l6 6M15 15l-6 6" opacity=".55"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+          '<span class="nb-qa-tx"><span class="nb-qa-t">إدارة المزرعة</span><span class="nb-qa-d">تابع حقولك ومحاصيلك وعملياتك</span></span>'+
+        '</button>'+
+        '<button type="button" class="nb-qa-card nb-qa-card--acad" style="--qa-i:2" onclick="showPage(\'academy\');window.scrollTo(0,0);">'+
+          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+          '<span class="nb-qa-tx"><span class="nb-qa-t">الأكاديمية</span><span class="nb-qa-d">دورات احترافية واختبارات وشهادات إتمام</span></span>'+
+        '</button>'+
+      '</div>'+
+    '</section>'+
     continueHTML+
     '<div class="nb-h2-courses-sec">'+
       '<div class="nb-h2-courses-head">'+
@@ -25811,6 +25832,139 @@ function nbFmtDate(date){
   backdrop-filter:blur(16px) saturate(140%);
   -webkit-backdrop-filter:blur(16px) saturate(140%);
   box-shadow:0 2px 10px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+</style>
+
+<style id="nb-home-quick-actions">
+/* ══ الرئيسية › «ماذا تريد أن تنجز اليوم؟» — 3 اختصارات (Nabtex AI / إدارة المزرعة / الأكاديمية) ══
+   إضافة مستقلة: كل الكلاسات nb-qa-* ولا تلمس أي كلاس موجود. للتراجع: امسح هذه الكتلة + كتلة nb-qa في _renderUnifiedHome.
+   • الحركة transform/opacity فقط ومتوقفة مع prefers-reduced-motion • النص الوصفي بلون --slate (تباين أعلى من --muted)
+   • الكارت كله زر حقيقي <button> (تركيز بالكيبورد + قارئ الشاشة) وحجمه أكبر بكتير من 44px */
+.nb-qa{--qa-out:cubic-bezier(.16,1,.3,1)}
+
+.nb-qa-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+  padding:2px 0 4px;
+}
+
+.nb-qa-card{
+  --qa-g:linear-gradient(135deg,#1B6B3A,#2eaa5c);
+  --qa-tx:#1B6B3A;
+  --qa-soft:rgba(27,107,58,.09);
+  --qa-ring:rgba(27,107,58,.32);
+  --qa-glow:rgba(27,107,58,.6);
+  --qa-edge:linear-gradient(135deg,rgba(27,107,58,.4),rgba(27,107,58,.1) 62%,rgba(27,107,58,.22));
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;flex-direction:column;align-items:stretch;gap:12px;
+  min-width:0;min-height:158px;padding:14px 11px 13px;
+  font-family:inherit;text-align:start;color:var(--ink);
+  border:1px solid transparent;border-radius:22px;
+  background:
+    radial-gradient(120% 95% at 100% 0,var(--qa-soft),transparent 66%) padding-box,
+    linear-gradient(var(--card),var(--card)) padding-box,
+    var(--qa-edge) border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,.04),0 12px 24px -16px rgba(0,0,0,.18);
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  animation:nbQaIn .6s var(--qa-out) calc(.2s + var(--qa-i,0) * 75ms) backwards;
+  transition:transform .28s var(--qa-out),box-shadow .28s ease;
+}
+@keyframes nbQaIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* الأيقونة + سهم التوجيه */
+.nb-qa-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.nb-qa-ic{
+  position:relative;flex:none;width:46px;height:46px;border-radius:15px;
+  display:grid;place-items:center;color:#fff;background:var(--qa-g);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 3px var(--qa-soft),0 10px 18px -10px var(--qa-glow);
+}
+.nb-qa-go{
+  flex:none;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;color:var(--qa-tx);background:var(--qa-soft);
+  transition:transform .3s var(--qa-out);
+}
+
+/* النص */
+.nb-qa-tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.nb-qa-t{font-size:14px;font-weight:800;line-height:1.35;color:var(--ink)}
+.nb-qa-d{
+  font-size:11.5px;line-height:1.65;font-weight:600;color:var(--slate);
+  overflow-wrap:anywhere;
+}
+
+/* تفاعل */
+.nb-qa-card:active{transform:scale(.97)}
+.nb-qa-card:focus-visible{outline:2.5px solid var(--qa-tx);outline-offset:2px}
+@media (hover:hover){
+  .nb-qa-card:hover{transform:translateY(-3px);box-shadow:0 2px 8px rgba(0,0,0,.05),0 18px 30px -16px rgba(0,0,0,.26)}
+  .nb-qa-card:hover .nb-qa-go{transform:translateX(-3px)}
+}
+
+/* ① Nabtex AI — نفس هوية كارت Nabtex AI: بنفسجي + هالة حول اللوجو + لمعة خفيفة */
+.nb-qa-card--ai{
+  --qa-g:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);
+  --qa-tx:#6d28d9;
+  --qa-soft:rgba(124,58,237,.1);
+  --qa-ring:rgba(124,58,237,.34);
+  --qa-glow:rgba(109,40,217,.8);
+  --qa-edge:linear-gradient(135deg,rgba(124,58,237,.5),rgba(27,107,58,.28) 58%,rgba(124,58,237,.22));
+  box-shadow:0 14px 28px -20px rgba(76,29,149,.55);
+}
+@keyframes nbQaHalo{0%{opacity:.7;transform:scale(.92)}70%,100%{opacity:0;transform:scale(1.32)}}
+@keyframes nbQaSheen{0%,62%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.nb-qa-card--ai .nb-qa-ic::after{
+  content:"";position:absolute;inset:-3px;border-radius:inherit;border:1.5px solid var(--qa-ring);
+  opacity:0;pointer-events:none;animation:nbQaHalo 3.4s ease-out 1.2s infinite;
+}
+.nb-qa-card--ai::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.34) 50%,transparent 60%);
+  transform:translateX(-130%);animation:nbQaSheen 7.5s ease-in-out 2s infinite;
+}
+
+/* ② إدارة المزرعة — أخضر نبتيكس (الافتراضي أعلاه) */
+
+/* ③ الأكاديمية — ذهبي هادئ (نفس --gold بتاع المنصة) */
+.nb-qa-card--acad{
+  --qa-g:linear-gradient(135deg,#b97a12 0%,#e2a93b 100%);
+  --qa-tx:#a86b0b;
+  --qa-soft:rgba(201,135,26,.11);
+  --qa-ring:rgba(201,135,26,.34);
+  --qa-glow:rgba(185,122,18,.7);
+  --qa-edge:linear-gradient(135deg,rgba(201,135,26,.5),rgba(27,107,58,.16) 60%,rgba(201,135,26,.24));
+}
+
+/* الوضع الداكن */
+[data-dark] .nb-qa-card{box-shadow:0 2px 10px rgba(0,0,0,.3)}
+[data-dark] .nb-qa-card--farm{--qa-tx:#5fc97e;--qa-soft:rgba(46,170,92,.16);--qa-edge:linear-gradient(135deg,rgba(46,170,92,.5),rgba(46,170,92,.12) 62%,rgba(46,170,92,.26))}
+[data-dark] .nb-qa-card--ai{--qa-tx:#c4b5fd;--qa-soft:rgba(168,85,247,.18);--qa-ring:rgba(168,85,247,.4);--qa-glow:rgba(147,51,234,.75);--qa-edge:linear-gradient(135deg,rgba(168,85,247,.55),rgba(27,107,58,.35) 58%,rgba(168,85,247,.28));box-shadow:0 2px 10px rgba(0,0,0,.3)}
+[data-dark] .nb-qa-card--ai::after{background:linear-gradient(105deg,transparent 40%,rgba(196,181,253,.12) 50%,transparent 60%)}
+[data-dark] .nb-qa-card--acad{--qa-tx:#fbbf24;--qa-soft:rgba(229,163,67,.16);--qa-edge:linear-gradient(135deg,rgba(229,163,67,.5),rgba(27,107,58,.22) 60%,rgba(229,163,67,.26))}
+
+/* شاشات ضيّقة جدًا: الكروت تفضل بنفس الحجم وتتسحب أفقيًا بدل ما النص يتزنق */
+@media (max-width:359px){
+  .nb-qa-grid{
+    grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:128px;
+    overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .nb-qa-grid::-webkit-scrollbar{display:none}
+  .nb-qa-card{scroll-snap-align:start}
+}
+@media (min-width:640px){
+  .nb-qa-grid{gap:14px}
+  .nb-qa-card{min-height:168px;padding:16px 16px 15px}
+  .nb-qa-t{font-size:15px}
+  .nb-qa-d{font-size:12.5px}
+}
+
+/* تباين أعلى لو الجهاز طالب كده */
+@media (prefers-contrast:more){
+  .nb-qa-card{background:var(--card);border-color:var(--ink)}
+  .nb-qa-d{color:var(--ink)}
+}
+/* تقليل الحركة */
+@media (prefers-reduced-motion:reduce){
+  .nb-qa-card,.nb-qa-card *,.nb-qa-card::after{animation:none!important;transition:none!important}
+  .nb-qa-card--ai::after{display:none}
 }
 </style>
 
