@@ -29620,6 +29620,29 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @media (prefers-reduced-motion:reduce){.aipw-tag,.aipw-pro::before{animation:none}}
 </style>
 
+<!-- AI-PLAN-FOCUS: تركيز بصري على الباقة المختارة وتخفيف غير المختارة (CSS فقط — إضافة). للتراجع: امسح الكتلة دي بس. -->
+<style id="ai-plan-focus-css">
+.aipw-pl{transition:border-color .3s,background .3s,box-shadow .3s,opacity .3s,filter .3s,transform .3s cubic-bezier(.22,1,.36,1)}
+/* غير المختار: أهدى (شفافية + تشبّع أقل + من غير ظل) — يرجع لوضوحه بالضغط/المرور */
+.aipw-pl:not(.on){opacity:.7;filter:saturate(.7);box-shadow:none;transform:scale(.985)}
+.aipw-pl:not(.on):not(.aipw-pro){background:var(--card);border-color:var(--line)}
+.aipw-pro:not(.on)::before{animation:none;opacity:0}
+@media (hover:hover){.aipw-pl:not(.on):hover{opacity:.88;filter:none}}
+.aipw-pl:not(.on):active{opacity:.9;filter:none;transform:scale(.975)}
+/* المختار: بارز — حلقة + توهّج + رفعة خفيفة + السعر بلون الباقة */
+.aipw-pl.on{transform:translateY(-1px)}
+.aipw-pl.on:not(.aipw-pro){border-color:var(--brand);background:linear-gradient(135deg,var(--brand-mist) 0%,var(--card) 92%);box-shadow:0 0 0 3px rgba(27,107,58,.16),0 16px 30px -14px rgba(27,107,58,.55),inset 0 1px 0 rgba(255,255,255,.75)}
+.aipw-pl.on:not(.aipw-pro) .aipw-pp b{color:var(--brand)}
+.aipw-pl.on:not(.aipw-pro) .aipw-pn{color:var(--brand)}
+.aipw-pro.on{box-shadow:0 0 0 3px rgba(240,185,50,.3),0 16px 32px -12px rgba(224,160,20,.65),inset 0 1px 0 rgba(255,255,255,.9)}
+.aipw-pl.on .aipw-rd{animation:aipwPick .38s cubic-bezier(.34,1.56,.64,1)}
+@keyframes aipwPick{0%{transform:scale(.6)}100%{transform:scale(1)}}
+[data-dark] .aipw-pl:not(.on){opacity:.62;filter:saturate(.65)}
+[data-dark] .aipw-pl.on:not(.aipw-pro){border-color:var(--brand-xl);background:linear-gradient(135deg,rgba(27,107,58,.3) 0%,var(--card) 92%);box-shadow:0 0 0 3px rgba(95,201,126,.2),0 16px 30px -14px rgba(27,107,58,.85),inset 0 1px 0 rgba(255,255,255,.06)}
+[data-dark] .aipw-pl.on:not(.aipw-pro) .aipw-pp b,[data-dark] .aipw-pl.on:not(.aipw-pro) .aipw-pn{color:var(--brand-xl)}
+@media (prefers-reduced-motion:reduce){.aipw-pl,.aipw-pl.on .aipw-rd{transition:none;animation:none}}
+</style>
+
 <style id="nb-farm-hub">
 /* ═══════════════════════════════════════════════════════════════
    مركز القرار (لوحة التحكم): ملخص المزرعة + قسم المميزات المطوي
