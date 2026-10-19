@@ -28041,6 +28041,9 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
   .nbai-ov .nbai-chip{min-height:36px}
 }
 
+/* ٧) أيقونة الإرسال: كانت مايلة لفوق — بنلفّها 45° عشان تبقى أفقية ناحية اليسار (اتجاه الإرسال في الواجهة العربية). للتراجع: امسح القاعدة دي بس. */
+.nbai-ov .nbai-go-ask svg{transform:translateX(3px) rotate(-45deg) scaleX(-1)}
+
 /* ٦) كمبيوتر بماوس: شريط تمرير رفيع ظاهر للمحادثة (كان مخفي) + الاقتراحات تلتف بدل صف أفقي مش بيتسحب بالماوس */
 @media (hover:hover) and (pointer:fine){
   .nbai-ov .nbai-th,.nbai-ov .nbai-pane[data-p="diag"]{scrollbar-width:thin;scrollbar-color:var(--ai-ring) transparent}
@@ -29489,6 +29492,16 @@ window.NbFarmAI.open = function(opener){
     });
   }catch(e){ console.warn('[Nabtex Farm] ai open:', e); }
 };
+/* AI-TAB-AUTH: مستخدم مش مسجّل دخول بيدوس تاب «AI» (أو كارت Nabtex AI في الرئيسية) كان بيتحوّل لصفحة «مزرعتي» (gate → showPage('farm')). دلوقتي بنفتح نافذة تسجيل الدخول فوق نفس الصفحة وتاب «AI» يفضل هو المقصود — المسجّلين ما بيتغيّرش معاهم أي حاجة. إضافة فقط: بتلفّ الدالة الأصلية من غير ما تعدّلها. للتراجع: امسح الكتلة دي بس. */
+(function(){
+  var _open = window.NbFarmAI.open;
+  window.NbFarmAI.open = function(opener){
+    try{
+      if(!user() && typeof openAuth === 'function'){ openAuth(); return; }
+    }catch(e){}
+    return _open.apply(this, arguments);
+  };
+})();
 /* AI-SUB: أي تغيير في الرصيد/الاشتراك (استخدام، شراء، يوم جديد) يعيد رسم شريط الرصيد */
 if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onChange(function(){ if(SCR && SCR._repaint){ try{ SCR._repaint(); }catch(e){} } });
 })();
