@@ -27772,6 +27772,65 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 }
 </style>
 
+<style id="nb-farm-ai-study">
+/* «ذاكر مع نبتكس» — كل القواعد تحت .nbai-ov (مفيش تأثير على باقي الموقع). الامتحان بيستخدم كلاسات كورسات الأكاديمية (acad-*) زي ما هي. للتراجع: امسح البلوك ده بس. */
+.nbai-ov .nbai-src-b{padding:0 6px}
+/* أيقونة إضافة الصور في شريط الكتابة */
+.nbai-st-add{flex:none;display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);cursor:pointer;transition:transform 180ms var(--ai-ease),background 180ms,opacity 180ms}
+.nbai-st-add:active{transform:scale(.92)}
+.nbai-st-add[disabled]{opacity:.4;cursor:default}
+@media (hover:hover){.nbai-st-add:not([disabled]):hover{background:var(--ai-soft2)}}
+.nbai-cm.nbst-ready .nbai-go-ask{opacity:1!important;transform:none!important;box-shadow:0 6px 14px -8px var(--ai-glow)!important}
+/* في «ذاكر» اقتراحات الأسئلة الزراعية مش مناسبة */
+.nbai-pane.nbai-study .nbai-chips{display:none!important}
+/* شريط الصور المختارة */
+.nbai-st-th{display:flex;align-items:center;gap:8px;margin-top:6px;padding:8px 6px 4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.nbai-st-th::-webkit-scrollbar{display:none}
+.nbst-th{position:relative;flex:none;display:grid;place-items:center;width:58px;height:58px;border:1px solid var(--line2);border-radius:12px;background:var(--bg2)}
+.nbst-th.is-new{animation:nbux-pop 240ms var(--ai-spring) backwards}
+.nbst-th img{display:block;width:100%;height:100%;object-fit:cover;border-radius:11px}
+.nbst-th .nbai-wz-spin{position:static}
+.nbst-x{position:absolute;top:-7px;inset-inline-start:-7px;display:grid;place-items:center;width:22px;height:22px;padding:0;border:2px solid var(--card);border-radius:50%;background:#374151;color:#fff;cursor:pointer}
+.nbst-x::after{content:"";position:absolute;inset:-8px}
+.nbst-x[disabled]{opacity:.5}
+.nbst-cnt{flex:none;margin-inline-start:auto;padding:0 4px;font-size:11.5px;font-weight:800;color:var(--ai-tx)}
+/* الشرح والملخص */
+.nbai-m.nbst-msg{align-self:stretch;width:100%}
+.nbst-h{font-size:14.5px;font-weight:800;line-height:1.6;color:var(--ink)}
+.nbst-meta{margin-bottom:4px;font-size:11.5px;color:var(--muted)}
+.nbst-part{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
+.nbst-pt{display:flex;align-items:flex-start;gap:8px;margin:0;font-size:14px;font-weight:800;line-height:1.6;color:var(--ink)}
+.nbst-pn{flex:none;display:grid;place-items:center;width:24px;height:24px;margin-top:1px;border-radius:50%;background:var(--ai-g);color:#fff;font-size:12px;font-weight:800}
+.nbst-src{display:inline-block;margin-top:5px;padding:1px 9px;border-radius:99px;background:var(--ai-soft);color:var(--ai-tx);font-size:10.5px;font-weight:700}
+.nbst-px{margin-top:6px;font-size:13.5px;line-height:1.95;color:var(--ink2)}
+.nbst-ex{margin-top:8px;padding:9px 11px;border:1px dashed var(--ai-ring);border-radius:12px;background:var(--ai-soft);font-size:13px;line-height:1.9;color:var(--ink2)}
+.nbst-exl{display:block;margin-bottom:2px;font-size:11px;font-weight:800;color:var(--ai-tx)}
+.nbst-sum{display:grid;gap:6px;margin:6px 0 0;padding:0;list-style:none}
+.nbst-sum li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.85}
+.nbst-sum li::before{content:"";flex:none;width:7px;height:7px;margin-top:11px;border-radius:50%;background:var(--ai-g)}
+.nbst-qdots .nbai-dots::after{content:"بجهّز الامتحان…"}
+/* الامتحان (مكوّنات acad-* جوه الشات) */
+.nbst-quiz{align-self:stretch;animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbst-quiz .acad-quiz-hdr{margin-bottom:8px}
+.nbst-quiz .acad-quiz-title{font-size:1.2rem}
+.nbst-quiz .acad-steps{margin:10px 0 14px}
+.nbst-quiz .acad-step{width:auto;flex:1 1 0;min-width:3px;max-width:36px}
+.nbst-quiz .acad-qcard{padding:16px 14px;border-radius:18px}
+.nbst-quiz .acad-qtext{margin-bottom:14px;font-size:14.5px}
+.nbst-quiz .acad-opt{padding:11px 12px;font-size:13px}
+.nbst-quiz .acad-opt span:last-child{min-width:0;overflow-wrap:anywhere}
+.nbst-quiz .acad-result{padding:26px 16px;border-radius:20px}
+.nbst-quiz .acad-result-score{font-size:4rem}
+.nbst-weak{margin:0 0 16px;text-align:start;font-size:13px;line-height:1.8;color:var(--ink2)}
+.nbst-weak ul{margin:4px 0 0;padding-inline-start:20px}
+.nbst-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-top:8px;padding:0 18px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink);font-size:12.5px;font-weight:800;cursor:pointer}
+.nbst-res .nbst-btn{margin-top:0}
+.nbst-end{align-self:stretch;display:flex;justify-content:center;padding:2px 0 8px}
+.nbst-pdf{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 22px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease)}
+.nbst-pdf:active{transform:scale(.97)}
+.nbai-ov :is(.nbai-st-add,.nbst-x,.nbst-o,.nbst-next,.nbst-btn,.nbst-pdf):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+</style>
+
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
@@ -27786,8 +27845,8 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 (function(){
 'use strict';
 
-var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };   /* لازم تساوي LIMITS في api/farm-ai.js */
-var PTS = { analyze: 1, ask: 1, diag_q: 1, diagnose: 1 };   /* AI-SUB: الأوضاع اللي نقاطها من اشتراك المساعد (window.AiSub) مش من LIM المحلي */
+var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8 };   /* لازم تساوي LIMITS في api/farm-ai.js */
+var PTS = { analyze: 1, ask: 1, diag_q: 1, diagnose: 1, study: 1 };   /* AI-SUB: الأوضاع اللي نقاطها من اشتراك المساعد (window.AiSub) مش من LIM المحلي — «ذاكر مع نبتكس» (study) نقطة شات، وامتحانها study_quiz من غير نقطة */
 var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 1280, SHOT_MAX = 340*1024, BLUR_MIN = 35;   /* القديم (للتراجع): IMG_MAX = 800 — الدقة اترفعت لـ 1280px عشان تفاصيل الأعراض (بقع/حشرات صغيرة) تفضل واضحة، وSHOT_MAX سقف حجم كل صورة، وBLUR_MIN حد الوضوح للتحذير */
 
 function lsGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
@@ -27813,6 +27872,7 @@ var MSG = {
   not_configured: 'المساعد غير متاح حاليًا.',
   too_large: 'الحجم كبير. جرّب صورة أصغر أو نص أقصر.',
   blocked: 'ما قدرتش أحلّل الصورة دي. جرّب صورة تانية أوضح.',
+  unreadable: 'الصور مش واضحة أو مفيهاش محتوى دراسي أقدر أشرحه. جرّب تصوّرها أوضح وفي إضاءة كويسة.',   /* ذاكر مع نبتكس */
   nothing_found: 'ما لقيتش بيانات أقدر أسجّلها من الكلام ده. اكتب بتفاصيل أكتر (مثلًا: روينا 3 ساعات وسمّدنا نترات كالسيوم 20 كجم).',
   sub_required: 'اشترك في المساعد الذكي عشان تكمل.',   /* AI-SUB */
   sub_check: 'تعذّر التحقق من اشتراكك دلوقتي. جرّب بعد شوية.',   /* AI-SUB */
@@ -27895,7 +27955,8 @@ function call(mode, payload, ckExtra, done){
   if(!u) return done({ err: 'login' });
   if(!navigator.onLine) return done({ err: 'offline' });
   var ck = hash(mode + '|' + ckExtra), key = 'nbai:r:' + mode + ':' + u.uid;
-  var saved = lsGet(key);
+  var nc = (mode === 'study' || mode === 'study_quiz');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
+  var saved = nc ? null : lsGet(key);
   if(saved && saved.k === ck && Date.now() - saved.at < TTL) return done({ ok: true, j: saved.j, cached: true });
   var qt = quotaGet(u.uid, mode);
   var aiPt = !!(window.AiSub && PTS[mode]);   /* AI-SUB: نقاط الشات/التشخيص من اشتراك المساعد (الحكم النهائي: الخادم + firestore.rules) */
@@ -27914,10 +27975,10 @@ function call(mode, payload, ckExtra, done){
     return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j || {} }; });
   }).then(function(res){
     clearTimeout(timer);
-    if(res.ok && (res.j.text || res.j.fields || res.j.q)){
+    if(res.ok && (res.j.text || res.j.fields || res.j.q || res.j.study || res.j.quiz)){
       if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:' + mode + ':' + u.uid, qt); }
       if(aiPt && res.j.points && !res.j.cached) window.AiSub.applyPoints(res.j.points);   /* AI-SUB */
-      lsSet(key, { k: ck, at: Date.now(), j: { text: res.j.text, fields: res.j.fields, q: res.j.q } });
+      if(!nc) lsSet(key, { k: ck, at: Date.now(), j: { text: res.j.text, fields: res.j.fields, q: res.j.q } });
       done({ ok: true, j: res.j });
     } else {
       if(aiPt && (res.j.error === 'user_limit' || res.j.error === 'sub_required')){ try{ window.AiSub.get(function(){}, true); }catch(x){} }   /* AI-SUB: الرصيد الحقيقي من السيرفر */
@@ -27951,12 +28012,13 @@ function qcOf(cv, ow, oh){
     return { blur: best < BLUR_MIN && mean >= 60, dark: mean < 60, bright: mean > 225, small: Math.min(ow, oh) < 600 };
   }catch(e){ return null; }
 }
-function shrink(file, cb){
+function shrink(file, cb, opt){
+  var MX = (opt && opt.max) || IMG_MAX, CAP = (opt && opt.cap) || SHOT_MAX;   /* opt اختياري («ذاكر مع نبتكس»: صور نصوص محتاجة دقة أعلى) — من غيره السلوك زي ما هو */
   var img = new Image(), url = URL.createObjectURL(file);
   img.onload = function(){
     try{
       var ow = img.naturalWidth || img.width, oh = img.naturalHeight || img.height;
-      var sc = Math.min(1, IMG_MAX / Math.max(ow, oh)), w = Math.round(ow * sc), h = Math.round(oh * sc);
+      var sc = Math.min(1, MX / Math.max(ow, oh)), w = Math.round(ow * sc), h = Math.round(oh * sc);
       var srcEl = img, cw = ow, ch = oh;
       while(cw > w * 2){   /* نصف نصف بدل قفزة واحدة: بيحافظ على حواف البقع والحشرات */
         var nw = Math.round(cw / 2), nh = Math.round(ch / 2), t = document.createElement('canvas'); t.width = nw; t.height = nh;
@@ -27968,12 +28030,12 @@ function shrink(file, cb){
         var c2 = cv.getContext('2d'); c2.imageSmoothingQuality = 'high'; c2.drawImage(srcEl, 0, 0, w, h);
         if(!tries) qc = qcOf(cv, ow, oh);
         var q = 0.84; d = cv.toDataURL('image/jpeg', q);
-        while(d.length > SHOT_MAX && q > 0.5){ q -= 0.08; d = cv.toDataURL('image/jpeg', q); }
-        if(d.length <= SHOT_MAX) break;
+        while(d.length > CAP && q > 0.5){ q -= 0.08; d = cv.toDataURL('image/jpeg', q); }
+        if(d.length <= CAP) break;
         w = Math.round(w * 0.8); h = Math.round(h * 0.8);
       }
       URL.revokeObjectURL(url);
-      cb(d.length > SHOT_MAX + 20*1024 ? null : d, qc);
+      cb(d.length > CAP + 20*1024 ? null : d, qc);
     }catch(e){ cb(null); }
   };
   img.onerror = function(){ URL.revokeObjectURL(url); cb(null); };
@@ -28005,7 +28067,7 @@ function buildScreen(){
       '<button type="button" class="nbai-tab" role="tab" data-t="diag" aria-selected="false">تشخيص بالصورة</button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
-      '<div class="nbai-src-w"><div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">سؤال عن أي حاجة</button></div></div>' +
+      '<div class="nbai-src-w"><div class="nbai-src" role="radiogroup" aria-label="نوع الاستشارة"><button type="button" class="nbai-src-b" data-src="farm" role="radio">مزرعتي على نبتكس</button><button type="button" class="nbai-src-b" data-src="any" role="radio">سؤال عن أي حاجة</button><button type="button" class="nbai-src-b" data-src="study" role="radio">ذاكر مع نبتكس</button></div></div>' +
       '<div class="nbai-th" data-th="ask" role="log" aria-live="polite" aria-label="محادثة المساعد"></div>' +
       '<div class="nbai-chips">' +
         '<button type="button" class="nbai-chip" data-q="">' + ci('<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>') + 'حلّل مزرعتي</button>' +
@@ -28014,7 +28076,9 @@ function buildScreen(){
         '<button type="button" class="nbai-chip" data-q="ليه أوراق النبات بتصفرّ؟">' + ci('<path d="M5 19C5 10.5 11 4 20 4c0 8.5-6 15-15 15z"/><path d="M5 19 13 11"/>') + 'ليه أوراق النبات بتصفرّ؟</button>' +
         '<button type="button" class="nbai-chip" data-q="إزاي أكافح الحشرات بأمان؟">' + ci('<rect x="8" y="8" width="8" height="11" rx="4"/><path d="M12 8V5M9.5 5.5 12 4l2.5 1.5M4 12l4 1M20 12l-4 1M4 18l4-2M20 18l-4-2"/>') + 'إزاي أكافح الحشرات بأمان؟</button>' +
       '</div>' +
-      '<div class="nbai-cm"><textarea class="nbai-q nbai-qi" rows="1" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي" enterkeyhint="send"></textarea>' +
+      '<div class="nbai-st-th" hidden></div>' +   /* ذاكر مع نبتكس: شريط الصور المختارة (حتى 4) */
+      '<div class="nbai-cm"><button type="button" class="nbai-st-add" hidden aria-label="إضافة صور (حتى 4 صور)" title="إضافة صور"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><path d="M16 5h6M19 2v6"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></button><input type="file" accept="image/*" multiple class="nbai-st-file" hidden>' +
+      '<textarea class="nbai-q nbai-qi" rows="1" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي" enterkeyhint="send"></textarea>' +
       '<button type="button" class="nbai-go nbai-go-ask" aria-label="إرسال"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button></div>' +
       '<button type="button" class="nbai-again" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>تحليل جديد</span></button>' +
     '</div>' +
@@ -28036,7 +28100,7 @@ function buildScreen(){
   document.body.appendChild(card);
 
   var out = card.querySelector('.nbai-out'), foot = card.querySelector('.nbai-f');
-  var tab = 'ask', shots = [null, null, null, null], qcs = [null, null, null, null], cur = 0, pend = 0, wzLoad = false, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة', aud = (lsGet('nbai:aud') === 'home' ? 'home' : 'farm'), src = (lsGet('nbai:src') === 'any' ? 'any' : 'farm');
+  var tab = 'ask', shots = [null, null, null, null], qcs = [null, null, null, null], cur = 0, pend = 0, wzLoad = false, busy = false, step = null, DIAG_LBL = 'شخّص المشكلة', aud = (lsGet('nbai:aud') === 'home' ? 'home' : 'farm'), src = (function(v){ return (v === 'any' || v === 'study') ? v : 'farm'; })(lsGet('nbai:src'));   /* القديم (للتراجع): (lsGet('nbai:src') === 'any' ? 'any' : 'farm') — اتضاف «study» = ذاكر مع نبتكس */
   function show(html, isErr){ out.className = 'nbai-out' + (isErr ? ' err' : ''); out.innerHTML = html; }
   /* شريط رصيد المساعد اليومي: بيتبني مرة واحدة وبعدها بيتحدّث بس، فعرض الشريط بيتسحب بنعومة مع كل استخدام. النقاط = نفس عدّاد الحد اليومي (left/LIM)، فمفيش أي تغيير في منطق الحصص. */
   function paintQuota(l, mx){
@@ -28070,7 +28134,7 @@ function buildScreen(){
     q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
     q.ft.hidden = !sl && l > 0;
     /* سطر الفوتر: في التشخيص بالصورة بس — الدقة بتزيد بزيادة زوايا التصوير */
-    q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : '';
+    q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : (src === 'study' ? 'صوّر الصفحات بوضوح وفي إضاءة كويسة — لحد 4 صور في المرة الواحدة.' : '');
     q.d.hidden = !q.d.textContent;
   }
   function paintFoot(){
@@ -28325,16 +28389,301 @@ function buildScreen(){
   });
   paintAud();
 
+  /* ═════════ «ذاكر مع نبتكس» (إضافة) ═════════
+     الطالب يختار «ذاكر مع نبتكس» جنب «مزرعتي على نبتكس» و«سؤال عن أي حاجة» ← تظهر أيقونة إضافة صور في شريط الكتابة (حتى 4 صور في كل مرة)
+     ← الذكاء الاصطناعي يقرأ الصور ويشرح كل جزئية بالعامية المصرية + مثال تبسيطي ← ملخص للصور ← امتحان MCQ تفاعلي من الصور بس ← زر تحميل المحادثة PDF.
+     • الواجهة: نفس شات الاستشارة (.nbai-th) لكن بمحتوى منفصل — محتوى «مزرعتي/أي حاجة» بيتخبّى في stash لما «ذاكر» يتفتح وبيرجع زي ما هو، فمفيش اختلاط في history ولا مسح.
+     • الخادم: وضعين جداد في api/farm-ai.js — study (شرح + ملخص، بيصرف نقطة شات واحدة) وstudy_quiz (الامتحان، من غير نقطة تانية).
+     • الامتحان بنفس مكوّنات وطريقة كورسات نبتكس (acad-opt / acad-qcard…): اختيار ← تلوين صح/غلط + التفسير ← السؤال التالي ← النتيجة بالنسبة المئوية (من غير XP).
+     • PDF: نفس آلية الأكاديمية (acDownloadLessonPDF): نافذة بزر «رجوع» و«طباعة / حفظ PDF».
+     للتراجع: امسح الكتلة دي (لحد نهايتها) + زر الصور والـ input والشريط من القالب + سطور study في paintSrc / srcBox / sendAsk / call / LIM / PTS / MSG + بلوك nb-farm-ai-study (style) + وضعين study في api/farm-ai.js. */
+  var ST_MAX = 4, ST_SHRINK = { max: 1800, cap: 400 * 1024 };
+  var STUDY = { sessions: [] }, stImgs = [], stLoad = 0, stView = 'ask', stSolo = null, stStash = { ask: null, study: null };
+  var stAdd = card.querySelector('.nbai-st-add'), stFile = card.querySelector('.nbai-st-file'), stStrip = card.querySelector('.nbai-st-th'), stCm = card.querySelector('.nbai-cm'), stQi = card.querySelector('.nbai-qi');
+  var ST_PH = stQi.getAttribute('placeholder') || '';
+  var IC_X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
+  var LTR4 = ['أ', 'ب', 'ج', 'د'];
+  TH.study = TH.ask;   /* نفس عنصر الشات؛ المحتوى هو اللي بيتبدّل */
+  GREET.study = gr('ذاكر مع نبتكس', 'ارفع من صورة لـ 4 صور من المحاضرة أو الملزمة، وأنا أشرحلك كل جزئية فيها بالبلدي ومعاها مثال بسيط، وأعملك ملخص، وبعدها امتحان تختبر بيه نفسك على نفس الصور.');
+
+  /* شريط الصور المختارة + حالة الأزرار */
+  function paintStrip(){
+    var on = src === 'study', n = stImgs.length, h = '';
+    stStrip.hidden = !on || (!n && !stLoad);
+    stImgs.forEach(function(x, i){
+      h += '<div class="nbst-th' + (x.fresh ? ' is-new' : '') + '"><img src="' + x.d + '" alt="صورة ' + (i + 1) + '"><button type="button" class="nbst-x" data-i="' + i + '" aria-label="حذف الصورة ' + (i + 1) + '"' + (busy ? ' disabled' : '') + '>' + IC_X + '</button></div>';
+      x.fresh = false;
+    });
+    for(var k = 0; k < stLoad; k++) h += '<div class="nbst-th is-load" aria-busy="true"><span class="nbai-wz-spin" aria-hidden="true"></span></div>';
+    h += '<span class="nbst-cnt" aria-live="polite"><bdi dir="ltr">' + (n + stLoad) + '/' + ST_MAX + '</bdi></span>';
+    stStrip.innerHTML = h;
+    stAdd.disabled = busy || (n + stLoad) >= ST_MAX;
+    stCm.classList.toggle('nbst-ready', on && n > 0 && !stLoad && !busy);
+  }
+  function paintStudy(){
+    var on = src === 'study';
+    askPane.classList.toggle('nbai-study', on);
+    stAdd.hidden = !on;
+    stQi.setAttribute('placeholder', on ? 'اكتب ملاحظة أو اسم المادة (اختياري)…' : ST_PH);
+    paintStrip();
+  }
+  /* تبديل محتوى الشات بين مجموعة الاستشارة (مزرعتي / أي حاجة) ومجموعة «ذاكر» */
+  function swapView(){
+    var want = src === 'study' ? 'study' : 'ask';
+    if(want === stView) return;
+    stStash[stView] = [].slice.call(TH.ask.childNodes);
+    while(TH.ask.firstChild) TH.ask.removeChild(TH.ask.firstChild);
+    if(want === 'study'){
+      stSolo = askPane.classList.contains('nbai-solo') ? { again: again.hidden } : null;   /* «مزرعتي» رسالة برسالة: نفك وضع الـ solo مؤقتًا عشان مربع الكتابة يظهر */
+      askPane.classList.remove('nbai-solo'); again.hidden = true;
+    }
+    var nodes = stStash[want]; stStash[want] = null;
+    if(nodes && nodes.length) nodes.forEach(function(nd){ TH.ask.appendChild(nd); }); else TH.ask.appendChild(greet(want));
+    if(want === 'ask' && stSolo){ askPane.classList.add('nbai-solo'); again.hidden = stSolo.again; stSolo = null; }
+    stView = want;
+    toEnd('ask');
+  }
+  function stBusy(on){ busy = on; card.querySelector('.nbai-go-ask').disabled = on; paintStrip(); }
+  function stScrollTo(el){ var sc = TH.ask; if(el && sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
+  function stPlaceEnd(){   /* زر PDF دايمًا في آخر المحادثة */
+    var o = TH.ask.querySelector('.nbst-end'); if(o && o.parentNode) o.parentNode.removeChild(o);
+    if(!STUDY.sessions.length) return;
+    var d = document.createElement('div'); d.className = 'nbst-end';
+    d.innerHTML = '<button type="button" class="nbst-pdf" data-nbst="pdf">' + IC_DL + '<span>تحميل المحادثة PDF</span></button>';
+    TH.ask.appendChild(d);
+  }
+
+  /* اختيار الصور: حتى 4 في كل مرة (بتتصغّر في المتصفح بدقة أعلى عشان النصوص تفضل مقروءة) */
+  stFile.addEventListener('change', function(){
+    var files = [].slice.call(this.files || []).filter(function(f){ return f && /^image\//.test(f.type || 'image/'); });
+    try{ this.value = ''; }catch(e){}   /* يسمح باختيار نفس الصورة تاني */
+    if(!files.length || busy) return;
+    var room = ST_MAX - stImgs.length - stLoad;
+    if(room <= 0){ show('وصلت للحد الأقصى — ' + ST_MAX + ' صور في كل مرة.', true); return; }
+    var over = files.length > room;
+    if(over){ files = files.slice(0, room); show('اتاخدت أول ' + room + (room === 1 ? ' صورة' : ' صور') + ' بس — الحد الأقصى ' + ST_MAX + ' صور في كل مرة.', true); } else show('', false);
+    stLoad += files.length; paintStrip();
+    var msgs = [], weak = [], bad = 0, capNote = over ? 'اتاخدت أول ' + room + (room === 1 ? ' صورة' : ' صور') + ' بس — الحد الأقصى ' + ST_MAX + ' صور في كل مرة.' : '';
+    (function next(){
+      var f = files.shift();
+      if(!f){
+        if(!card.isConnected) return;
+        if(bad) msgs.push('ما قدرتش أقرأ ' + (bad === 1 ? 'صورة' : bad + ' صور') + '. جرّب صور تانية.');
+        if(weak.length) msgs.push((weak.length === 1 ? 'صورة ' : 'الصور ') + weak.join('، ') + ' مش واضحة كفاية (إضاءة أو تركيز) — الأفضل تعيد تصويرها عشان الشرح يطلع دقيق.');
+        if(capNote) msgs.unshift(capNote);
+        if(msgs.length) show(msgs.join('<br>'), true);
+        return;
+      }
+      shrink(f, function(d, qc){
+        if(!card.isConnected) return;
+        stLoad--;
+        if(d){ stImgs.push({ d: d, qc: qc || null, fresh: true }); if(!qcInfo(qc).ok) weak.push(stImgs.length); }
+        else bad++;
+        paintStrip(); next();
+      }, ST_SHRINK);
+    })();
+  });
+
+  /* ── عرض الشرح والملخص ── */
+  function stExplainHtml(S){
+    var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء') + ' من ' + S.imgs.length + (S.imgs.length === 1 ? ' صورة' : ' صور') + '</div>';
+    S.parts.forEach(function(p, i){
+      var srcs = (p.src || []).filter(function(v){ return v >= 1 && v <= S.imgs.length; });
+      h += '<section class="nbst-part"><h4 class="nbst-pt"><span class="nbst-pn">' + (i + 1) + '</span><span>' + esc(p.title) + '</span></h4>' +
+        (srcs.length ? '<span class="nbst-src">من ' + (srcs.length > 1 ? 'الصور ' : 'الصورة ') + srcs.join('، ') + '</span>' : '') +
+        '<div class="nbst-px">' + fmt(p.explain) + '</div>' +
+        (p.example ? '<div class="nbst-ex"><span class="nbst-exl">مثال تبسيطي</span>' + fmt(p.example) + '</div>' : '') + '</section>';
+    });
+    return h;
+  }
+  function stSummaryHtml(S){
+    return '<div class="nbst-h">ملخص الصور</div><ul class="nbst-sum">' + S.summary.map(function(x){ return '<li><span>' + fmt(x) + '</span></li>'; }).join('') + '</ul>';
+  }
+
+  /* ── الامتحان التفاعلي (نفس طريقة كورسات نبتكس: اختيار ← تلوين + تفسير ← التالي ← نتيجة %) ── */
+  function renderQuiz(S){
+    var el = S.el, qs = S.quiz, n = qs ? qs.length : 0, h = '';
+    if(!el || !n) return;
+    if(S.step >= n){
+      var okN = 0, weak = {};
+      qs.forEach(function(q, i){ if(S.ans[i] === q.answer) okN++; else if(q.part >= 0) weak[q.part] = 1; });
+      var score = Math.round(okN / n * 100), wk = Object.keys(weak).map(Number).sort(function(a, b){ return a - b; });
+      var msg = score >= 80 ? 'ممتاز! فاهم الشرح كويس جدًا.' : (score >= 60 ? 'كويس! راجع الأجزاء اللي غلطت فيها وجرّب تاني.' : 'محتاج تراجع الشرح تاني وبعدها تعيد الامتحان.');
+      h = '<div class="acad-result nbst-res"><div class="acad-result-score">' + score + '%</div><div class="acad-result-lbl">نتيجتك: ' + okN + ' من ' + n + '</div><div class="acad-result-msg">' + msg + '</div>' +
+        (wk.length ? '<div class="nbst-weak"><b>الأجزاء اللي محتاجة مراجعة:</b><ul>' + wk.map(function(i){ return S.parts[i] ? '<li>' + (i + 1) + '. ' + esc(S.parts[i].title) + '</li>' : ''; }).join('') + '</ul></div>' : '') +
+        '<div class="acad-result-acts"><button type="button" class="nbst-btn" data-nbst="again">إعادة الامتحان</button></div></div>';
+    } else {
+      var cur = qs[S.step], pn = S.parts[cur.part] ? S.parts[cur.part].title : '';
+      var steps = qs.map(function(_, i){ return '<div class="acad-step ' + (i < S.step ? 'done' : (i === S.step ? 'cur' : '')) + '"></div>'; }).join('');
+      h = '<div class="acad-quiz-hdr"><div class="acad-quiz-title">امتحان على الشرح</div><div class="acad-quiz-sub">' + n + ' سؤال من الصور اللي رفعتها</div></div>' +
+        '<div class="acad-steps">' + steps + '</div>' +
+        '<div class="acad-qcard"><div class="acad-qnum">السؤال ' + (S.step + 1) + ' من ' + n + (pn ? ' · ' + esc(pn) : '') + '</div><div class="acad-qtext">' + esc(cur.q) + '</div>' +
+        '<div class="acad-opts" role="group" aria-label="اختيارات السؤال">' + cur.options.map(function(o, i){ return '<button type="button" class="acad-opt nbst-o" data-i="' + i + '"><span class="acad-opt-lt">' + LTR4[i] + '</span><span>' + esc(o) + '</span></button>'; }).join('') + '</div>' +
+        '<div class="acad-exp" role="status"></div></div>' +
+        '<div style="display:flex;justify-content:center"><button type="button" class="acad-quiz-next nbst-next" data-nbst="next">' + (S.step === n - 1 ? 'عرض النتيجة' : 'السؤال التالي ←') + '</button></div>';
+    }
+    el.innerHTML = h;
+  }
+
+  /* المرحلة 2: الامتحان (من نفس الصور) — من غير نقطة تانية */
+  function stLoadQuiz(S, prev){
+    if(prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    stBusy(true); paintFoot();
+    var ty = typing('study'); ty.classList.add('nbst-qdots');
+    call('study_quiz', { images: S.list, parts: S.parts.map(function(p){ return p.title; }), note: S.note }, S.list.length + '|' + S.parts.length, function(r){
+      stBusy(false);
+      if(!card.isConnected) return;
+      if(!r.ok || !r.j.quiz || !r.j.quiz.questions || !r.j.quiz.questions.length){
+        ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(aiErr(r.err)) + '<br><button type="button" class="nbst-btn" data-nbst="retryq">جرّب تحميل الامتحان تاني</button>'; ty._s = S;
+      } else {
+        S.quiz = r.j.quiz.questions; S.ans = []; S.step = 0; S.revealed = false;
+        var box = document.createElement('div'); box.className = 'nbst-quiz'; box._s = S; S.el = box;
+        if(ty.parentNode) ty.parentNode.replaceChild(box, ty); else TH.ask.appendChild(box);
+        renderQuiz(S); stScrollTo(box);
+      }
+      stPlaceEnd(); paintFoot();
+    });
+  }
+
+  /* المرحلة 1: شرح كل جزئية + ملخص (نقطة شات واحدة) */
+  function runStudy(){
+    if(busy) return;
+    var u = user();
+    if(!u){ show(esc(MSG.login), true); return; }
+    if(stLoad){ show('استنى لحظة لحد ما الصور تتجهّز.', true); return; }
+    if(!stImgs.length){ show('أضف صورة واحدة على الأقل من أيقونة الصور عشان نبدأ.', true); return; }
+    var note = stQi.value.trim().slice(0, 300), imgs = stImgs.map(function(x){ return x.d; });
+    var list = imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; });
+    show('', false);
+    var shots = '<div class="nbai-shots">' + imgs.map(function(d, i){ return '<figure class="nbai-shot"><img src="' + d + '" alt="صورة ' + (i + 1) + '"><figcaption>صورة ' + (i + 1) + '</figcaption></figure>'; }).join('') + '</div>';
+    var oldEnd = TH.ask.querySelector('.nbst-end'); if(oldEnd && oldEnd.parentNode) oldEnd.parentNode.removeChild(oldEnd);
+    TH.ask.appendChild(mkMsg('user', shots + (note ? esc(note) : 'اشرحلي الصور دي'), false));
+    stImgs = []; stQi.value = ''; fit();
+    var ty = typing('study');
+    stBusy(true); paintFoot();
+    call('study', { images: list, note: note }, imgs.length + '|' + note, function(r){
+      var st = r.ok && r.j.study && r.j.study.parts && r.j.study.parts.length ? r.j.study : null;
+      if(!st){
+        stBusy(false);
+        if(!card.isConnected) return;
+        ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(aiErr(r.err));
+        stImgs = imgs.map(function(d){ return { d: d, qc: null }; }); if(!stQi.value){ stQi.value = note; fit(); }   /* فشل → الصور والملاحظة ترجع عشان تتبعت تاني */
+        paintStrip(); stPlaceEnd(); paintFoot(); return;
+      }
+      var S = { imgs: imgs, list: list, note: note, title: st.title || '', parts: st.parts, summary: st.summary || [], quiz: null, ans: [], step: 0, revealed: false, el: null };
+      STUDY.sessions.push(S);
+      ty.className = 'nbai-m nbai-m-ai nbst-msg'; ty.innerHTML = stExplainHtml(S); stScrollTo(ty);
+      if(S.summary.length){ var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); TH.ask.appendChild(sm); }
+      stLoadQuiz(S);
+    });
+  }
+
+  /* ── تحميل المحادثة PDF — نفس آلية تحميل المحاضرات في الأكاديمية (نافذة طباعة بأزرار رجوع/طباعة-حفظ PDF) ── */
+  function stPdfHtml(){
+    var first = STUDY.sessions[0], ttl = (first && first.title) ? first.title : 'ذاكر مع نبتكس', dt = '';
+    try{ dt = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); }catch(e){ dt = new Date().toISOString().slice(0, 10); }
+    var css = '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{background:#fff}body{font-family:"Cairo",sans-serif;margin:0;padding:40px 28px;color:#1e2a24;line-height:1.9}' +
+      '.p-wrap{max-width:760px;margin:0 auto}.p-head{margin-bottom:6px;padding-bottom:22px;border-bottom:2px solid #eef8f0}.p-brand{font-size:12px;font-weight:800;color:#1B6B3A;letter-spacing:.1em;margin-bottom:10px}.p-date{font-size:11px;color:#6d8f7a;font-weight:700}' +
+      '.p-sess{margin-top:26px}.p-sess+.p-sess{page-break-before:always}.p-sh{font-size:12px;font-weight:800;color:#6d8f7a;margin:0 0 4px}.p-title{font-size:1.7rem;line-height:1.3;margin:0 0 10px;color:#1e2a24}' +
+      '.p-imgs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}.p-imgs img{height:110px;width:auto;max-width:48%;border:1px solid #e2eee5;border-radius:8px;object-fit:cover}.p-note{font-size:12px;color:#6d8f7a;margin-bottom:8px}' +
+      '.p-h{font-size:1.1rem;color:#1B6B3A;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid #e2eee5}.p-part{break-inside:avoid;margin:0 0 14px;padding:12px 14px;border:1px solid #e2eee5;border-radius:10px;background:#f5fbf6}' +
+      '.p-pt{font-size:1rem;font-weight:800;margin:0 0 4px}.p-pt span{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#1B6B3A;color:#fff;font-size:12px;margin-inline-end:8px}' +
+      '.p-px{font-size:13.5px}.p-ex{margin-top:8px;padding:8px 11px;border:1px dashed #84b896;border-radius:8px;font-size:13px;background:#fff}.p-ex b{display:block;color:#1B6B3A;font-size:11px}' +
+      'ul.p-sum{margin:0;padding-inline-start:20px;font-size:13.5px}ul.p-sum li{margin-bottom:3px}' +
+      '.p-score{margin:0 0 12px;padding:8px 12px;border-radius:8px;background:#eef8f0;color:#1B6B3A;font-weight:800;font-size:13px}' +
+      '.p-q{break-inside:avoid;margin:0 0 14px;padding:12px 14px;border:1px solid #e2eee5;border-radius:10px}.p-qt{font-weight:800;font-size:13.5px;margin-bottom:8px}' +
+      '.p-o{display:flex;gap:8px;padding:5px 10px;margin:4px 0;border:1px solid #e2eee5;border-radius:8px;font-size:13px;line-height:1.7}.p-o i{font-style:normal;font-weight:800;flex:none}' +
+      '.p-o.ok{border-color:#27ae60;background:#eafaf0;color:#1c7a43}.p-o.bad{border-color:#c0392b;background:#fdeeee;color:#a5281b}.p-why{margin-top:8px;font-size:12.5px;color:#1B6B3A}' +
+      '.p-foot{margin-top:50px;padding-top:18px;border-top:1px solid #e2eee5;font-size:11px;color:#6d8f7a;text-align:center}' +
+      '.p-tb{position:fixed;top:14px;left:14px;z-index:10;display:flex;gap:8px}.p-tb button{padding:10px 18px;border-radius:999px;border:none;background:#1B6B3A;color:#fff;font-family:"Cairo",sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}' +
+      '@media print{.p-tb{display:none}@page{margin:18mm 16mm}body{padding:0}}';
+    var body = '';
+    STUDY.sessions.forEach(function(S, si){
+      body += '<section class="p-sess">' + (STUDY.sessions.length > 1 ? '<div class="p-sh">الجلسة ' + (si + 1) + '</div>' : '') + '<h1 class="p-title">' + esc(S.title || 'شرح الصور') + '</h1>' +
+        '<div class="p-imgs">' + S.imgs.map(function(d, i){ return '<img src="' + d + '" alt="صورة ' + (i + 1) + '">'; }).join('') + '</div>' + (S.note ? '<div class="p-note">ملاحظتك: ' + esc(S.note) + '</div>' : '') +
+        '<h2 class="p-h">شرح الأجزاء</h2>';
+      S.parts.forEach(function(p, i){
+        body += '<div class="p-part"><h3 class="p-pt"><span>' + (i + 1) + '</span>' + esc(p.title) + '</h3><div class="p-px">' + fmt(p.explain) + '</div>' + (p.example ? '<div class="p-ex"><b>مثال تبسيطي</b>' + fmt(p.example) + '</div>' : '') + '</div>';
+      });
+      if(S.summary.length) body += '<h2 class="p-h">ملخص الصور</h2><ul class="p-sum">' + S.summary.map(function(x){ return '<li>' + fmt(x) + '</li>'; }).join('') + '</ul>';
+      if(S.quiz && S.quiz.length){
+        var n = S.quiz.length, ok = 0, got = 0;
+        S.quiz.forEach(function(q, i){ if(S.ans[i] != null){ got++; if(S.ans[i] === q.answer) ok++; } });
+        body += '<h2 class="p-h">امتحان MCQ على الشرح</h2>' + (got ? '<div class="p-score">' + (got === n ? 'نتيجتك: ' + ok + ' من ' + n + ' (' + Math.round(ok / n * 100) + '%)' : 'جاوبت على ' + got + ' من ' + n + ' سؤال — صح منهم ' + ok) + '</div>' : '');
+        S.quiz.forEach(function(q, i){
+          body += '<div class="p-q"><div class="p-qt">' + (i + 1) + '. ' + esc(q.q) + '</div>' + q.options.map(function(o, k){
+            var cls = k === q.answer ? ' ok' : (S.ans[i] === k ? ' bad' : '');
+            return '<div class="p-o' + cls + '"><i>' + LTR4[k] + '</i><span>' + esc(o) + (k === q.answer ? ' ✓' : (S.ans[i] === k ? ' ✗ (إجابتك)' : '')) + '</span></div>';
+          }).join('') + (q.why ? '<div class="p-why"><b>التفسير:</b> ' + esc(q.why) + '</div>' : '') + '</div>';
+        });
+      }
+      body += '</section>';
+    });
+    return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + esc(ttl) + ' — Nabtex AI</title>' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"><style>' + css + '</style></head><body>' +
+      '<div class="p-tb"><button onclick="window.close()" style="background:#f3faf4;color:#1e2a24;border:1.5px solid #e2eee5">← رجوع</button><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>' +
+      '<div class="p-wrap"><div class="p-head"><div class="p-brand">🛡️ Nabtex AI — ذاكر مع نبتكس</div><div class="p-date">' + esc(dt) + '</div></div>' + body +
+      '<div class="p-foot">© نبتيكس Nabtex — تم إصدار هذا الملف من Nabtex AI (ذاكر مع نبتكس)</div></div></body></html>';
+  }
+  function stPdf(){
+    if(!STUDY.sessions.length) return;
+    var w = window.open('', '_blank');
+    if(!w){ if(typeof showToast === 'function') showToast('⚠️ يرجى السماح بالنوافذ المنبثقة لتحميل المحادثة', 'err'); return; }
+    var html = stPdfHtml(), ua = navigator.userAgent || '';
+    var isSafariOnly = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|OPiOS|Android/.test(ua), isAndroid = /Android/.test(ua);
+    if(isSafariOnly || isAndroid){ w.document.write(html); w.document.close(); }
+    else {
+      try{
+        var url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        w.location.href = url;
+        if(w.addEventListener) w.addEventListener('unload', function(){ try{ URL.revokeObjectURL(url); }catch(e){} });
+      }catch(e){ w.document.write(html); w.document.close(); }
+    }
+    if(typeof showToast === 'function') showToast('📄 جاري تجهيز المحادثة للتحميل...', 'ok');
+  }
+
+  /* أحداث «ذاكر»: إضافة/حذف صورة، اختيار إجابة، التالي، إعادة، PDF */
+  card.addEventListener('click', function(ev){
+    var t = ev.target; if(!t || !t.closest) return;
+    var rm = t.closest('.nbst-x');
+    if(rm && card.contains(rm)){ if(busy) return; var ri = +rm.getAttribute('data-i'); if(stImgs[ri]){ stImgs.splice(ri, 1); paintStrip(); show('', false); } return; }
+    var ad = t.closest('.nbai-st-add');
+    if(ad && card.contains(ad)){
+      if(busy) return;
+      if(stImgs.length + stLoad >= ST_MAX){ show('وصلت للحد الأقصى — ' + ST_MAX + ' صور في كل مرة.', true); return; }
+      stFile.click(); return;
+    }
+    var o = t.closest('.nbst-o');
+    if(o && card.contains(o)){
+      var box = o.closest('.nbst-quiz'), S = box && box._s; if(!S || S.revealed || !S.quiz) return;
+      var idx = +o.getAttribute('data-i'), cur = S.quiz[S.step];
+      S.ans[S.step] = idx; S.revealed = true;
+      box.querySelectorAll('.nbst-o').forEach(function(x, i){ x.disabled = true; if(i === cur.answer) x.classList.add('ok'); else if(i === idx) x.classList.add('bad'); });
+      var ex = box.querySelector('.acad-exp'); if(ex){ ex.textContent = cur.why || (idx === cur.answer ? 'إجابة صحيحة.' : 'الإجابة الصحيحة متعلّمة بالأخضر.'); ex.classList.add('show'); }
+      var nx = box.querySelector('.nbst-next'); if(nx) nx.classList.add('show');
+      return;
+    }
+    var a = t.closest('[data-nbst]'); if(!a || !card.contains(a)) return;
+    var act = a.getAttribute('data-nbst'), bx = a.closest('.nbst-quiz'), SS = bx && bx._s;
+    if(act === 'next'){ if(!SS || !SS.revealed) return; SS.step++; SS.revealed = false; renderQuiz(SS); stScrollTo(bx); }
+    else if(act === 'again'){ if(!SS) return; SS.ans = []; SS.step = 0; SS.revealed = false; renderQuiz(SS); stScrollTo(bx); }
+    else if(act === 'retryq'){ var eb = a.closest('.nbai-m'); if(!busy && eb && eb._s) stLoadQuiz(eb._s, eb); }
+    else if(act === 'pdf') stPdf();
+  });
+
   var srcBox = card.querySelector('.nbai-src'), chipAnalyze = card.querySelector('.nbai-chip[data-q=""]');
   function paintSrc(){
+    swapView();   /* ذاكر مع نبتكس: تبديل محتوى الشات (stash) */
     srcBox.querySelectorAll('.nbai-src-b').forEach(function(b){ var on = b.getAttribute('data-src') === src; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
     if(chipAnalyze) chipAnalyze.style.display = src === 'any' ? 'none' : '';   /* «حلّل مزرعتي» محتاجة بيانات مزرعة */
-    var g = TH.ask.firstChild; if(g && !CHAT.ask.length && g.classList && g.classList.contains('nbai-m-ai')) g.innerHTML = GREET.ask;
+    var g = TH.ask.firstChild; if(src !== 'study' && g && !CHAT.ask.length && g.classList && g.classList.contains('nbai-m-ai')) g.innerHTML = GREET.ask;
+    paintStudy();
     paintFoot();
   }
   srcBox.addEventListener('click', function(ev){
     var b = ev.target.closest && ev.target.closest('.nbai-src-b'); if(!b || busy) return;
-    src = b.getAttribute('data-src') === 'any' ? 'any' : 'farm'; lsSet('nbai:src', src); paintSrc();
+    var sv = b.getAttribute('data-src'); src = (sv === 'any' || sv === 'study') ? sv : 'farm'; lsSet('nbai:src', src); paintSrc();   /* القديم (للتراجع): src = ... === 'any' ? 'any' : 'farm' */
   });
   paintSrc();
 
@@ -28342,6 +28691,7 @@ function buildScreen(){
     if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
 
   function sendAsk(){
+    if(src === 'study'){ runStudy(); return; }   /* ذاكر مع نبتكس: نفس زر الإرسال/Enter */
     var i = card.querySelector('.nbai-qi');
     if(!i.value.trim()){ i.focus(); return; }
     runAsk();
