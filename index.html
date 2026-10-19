@@ -27829,6 +27829,15 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbst-pdf{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 22px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease)}
 .nbst-pdf:active{transform:scale(.97)}
 .nbai-ov :is(.nbai-st-add,.nbst-x,.nbst-o,.nbst-next,.nbst-btn,.nbst-pdf):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+/* ظهور شرح «ذاكر» بالتتابع (العنوان ← جزء جزء ← الملخص ← الامتحان) — opacity/transform فقط ومتوقف مع prefers-reduced-motion. للتراجع: امسح الأسطر دي + دالتي stSeq/stFollow واستدعاء stSeq في runStudy. */
+@keyframes nbst-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+.nbai-ov .nbst-in{animation:nbst-in 560ms var(--ai-ease) backwards}
+.nbai-ov .nbst-in .nbst-pn{animation:nbux-pop 440ms var(--ai-spring) 100ms backwards}
+.nbai-ov .nbst-in .nbst-pt>span:last-child{animation:nbux-fade 460ms var(--ai-ease) 140ms backwards}
+.nbai-ov .nbst-in .nbst-src{animation:nbux-rise 400ms var(--ai-ease) 240ms backwards}
+.nbai-ov .nbst-in .nbst-px{animation:nbux-rise 480ms var(--ai-ease) 300ms backwards}
+.nbai-ov .nbst-in .nbst-ex{animation:nbux-rise 480ms var(--ai-ease) 560ms backwards}
+.nbai-ov .nbst-li-in{animation:nbux-rise 440ms var(--ai-ease) backwards}
 </style>
 
 <script id="nb-farm-ai-js">
@@ -28546,6 +28555,39 @@ function buildScreen(){
     });
   }
 
+  /* ظهور الشرح بالتتابع: العنوان ← كل جزء لوحده بإيقاع هادي ← الملخص ← الامتحان (بدل ما كل حاجة تظهر مرة واحدة). مع prefers-reduced-motion بيظهر كله زي الأول. */
+  var stFree = false;   /* لو الطالب لمس/سحب الشاشة وقت العرض، الشات يبطّل يتابع النزول لوحده */
+  function stFollow(el){
+    if(stFree || !el || !el.isConnected) return;
+    var sc = TH.ask, r = el.getBoundingClientRect(), s = sc.getBoundingClientRect(), tall = r.height > s.height - 28;
+    var dy = tall ? r.top - s.top - 8 : r.bottom - s.bottom + 16;
+    if(!tall && dy <= 2) return;
+    try{ sc.scrollBy({ top: dy, behavior: 'smooth' }); }catch(e){ sc.scrollTop += dy; }
+  }
+  function stSeq(S, ty, done){
+    var tmp = document.createElement('div'); tmp.innerHTML = stExplainHtml(S);
+    var kids = [].slice.call(tmp.children);
+    ty.className = 'nbai-m nbai-m-ai nbst-msg';
+    if(NOANIM || kids.length < 3){ ty.innerHTML = tmp.innerHTML; stScrollTo(ty); done(); return; }
+    var gap = Math.max(320, Math.min(780, 4400 / (kids.length - 2))), k = 2;
+    stFree = false;
+    function onUser(){ stFree = true; }
+    TH.ask.addEventListener('wheel', onUser, { passive: true }); TH.ask.addEventListener('touchmove', onUser, { passive: true });
+    function put(el, delay){
+      el.classList.add('nbst-in'); if(delay) el.style.animationDelay = delay + 'ms'; ty.appendChild(el);
+      setTimeout(function(){ el.classList.remove('nbst-in'); el.style.animationDelay = ''; }, 1700);   /* نشيل الكلاس عشان الحركة ماتتعادش لو الشات اتبدّل وارجع */
+    }
+    ty.innerHTML = '';
+    put(kids[0]); put(kids[1], 140); stScrollTo(ty);
+    (function nextPart(){
+      if(!card.isConnected) return;
+      var el = kids[k++];
+      if(!el){ TH.ask.removeEventListener('wheel', onUser); TH.ask.removeEventListener('touchmove', onUser); done(); return; }
+      put(el); stFollow(el);
+      setTimeout(nextPart, gap);
+    })();
+  }
+
   /* المرحلة 1: شرح كل جزئية + ملخص (نقطة شات واحدة) */
   function runStudy(){
     if(busy) return;
@@ -28573,9 +28615,21 @@ function buildScreen(){
       }
       var S = { imgs: imgs, list: list, note: note, title: st.title || '', parts: st.parts, summary: st.summary || [], quiz: null, ans: [], step: 0, revealed: false, el: null };
       STUDY.sessions.push(S);
-      ty.className = 'nbai-m nbai-m-ai nbst-msg'; ty.innerHTML = stExplainHtml(S); stScrollTo(ty);
-      if(S.summary.length){ var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); TH.ask.appendChild(sm); }
-      stLoadQuiz(S);
+      stSeq(S, ty, function(){   /* الشرح جزء جزء ← الملخص ← الامتحان */
+        if(!card.isConnected) return;
+        var wait = 0;
+        if(S.summary.length){
+          var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); TH.ask.appendChild(sm);
+          if(!NOANIM){
+            var lis = [].slice.call(sm.querySelectorAll('.nbst-sum li'));
+            lis.forEach(function(li, i){ li.classList.add('nbst-li-in'); li.style.animationDelay = (180 + Math.min(i, 10) * 90) + 'ms'; });
+            setTimeout(function(){ lis.forEach(function(li){ li.classList.remove('nbst-li-in'); li.style.animationDelay = ''; }); }, 2300);
+            wait = 500 + Math.min(lis.length, 8) * 90;
+          }
+          stFollow(sm);
+        }
+        setTimeout(function(){ if(card.isConnected) stLoadQuiz(S); }, wait);
+      });
     });
   }
 
