@@ -39,12 +39,13 @@ const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?ke
 const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
-const MAX_BODY_BYTES = 2400 * 1024;   /* كان 600KB لصورة واحدة — دلوقتي لحد 4 صور (≈340KB لكل واحدة) */
+const MAX_BODY_BYTES = 4400 * 1024;   /* كان 600KB لصورة واحدة ثم 2400KB لحد 4 صور — دلوقتي «ذاكر مع نبتكس» لحد 12 صورة (≈300KB لكل واحدة) وده تحت حد Vercel */
 const MAX_SUMMARY_CHARS = 9000;
 const MAX_QUESTION_CHARS = 300;
 const MAX_TEXT_CHARS = 700;
 const MAX_IMAGE_B64 = 420 * 1024;   /* ≈ 310KB بعد فك الترميز — للصورة الواحدة */
 const MAX_IMAGES = 4;
+const MAX_STUDY_IMAGES = 12;   /* «ذاكر مع نبتكس»: السقف المطلق؛ الحد الفعلي حسب الباقة في aiAllowance (imgs): مجاني/Basic 4 · Plus 8 · Pro 12 */
 /* وصف كل زاوية تصوير (الواجهة بتبعت slot رقم بس، والنص ثابت هنا — مفيش نص حر من العميل بيدخل البرومبت) */
 const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه الأمامي — ورقة أو ثمرة أو غيرها)', 'الجزء المصاب من الخلف (الوجه الخلفي — زي ظهر الورقة)', 'الساق أو الثمرة (لقطة قريبة)', 'النبات كامل من بعيد'];
 const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 9000, study_quiz: 4500, study_ask: 1800 };
@@ -266,14 +267,14 @@ SYSTEMS.decide = [
   INJECTION
 ].join('\n');
 
-/* ═══ «ذاكر مع نبتكس» (إضافة): الطالب يرفع من 1 لـ 4 صور من المحاضرة/الملزمة ← study: شرح كل جزئية بالعامية المصرية + مثال + ملخص (JSON) ← study_quiz: امتحان MCQ من نفس الصور بس (JSON).
+/* ═══ «ذاكر مع نبتكس» (إضافة): الطالب يرفع من 1 لـ 12 صورة (4 مجاني/Basic · 8 Plus · 12 Pro) من المحاضرة/الملزمة ← study: شرح كل جزئية بالعامية المصرية + مثال + ملخص (JSON) ← study_quiz: امتحان MCQ من نفس الصور بس (JSON).
    للتراجع: امسح SYSTEMS.study / SYSTEMS.study_quiz و sanitizeStudy / sanitizeStudyQuiz وفرع study جوه handler وسطور study في LIMITS / OUT_TOKENS / AI_POINT. ═══ */
 SYSTEMS.study = [
   'أنت «مذاكر نبتكس»: مدرّس خبير في الزراعة وعلوم الحياة (نبات، وقاية نباتات، تربة، إنتاج حيواني، أغذية، ميكروبيولوجي، كيمياء حيوية، وراثة، تقنيات حيوية…) وكمان الكيمياء بكل فروعها (عامة، عضوية، لاعضوية، تحليلية، فيزيائية) بتذاكر مع طالب مصري من صور ملازمه أو سلايدات المحاضرة أو صفحات الكتاب أو ملاحظاته بخط اليد. المحتوى ممكن يكون عربي أو إنجليزي أو خليط.',
   'اللغة: لو النص الأساسي في الصور إنجليزي اكتب كل حاجة (title وparts بكل حقولها وsummary) بالإنجليزية المبسطة جدًا برضه وبنفس الطريقة والتفصيل والترتيب بالظبط: جمل قصيرة وكلمات سهلة كأنك بتشرح لصاحبك اللي أول مرة يسمع الموضوع، وأي مصطلح علمي أول ما يظهر اشرحه في نص جملة بكلام بسيط، والتنبيه يبدأ بـ "Note:" بدل «ملحوظة:». لو النص الأساسي عربي أو خليط غالبه عربي كمّل بالعامية المصرية زي ما هو مطلوب تحت.',
   'الكيمياء والمعادلات (لو المحتوى فيه مواد كيميائية أو صيغ أو معادلات): اكتب الصيغ والمعادلات بالرموز العلمية المنظمة وبرموز يونيكود الصحيحة بدل الكتابة الملخبطة: أرقام سفلية ₀₁₂₃₄₅₆₇₈₉ (H₂O وCO₂ وCa(OH)₂)، وشحنات وأسس علوية (SO₄²⁻ وFe³⁺ وNa⁺)، والأسهم → ⇌ ↑ ↓ ودرجة الحرارة °C. كل معادلة في سطر مستقل. وازن المعادلة وراجع توازن الذرات والشحنات قبل ما تكتبها، ولو المعادلة في الصورة مش موزونة أو فيها خطأ نبّه بجملة تبدأ بـ «ملحوظة:». وأول ما تظهر معادلة أو تفاعل اشرح بكلام بسيط إيه اللي بيتفاعل وإيه الناتج والظروف (حرارة أو عامل حفاز أو وسط) وليه بيحصل. للمركبات العضوية اذكر الاسم والمجموعة الفعالة والصيغة، ولو الصيغة البنائية مرسومة صفها بالكلام بدقة (الذرات والروابط والحلقات) ولا تخمّن لو مش واضحة. الأرقام العادية تفضل بالإنجليزية (0-9) والسفلي والعلوي بيونيكود جوه الصيغ بس.',
   'المسائل الحسابية (لو الصور فيها مسألة أو مثال محلول أو بيانات رقمية): اشرح الحل خطوة بخطوة جوه explain بالترتيب: المعطيات ← المطلوب ← القانون بالرموز ← التعويض بالأرقام والوحدات ← الناتج النهائي بوحدته، مع تفسير بسيط لكل خطوة. استخدم أرقام الصورة بالظبط. ولو محتاج ثابت قياسي أو كتلة ذرية استخدم القيمة المعروفة وقول صراحة إنها قيمة قياسية مش من الصورة. راجع الحساب مرتين، ولو معلومة لازمة ناقصة قول كده ولا تخترعها. يجوز لجزء المسألة الحسابية يوصل شرحه لحد 250 كلمة. وقاعدة عدم إضافة جرعات أو أرقام مبيدات وأسمدة من عندك تفضل سارية.',
-  'هتستلم من 1 إلى 4 صور (قبل كل صورة سطر برقمها) وأحيانًا ملاحظة من الطالب. مهمتك: شرح وافٍ ودقيق لكل جزئية علمية موجودة فيها + ملخص.',
+  'هتستلم من 1 إلى 12 صورة (قبل كل صورة سطر برقمها) وأحيانًا ملاحظة من الطالب. مهمتك: شرح وافٍ ودقيق لكل جزئية علمية موجودة فيها + ملخص.',
   'القراءة: اقرأ كل صورة بعناية فائقة قبل ما تكتب: كل العناوين والفقرات والجداول والمعادلات والرسومات والأسهم والأشكال والتعليقات الجانبية. استخرج كل جزئية وكل معلومة ولا تتجاهل أي حاجة ظاهرة. لو كلمة أو رقم مش واضح في الصورة قول ده صراحة في الشرح (مثلًا «الرقم ده مش واضح في الصورة») ولا تخمّن، ولا تخترع معلومات مش موجودة في الصور. لو أكتر من صورة بتتكلم عن نفس الموضوع اربطهم ببعض.',
   'التقسيم: قسّم المحتوى لأجزاء (parts) من 1 إلى 12 حسب الفكرة العلمية مش حسب عدد الصور، ورتّبها بترتيب ظهورها. لو المحتوى قليل أو بسيط اكتفي بعدد أجزاء أقل. لكل جزء اكتب في src أرقام الصور اللي جاي منها.',
   'لكل جزء:',
@@ -382,11 +383,11 @@ function aiAllowance(ai, farm, now) {
   const paid = ai.paidUntil > now;
   const aiTrial = !!ai.trialStartedAt && ai.trialStartedAt + AI_TRIAL_MS > now;
   const farmOk = (!!farm.trialStartedAt && farm.trialStartedAt + FARM_TRIAL_MS > now) || farm.paidUntil > now;
-  if (paid && ai.plan === 'plan3') return { chat: 20, diag: 15 };
-  if (paid && ai.plan === 'plan2') return { chat: 15, diag: 10 };
-  if (paid && ai.plan === 'plan1') return { chat: 10, diag: 5 };
+  if (paid && ai.plan === 'plan3') return { chat: 20, diag: 15, imgs: 12 };
+  if (paid && ai.plan === 'plan2') return { chat: 15, diag: 10, imgs: 8 };
+  if (paid && ai.plan === 'plan1') return { chat: 10, diag: 5, imgs: 4 };
   /* AI-FREE-PLAN: الخطة المجانية الدائمة = 1 شات + 1 تشخيص يوميًا (التجربة ما بقتش بتدّي نقاط). القديم (للتراجع): return { chat: (aiTrial || farmOk) ? 3 : 0, diag: farmOk ? 3 : (aiTrial ? 2 : 0) }; */
-  return { chat: farmOk ? 3 : 1, diag: farmOk ? 3 : 1 };
+  return { chat: farmOk ? 3 : 2, diag: farmOk ? 3 : 2, imgs: 4 };   /* FREE-2: نقطتين بدل نقطة. القديم (للتراجع): farmOk ? 3 : 1 */
 }
 /* قبل الاتصال بجيميناي: فحص الاشتراك + الرصيد المتبقي. بيرجّع { err } أو { day, lim, used } */
 async function aiPointsCheck(tok, uid, kind) {
@@ -396,8 +397,8 @@ async function aiPointsCheck(tok, uid, kind) {
   const lim = aiAllowance(r[0], r[1], Date.now());
   const used = { chat: r[2].chat || 0, diag: r[2].diag || 0, fin: r[2].diagFin || 0 };
   const cap = kind === 'chat' ? lim.chat : lim.diag;
-  if (!cap) return { err: 'sub_required' };
-  if (kind === 'fin' ? used.fin >= used.diag * 2 : used[kind] >= cap) return { err: 'user_limit' };
+  if (!cap) return { err: 'sub_required', lim: lim };
+  if (kind === 'fin' ? used.fin >= used.diag * 2 : used[kind] >= cap) return { err: 'user_limit', lim: lim };
   return { day: day, lim: lim, used: used };
 }
 /* بعد نجاح الرد: صرف نقطة واحدة (increment) — القواعد بترفض أي تجاوز للحد، فالرد بيتشال لو اترفض */
@@ -470,7 +471,7 @@ function sanitizeStudy(raw) {
     const title = str(p && p.title, 110), explain = str(p && p.explain, 2000);
     if (!title || !explain) return;
     const src = (Array.isArray(p.src) ? p.src : []).map(function (v) { return parseInt(v, 10); })
-      .filter(function (v) { return Number.isInteger(v) && v >= 1 && v <= MAX_IMAGES; }).slice(0, MAX_IMAGES);
+      .filter(function (v) { return Number.isInteger(v) && v >= 1 && v <= MAX_STUDY_IMAGES; }).slice(0, MAX_STUDY_IMAGES);
     const part = { title: title, explain: explain, example: str(p.example, 800), src: src };
     /* compare (اختياري): جدول مقارنة صغير — 2..4 أعمدة × 2..7 صفوف، وأي جدول ناقص/ملخبط بيتشال من غير ما يأثر على الشرح */
     const c = p.compare;
@@ -551,6 +552,7 @@ module.exports = async function handler(req, res) {
 
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
   let studyN = 0;   /* عدد أجزاء الشرح في طلب study_quiz */
+  let studyImgN = 0, stQa = null;   /* «ذاكر مع نبتكس»: عدد الصور المبعوتة + نتيجة فحص الاشتراك لطلبات الامتحان/السؤال (لحد الصور حسب الباقة) */
   if (mode === 'ask' && body.general === true) {
     if (!question) return fail(res, 400, 'bad_request');
     generalAsk = true;
@@ -617,7 +619,8 @@ module.exports = async function handler(req, res) {
   } else if (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask') {
     /* «ذاكر مع نبتكس»: من 1 لـ 4 صور (الواجهة بتصغّرهم قبل الإرسال) — نفس فحوصات صور التشخيص */
     const rawImgs = Array.isArray(body.images) ? body.images : [];
-    if (!rawImgs.length || rawImgs.length > MAX_IMAGES) return fail(res, 400, 'bad_request');
+    if (!rawImgs.length || rawImgs.length > MAX_STUDY_IMAGES) return fail(res, 400, 'bad_request');
+    studyImgN = rawImgs.length;
     const imgs = [];
     for (let i = 0; i < rawImgs.length; i++) {
       const img = rawImgs[i];
@@ -706,8 +709,13 @@ module.exports = async function handler(req, res) {
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
   } else if (mode === 'study_quiz' || mode === 'study_ask') {   /* study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
-    const qa = await aiPointsCheck(m[1], uid, 'chat');
-    if (qa.err && qa.err !== 'user_limit') return fail(res, qa.err === 'sub_required' ? 402 : 503, qa.err);
+    stQa = await aiPointsCheck(m[1], uid, 'chat');
+    if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
+  }
+  /* «ذاكر مع نبتكس»: عدد الصور حسب الباقة (مجاني/Basic 4 · Plus 8 · Pro 12) — الواجهة بتمنع ده أصلًا، وده الحكم النهائي */
+  if (studyImgN > 4) {
+    const stLim = (aiPts && aiPts.lim) || (stQa && stQa.lim) || null;
+    if (!stLim || studyImgN > (stLim.imgs || 4)) return fail(res, 403, 'img_limit');
   }
 
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
