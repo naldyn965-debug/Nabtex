@@ -383,6 +383,10 @@ function aiAllowance(ai, farm, now) {
   const paid = ai.paidUntil > now;
   const aiTrial = !!ai.trialStartedAt && ai.trialStartedAt + AI_TRIAL_MS > now;
   const farmOk = (!!farm.trialStartedAt && farm.trialStartedAt + FARM_TRIAL_MS > now) || farm.paidUntil > now;
+  /* STUDY-SPLIT: باقات «ذاكر مع نبتيكس» — نفس نقاط الشات وعدد الصور بس من غير تشخيص (بيفضل على الخطة المجانية). لازم تطابق firestore.rules (aiChatLim) و index.html (AI_PLANS). */
+  if (paid && ai.plan === 'study3') return { chat: 20, diag: farmOk ? 3 : 2, imgs: 12 };
+  if (paid && ai.plan === 'study2') return { chat: 15, diag: farmOk ? 3 : 2, imgs: 8 };
+  if (paid && ai.plan === 'study1') return { chat: 10, diag: farmOk ? 3 : 2, imgs: 4 };
   if (paid && ai.plan === 'plan3') return { chat: 20, diag: 15, imgs: 12 };
   if (paid && ai.plan === 'plan2') return { chat: 15, diag: 10, imgs: 8 };
   if (paid && ai.plan === 'plan1') return { chat: 10, diag: 5, imgs: 4 };
