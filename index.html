@@ -27838,6 +27838,39 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbst-in .nbst-px{animation:nbux-rise 480ms var(--ai-ease) 300ms backwards}
 .nbai-ov .nbst-in .nbst-ex{animation:nbux-rise 480ms var(--ai-ease) 560ms backwards}
 .nbai-ov .nbst-li-in{animation:nbux-rise 440ms var(--ai-ease) backwards}
+/* مظهر الصور المرفقة (ذاكر): صينية مرتبة + صور بنسبة الورقة + ترقيم + مكان إضافة. للتراجع: امسح الأسطر دي + ارجع paintStrip والسطر اللي فيه .nbst-slot في click. */
+.nbai-ov .nbai-st-th{display:block;margin-top:8px;padding:10px 12px 12px;overflow:visible;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--ai-soft),transparent 72%),var(--card);box-shadow:0 12px 26px -20px var(--ai-glow);animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbai-ov .nbai-st-th[hidden]{display:none}
+.nbst-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.nbst-ht{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--ink2)}
+.nbst-ht::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ai-g);box-shadow:0 0 0 3px var(--ai-soft2)}
+.nbai-ov .nbst-cnt{display:inline-flex;align-items:center;gap:8px;margin:0;padding:3px 10px;border-radius:999px;background:var(--ai-soft);font-size:11.5px;font-weight:800;line-height:1.5;color:var(--ai-tx)}
+.nbst-segs{display:inline-flex;gap:3px}
+.nbst-segs i{width:9px;height:4px;border-radius:2px;background:var(--ai-soft2);transition:background 220ms var(--ai-ease)}
+.nbst-segs i.on{background:var(--ai-g)}
+.nbst-row{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 8px;margin-bottom:-4px;scrollbar-width:none}
+.nbst-row::-webkit-scrollbar{display:none}
+.nbai-ov .nbst-th{flex:none;width:72px;height:96px;border:1px solid var(--line2);border-radius:14px;background:var(--bg2);overflow:hidden;box-shadow:0 10px 18px -12px rgba(16,24,40,.45)}
+.nbai-ov .nbst-th img{border-radius:0}
+.nbai-ov .nbst-th:not(.is-load)::after{content:"";position:absolute;inset:auto 0 0;height:42%;background:linear-gradient(transparent,rgba(15,23,42,.45));pointer-events:none}
+.nbai-ov .nbst-th.is-new{animation:nbux-pop 320ms var(--ai-spring) backwards}
+.nbai-ov .nbst-th.is-load{background:linear-gradient(100deg,var(--bg2) 30%,var(--ai-soft2) 50%,var(--bg2) 70%) 0 0/200% 100%;animation:nbst-shim 1.3s linear infinite}
+@keyframes nbst-shim{to{background-position:-200% 0}}
+.nbai-ov .nbst-th.is-weak{border-color:var(--wz-wn-br);box-shadow:0 0 0 2px var(--wz-wn-bg),0 10px 18px -12px rgba(16,24,40,.45)}
+.nbst-no,.nbst-wk{position:absolute;z-index:2;bottom:6px;display:grid;place-items:center;height:20px;border-radius:999px;color:#fff;font-size:11px;font-weight:800;line-height:1;box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.nbst-no{inset-inline-end:6px;min-width:20px;padding:0 5px;background:var(--ai-g)}
+.nbst-wk{inset-inline-start:6px;width:20px;background:#f59e0b;font-size:12px;font-weight:900}
+.nbai-ov .nbst-x{z-index:3;top:6px;inset-inline-start:6px;width:22px;height:22px;border:0;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform 160ms var(--ai-ease),background 180ms}
+.nbai-ov .nbst-x:active{transform:scale(.88)}
+@media (hover:hover){.nbai-ov .nbst-x:not([disabled]):hover{background:rgba(15,23,42,.8)}}
+.nbst-slot{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:72px;height:96px;padding:0;border:1.5px dashed var(--ai-ring);border-radius:14px;background:var(--ai-soft);color:var(--ai-tx);font-size:11px;font-weight:800;line-height:1.3;cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms,border-color 180ms}
+.nbst-slot-ic{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--card);box-shadow:0 4px 10px -6px var(--ai-glow)}
+.nbst-slot:active{transform:scale(.95)}
+@media (hover:hover){.nbst-slot:hover{background:var(--ai-soft2);border-color:var(--ai-tx)}}
+.nbai-ov .nbst-slot:focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+/* تنبيه الصور غير الواضحة في «ذاكر»: بطاقة هادية بأيقونة بدل مربع بيج عادي */
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-out.err{position:relative;padding:11px 14px;padding-inline-start:48px;border-radius:16px;font-size:12.5px;font-weight:700;line-height:1.85;color:var(--wz-wn);border-color:var(--wz-wn-br);background:linear-gradient(180deg,var(--wz-wn-bg),transparent),var(--card);box-shadow:0 10px 20px -18px rgba(217,119,6,.9)}
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-out.err::before{content:"!";position:absolute;inset-inline-start:13px;top:11px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#f59e0b;color:#fff;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 4px var(--wz-wn-bg)}
 </style>
 
 <script id="nb-farm-ai-js">
@@ -28418,15 +28451,17 @@ function buildScreen(){
 
   /* شريط الصور المختارة + حالة الأزرار */
   function paintStrip(){
-    var on = src === 'study', n = stImgs.length, h = '';
+    var on = src === 'study', n = stImgs.length, h = '', tot = n + stLoad, segs = '';
     stStrip.hidden = !on || (!n && !stLoad);
     stImgs.forEach(function(x, i){
-      h += '<div class="nbst-th' + (x.fresh ? ' is-new' : '') + '"><img src="' + x.d + '" alt="صورة ' + (i + 1) + '"><button type="button" class="nbst-x" data-i="' + i + '" aria-label="حذف الصورة ' + (i + 1) + '"' + (busy ? ' disabled' : '') + '>' + IC_X + '</button></div>';
+      var wk = !qcInfo(x.qc).ok;   /* صورة مش واضحة: علامة تنبيه هادية على الصورة نفسها */
+      h += '<div class="nbst-th' + (x.fresh ? ' is-new' : '') + (wk ? ' is-weak' : '') + '"><img src="' + x.d + '" alt="صورة ' + (i + 1) + '"><span class="nbst-no" aria-hidden="true">' + (i + 1) + '</span>' + (wk ? '<span class="nbst-wk" role="img" aria-label="الصورة مش واضحة كفاية">!</span>' : '') + '<button type="button" class="nbst-x" data-i="' + i + '" aria-label="حذف الصورة ' + (i + 1) + '"' + (busy ? ' disabled' : '') + '>' + IC_X + '</button></div>';
       x.fresh = false;
     });
     for(var k = 0; k < stLoad; k++) h += '<div class="nbst-th is-load" aria-busy="true"><span class="nbai-wz-spin" aria-hidden="true"></span></div>';
-    h += '<span class="nbst-cnt" aria-live="polite"><bdi dir="ltr">' + (n + stLoad) + '/' + ST_MAX + '</bdi></span>';
-    stStrip.innerHTML = h;
+    if(!busy && tot < ST_MAX) h += '<button type="button" class="nbst-slot" aria-label="إضافة صورة"><span class="nbst-slot-ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span>أضف صورة</span></button>';
+    for(var q = 0; q < ST_MAX; q++) segs += '<i' + (q < tot ? ' class="on"' : '') + '></i>';
+    stStrip.innerHTML = '<div class="nbst-hd"><span class="nbst-ht">الصور المختارة</span><span class="nbst-cnt" aria-live="polite"><span class="nbst-segs" aria-hidden="true">' + segs + '</span><bdi dir="ltr">' + tot + '/' + ST_MAX + '</bdi></span></div><div class="nbst-row">' + h + '</div>';
     stAdd.disabled = busy || (n + stLoad) >= ST_MAX;
     stCm.classList.toggle('nbst-ready', on && n > 0 && !stLoad && !busy);
   }
@@ -28532,7 +28567,7 @@ function buildScreen(){
         '<div class="acad-exp" role="status"></div></div>' +
         '<div style="display:flex;justify-content:center"><button type="button" class="acad-quiz-next nbst-next" data-nbst="next">' + (S.step === n - 1 ? 'عرض النتيجة' : 'السؤال التالي ←') + '</button></div>';
     }
-    el.innerHTML = h;
+    el.innerHTML = h; stDir(el);
   }
 
   /* المرحلة 2: الامتحان (من نفس الصور) — من غير نقطة تانية */
@@ -28564,8 +28599,16 @@ function buildScreen(){
     if(!tall && dy <= 2) return;
     try{ sc.scrollBy({ top: dy, behavior: 'smooth' }); }catch(e){ sc.scrollTop += dy; }
   }
+  /* شرح/امتحان بالإنجليزي: النص الإنجليزي بس يتعرض LTR (العربي زي ما هو RTL من غير أي تغيير) */
+  var ST_DIR = '.nbst-px,.nbst-ex,.nbst-pt,.nbst-h,.nbst-sum li,.acad-qtext,.acad-opt,.acad-exp';
+  function stDir(root, sel){
+    [].forEach.call(root.querySelectorAll(sel || ST_DIR), function(e){
+      var t = (e.textContent || '').replace(/\(إجابتك\)/g, ''), la = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length;
+      if(la && la > ar) e.setAttribute('dir', 'ltr');
+    });
+  }
   function stSeq(S, ty, done){
-    var tmp = document.createElement('div'); tmp.innerHTML = stExplainHtml(S);
+    var tmp = document.createElement('div'); tmp.innerHTML = stExplainHtml(S); stDir(tmp);
     var kids = [].slice.call(tmp.children);
     ty.className = 'nbai-m nbai-m-ai nbst-msg';
     if(NOANIM || kids.length < 3){ ty.innerHTML = tmp.innerHTML; stScrollTo(ty); done(); return; }
@@ -28619,7 +28662,7 @@ function buildScreen(){
         if(!card.isConnected) return;
         var wait = 0;
         if(S.summary.length){
-          var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); TH.ask.appendChild(sm);
+          var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); TH.ask.appendChild(sm); stDir(sm);
           if(!NOANIM){
             var lis = [].slice.call(sm.querySelectorAll('.nbst-sum li'));
             lis.forEach(function(li, i){ li.classList.add('nbst-li-in'); li.style.animationDelay = (180 + Math.min(i, 10) * 90) + 'ms'; });
@@ -28674,6 +28717,10 @@ function buildScreen(){
       }
       body += '</section>';
     });
+    try{   /* نص إنجليزي في الـ PDF يتعرض LTR (مستند inert: الصور مابتتحمّلش تاني) */
+      var pd = document.implementation.createHTMLDocument(''); pd.body.innerHTML = body;
+      stDir(pd.body, '.p-px,.p-ex,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li'); body = pd.body.innerHTML;
+    }catch(e){}
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + esc(ttl) + ' — Nabtex AI</title>' +
       '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"><style>' + css + '</style></head><body>' +
       '<div class="p-tb"><button onclick="window.close()" style="background:#f3faf4;color:#1e2a24;border:1.5px solid #e2eee5">← رجوع</button><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>' +
@@ -28702,7 +28749,7 @@ function buildScreen(){
     var t = ev.target; if(!t || !t.closest) return;
     var rm = t.closest('.nbst-x');
     if(rm && card.contains(rm)){ if(busy) return; var ri = +rm.getAttribute('data-i'); if(stImgs[ri]){ stImgs.splice(ri, 1); paintStrip(); show('', false); } return; }
-    var ad = t.closest('.nbai-st-add');
+    var ad = t.closest('.nbai-st-add,.nbst-slot');
     if(ad && card.contains(ad)){
       if(busy) return;
       if(stImgs.length + stLoad >= ST_MAX){ show('وصلت للحد الأقصى — ' + ST_MAX + ' صور في كل مرة.', true); return; }
@@ -28714,7 +28761,7 @@ function buildScreen(){
       var idx = +o.getAttribute('data-i'), cur = S.quiz[S.step];
       S.ans[S.step] = idx; S.revealed = true;
       box.querySelectorAll('.nbst-o').forEach(function(x, i){ x.disabled = true; if(i === cur.answer) x.classList.add('ok'); else if(i === idx) x.classList.add('bad'); });
-      var ex = box.querySelector('.acad-exp'); if(ex){ ex.textContent = cur.why || (idx === cur.answer ? 'إجابة صحيحة.' : 'الإجابة الصحيحة متعلّمة بالأخضر.'); ex.classList.add('show'); }
+      var ex = box.querySelector('.acad-exp'); if(ex){ ex.textContent = cur.why || (idx === cur.answer ? 'إجابة صحيحة.' : 'الإجابة الصحيحة متعلّمة بالأخضر.'); ex.classList.add('show'); stDir(ex.parentNode, '.acad-exp'); }
       var nx = box.querySelector('.nbst-next'); if(nx) nx.classList.add('show');
       return;
     }
