@@ -18322,7 +18322,7 @@ document.addEventListener('click', e => {
           '<span class="aipw-rd" aria-hidden="true"></span>' +
           '<span class="aipw-pn">' + p.label + (k === 'plan3' ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
           '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
-          '<span class="aipw-pc"><i><b>' + p.chat + '</b> استشارة</i><i><b>' + p.diag + '</b> تشخيص بالصور</i><i class="aipw-dly">يوميًا</i></span>' +
+          '<span class="aipw-pc"><i><b>' + p.chat + '</b> للسؤال أو المذاكرة' /* القديم (للتراجع): ' استشارة' */ + '</i><i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i><i class="aipw-dly">يوميًا</i></span>' +
           aiStudyRow(p) +   /* AI-IMGS */
         '</button>';
       });
@@ -28396,7 +28396,10 @@ function buildScreen(){
   }
   paintFoot();
   card._enter = function(){ var q = foot._q; if(!q) return; var w = q.fl.style.width; q.fl.style.transition = 'none'; q.fl.style.width = '0%'; void q.fl.offsetWidth; q.fl.style.transition = ''; q.fl.style.width = w; };   /* حركة ملء المؤشر عند الفتح فقط */
-  card._setSrc = function(v){ if(busy) return; var n = (v === 'any' || v === 'study') ? v : 'farm'; if(src === n) return; src = n; lsSet('nbai:src', src); paintSrc(); };   /* HOME-STUDY-BTN: اختيار المصدر برمجيًا (زر «ذاكر» في الرئيسية) — نفس سلوك الضغط على اختيار المصدر */
+  card._setSrc = function(v){ if(busy) return; var n = (v === 'any' || v === 'study') ? v : 'farm';
+    /* STUDY-TAB-FIX: لو المستخدم كان آخر مرة على تاب «تشخيص بالصورة» ثم دوس «ذاكر مع نبتيكس» من الرئيسية، تاب التشخيص كان بيفضل ظاهر (والتابات مخفية في وضع التركيز) فبيتداخل مع وضع المذاكرة. هنا بنرجّع تاب «اسأل / ذاكر» الأول بنفس معالج الضغط الأصلي. للتراجع: امسح السطر ده بس. */
+    if(n === 'study' && tab !== 'ask'){ var _at = card.querySelector('.nbai-tab[data-t="ask"]'); if(_at) _at.click(); }
+    if(src === n) return; src = n; lsSet('nbai:src', src); paintSrc(); };   /* HOME-STUDY-BTN: اختيار المصدر برمجيًا (زر «ذاكر» في الرئيسية) — نفس سلوك الضغط على اختيار المصدر */
   card._repaint = paintFoot;   /* إصلاح: الشاشة بتتبني مرة واحدة وبتتخفي/تظهر، فبنعيد رسم الشريط كل ما تتفتح (openScreen) عشان الرصيد يرجع من الأول مع بداية اليوم الجديد. للتراجع: امسح السطر ده والسطر اللي في openScreen. */
 
   /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
@@ -29554,14 +29557,69 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
-.nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(145deg,#2d9a58 0%,#1B6B3A 62%,#0f552e 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 10px 20px -10px rgba(27,107,58,.7);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
+.nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6d28d9 0%,#8b3fe6 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(109,40,217,.7);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
+/* القديم (للتراجع) — اللون الأخضر: background:linear-gradient(145deg,#2d9a58 0%,#1B6B3A 62%,#0f552e 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 10px 20px -10px rgba(27,107,58,.7); — ولازم تمسح كتلة «PURPLE-PREMIUM» تحت وسكريبت PURPLE-PREMIUM الصغير بعد الستايل ده. */
 .nb-h2-study svg{width:19px;height:19px;flex:none}
 .nb-h2-study:hover{filter:brightness(1.06)}
 .nb-h2-study:active{transform:scale(.97);transition-duration:80ms}
 .nb-h2-study:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
 @media(min-width:640px){.nb-h2-study{max-width:520px}}
 @media(prefers-reduced-motion:reduce){.nb-h2-study{transition:none!important}}
+/* ═════════ PURPLE-PREMIUM: بنفسجي Nabtex AI + حركة تفاعلية (إضافة) ═════════
+   • الوضع الهادي: لمعة ضوء بتعدّي على الزر كل ~6 ثواني + توهّج بنفسجي بيتنفّس + أيقونة الكتاب بتطفو بهدوء.
+   • التفاعل: إضاءة (spotlight) بتتبع الإصبع/الماوس جوه الزر، رفعة خفيفة + لفّة للأيقونة عند الهوفر، موجة (ripple) من نقطة الضغط، وانكماش عند الضغط.
+   • prefers-reduced-motion: كل الحركات الدايمة والموجة بتتوقف (اللون بس بيفضل). كله مقيّد بـ .nb-h2-study — مفيش تأثير على أي حاجة تانية.
+   للتراجع: امسح الكتلة دي + سكريبت PURPLE-PREMIUM الصغير اللي بعد الستايل + ارجع ألوان القاعدة الأولى من التعليق اللي فوق. */
+.nb-h2-study{overflow:hidden;isolation:isolate;--mx:50%;--my:50%;animation:nbH2StGlow 4s ease-in-out infinite}
+.nb-h2-study::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(130px circle at var(--mx) var(--my),rgba(255,255,255,.3),transparent 70%);transition:opacity .35s ease}
+.nb-h2-study::after{content:"";position:absolute;top:0;bottom:0;left:0;width:42%;z-index:-1;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.34) 50%,transparent 100%);transform:translateX(-130%) skewX(-18deg);animation:nbH2StSheen 6s cubic-bezier(.4,0,.2,1) 1.4s infinite}
+.nb-h2-study svg{animation:nbH2StBook 4.4s ease-in-out infinite;transform-origin:50% 70%}
+.nb-h2-study:active::before{opacity:1}
+.nb-h2-st-rp{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(255,255,255,.18) 45%,transparent 70%);transform:scale(0);opacity:1;animation:nbH2StRp .7s cubic-bezier(.22,1,.36,1) forwards}
+@media(hover:hover){
+  .nb-h2-study:hover{transform:translateY(-2px);filter:brightness(1.05)}
+  .nb-h2-study:hover::before{opacity:1}
+  .nb-h2-study:hover svg{animation:nbH2StBookHov .7s cubic-bezier(.34,1.56,.64,1) both}
+}
+.nb-h2-study:active{transform:scale(.97);transition-duration:80ms}
+.nb-h2-study:focus-visible{outline-color:#7c3aed}
+@keyframes nbH2StGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(109,40,217,.65),0 0 0 0 rgba(139,63,230,0)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 14px 28px -10px rgba(139,63,230,.85),0 0 0 6px rgba(139,63,230,.12)}}
+@keyframes nbH2StSheen{0%,58%{transform:translateX(-130%) skewX(-18deg)}100%{transform:translateX(340%) skewX(-18deg)}}
+@keyframes nbH2StBook{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1.5px) rotate(-4deg)}}
+@keyframes nbH2StBookHov{0%{transform:scale(1) rotate(0)}60%{transform:scale(1.2) rotate(-10deg)}100%{transform:scale(1.12) rotate(-6deg)}}
+@keyframes nbH2StRp{0%{transform:scale(0);opacity:1}100%{transform:scale(1);opacity:0}}
+@media(prefers-reduced-motion:reduce){
+  .nb-h2-study,.nb-h2-study::after,.nb-h2-study svg{animation:none!important}
+  .nb-h2-st-rp{display:none!important}
+  .nb-h2-study:hover{transform:none}
+}
 </style>
+<script>
+/* PURPLE-PREMIUM (مع كتلة الـ CSS اللي فوق): بيحدّث موضع الإضاءة داخل الزر + موجة الضغط. تفويض أحداث على document (الزر بيتبني ديناميكيًا) — مفيش تأثير على onclick بتاعه. للتراجع: امسح الـ <script> ده. */
+(function(){
+  try{
+    var S = '.nb-h2-study';
+    function btn(ev){ var t = ev.target; return t && t.closest ? t.closest(S) : null; }
+    function pos(ev){
+      var b = btn(ev); if(!b) return null;
+      var r = b.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+      b.style.setProperty('--mx', x + 'px'); b.style.setProperty('--my', y + 'px');
+      return { b: b, r: r, x: x, y: y };
+    }
+    document.addEventListener('pointermove', pos, { passive: true });
+    document.addEventListener('pointerdown', function(ev){
+      var p = pos(ev); if(!p) return;
+      try{ if(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) return; }catch(e){}
+      var d = Math.max(p.r.width, p.r.height) * 2.4, s = document.createElement('span');
+      s.className = 'nb-h2-st-rp';
+      s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (p.x - d / 2) + 'px;top:' + (p.y - d / 2) + 'px';
+      s.addEventListener('animationend', function(){ if(s.parentNode) s.parentNode.removeChild(s); });
+      p.b.appendChild(s);
+      setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 1000);
+    }, { passive: true });
+  }catch(e){}
+})();
+</script>
 
 <style id="ai-sub-css">
 /* شاشة اشتراك المساعد الذكي (aipw-*) — مؤشر الرصيد وزر الترقية جوه الواجهة بقوا في nb-farm-ai-ux. */
