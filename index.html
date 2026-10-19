@@ -27832,6 +27832,9 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbst-askq:focus{outline:2px solid var(--ai-tx);outline-offset:1px}
 .nbai-ov .nbst-asks{flex:none;min-height:42px;padding:0 16px;border:0;border-radius:14px;background:var(--ai-g);color:#fff;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
 .nbai-ov .nbst-asks[disabled],.nbai-ov .nbst-askq[disabled]{opacity:.55;cursor:default}
+/* وقت الكتابة في سؤال المتابعة (الكيبورد مفتوح): نخفي شريط الكتابة الأساسي وشريط الصور وسطر الرصيد مؤقتًا عشان مساحة الشات ما تضيقش ومربعين كتابة ما يظهروش مع بعض */
+.nbai-ov.nbst-kb :is(.nbai-cm,.nbai-st-th,.nbai-f){display:none}
+.nbai-ov .nbst-askr{scroll-margin-bottom:12px}
 .nbst-sum{display:grid;gap:6px;margin:6px 0 0;padding:0;list-style:none}
 .nbst-sum li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.85}
 .nbst-sum li::before{content:"";flex:none;width:7px;height:7px;margin-top:11px;border-radius:50%;background:var(--ai-g)}
@@ -28568,6 +28571,7 @@ function buildScreen(){
     var qa = p.qa || (p.qa = []);
     var wait = document.createElement('div'); wait.className = 'nbst-aaa'; wait.innerHTML = '<span class="nbai-dots" role="img" aria-label="المساعد بيكتب"><i></i><i></i><i></i></span>';
     var qb = document.createElement('div'); qb.className = 'nbst-aqq'; qb.textContent = q;
+    try{ ta.blur(); }catch(e){} card.classList.remove('nbst-kb');   /* يقفل الكيبورد ويرجّع شريط الكتابة الأساسي عشان الطالب يشوف الرد */
     box._busy = true; ta.disabled = true; go.disabled = true; lst.appendChild(qb); lst.appendChild(wait);
     try{ wait.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){}
     call('study_ask', { images: sel, part: { title: p.title, explain: p.explain, example: p.example || '' }, q: q, hist: qa.slice(-2) }, S.list.length + '|' + box.getAttribute('data-p') + '|' + q, function(r){
@@ -28604,7 +28608,7 @@ function buildScreen(){
         stCmpHtml(p.compare, 'nbst-cmp') +
         (p.example ? '<div class="nbst-ex"><span class="nbst-exl">مثال تبسيطي</span>' + fmt(p.example) + '</div>' : '') +
         '<div class="nbst-ask" data-s="' + STUDY.sessions.indexOf(S) + '" data-p="' + i + '"><button type="button" class="nbst-askb" data-nbst="askopen" aria-expanded="false">مش فاهم الجزء ده؟ اسأل</button>' +
-        '<div class="nbst-askf" hidden><div class="nbst-askl"></div><div class="nbst-askr"><textarea class="nbst-askq" rows="1" maxlength="300" placeholder="اكتب اللي مش فاهمه في الجزء ده…" aria-label="سؤالك عن الجزء ده"></textarea><button type="button" class="nbst-asks" data-nbst="askgo">اسأل</button></div></div></div></section>';
+        '<div class="nbst-askf" hidden><div class="nbst-askl"></div><div class="nbst-askr"><textarea class="nbst-askq" rows="1" maxlength="300" placeholder="اكتب اللي مش فاهمه…" aria-label="سؤالك عن الجزء ده"></textarea><button type="button" class="nbst-asks" data-nbst="askgo">اسأل</button></div></div></div></section>';
     });
     return h;
   }
@@ -28874,9 +28878,30 @@ function buildScreen(){
     else if(act === 'askopen'){
       var ab = a.closest('.nbst-ask'), af = ab && ab.querySelector('.nbst-askf'); if(!af) return;
       var op = af.hidden; af.hidden = !op; a.setAttribute('aria-expanded', op ? 'true' : 'false');
-      if(op){ var tq = af.querySelector('.nbst-askq'); if(tq) try{ tq.focus({ preventScroll: true }); af.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){} }
+      if(op){ var tq = af.querySelector('.nbst-askq'); if(tq) try{ tq.focus({ preventScroll: true }); }catch(e){} }
     }
     else if(act === 'askgo') stAsk(a.closest('.nbst-ask'));
+  });
+  /* سؤال المتابعة: لما الطالب يضغط على المربع نخفي شريط الكتابة الأساسي (class nbst-kb) ونتأكد إن المربع ظاهر فوق الكيبورد (بعد ما الكيبورد يفتح ويصغّر مساحة الشات) */
+  var kbT = 0;
+  function stSeeAsk(el){
+    var row = el && el.closest ? (el.closest('.nbst-askr') || el) : el, sc = TH.ask;
+    if(!row || !sc || !row.isConnected) return;
+    var r = row.getBoundingClientRect(), s = sc.getBoundingClientRect(), dy = r.bottom - s.bottom + 14;
+    if(dy > 0) sc.scrollTop += dy; else if(r.top < s.top) sc.scrollTop += r.top - s.top - 8;
+  }
+  card.addEventListener('focusin', function(ev){
+    var t = ev.target; if(!t || !t.classList || !t.classList.contains('nbst-askq')) return;
+    clearTimeout(kbT); card.classList.add('nbst-kb');
+    [60, 320, 650].forEach(function(ms){ setTimeout(function(){ if(document.activeElement === t) stSeeAsk(t); }, ms); });
+  });
+  card.addEventListener('focusout', function(ev){
+    var t = ev.target; if(!t || !t.classList || !t.classList.contains('nbst-askq')) return;
+    clearTimeout(kbT);
+    kbT = setTimeout(function(){ var a = document.activeElement; if(!(a && a.classList && a.classList.contains('nbst-askq') && card.contains(a))) card.classList.remove('nbst-kb'); }, 350);   /* التأخير عشان ضغطة زر «اسأل» ما تضيعش لو التصميم اتحرك */
+  });
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', function(){
+    var a = document.activeElement; if(card.isConnected && a && a.classList && a.classList.contains('nbst-askq') && card.contains(a)) stSeeAsk(a);
   });
   card.addEventListener('keydown', function(ev){   /* Enter يبعت سؤال المتابعة (Shift+Enter سطر جديد) */
     var t = ev.target; if(!t || !t.classList || !t.classList.contains('nbst-askq')) return;
