@@ -385,7 +385,8 @@ function aiAllowance(ai, farm, now) {
   if (paid && ai.plan === 'plan3') return { chat: 20, diag: 15 };
   if (paid && ai.plan === 'plan2') return { chat: 15, diag: 10 };
   if (paid && ai.plan === 'plan1') return { chat: 10, diag: 5 };
-  return { chat: (aiTrial || farmOk) ? 3 : 0, diag: farmOk ? 3 : (aiTrial ? 2 : 0) };
+  /* AI-FREE-PLAN: الخطة المجانية الدائمة = 1 شات + 1 تشخيص يوميًا (التجربة ما بقتش بتدّي نقاط). القديم (للتراجع): return { chat: (aiTrial || farmOk) ? 3 : 0, diag: farmOk ? 3 : (aiTrial ? 2 : 0) }; */
+  return { chat: farmOk ? 3 : 1, diag: farmOk ? 3 : 1 };
 }
 /* قبل الاتصال بجيميناي: فحص الاشتراك + الرصيد المتبقي. بيرجّع { err } أو { day, lim, used } */
 async function aiPointsCheck(tok, uid, kind) {
