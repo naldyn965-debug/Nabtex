@@ -18331,7 +18331,7 @@ document.addEventListener('click', e => {
           '<span class="aipw-pn">' + p.label + (/3$/.test(k) ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
           '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
           '<span class="aipw-pc"><i><b>' + p.chat + '</b> للسؤال أو المذاكرة' /* القديم (للتراجع): ' استشارة' */ + '</i>' + (p.study ? '' /* STUDY-SPLIT: «ذاكر» من غير تشخيص */ : '<i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i>') + '<i class="aipw-dly">يوميًا</i></span>' +
-          aiStudyRow(p) +   /* AI-IMGS */
+          (p.study ? aiStudyRow(p) : '') +   /* AI-IMGS. STUDY-SPLIT: صف الصور بقى في باقات «ذاكر» بس (مش في باقات Nabtex AI). القديم (للتراجع): aiStudyRow(p) + */
         '</button>';
       });
       return h + '</div>';
