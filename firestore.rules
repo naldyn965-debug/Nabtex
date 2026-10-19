@@ -35,7 +35,8 @@ service cloud.firestore {
     //   AI-FREE-PLAN: the 2-day trial no longer grants points; every signed-in account gets a permanent free plan = 1 chat + 1 diagnosis per day.
     //   (old chat line: ... : ((aiTrialOk(uid) || aiFarmOk(uid)) ? 3 : 0))) · old diag line: ... : (aiFarmOk(uid) ? 3 : (aiTrialOk(uid) ? 2 : 0))))
     function aiDoc(uid) { return /databases/$(database)/documents/ai_subscriptions/$(uid); }
-    function aiPrice(plan) { return plan == 'plan1' ? 149 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 300 : -1)); }
+    // AI-PRICE: Basic 99 / Pro 299 (old: plan1 149, plan3 300)
+    function aiPrice(plan) { return plan == 'plan1' ? 99 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 299 : -1)); }
     function aiPlanIs(uid, p) {
       return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
         && get(aiDoc(uid)).data.get('plan', '') == p;

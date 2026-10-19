@@ -2810,7 +2810,8 @@ async function doFarmSubAction(action, paymentId, note) {
    الاعتماد/الرفض بيتم هنا مباشرة بحساب الأدمن (firestore.rules بتسمح بالتحديث للأدمن فقط: isAdmin) في Transaction واحدة
    مع سجل Audit. مدة الباقة شهر ميلادي من (الآن أو انتهاء الاشتراك الحالي لو لسه شغال → تجديد متراكم) والباقة المشتراة بتبقى هي الفعّالة فورًا.
    ══════════════════════════════════════════════════════════════ */
-const AISUB_PLAN_LABEL = { plan1: 'الباقة الأولى (149ج)', plan2: 'الباقة الثانية (199ج)', plan3: 'باقة البرو (300ج)' };
+/* AI-PRICE — القديم (للتراجع): plan1: 'الباقة الأولى (149ج)' · plan3: 'باقة البرو (300ج)' */
+    const AISUB_PLAN_LABEL = { plan1: 'الباقة الأولى (99ج)', plan2: 'الباقة الثانية (199ج)', plan3: 'باقة البرو (299ج)' };
 let aiAdminPays = [], aiAdminFilterVal = 'pending', aiAdminPaysUnsub = null, aiAdminAuditUnsub = null;
 
 function aiAddMonth(ms) {
