@@ -10164,6 +10164,11 @@ const App = {
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'+
         '</button>'+
       '</div>'+
+    /* HOME-STUDY-BTN: زر «ذاكر مع نبتيكس» تحت شريط البحث — بيفتح Nabtex AI على وضع الذاكرة. للتراجع: امسح الزر ده + كتلة CSS (nb-home-study-btn) + NbFarmAI.openStudy + card._setSrc. */
+    '<button type="button" class="nb-h2-study" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.openStudy===\'function\'){window.NbFarmAI.openStudy(this);}">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z"/><path d="M12 6.5v13"/></svg>'+
+      '<span>ذاكر مع نبتيكس</span>'+
+    '</button>'+
     '</div>'+
     /* ── اختصارات سريعة (إضافة مستقلة — كلاسات nb-qa-* فقط، نفس وجهات التنقّل بتاعة الشريط السفلي) ──
        للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-home-quick-actions ── */
@@ -18172,7 +18177,7 @@ document.addEventListener('click', e => {
     // ═══════════════════════════════════════════════════════════════════════════════
     //  AI ASSISTANT SUBSCRIPTION — اشتراك المساعد الذكي (إضافة مستقلة تمامًا عن FarmSub)
     //  • تجربة مجانية يومين (3 شات + 2 تشخيص) · الباقة الأولى 149ج (10 شات + 5 تشخيص) · الثانية 199ج (15 + 10) · البرو 300ج (20 + 15) — النقاط بتتجدد يوميًا (يوم القاهرة).
-    //  • AI-FREE-PLAN: التجربة المجانية (يومين) اتلغت — أي حساب مسجّل بيفتح تلقائي على «الخطة المجانية» = نقطة استشارة + نقطة تشخيص بالصور يوميًا (الأرقام دي بتتطبّق كمان في firestore.rules و api/farm-ai.js).
+    //  • AI-FREE-PLAN: التجربة المجانية (يومين) اتلغت — أي حساب مسجّل بيفتح تلقائي على «الخطة المجانية» = نقطتين استشارة + نقطتين تشخيص بالصور يوميًا (الأرقام دي بتتطبّق كمان في firestore.rules و api/farm-ai.js).
     //  • المساعد ضمن اشتراك إدارة المزرعة (تجربة/مدفوع) = 3 شات + 3 تشخيص؛ للزيادة يشترك في باقة (الأعلى لكل نوع هو اللي بيتطبّق).
     //  • الحماية الحقيقية: firestore.rules (ai_subscriptions / ai_subscription_payments / ai_usage) + api/farm-ai.js — الواجهة هنا عرض وطلب فقط.
     //  • الدفع منفصل عن إدارة المزرعة (مجموعات farm_* ما اتلمستش) وبنفس شيت الدفع والتصميم.
@@ -18182,9 +18187,9 @@ document.addEventListener('click', e => {
     var AI_TRIAL_MS = 2 * 24 * 3600 * 1000;
     var AI_PLANS = {
       /* AI-PLAN-NAMES — القديم (للتراجع): label: 'الباقة الأولى' / 'الباقة الثانية' */
-      plan1: { price: 99, chat: 10, diag: 5, label: 'Basic' },   /* AI-PRICE — القديم (للتراجع): price: 149 */
-      plan2: { price: 199, chat: 15, diag: 10, label: 'Plus' },
-      plan3: { price: 299, chat: 20, diag: 15, label: 'Pro' }   /* AI-PRICE — القديم (للتراجع): price: 300 */ /* AI-PLAN-NAMES — القديم (للتراجع): label: 'باقة البرو' */
+      plan1: { price: 99, chat: 10, diag: 5, imgs: 4, label: 'Basic' },   /* AI-PRICE — القديم (للتراجع): price: 149 */
+      plan2: { price: 199, chat: 15, diag: 10, imgs: 8, label: 'Plus' },
+      plan3: { price: 299, chat: 20, diag: 15, imgs: 12, label: 'Pro' }   /* AI-PRICE — القديم (للتراجع): price: 300 */ /* AI-PLAN-NAMES — القديم (للتراجع): label: 'باقة البرو' */
     };
     var aiMem = { uid: null, d: null, at: 0, day: '' };
     var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false };
@@ -18213,7 +18218,7 @@ document.addEventListener('click', e => {
       var lim = { chat: 0, diag: 0 };
       if (plan) { lim.chat = AI_PLANS[plan].chat; lim.diag = AI_PLANS[plan].diag; }
       /* AI-FREE-PLAN: الخطة المجانية = 1 استشارة + 1 تشخيص يوميًا لأي حساب. القديم (للتراجع): else { lim.chat = (trial || farmOk) ? 3 : 0; lim.diag = farmOk ? 3 : (trial ? 2 : 0); } */
-      else { lim.chat = farmOk ? 3 : 1; lim.diag = farmOk ? 3 : 1; }
+      else { lim.chat = farmOk ? 3 : 2; lim.diag = farmOk ? 3 : 2; }   /* FREE-2: الخطة المجانية نقطتين بدل نقطة. القديم (للتراجع): farmOk ? 3 : 1 */
       var sorted = pays.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       var pending = sorted.filter(function(p) { return p.status === 'pending'; })[0] || null;
       var latest = sorted[0] || null;
@@ -18300,6 +18305,15 @@ document.addEventListener('click', e => {
     /* AI-LOGO: لوجو Nabtex AI (نفس لوجو واجهة المساعد). القديم (للتراجع): var AIPW_SPARK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/></svg>'; */
     var AIPW_SPARK = '<svg width="30" height="30" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg>';
 
+    /* AI-IMGS: صف «ذاكر مع نبتكس» داخل بطاقة الباقة — عدد الصور في كل مرة + مقياس نقط (من 12). للتراجع: امسح الدالة دي وسطر aiStudyRow في aiPlansHTML وكتلة CSS (AI-IMGS). */
+    function aiStudyRow(p) {
+      var n = p.imgs || 4, dots = '';
+      for (var q = 0; q < 12; q++) dots += '<i' + (q < n ? ' class="on"' : '') + '></i>';
+      return '<span class="aipw-st"><span class="aipw-st-ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10.5" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg></span>' +
+        '<span class="aipw-st-tx"><small>ذاكر مع نبتكس</small><span>ارفع حتى <b>' + n + '</b> ' + (n > 10 ? 'صورة' : 'صور') + ' في كل مرة</span></span>' +
+        '<span class="aipw-st-mt" aria-hidden="true">' + dots + '</span></span>';
+    }
+
     function aiPlansHTML(d) {
       var cur = d && d.plan, h = '<div class="aipw-pls" role="radiogroup" aria-label="الباقات">';
       ['plan1', 'plan2', 'plan3'].forEach(function(k) {
@@ -18309,6 +18323,7 @@ document.addEventListener('click', e => {
           '<span class="aipw-pn">' + p.label + (k === 'plan3' ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
           '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
           '<span class="aipw-pc"><i><b>' + p.chat + '</b> استشارة</i><i><b>' + p.diag + '</b> تشخيص بالصور</i><i class="aipw-dly">يوميًا</i></span>' +
+          aiStudyRow(p) +   /* AI-IMGS */
         '</button>';
       });
       return h + '</div>';
@@ -18590,6 +18605,8 @@ document.addEventListener('click', e => {
       },
       status: function() { return aiStatusLine(aiMem.d); },
       plan: function() { return aiMem.d ? aiMem.d.plan : null; },
+      /* AI-IMGS: أقصى عدد صور في «ذاكر مع نبتكس» لكل مرة حسب الباقة (الخطة المجانية/Basic 4 · Plus 8 · Pro 12) */
+      imgs: function() { var pl = aiMem.d && aiMem.d.plan; return (pl && AI_PLANS[pl] && AI_PLANS[pl].imgs) || 4; },
       applyPoints: aiApplyPoints,
       invalidate: function() { aiMem.at = 0; },
       /* آخر حالة محمّلة لنفس المستخدم واليوم (من غير أي استعلام) — للفتح الفوري لواجهة المساعد */
@@ -28107,6 +28124,7 @@ var MSG = {
   nothing_found: 'ما لقيتش بيانات أقدر أسجّلها من الكلام ده. اكتب بتفاصيل أكتر (مثلًا: روينا 3 ساعات وسمّدنا نترات كالسيوم 20 كجم).',
   sub_required: 'اشترك في المساعد الذكي عشان تكمل.',   /* AI-SUB */
   sub_check: 'تعذّر التحقق من اشتراكك دلوقتي. جرّب بعد شوية.',   /* AI-SUB */
+  img_limit: 'عدد الصور أكتر من المسموح في باقتك الحالية — قلّل الصور أو رقّي الباقة.',   /* AI-IMGS */
   generic: 'حصلت مشكلة مؤقتة. جرّب تاني بعد شوية.'
 };
 
@@ -28294,7 +28312,7 @@ function buildScreen(){
       '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
     '</header>' +
     '<div class="nbai-tabs" role="tablist">' +
-      '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">استشارة زراعية</button>' +
+      '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">اسأل / ذاكر</button>' +
       '<button type="button" class="nbai-tab" role="tab" data-t="diag" aria-selected="false">تشخيص بالصورة</button>' +
     '</div>' +
     '<div class="nbai-pane" data-p="ask">' +
@@ -28378,6 +28396,7 @@ function buildScreen(){
   }
   paintFoot();
   card._enter = function(){ var q = foot._q; if(!q) return; var w = q.fl.style.width; q.fl.style.transition = 'none'; q.fl.style.width = '0%'; void q.fl.offsetWidth; q.fl.style.transition = ''; q.fl.style.width = w; };   /* حركة ملء المؤشر عند الفتح فقط */
+  card._setSrc = function(v){ if(busy) return; var n = (v === 'any' || v === 'study') ? v : 'farm'; if(src === n) return; src = n; lsSet('nbai:src', src); paintSrc(); };   /* HOME-STUDY-BTN: اختيار المصدر برمجيًا (زر «ذاكر» في الرئيسية) — نفس سلوك الضغط على اختيار المصدر */
   card._repaint = paintFoot;   /* إصلاح: الشاشة بتتبني مرة واحدة وبتتخفي/تظهر، فبنعيد رسم الشريط كل ما تتفتح (openScreen) عشان الرصيد يرجع من الأول مع بداية اليوم الجديد. للتراجع: امسح السطر ده والسطر اللي في openScreen. */
 
   /* ── شات: فقاعات سؤال/رد، والسجل بيفضل فوق ومربع الكتابة تحت زي أي شات ── */
@@ -28621,7 +28640,7 @@ function buildScreen(){
   paintAud();
 
   /* ═════════ «ذاكر مع نبتكس» (إضافة) ═════════
-     الطالب يختار «ذاكر مع نبتكس» جنب «مزرعتي على نبتكس» و«سؤال عن أي حاجة» ← تظهر أيقونة إضافة صور في شريط الكتابة (حتى 4 صور في كل مرة)
+     الطالب يختار «ذاكر مع نبتكس» جنب «مزرعتي على نبتكس» و«سؤال عن أي حاجة» ← تظهر أيقونة إضافة صور في شريط الكتابة (حتى 4 صور في كل مرة · Plus 8 · Pro 12)
      ← الذكاء الاصطناعي يقرأ الصور ويشرح كل جزئية بالعامية المصرية + مثال تبسيطي ← ملخص للصور ← امتحان MCQ تفاعلي من الصور بس ← زر تحميل المحادثة PDF.
      • الواجهة: نفس شات الاستشارة (.nbai-th) لكن بمحتوى منفصل — محتوى «مزرعتي/أي حاجة» بيتخبّى في stash لما «ذاكر» يتفتح وبيرجع زي ما هو، فمفيش اختلاط في history ولا مسح.
      • الخادم: وضعين جداد في api/farm-ai.js — study (شرح + ملخص، بيصرف نقطة شات واحدة) وstudy_quiz (الامتحان، من غير نقطة تانية).
@@ -28629,6 +28648,11 @@ function buildScreen(){
      • PDF: نفس آلية الأكاديمية (acDownloadLessonPDF): نافذة بزر «رجوع» و«طباعة / حفظ PDF».
      للتراجع: امسح الكتلة دي (لحد نهايتها) + زر الصور والـ input والشريط من القالب + سطور study في paintSrc / srcBox / sendAsk / call / LIM / PTS / MSG + بلوك nb-farm-ai-study (style) + وضعين study في api/farm-ai.js. */
   var ST_MAX = 4, ST_SHRINK = { max: 1800, cap: 400 * 1024 };
+  /* AI-IMGS: عدد الصور في كل مرة حسب الباقة (الخطة المجانية/Basic 4 · Plus 8 · Pro 12). مع 12 صورة سقف حجم الصورة أقل شوية عشان الطلب كله يفضل تحت حد Vercel (≈4.5MB). القديم (للتراجع): ST_MAX = 4 ثابت. */
+  function stSync(){
+    var n = 4; try{ if(window.AiSub && window.AiSub.imgs) n = window.AiSub.imgs() || 4; }catch(e){}
+    ST_MAX = n; ST_SHRINK.cap = (n > 8 ? 300 : 400) * 1024;
+  }
   var STUDY = { sessions: [] }, stImgs = [], stLoad = 0, stView = 'ask', stSolo = null, stStash = { ask: null, study: null };
   var stAdd = card.querySelector('.nbai-st-add'), stFile = card.querySelector('.nbai-st-file'), stStrip = card.querySelector('.nbai-st-th'), stCm = card.querySelector('.nbai-cm'), stQi = card.querySelector('.nbai-qi');
   var ST_PH = stQi.getAttribute('placeholder') || '';
@@ -28636,10 +28660,11 @@ function buildScreen(){
   var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
   var LTR4 = ['أ', 'ب', 'ج', 'د'];
   TH.study = TH.ask;   /* نفس عنصر الشات؛ المحتوى هو اللي بيتبدّل */
-  GREET.study = gr('ذاكر مع نبتكس', 'ارفع من صورة لـ 4 صور من المحاضرة أو الملزمة، وأنا أشرحلك كل جزئية فيها بالبلدي ومعاها مثال بسيط، وأعملك ملخص، وبعدها امتحان تختبر بيه نفسك على نفس الصور.');
+  GREET.study = gr('ذاكر مع نبتكس', 'ارفع صور المحاضرة أو الملزمة (عدد الصور في كل مرة حسب باقتك)، وأنا أشرحلك كل جزئية فيها بالبلدي ومعاها مثال بسيط، وأعملك ملخص، وبعدها امتحان تختبر بيه نفسك على نفس الصور.');
 
   /* شريط الصور المختارة + حالة الأزرار */
   function paintStrip(){
+    stSync();   /* AI-IMGS */
     var on = src === 'study', n = stImgs.length, h = '', tot = n + stLoad, segs = '';
     stStrip.hidden = !on || (!n && !stLoad);
     stImgs.forEach(function(x, i){
@@ -28654,6 +28679,8 @@ function buildScreen(){
     stAdd.disabled = busy || (n + stLoad) >= ST_MAX;
     stCm.classList.toggle('nbst-ready', on && n > 0 && !stLoad && !busy);
   }
+  /* AI-IMGS: لما حالة الاشتراك تتحمّل/تتغيّر الحد والعدّاد يتحدّثوا (من غير ما يمسّ الصور المختارة) */
+  try{ if(window.AiSub && window.AiSub.onChange) window.AiSub.onChange(function(){ if(card.isConnected){ paintStrip(); } }); if(window.AiSub && window.AiSub.get) window.AiSub.get(function(){ if(card.isConnected){ paintStrip(); } }); }catch(e){}
   /* مود المذاكرة والتركيز: «ذاكر» = إخفاء التابات وصف الاختيار؛ السهم بيطلّع من المود (stPrev = آخر اختيار قبل «ذاكر») */
   var stPrev = 'farm', stBack = card.querySelector('.nbai-back'), stSub = card.querySelector('.nbai-bar-s');
   var stSub0 = stSub ? stSub.textContent : '', stBack0 = stBack ? (stBack.getAttribute('aria-label') || '') : '';
@@ -28710,6 +28737,7 @@ function buildScreen(){
     var files = [].slice.call(this.files || []).filter(function(f){ return f && /^image\//.test(f.type || 'image/'); });
     try{ this.value = ''; }catch(e){}   /* يسمح باختيار نفس الصورة تاني */
     if(!files.length || busy) return;
+    stSync();   /* AI-IMGS */
     var room = ST_MAX - stImgs.length - stLoad;
     if(room <= 0){ show('وصلت للحد الأقصى — ' + ST_MAX + ' صور في كل مرة.', true); return; }
     var over = files.length > room;
@@ -29048,6 +29076,7 @@ function buildScreen(){
     var ad = t.closest('.nbai-st-add,.nbst-slot');
     if(ad && card.contains(ad)){
       if(busy) return;
+      stSync();   /* AI-IMGS */
       if(stImgs.length + stLoad >= ST_MAX){ show('وصلت للحد الأقصى — ' + ST_MAX + ' صور في كل مرة.', true); return; }
       stFile.click(); return;
     }
@@ -29508,10 +29537,31 @@ window.NbFarmAI.open = function(opener){
     return _open.apply(this, arguments);
   };
 })();
+/* HOME-STUDY-BTN: فتح Nabtex AI على «ذاكر مع نبتكس» (زر الرئيسية). نفس بوابة الدخول/الاشتراك بتاعة open؛ المستخدم غير المسجّل بيروح لتسجيل الدخول من غير ما نغيّر اختياره. */
+window.NbFarmAI.openStudy = function(opener){
+  try{
+    if(user()){
+      lsSet('nbai:src', 'study');
+      if(SCR && SCR._setSrc && !OPEN) SCR._setSrc('study');
+    }
+  }catch(e){}
+  return window.NbFarmAI.open(opener);
+};
 /* AI-SUB: أي تغيير في الرصيد/الاشتراك (استخدام، شراء، يوم جديد) يعيد رسم شريط الرصيد */
 if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onChange(function(){ if(SCR && SCR._repaint){ try{ SCR._repaint(); }catch(e){} } });
 })();
 </script>
+
+<style id="nb-home-study-btn">
+/* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
+.nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(145deg,#2d9a58 0%,#1B6B3A 62%,#0f552e 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 10px 20px -10px rgba(27,107,58,.7);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
+.nb-h2-study svg{width:19px;height:19px;flex:none}
+.nb-h2-study:hover{filter:brightness(1.06)}
+.nb-h2-study:active{transform:scale(.97);transition-duration:80ms}
+.nb-h2-study:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+@media(min-width:640px){.nb-h2-study{max-width:520px}}
+@media(prefers-reduced-motion:reduce){.nb-h2-study{transition:none!important}}
+</style>
 
 <style id="ai-sub-css">
 /* شاشة اشتراك المساعد الذكي (aipw-*) — مؤشر الرصيد وزر الترقية جوه الواجهة بقوا في nb-farm-ai-ux. */
@@ -29579,6 +29629,27 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 [data-dark] .fsub-plan--pro .fsub-plan-price{color:#f0c35a}
 [data-dark] .fsub-plan--pro .fsub-plan-note b{color:#f0c35a}
 [data-dark] .fsub-plan--pro.on{border-color:#f0b429;background:linear-gradient(135deg,rgba(240,180,41,.22),var(--card) 85%)}
+/* AI-IMGS: صف «ذاكر مع نبتكس» في بطاقات الباقات (4 / 8 / 12 صورة). للتراجع: امسح الأسطر دي لحد نهاية الكتلة. */
+.aipw-pl{grid-template-areas:"rd pn pp" ". pc pc" ". st st"}
+.aipw-st{grid-area:st;display:flex;align-items:center;gap:10px;margin-top:3px;padding:8px 10px;border-radius:14px;text-align:right;background:linear-gradient(135deg,rgba(27,107,58,.09),rgba(27,107,58,.02));border:1px solid rgba(27,107,58,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+.aipw-st-ic{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;color:#fff;background:linear-gradient(145deg,var(--brand-l,#2f8f55),var(--brand));box-shadow:0 6px 12px -6px rgba(27,107,58,.75),inset 0 1px 0 rgba(255,255,255,.35)}
+.aipw-st-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.35}
+.aipw-st-tx small{font-size:10.5px;font-weight:700;color:var(--muted)}
+.aipw-st-tx span{font-size:11.5px;font-weight:800;color:var(--ink);white-space:nowrap}
+.aipw-st-tx span b{font-size:14px;font-weight:900;color:var(--brand)}
+.aipw-st-mt{flex:none;display:grid;grid-template-columns:repeat(6,5px);gap:3px}
+.aipw-st-mt i{width:5px;height:5px;border-radius:50%;background:var(--line2);transition:background .25s}
+.aipw-st-mt i.on{background:var(--brand)}
+.aipw-pro .aipw-st{background:linear-gradient(135deg,rgba(240,185,50,.24),rgba(255,255,255,.4));border-color:rgba(224,170,40,.45)}
+.aipw-pro .aipw-st-ic{color:#4a3300;background:linear-gradient(145deg,#fbe08a,#e0a31a 60%,#c58609);box-shadow:0 6px 12px -6px rgba(180,120,0,.7),inset 0 1px 0 rgba(255,255,255,.6)}
+.aipw-pro .aipw-st-tx span b{color:#9a6700}
+.aipw-pro .aipw-st-mt i.on{background:#e0a31a}
+[data-dark] .aipw-st{background:linear-gradient(135deg,rgba(95,201,126,.12),rgba(255,255,255,.02));border-color:rgba(95,201,126,.25);box-shadow:none}
+[data-dark] .aipw-st-tx span b{color:var(--brand-xl)}
+[data-dark] .aipw-st-mt i.on{background:var(--brand-xl)}
+[data-dark] .aipw-pro .aipw-st{background:linear-gradient(135deg,rgba(247,207,85,.2),rgba(255,255,255,.02));border-color:rgba(240,185,50,.4)}
+[data-dark] .aipw-pro .aipw-st-tx span b{color:#f0c35a}
+[data-dark] .aipw-pro .aipw-st-mt i.on{background:#f0c35a}
 </style>
 
 <style id="ai-sub-polish-css">

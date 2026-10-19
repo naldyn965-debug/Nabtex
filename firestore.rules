@@ -32,7 +32,7 @@ service cloud.firestore {
     // Daily points (ai_usage) are capped HERE, so the limits hold even if someone bypasses the UI or calls Firestore directly.
     //   plan1 (149 EGP): 10 chat + 5 diagnosis · plan2 (199 EGP): 15 + 10 · plan3 PRO (300 EGP): 20 + 15 · 2-day trial: 3 + 2 · Farm Management access (trial/paid): 3 + 3
     //   per kind the highest applicable source wins. Keep these numbers identical to aiAllowance() in api/farm-ai.js.
-    //   AI-FREE-PLAN: the 2-day trial no longer grants points; every signed-in account gets a permanent free plan = 1 chat + 1 diagnosis per day.
+    //   AI-FREE-PLAN: the 2-day trial no longer grants points; every signed-in account gets a permanent free plan = 2 chat + 2 diagnosis per day.
     //   (old chat line: ... : ((aiTrialOk(uid) || aiFarmOk(uid)) ? 3 : 0))) · old diag line: ... : (aiFarmOk(uid) ? 3 : (aiTrialOk(uid) ? 2 : 0))))
     function aiDoc(uid) { return /databases/$(database)/documents/ai_subscriptions/$(uid); }
     // AI-PRICE: Basic 99 / Pro 299 (old: plan1 149, plan3 300)
@@ -48,8 +48,8 @@ service cloud.firestore {
         get(fsDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(7, 'd') > request.time
         || get(fsDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time);
     }
-    function aiChatLim(uid) { return aiPlanIs(uid, 'plan3') ? 20 : (aiPlanIs(uid, 'plan2') ? 15 : (aiPlanIs(uid, 'plan1') ? 10 : (aiFarmOk(uid) ? 3 : 1))); }
-    function aiDiagLim(uid) { return aiPlanIs(uid, 'plan3') ? 15 : (aiPlanIs(uid, 'plan2') ? 10 : (aiPlanIs(uid, 'plan1') ? 5 : (aiFarmOk(uid) ? 3 : 1))); }
+    function aiChatLim(uid) { return aiPlanIs(uid, 'plan3') ? 20 : (aiPlanIs(uid, 'plan2') ? 15 : (aiPlanIs(uid, 'plan1') ? 10 : (aiFarmOk(uid) ? 3 : 2))); }
+    function aiDiagLim(uid) { return aiPlanIs(uid, 'plan3') ? 15 : (aiPlanIs(uid, 'plan2') ? 10 : (aiPlanIs(uid, 'plan1') ? 5 : (aiFarmOk(uid) ? 3 : 2))); }
     function aiUN(k) { return request.resource.data.get(k, 0); }
     function aiUO(k) { return resource.data.get(k, 0); }
     function aiUsageBounds(uid) {
