@@ -27805,6 +27805,33 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbst-px{margin-top:6px;font-size:13.5px;line-height:1.95;color:var(--ink2)}
 .nbst-ex{margin-top:8px;padding:9px 11px;border:1px dashed var(--ai-ring);border-radius:12px;background:var(--ai-soft);font-size:13px;line-height:1.9;color:var(--ink2)}
 .nbst-exl{display:block;margin-bottom:2px;font-size:11px;font-weight:800;color:var(--ai-tx)}
+/* جدول المقارنة (إضافة): جوه جزء الشرح بس، بيتمرر أفقيًا على الموبايل لو الأعمدة كتير */
+.nbai-ov .nbst-cmp{margin-top:9px;border:1px solid var(--ai-ring);border-radius:12px;background:var(--card);overflow:hidden}
+.nbai-ov .nbst-cmpt{padding:7px 11px;font-size:11.5px;font-weight:800;line-height:1.6;color:var(--ai-tx);background:var(--ai-soft)}
+.nbai-ov .nbst-cmpw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nbai-ov .nbst-cmp table{width:100%;min-width:max-content;border-collapse:collapse;font-size:12.5px;line-height:1.75;color:var(--ink2)}
+.nbai-ov .nbst-cmp th,.nbai-ov .nbst-cmp td{padding:7px 10px;text-align:start;vertical-align:top;border-top:1px solid var(--line);min-width:84px}
+.nbai-ov .nbst-cmp thead th{border-top:0;font-weight:800;color:var(--ink);background:var(--bg2);white-space:nowrap}
+.nbai-ov .nbst-cmp tbody th{font-weight:800;color:var(--ink);background:var(--bg2)}
+.nbai-ov .nbst-cmp th+th,.nbai-ov .nbst-cmp th+td,.nbai-ov .nbst-cmp td+td{border-inline-start:1px solid var(--line)}
+/* سؤال متابعة عن جزء (إضافة): زر تحت كل جزء بيفتح صندوق سؤال + ردود في نفس الجزء */
+.nbai-ov .nbst-ask{margin-top:10px}
+.nbai-ov .nbst-askb{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid var(--ai-ring);border-radius:999px;background:var(--ai-soft);color:var(--ai-tx);font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms}
+.nbai-ov .nbst-askb:active{transform:scale(.97)}
+@media (hover:hover){.nbai-ov .nbst-askb:hover{background:var(--ai-soft2)}}
+.nbai-ov :is(.nbst-askb,.nbst-asks):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+.nbai-ov .nbst-askf{margin-top:8px}
+.nbai-ov .nbst-askf[hidden]{display:none}
+.nbai-ov .nbst-askl{display:grid;gap:8px;margin-bottom:8px}
+.nbai-ov .nbst-askl:empty{display:none}
+.nbai-ov .nbst-aqq{justify-self:start;max-width:92%;padding:7px 11px;border-radius:12px;background:var(--ai-soft);color:var(--ink);font-size:12.5px;font-weight:700;line-height:1.8}
+.nbai-ov .nbst-aaa{padding:9px 11px;border:1px dashed var(--ai-ring);border-radius:12px;background:var(--card);font-size:13px;line-height:1.95;color:var(--ink2)}
+.nbai-ov .nbst-aaa.err{color:var(--wz-wn);border-color:var(--wz-wn-br);background:var(--wz-wn-bg);font-weight:700}
+.nbai-ov .nbst-askr{display:flex;align-items:flex-end;gap:8px}
+.nbai-ov .nbst-askq{flex:1;min-width:0;min-height:42px;max-height:110px;padding:9px 12px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;line-height:1.6;resize:none}
+.nbai-ov .nbst-askq:focus{outline:2px solid var(--ai-tx);outline-offset:1px}
+.nbai-ov .nbst-asks{flex:none;min-height:42px;padding:0 16px;border:0;border-radius:14px;background:var(--ai-g);color:#fff;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+.nbai-ov .nbst-asks[disabled],.nbai-ov .nbst-askq[disabled]{opacity:.55;cursor:default}
 .nbst-sum{display:grid;gap:6px;margin:6px 0 0;padding:0;list-style:none}
 .nbst-sum li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.85}
 .nbst-sum li::before{content:"";flex:none;width:7px;height:7px;margin-top:11px;border-radius:50%;background:var(--ai-g)}
@@ -27887,7 +27914,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 (function(){
 'use strict';
 
-var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8 };   /* لازم تساوي LIMITS في api/farm-ai.js */
+var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15 };   /* لازم تساوي LIMITS في api/farm-ai.js */
 var PTS = { analyze: 1, ask: 1, diag_q: 1, diagnose: 1, study: 1 };   /* AI-SUB: الأوضاع اللي نقاطها من اشتراك المساعد (window.AiSub) مش من LIM المحلي — «ذاكر مع نبتكس» (study) نقطة شات، وامتحانها study_quiz من غير نقطة */
 var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 1280, SHOT_MAX = 340*1024, BLUR_MIN = 35;   /* القديم (للتراجع): IMG_MAX = 800 — الدقة اترفعت لـ 1280px عشان تفاصيل الأعراض (بقع/حشرات صغيرة) تفضل واضحة، وSHOT_MAX سقف حجم كل صورة، وBLUR_MIN حد الوضوح للتحذير */
 
@@ -27997,14 +28024,14 @@ function call(mode, payload, ckExtra, done){
   if(!u) return done({ err: 'login' });
   if(!navigator.onLine) return done({ err: 'offline' });
   var ck = hash(mode + '|' + ckExtra), key = 'nbai:r:' + mode + ':' + u.uid;
-  var nc = (mode === 'study' || mode === 'study_quiz');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
+  var nc = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
   var saved = nc ? null : lsGet(key);
   if(saved && saved.k === ck && Date.now() - saved.at < TTL) return done({ ok: true, j: saved.j, cached: true });
   var qt = quotaGet(u.uid, mode);
   var aiPt = !!(window.AiSub && PTS[mode]);   /* AI-SUB: نقاط الشات/التشخيص من اشتراك المساعد (الحكم النهائي: الخادم + firestore.rules) */
   if(aiPt){ var ge = window.AiSub.gate(mode); if(ge) return done({ err: ge }); }
   else if(qt.n >= LIM[mode]) return done({ err: 'user_limit' });
-  if(Date.now() - qt.last < COOLDOWN) return done({ err: 'wait' });
+  if(Date.now() - qt.last < (mode === 'study_ask' ? 4000 : COOLDOWN)) return done({ err: 'wait' });   /* سؤال المتابعة في «ذاكر»: فاصل 4 ثواني بدل 20 */
   var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
   var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, TMO);
   u.getIdToken().then(function(tok){
@@ -28529,7 +28556,44 @@ function buildScreen(){
     })();
   });
 
+  /* ── سؤال متابعة عن جزء (study_ask): بنبعت الجزء + صوره + السؤال + آخر ≤ 2 تبادل على نفس الجزء، والرد بيتحط تحت الجزء ده ── */
+  function stAsk(box){
+    if(!box || box._busy || busy) return;
+    var S = STUDY.sessions[+box.getAttribute('data-s')], p = S && S.parts[+box.getAttribute('data-p')];
+    if(!S || !p) return;
+    var ta = box.querySelector('.nbst-askq'), go = box.querySelector('.nbst-asks'), lst = box.querySelector('.nbst-askl'), q = (ta.value || '').trim().slice(0, 300);
+    if(q.length < 2){ ta.focus(); return; }
+    var sel = (p.src || []).filter(function(v){ return v >= 1 && v <= S.list.length; }).slice(0, 4).map(function(v){ return S.list[v - 1]; });
+    if(!sel.length) sel = S.list.slice(0, 4);
+    var qa = p.qa || (p.qa = []);
+    var wait = document.createElement('div'); wait.className = 'nbst-aaa'; wait.innerHTML = '<span class="nbai-dots" role="img" aria-label="المساعد بيكتب"><i></i><i></i><i></i></span>';
+    var qb = document.createElement('div'); qb.className = 'nbst-aqq'; qb.textContent = q;
+    box._busy = true; ta.disabled = true; go.disabled = true; lst.appendChild(qb); lst.appendChild(wait);
+    try{ wait.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){}
+    call('study_ask', { images: sel, part: { title: p.title, explain: p.explain, example: p.example || '' }, q: q, hist: qa.slice(-2) }, S.list.length + '|' + box.getAttribute('data-p') + '|' + q, function(r){
+      if(!card.isConnected) return;
+      box._busy = false; ta.disabled = false; go.disabled = false;
+      var ok = r.ok && r.j && typeof r.j.text === 'string' && r.j.text.trim();
+      if(!ok){
+        lst.removeChild(qb); wait.className = 'nbst-aaa err'; wait.textContent = aiErr(r.err);   /* السؤال يفضل في المربع عشان يتبعت تاني */
+        return;
+      }
+      qa.push({ q: q, a: r.j.text.trim() });
+      wait.innerHTML = fmt(r.j.text.trim()); stDir(lst, '.nbst-aqq,.nbst-aaa');
+      ta.value = ''; ta.style.height = '';
+      try{ wait.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){}
+    });
+  }
+
   /* ── عرض الشرح والملخص ── */
+  /* جدول مقارنة اختياري للجزء (p.compare من الخادم): cls بيحدد نسخة الشات أو الـ PDF */
+  function stCmpHtml(c, cls){
+    if(!c || !c.cols || !c.rows || !c.rows.length) return '';
+    var h = '<div class="' + cls + '">' + (c.title ? '<div class="' + cls + 't">' + esc(c.title) + '</div>' : '') + '<div class="' + cls + 'w"><table><thead><tr><th></th>' +
+      c.cols.map(function(x){ return '<th>' + fmt(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      c.rows.map(function(r){ return '<tr>' + r.map(function(x, i){ return i === 0 ? '<th scope="row">' + fmt(x) + '</th>' : '<td>' + fmt(x) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div></div>';
+    return h;
+  }
   function stExplainHtml(S){
     var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء') + ' من ' + S.imgs.length + (S.imgs.length === 1 ? ' صورة' : ' صور') + '</div>';
     S.parts.forEach(function(p, i){
@@ -28537,7 +28601,10 @@ function buildScreen(){
       h += '<section class="nbst-part"><h4 class="nbst-pt"><span class="nbst-pn">' + (i + 1) + '</span><span>' + esc(p.title) + '</span></h4>' +
         (srcs.length ? '<span class="nbst-src">من ' + (srcs.length > 1 ? 'الصور ' : 'الصورة ') + srcs.join('، ') + '</span>' : '') +
         '<div class="nbst-px">' + fmt(p.explain) + '</div>' +
-        (p.example ? '<div class="nbst-ex"><span class="nbst-exl">مثال تبسيطي</span>' + fmt(p.example) + '</div>' : '') + '</section>';
+        stCmpHtml(p.compare, 'nbst-cmp') +
+        (p.example ? '<div class="nbst-ex"><span class="nbst-exl">مثال تبسيطي</span>' + fmt(p.example) + '</div>' : '') +
+        '<div class="nbst-ask" data-s="' + STUDY.sessions.indexOf(S) + '" data-p="' + i + '"><button type="button" class="nbst-askb" data-nbst="askopen" aria-expanded="false">مش فاهم الجزء ده؟ اسأل</button>' +
+        '<div class="nbst-askf" hidden><div class="nbst-askl"></div><div class="nbst-askr"><textarea class="nbst-askq" rows="1" maxlength="300" placeholder="اكتب اللي مش فاهمه في الجزء ده…" aria-label="سؤالك عن الجزء ده"></textarea><button type="button" class="nbst-asks" data-nbst="askgo">اسأل</button></div></div></div></section>';
     });
     return h;
   }
@@ -28600,7 +28667,7 @@ function buildScreen(){
     try{ sc.scrollBy({ top: dy, behavior: 'smooth' }); }catch(e){ sc.scrollTop += dy; }
   }
   /* شرح/امتحان بالإنجليزي: النص الإنجليزي بس يتعرض LTR (العربي زي ما هو RTL من غير أي تغيير) */
-  var ST_DIR = '.nbst-px,.nbst-ex,.nbst-pt,.nbst-h,.nbst-sum li,.acad-qtext,.acad-opt,.acad-exp';
+  var ST_DIR = '.nbst-px,.nbst-ex,.nbst-pt,.nbst-h,.nbst-sum li,.acad-qtext,.acad-opt,.acad-exp,.nbst-cmpt,.nbst-cmp th,.nbst-cmp td';
   function stDir(root, sel){
     [].forEach.call(root.querySelectorAll(sel || ST_DIR), function(e){
       var t = (e.textContent || '').replace(/\(إجابتك\)/g, ''), la = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length;
@@ -28716,6 +28783,8 @@ function buildScreen(){
       '.p-imgs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}.p-imgs img{height:110px;width:auto;max-width:48%;border:1px solid #e2eee5;border-radius:8px;object-fit:cover}.p-note{font-size:12px;color:#6d8f7a;margin-bottom:8px}' +
       '.p-h{font-size:1.1rem;color:#1B6B3A;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid #e2eee5}.p-part{break-inside:avoid;margin:0 0 14px;padding:12px 14px;border:1px solid #e2eee5;border-radius:10px;background:#f5fbf6}' +
       '.p-pt{font-size:1rem;font-weight:800;margin:0 0 4px}.p-pt span{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#1B6B3A;color:#fff;font-size:12px;margin-inline-end:8px}' +
+      '.p-qa{margin-top:10px;padding:8px 11px;border-inline-start:3px solid #1B6B3A;background:#fff;border-radius:6px;font-size:13px}.p-qa b{color:#1B6B3A}.p-qq{font-weight:700;margin-top:4px}.p-qr{margin-bottom:6px}' +
+      '.p-cmp{margin-top:10px;break-inside:avoid;border:1px solid #84b896;border-radius:8px;overflow:hidden;background:#fff}.p-cmpt{padding:5px 10px;font-size:12px;font-weight:800;color:#1B6B3A;background:#eef8f0}.p-cmp table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.7}.p-cmp th,.p-cmp td{padding:5px 9px;text-align:start;vertical-align:top;border-top:1px solid #e2eee5}.p-cmp thead th{border-top:0;font-weight:800;background:#f5fbf6}.p-cmp tbody th{font-weight:800;background:#f5fbf6}.p-cmp th+th,.p-cmp th+td,.p-cmp td+td{border-inline-start:1px solid #e2eee5}' +
       '.p-px{font-size:13.5px}.p-ex{margin-top:8px;padding:8px 11px;border:1px dashed #84b896;border-radius:8px;font-size:13px;background:#fff}.p-ex b{display:block;color:#1B6B3A;font-size:11px}' +
       'ul.p-sum{margin:0;padding-inline-start:20px;font-size:13.5px}ul.p-sum li{margin-bottom:3px}' +
       '.p-score{margin:0 0 12px;padding:8px 12px;border-radius:8px;background:#eef8f0;color:#1B6B3A;font-weight:800;font-size:13px}' +
@@ -28731,7 +28800,8 @@ function buildScreen(){
         '<div class="p-imgs">' + S.imgs.map(function(d, i){ return '<img src="' + d + '" alt="صورة ' + (i + 1) + '">'; }).join('') + '</div>' + (S.note ? '<div class="p-note">ملاحظتك: ' + esc(S.note) + '</div>' : '') +
         '<h2 class="p-h">شرح الأجزاء</h2>';
       S.parts.forEach(function(p, i){
-        body += '<div class="p-part"><h3 class="p-pt"><span>' + (i + 1) + '</span>' + esc(p.title) + '</h3><div class="p-px">' + fmt(p.explain) + '</div>' + (p.example ? '<div class="p-ex"><b>مثال تبسيطي</b>' + fmt(p.example) + '</div>' : '') + '</div>';
+        body += '<div class="p-part"><h3 class="p-pt"><span>' + (i + 1) + '</span>' + esc(p.title) + '</h3><div class="p-px">' + fmt(p.explain) + '</div>' + stCmpHtml(p.compare, 'p-cmp') + (p.example ? '<div class="p-ex"><b>مثال تبسيطي</b>' + fmt(p.example) + '</div>' : '') +
+          ((p.qa && p.qa.length) ? '<div class="p-qa">' + p.qa.map(function(x){ return '<div class="p-qq"><b>سؤالك:</b> ' + esc(x.q) + '</div><div class="p-qr"><b>الرد:</b> ' + fmt(x.a) + '</div>'; }).join('') + '</div>' : '') + '</div>';
       });
       if(S.summary.length) body += '<h2 class="p-h">ملخص الصور</h2><ul class="p-sum">' + S.summary.map(function(x){ return '<li>' + fmt(x) + '</li>'; }).join('') + '</ul>';
       if(S.quiz && S.quiz.length){
@@ -28749,7 +28819,7 @@ function buildScreen(){
     });
     try{   /* نص إنجليزي في الـ PDF يتعرض LTR (مستند inert: الصور مابتتحمّلش تاني) */
       var pd = document.implementation.createHTMLDocument(''); pd.body.innerHTML = body;
-      stDir(pd.body, '.p-px,.p-ex,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li'); body = pd.body.innerHTML;
+      stDir(pd.body, '.p-px,.p-ex,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li,.p-cmpt,.p-cmp th,.p-cmp td,.p-qq,.p-qr'); body = pd.body.innerHTML;
     }catch(e){}
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + esc(ttl) + ' — Nabtex AI</title>' +
       '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"><style>' + css + '</style></head><body>' +
@@ -28801,6 +28871,20 @@ function buildScreen(){
     else if(act === 'again'){ if(!SS) return; SS.ans = []; SS.step = 0; SS.revealed = false; renderQuiz(SS); stScrollTo(bx); }
     else if(act === 'retryq'){ var eb = a.closest('.nbai-m'); if(!busy && eb && eb._s) stLoadQuiz(eb._s, eb); }
     else if(act === 'pdf') stPdf();
+    else if(act === 'askopen'){
+      var ab = a.closest('.nbst-ask'), af = ab && ab.querySelector('.nbst-askf'); if(!af) return;
+      var op = af.hidden; af.hidden = !op; a.setAttribute('aria-expanded', op ? 'true' : 'false');
+      if(op){ var tq = af.querySelector('.nbst-askq'); if(tq) try{ tq.focus({ preventScroll: true }); af.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){} }
+    }
+    else if(act === 'askgo') stAsk(a.closest('.nbst-ask'));
+  });
+  card.addEventListener('keydown', function(ev){   /* Enter يبعت سؤال المتابعة (Shift+Enter سطر جديد) */
+    var t = ev.target; if(!t || !t.classList || !t.classList.contains('nbst-askq')) return;
+    if(ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing){ ev.preventDefault(); stAsk(t.closest('.nbst-ask')); }
+  });
+  card.addEventListener('input', function(ev){
+    var t = ev.target; if(!t || !t.classList || !t.classList.contains('nbst-askq')) return;
+    t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 110) + 'px';
   });
 
   var srcBox = card.querySelector('.nbai-src'), chipAnalyze = card.querySelector('.nbai-chip[data-q=""]');
