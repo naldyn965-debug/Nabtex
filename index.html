@@ -27851,6 +27851,9 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbst-quiz .acad-opt span:last-child{min-width:0;overflow-wrap:anywhere}
 .nbst-quiz .acad-result{padding:26px 16px;border-radius:20px}
 .nbst-quiz .acad-result-score{font-size:4rem}
+/* نتيجة امتحان «ذاكر»: بدون هالة حوالين الرقم (drop-shadow + text-shadow) ولا التدرّج الخفيف في أعلى الكارت — الرقم حاد وواضح. شاشات الأكاديمية ما اتغيّرتش. للتراجع: امسح السطرين دول. */
+.nbst-quiz .nbst-res .acad-result-score{filter:none;text-shadow:none}
+.nbst-quiz .nbst-res::before{display:none}
 .nbst-weak{margin:0 0 16px;text-align:start;font-size:13px;line-height:1.8;color:var(--ink2)}
 .nbst-weak ul{margin:4px 0 0;padding-inline-start:20px}
 .nbst-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-top:8px;padding:0 18px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink);font-size:12.5px;font-weight:800;cursor:pointer}
@@ -28682,6 +28685,21 @@ function buildScreen(){
   }
 
   /* المرحلة 2: الامتحان (من نفس الصور) — من غير نقطة تانية */
+  /* توزيع متوازن لمكان الإجابة الصحيحة على الامتحان كله: كل موقع (أ/ب/ج/د) بنسبة متساوية تقريبًا ومن غير تكرار نفس الموقع أكتر من مرتين ورا بعض.
+     الخلط العشوائي لكل سؤال لوحده (في الخادم) كان بيطلّع تكتلات في أول/آخر اختيار. للتراجع: امسح الدالة دي وسطر stBalance في stLoadQuiz. */
+  function stBalance(qs){
+    function shuf(a){ for(var x = a.length - 1; x > 0; x--){ var y = Math.floor(Math.random() * (x + 1)), z = a[x]; a[x] = a[y]; a[y] = z; } return a; }
+    function runs(a){ for(var k = 2; k < a.length; k++) if(a[k] === a[k - 1] && a[k] === a[k - 2]) return true; return false; }
+    var n = qs.length, perm = shuf([0, 1, 2, 3]), pool = [], tries = 0, i;
+    for(i = 0; i < n; i++) pool.push(perm[i % 4]);   /* الباقي من القسمة على 4 بيتوزع على مواقع عشوائية مش على أ وب دايمًا */
+    do { shuf(pool); } while(runs(pool) && ++tries < 60);
+    qs.forEach(function(q, k){
+      if(!q || !q.options || q.options.length !== 4 || !(q.answer >= 0 && q.answer < 4)) return;
+      var good = q.options[q.answer], rest = shuf(q.options.filter(function(o, m){ return m !== q.answer; })), pos = pool[k], out = [], r = 0, m;
+      for(m = 0; m < 4; m++) out.push(m === pos ? good : rest[r++]);
+      q.options = out; q.answer = pos;
+    });
+  }
   function stLoadQuiz(S, prev){
     if(prev && prev.parentNode) prev.parentNode.removeChild(prev);
     stBusy(true); paintFoot();
@@ -28692,7 +28710,7 @@ function buildScreen(){
       if(!r.ok || !r.j.quiz || !r.j.quiz.questions || !r.j.quiz.questions.length){
         ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(aiErr(r.err)) + '<br><button type="button" class="nbst-btn" data-nbst="retryq">جرّب تحميل الامتحان تاني</button>'; ty._s = S;
       } else {
-        S.quiz = r.j.quiz.questions; S.ans = []; S.step = 0; S.revealed = false;
+        S.quiz = r.j.quiz.questions; stBalance(S.quiz); S.ans = []; S.step = 0; S.revealed = false;
         var box = document.createElement('div'); box.className = 'nbst-quiz'; box._s = S; S.el = box;
         if(ty.parentNode) ty.parentNode.replaceChild(box, ty); else TH.ask.appendChild(box);
         renderQuiz(S); stScrollTo(box);
