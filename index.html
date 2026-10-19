@@ -28604,7 +28604,37 @@ function buildScreen(){
   function stDir(root, sel){
     [].forEach.call(root.querySelectorAll(sel || ST_DIR), function(e){
       var t = (e.textContent || '').replace(/\(إجابتك\)/g, ''), la = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length;
-      if(la && la > ar) e.setAttribute('dir', 'ltr');
+      if(la && la > ar) e.setAttribute('dir', 'ltr'); else if(la) stIso(e);
+    });
+  }
+  /* صيغ ومعادلات كيميائية جوه نص عربي: كل مقطع لاتيني/رموز يتعزل LTR (<bdi>) عشان ترتيب الرموز والأسهم ما يتلخبطش */
+  function stIso(el){
+    var doc = el.ownerDocument, tw = doc.createTreeWalker(el, 4), nodes = [], n;
+    while((n = tw.nextNode())){ if(/[A-Za-z\u2190-\u21FF]/.test(n.nodeValue) && !(n.parentNode.closest && n.parentNode.closest('.nbst-iso'))) nodes.push(n); }
+    var LT = /[A-Za-z0-9\u2070-\u209F\u2190-\u21FF]/, AR = /[\u0600-\u06FF]/, BR = /^[+\-\u2212=\u2192\u21CC\u21C4\u00B7\u00D7\u00F7<>\u2265\u2264\u2248\/]+$/;
+    nodes.forEach(function(t){
+      var parts = t.nodeValue.split(/(\s+)/), toks = [], i, w, m, core, tail;
+      for(i = 0; i < parts.length; i++){
+        w = parts[i]; if(w === '') continue;
+        if(/^\s+$/.test(w)){ toks.push({ sp: w }); continue; }
+        m = /^(.*?)([.,;:!?\u060C\u061B\u061F]*)$/.exec(w); core = m[1]; tail = m[2];
+        toks.push({ w: w, core: core, tail: tail, k: (core && !AR.test(core) && LT.test(core)) ? 'L' : (core && BR.test(core) ? 'B' : 'A') });
+      }
+      var out = doc.createDocumentFragment(), buf = '', run = '', pend = '', lastL = -1, j;
+      function put(txt){ if(txt) out.appendChild(doc.createTextNode(txt)); }
+      function endRun(){ if(run){ var b = doc.createElement('bdi'); b.className = 'nbst-iso'; b.setAttribute('dir', 'ltr'); b.textContent = run; out.appendChild(b); run = ''; } }
+      for(j = 0; j < toks.length; j++){
+        var tk = toks[j];
+        if(tk.sp !== undefined){ pend += tk.sp; continue; }
+        if(tk.k === 'L' || (tk.k === 'B' && run)){
+          if(tk.k === 'L'){ if(run){ run += pend + tk.core; } else { put(buf + pend); buf = ''; run = tk.core; } pend = ''; if(tk.tail){ endRun(); buf = tk.tail; } }
+          else { run += pend + tk.core; pend = ''; }
+          continue;
+        }
+        endRun(); buf += pend + tk.w; pend = '';
+      }
+      endRun(); put(buf + pend);
+      t.parentNode.replaceChild(out, t);
     });
   }
   function stSeq(S, ty, done){
