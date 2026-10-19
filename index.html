@@ -18172,6 +18172,7 @@ document.addEventListener('click', e => {
     // ═══════════════════════════════════════════════════════════════════════════════
     //  AI ASSISTANT SUBSCRIPTION — اشتراك المساعد الذكي (إضافة مستقلة تمامًا عن FarmSub)
     //  • تجربة مجانية يومين (3 شات + 2 تشخيص) · الباقة الأولى 149ج (10 شات + 5 تشخيص) · الثانية 199ج (15 + 10) · البرو 300ج (20 + 15) — النقاط بتتجدد يوميًا (يوم القاهرة).
+    //  • AI-FREE-PLAN: التجربة المجانية (يومين) اتلغت — أي حساب مسجّل بيفتح تلقائي على «الخطة المجانية» = نقطة استشارة + نقطة تشخيص بالصور يوميًا (الأرقام دي بتتطبّق كمان في firestore.rules و api/farm-ai.js).
     //  • المساعد ضمن اشتراك إدارة المزرعة (تجربة/مدفوع) = 3 شات + 3 تشخيص؛ للزيادة يشترك في باقة (الأعلى لكل نوع هو اللي بيتطبّق).
     //  • الحماية الحقيقية: firestore.rules (ai_subscriptions / ai_subscription_payments / ai_usage) + api/farm-ai.js — الواجهة هنا عرض وطلب فقط.
     //  • الدفع منفصل عن إدارة المزرعة (مجموعات farm_* ما اتلمستش) وبنفس شيت الدفع والتصميم.
@@ -18208,10 +18209,11 @@ document.addEventListener('click', e => {
       var trialEnd = sub && sub.trialStartedAt ? sub.trialStartedAt + AI_TRIAL_MS : null;
       var paidUntil = sub && sub.paidUntil || null;
       var paid = !!(paidUntil && paidUntil > nowMs), plan = (paid && AI_PLANS[sub.plan]) ? sub.plan : null;
-      var trial = !!(trialEnd && trialEnd > nowMs);
+      var trial = false;   /* AI-FREE-PLAN: التجربة ما بقتش بتدّي أي نقاط. القديم (للتراجع): var trial = !!(trialEnd && trialEnd > nowMs); */
       var lim = { chat: 0, diag: 0 };
       if (plan) { lim.chat = AI_PLANS[plan].chat; lim.diag = AI_PLANS[plan].diag; }
-      else { lim.chat = (trial || farmOk) ? 3 : 0; lim.diag = farmOk ? 3 : (trial ? 2 : 0); }
+      /* AI-FREE-PLAN: الخطة المجانية = 1 استشارة + 1 تشخيص يوميًا لأي حساب. القديم (للتراجع): else { lim.chat = (trial || farmOk) ? 3 : 0; lim.diag = farmOk ? 3 : (trial ? 2 : 0); } */
+      else { lim.chat = farmOk ? 3 : 1; lim.diag = farmOk ? 3 : 1; }
       var sorted = pays.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       var pending = sorted.filter(function(p) { return p.status === 'pending'; })[0] || null;
       var latest = sorted[0] || null;
@@ -18220,14 +18222,16 @@ document.addEventListener('click', e => {
         used: { chat: used.chat || 0, diag: used.diag || 0 }, left: { chat: 0, diag: 0 },
         plan: plan, paidUntil: paidUntil, trialEnd: trialEnd, endsAt: null, msLeft: 0, daysLeft: 0,
         pending: pending, rejected: (!pending && latest && latest.status === 'rejected') ? latest : null,
-        farmOk: !!farmOk, canStartTrial: !sub && !farmOk
+        farmOk: !!farmOk, canStartTrial: false   /* AI-FREE-PLAN. القديم (للتراجع): canStartTrial: !sub && !farmOk */
       };
       if (plan) { d.state = 'active'; d.endsAt = paidUntil; }
       else if (trial) { d.state = 'trial'; d.endsAt = trialEnd; }
       else if (farmOk) d.state = 'farm';
       else if (pending) d.state = 'pending';
       else if (d.rejected) d.state = 'rejected';
-      else if (sub) d.state = 'expired';
+      /* AI-FREE-PLAN: «انتهت فترة اشتراكك» للي كان مشترك فعلًا بس؛ غير كده الخطة المجانية. القديم (للتراجع): else if (sub) d.state = 'expired'; */
+      else if (sub && sub.paidUntil) d.state = 'expired';
+      else d.state = 'free';
       if (d.endsAt) { d.msLeft = d.endsAt - nowMs; d.daysLeft = Math.ceil(d.msLeft / 86400000); }
       d.left.chat = Math.max(0, lim.chat - d.used.chat);
       d.left.diag = Math.max(0, lim.diag - d.used.diag);
@@ -18287,7 +18291,9 @@ document.addEventListener('click', e => {
       if (!d || !d.hasAccess) return '';
       if (d.state === 'active') return AI_PLANS[d.plan].label + ' — حتى ' + fsubFmtDate(d.endsAt);
       if (d.state === 'trial') return 'تجربة مجانية — متبقي ' + fsubLeftText(d);
-      return 'ضمن اشتراك إدارة المزرعة';
+      /* AI-FREE-PLAN. القديم (للتراجع): return 'ضمن اشتراك إدارة المزرعة'; */
+      if (d.state === 'farm') return 'ضمن اشتراك إدارة المزرعة';
+      return 'الخطة المجانية';
     }
 
     var AIPW_X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
