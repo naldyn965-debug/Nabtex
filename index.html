@@ -18186,13 +18186,21 @@ document.addEventListener('click', e => {
     /* AI-SUB:START */
     var AI_TRIAL_MS = 2 * 24 * 3600 * 1000;
     var AI_PLANS = {
+      /* STUDY-SPLIT: باقات «ذاكر مع نبتيكس» (منفصلة عن Nabtex AI) — نفس نقاط السؤال/المذاكرة ونفس عدد الصور ونفس الأسعار، والفرق الوحيد إن مفيش نقاط تشخيص بالصور (diag: 0 هنا = بتفضل على الخطة المجانية). نفس المفاتيح في firestore.rules و api/farm-ai.js و admin.html. للتراجع: امسح الثلاث سطور دول + كل سطور STUDY-SPLIT. */
+      study1: { price: 99, chat: 10, diag: 0, imgs: 4, label: 'Basic', study: true },
+      study2: { price: 199, chat: 15, diag: 0, imgs: 8, label: 'Plus', study: true },
+      study3: { price: 299, chat: 20, diag: 0, imgs: 12, label: 'Pro', study: true },
       /* AI-PLAN-NAMES — القديم (للتراجع): label: 'الباقة الأولى' / 'الباقة الثانية' */
-      plan1: { price: 99, chat: 10, diag: 5, imgs: 4, label: 'Basic' },   /* AI-PRICE — القديم (للتراجع): price: 149 */
+      plan1: { price: 149, chat: 10, diag: 5, imgs: 4, label: 'Basic' },   /* AI-PRICE — Basic = 149 (كان 99 في نسخة سابقة؛ القديم القديم: 149) — لازم يطابق aiPrice في firestore.rules وتسمية admin.html. للتراجع: price: 99 */
       plan2: { price: 199, chat: 15, diag: 10, imgs: 8, label: 'Plus' },
       plan3: { price: 299, chat: 20, diag: 15, imgs: 12, label: 'Pro' }   /* AI-PRICE — القديم (للتراجع): price: 300 */ /* AI-PLAN-NAMES — القديم (للتراجع): label: 'باقة البرو' */
     };
     var aiMem = { uid: null, d: null, at: 0, day: '' };
-    var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false };
+    var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false, fam: 'ai' };   /* STUDY-SPLIT: fam = 'ai' (Nabtex AI) | 'study' (ذاكر مع نبتيكس) */
+    /* STUDY-SPLIT: مساعدات الفصل بين باقات Nabtex AI وباقات «ذاكر» */
+    function aiKeys(f) { return f === 'study' ? ['study1', 'study2', 'study3'] : ['plan1', 'plan2', 'plan3']; }
+    function aiPKey(k) { return String(k).replace(/^study/, 'plan'); }   /* لتنسيق الـ CSS (data-p) — study3 بنفس لمسة البرو */
+    function aiPName(k) { var p = AI_PLANS[k]; return p ? (p.study ? 'ذاكر — ' : '') + p.label : ''; }
     var aiListeners = [];
 
     function aiDay() { return fsubFmtDate(Date.now()); }
@@ -18216,7 +18224,7 @@ document.addEventListener('click', e => {
       var paid = !!(paidUntil && paidUntil > nowMs), plan = (paid && AI_PLANS[sub.plan]) ? sub.plan : null;
       var trial = false;   /* AI-FREE-PLAN: التجربة ما بقتش بتدّي أي نقاط. القديم (للتراجع): var trial = !!(trialEnd && trialEnd > nowMs); */
       var lim = { chat: 0, diag: 0 };
-      if (plan) { lim.chat = AI_PLANS[plan].chat; lim.diag = AI_PLANS[plan].diag; }
+      if (plan) { lim.chat = AI_PLANS[plan].chat; lim.diag = AI_PLANS[plan].study ? (farmOk ? 3 : 2) : AI_PLANS[plan].diag; }   /* STUDY-SPLIT: باقة «ذاكر» مفيهاش تشخيص — بيفضل على نقاط الخطة المجانية. القديم (للتراجع): lim.diag = AI_PLANS[plan].diag */
       /* AI-FREE-PLAN: الخطة المجانية = 1 استشارة + 1 تشخيص يوميًا لأي حساب. القديم (للتراجع): else { lim.chat = (trial || farmOk) ? 3 : 0; lim.diag = farmOk ? 3 : (trial ? 2 : 0); } */
       else { lim.chat = farmOk ? 3 : 2; lim.diag = farmOk ? 3 : 2; }   /* FREE-2: الخطة المجانية نقطتين بدل نقطة. القديم (للتراجع): farmOk ? 3 : 1 */
       var sorted = pays.slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
@@ -18294,7 +18302,7 @@ document.addEventListener('click', e => {
     }
     function aiStatusLine(d) {
       if (!d || !d.hasAccess) return '';
-      if (d.state === 'active') return AI_PLANS[d.plan].label + ' — حتى ' + fsubFmtDate(d.endsAt);
+      if (d.state === 'active') return aiPName(d.plan) + ' — حتى ' + fsubFmtDate(d.endsAt);   /* STUDY-SPLIT. القديم (للتراجع): AI_PLANS[d.plan].label */
       if (d.state === 'trial') return 'تجربة مجانية — متبقي ' + fsubLeftText(d);
       /* AI-FREE-PLAN. القديم (للتراجع): return 'ضمن اشتراك إدارة المزرعة'; */
       if (d.state === 'farm') return 'ضمن اشتراك إدارة المزرعة';
@@ -18316,13 +18324,13 @@ document.addEventListener('click', e => {
 
     function aiPlansHTML(d) {
       var cur = d && d.plan, h = '<div class="aipw-pls" role="radiogroup" aria-label="الباقات">';
-      ['plan1', 'plan2', 'plan3'].forEach(function(k) {
+      aiKeys(aiUI.fam).forEach(function(k) {   /* STUDY-SPLIT. القديم (للتراجع): ['plan1', 'plan2', 'plan3'].forEach(function(k) { */
         var p = AI_PLANS[k], on = aiUI.plan === k;
-        h += '<button type="button" class="aipw-pl' + (k === 'plan3' ? ' aipw-pro' : '') + (on ? ' on' : '') + '" data-plan="' + k + '" role="radio" aria-checked="' + on + '" onclick="AiSub.pick(\'' + k + '\')">' +
+        h += '<button type="button" class="aipw-pl' + (/3$/.test(k) ? ' aipw-pro' : '') + (on ? ' on' : '') + '" data-plan="' + k + '" role="radio" aria-checked="' + on + '" onclick="AiSub.pick(\'' + k + '\')">' +
           '<span class="aipw-rd" aria-hidden="true"></span>' +
-          '<span class="aipw-pn">' + p.label + (k === 'plan3' ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
+          '<span class="aipw-pn">' + p.label + (/3$/.test(k) ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
           '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
-          '<span class="aipw-pc"><i><b>' + p.chat + '</b> للسؤال أو المذاكرة' /* القديم (للتراجع): ' استشارة' */ + '</i><i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i><i class="aipw-dly">يوميًا</i></span>' +
+          '<span class="aipw-pc"><i><b>' + p.chat + '</b> للسؤال أو المذاكرة' /* القديم (للتراجع): ' استشارة' */ + '</i>' + (p.study ? '' /* STUDY-SPLIT: «ذاكر» من غير تشخيص */ : '<i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i>') + '<i class="aipw-dly">يوميًا</i></span>' +
           aiStudyRow(p) +   /* AI-IMGS */
         '</button>';
       });
@@ -18331,7 +18339,7 @@ document.addEventListener('click', e => {
 
     function aiPaywallHTML(d, opt) {
       var title, sub, body = '', plans = false;
-      var top = d && d.state === 'active' && d.plan === 'plan3';
+      var top = d && d.state === 'active' && (aiUI.fam === 'study' ? (d.plan === 'study3' || d.plan === 'plan3') : d.plan === 'plan3');   /* STUDY-SPLIT. القديم (للتراجع): d.plan === 'plan3' */
       if (d && d.state === 'error') {
         title = 'تعذّر التحقق من الاشتراك'; sub = 'تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.';
         body = '<button type="button" class="aipw-cta" onclick="AiSub.retry()"><span>إعادة المحاولة</span></button>';
@@ -18345,6 +18353,7 @@ document.addEventListener('click', e => {
         if (opt && opt.limit) { title = 'عايز نقاط أكتر؟'; sub = 'نقاطك بتتجدد كل يوم — اختر الباقة المناسبة.'; }
         else if (d && d.state === 'expired') { title = 'انتهت فترة اشتراكك'; sub = 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.'; }
         else if (d && d.state === 'rejected') { title = 'تعذّر تفعيل طلبك الأخير'; sub = 'راجع بيانات الدفع وابعت طلبًا جديدًا.'; }
+        else if (aiUI.fam === 'study') { title = 'اشترك في ذاكر مع نبتيكس'; sub = 'اسأل واذاكر بنقاط يومية — ارفع صور محاضراتك وأنا أشرحها وأختبرك فيها.'; }   /* STUDY-SPLIT */
         else { title = 'اشترك في <bdi dir="ltr">Nabtex AI</bdi>' /* القديم (للتراجع): 'اشترك في المساعد الذكي' */; sub = 'استشارة زراعية وتشخيص أمراض بالصور — بنقاط يومية.'; }
         if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="aipw-note aipw-bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         if (d && d.pending) body += aiPendingHTML(d.pending);
@@ -18355,7 +18364,7 @@ document.addEventListener('click', e => {
         if (d && d.canStartTrial) {
           body += '<button type="button" class="aipw-trial" id="ai-trial" onclick="AiSub.startTrial()">جرّب مجانًا لمدة يومين<small>3 استشارة + 2 تشخيص يوميًا · مرة واحدة لكل حساب</small></button>';
         }
-        if (d && d.farmOk) body += '<div class="aipw-fn">اشتراك إدارة المزرعة بيشمل 3 استشارة + 3 تشخيص يوميًا.</div>';
+        if (d && d.farmOk && aiUI.fam !== 'study') body += '<div class="aipw-fn">اشتراك إدارة المزرعة بيشمل 3 استشارة + 3 تشخيص يوميًا.</div>';
         body += '<div class="aipw-sec"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h12v9H6zM8 11V8a4 4 0 018 0v3"/></svg>بياناتك آمنة ومشفرة</div>';
       }
       if (!plans) body += '<button type="button" class="aipw-trial" onclick="AiSub.closePaywall()">إغلاق</button>';
@@ -18365,7 +18374,7 @@ document.addEventListener('click', e => {
     function aiPendingHTML(p) {
       if (!p) return '';
       var pl = AI_PLANS[p.plan], when = p.createdAt ? fsubFmtDate(p.createdAt) : '';
-      return '<div class="fsub-note fsub-note--info"><b>طلب قيد المراجعة</b><br>' + (pl ? pl.label : '') + (when ? ' — أُرسل ' + when : '') + (p.refKey ? ' — مرجع …' + fsubEsc(p.refKey.slice(-4)) : '') + '</div>';
+      return '<div class="fsub-note fsub-note--info"><b>طلب قيد المراجعة</b><br>' + (pl ? aiPName(p.plan) : '') + (when ? ' — أُرسل ' + when : '') + (p.refKey ? ' — مرجع …' + fsubEsc(p.refKey.slice(-4)) : '') + '</div>';
     }
 
     function aiPwKey(ev) { if (ev.key === 'Escape') aiClosePaywall(); }
@@ -18386,7 +18395,7 @@ document.addEventListener('click', e => {
         document.body.appendChild(o);
       }
       if (opt) o._opt = opt;
-      o.innerHTML = '<div class="aipw-box" data-p="' + aiUI.plan + '">' + aiPaywallHTML(d, o._opt) + '</div>';
+      o.innerHTML = '<div class="aipw-box" data-p="' + aiPKey(aiUI.plan) + '">' + aiPaywallHTML(d, o._opt) + '</div>';
     }
     function aiRefreshPaywall() {
       if (!document.getElementById('ai-pw')) return;
@@ -18418,10 +18427,10 @@ document.addEventListener('click', e => {
       var st = { s: 'pay', busy: false, m: aiUI.method === 'instapay' ? 'ip' : 'vf', un: null, snd: 0, ref: '', base: (aiMem.d && aiMem.d.paidUntil) || 0 };
       var Q = function(a) { return root.querySelector('[data-f=' + a + ']'); };
       /* نصوص خاصة بالمساعد (باقي الشيت زي ما هو) */
-      var plm = Q('plm'), pla = Q('pla');
-      plm.setAttribute('data-a', 'p-plan1'); plm.textContent = 'Basic' /* AI-PLAN-NAMES — القديم (للتراجع): 'الأولى' */;
-      pla.setAttribute('data-a', 'p-plan2'); pla.textContent = 'Plus' /* القديم: 'الثانية' */;
-      var pl3 = pla.cloneNode(false); pl3.setAttribute('data-a', 'p-plan3'); pl3.setAttribute('data-f', 'pl3'); pl3.textContent = 'Pro' /* القديم: 'البرو' */; pl3.classList.remove('on'); pla.parentNode.appendChild(pl3);
+      var KS = aiKeys(aiUI.fam), plm = Q('plm'), pla = Q('pla');   /* STUDY-SPLIT */
+      plm.setAttribute('data-a', 'p-' + KS[0]); plm.textContent = 'Basic' /* AI-PLAN-NAMES — القديم (للتراجع): 'الأولى' */;
+      pla.setAttribute('data-a', 'p-' + KS[1]); pla.textContent = 'Plus' /* القديم: 'الثانية' */;
+      var pl3 = pla.cloneNode(false); pl3.setAttribute('data-a', 'p-' + KS[2]); pl3.setAttribute('data-f', 'pl3'); pl3.textContent = 'Pro' /* القديم: 'البرو' */; pl3.classList.remove('on'); pla.parentNode.appendChild(pl3);
       var t1 = root.querySelector('[data-s=received] [data-a=close] span'); if (t1) t1.textContent = 'العودة إلى المساعد';
       var t2 = root.querySelector('[data-s=active] .nbco-p'); if (t2) t2.textContent = 'يمكنك الآن استخدام المساعد الذكي بنقاط باقتك.';
       var t3 = root.querySelector('[data-s=active] [data-a=go] span'); if (t3) t3.textContent = 'العودة إلى المساعد';
@@ -18463,11 +18472,11 @@ document.addEventListener('click', e => {
 
       function refresh() {
         var pl = aiUI.plan, p = AI_PLANS[pl];
-        Q('title').textContent = 'Nabtex AI — ' + p.label; /* AI-PLAN-NAMES — القديم (للتراجع): 'المساعد الذكي — ' + p.label */
-        Q('sub').textContent = p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';
+        Q('title').textContent = (aiUI.fam === 'study' ? 'ذاكر مع نبتيكس — ' : 'Nabtex AI — ') + p.label;   /* STUDY-SPLIT */ /* AI-PLAN-NAMES — القديم (للتراجع): 'المساعد الذكي — ' + p.label */
+        Q('sub').textContent = p.study ? p.chat + ' نقاط للسؤال أو المذاكرة يوميًا — اشتراك شهري' : p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';   /* STUDY-SPLIT */
         Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
         Q('off').hidden = true;
-        ['plan1', 'plan2', 'plan3'].forEach(function(k) { var b = Q(k === 'plan1' ? 'plm' : (k === 'plan2' ? 'pla' : 'pl3')); b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
+        KS.forEach(function(k, ki) { var b = Q(ki === 0 ? 'plm' : (ki === 1 ? 'pla' : 'pl3'));   /* STUDY-SPLIT */ b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
         Q('numvf').textContent = FSUB_PAY.vcash; ipRows();
       }
       function setM(m) {
@@ -18530,7 +18539,7 @@ document.addEventListener('click', e => {
         }).then(function(data) {
           try {
             fetch(FSUB_PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ courseLabel: 'اشتراك المساعد الذكي — ' + AI_PLANS[plan].label, amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
+              body: JSON.stringify({ courseLabel: (AI_PLANS[plan].study ? 'اشتراك ذاكر مع نبتيكس — ' : 'اشتراك المساعد الذكي — ') + AI_PLANS[plan].label, amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
           } catch (e) {}
           busy(false);
           if (!document.getElementById('ai-co')) return;
@@ -18557,7 +18566,7 @@ document.addEventListener('click', e => {
         }
         else if (a === 'cord') { if (navigator.clipboard) navigator.clipboard.writeText(st.ref).catch(function() {}); }
         else if (a === 'm-vf' || a === 'm-ip') setM(a.slice(2));
-        else if (a === 'p-plan1' || a === 'p-plan2' || a === 'p-plan3') setP(a.slice(2));
+        else if (/^p-(plan|study)[123]$/.test(a)) setP(a.slice(2));   /* STUDY-SPLIT. القديم (للتراجع): a === 'p-plan1' || a === 'p-plan2' || a === 'p-plan3' */
         else if (a === 'sent') { go('verify'); setTimeout(function() { try { fFrom.focus({ preventScroll: true }); } catch (x) {} }, 420); }
         else if (a === 'no') { aiCoClose(); farmToast('يمكنك العودة لإتمام الاشتراك بعد التحويل', 'info'); }
         else if (a === 'next') {
@@ -18605,6 +18614,8 @@ document.addEventListener('click', e => {
       },
       status: function() { return aiStatusLine(aiMem.d); },
       plan: function() { return aiMem.d ? aiMem.d.plan : null; },
+      /* STUDY-SPLIT: هل المستخدم على أعلى باقة متاحة في السياق ده؟ ('study' = ذاكر: study3 أو برو Nabtex AI · غير كده: برو Nabtex AI بس) */
+      top: function(f) { var p = aiMem.d ? aiMem.d.plan : null; return f === 'study' ? (p === 'study3' || p === 'plan3') : p === 'plan3'; },
       /* AI-IMGS: أقصى عدد صور في «ذاكر مع نبتكس» لكل مرة حسب الباقة (الخطة المجانية/Basic 4 · Plus 8 · Pro 12) */
       imgs: function() { var pl = aiMem.d && aiMem.d.plan; return (pl && AI_PLANS[pl] && AI_PLANS[pl].imgs) || 4; },
       applyPoints: aiApplyPoints,
@@ -18614,7 +18625,12 @@ document.addEventListener('click', e => {
       onChange: function(fn) { if (typeof fn === 'function') aiListeners.push(fn); },
       paywall: function(opt) {
         aiLoad(true, function(d) {
-          if (d && d.plan === 'plan1') aiUI.plan = 'plan2'; else if (d && d.plan === 'plan2') aiUI.plan = 'plan3';   /* الافتراضي: الباقة الأعلى من باقته */
+          /* STUDY-SPLIT: السياق (ذاكر / Nabtex AI): صاحب باقة Nabtex AI بيشوف باقات Nabtex AI حتى من جوه «ذاكر» (باقاته بتشمل المذاكرة أصلًا، وشراء «ذاكر» هيقلّل باقته). الافتراضي: الباقة الأعلى من باقته. القديم (للتراجع): if (d && d.plan === 'plan1') aiUI.plan = 'plan2'; else if (d && d.plan === 'plan2') aiUI.plan = 'plan3'; */
+          var fam = (opt && opt.fam === 'study' && !(d && d.plan && d.plan.indexOf('plan') === 0)) ? 'study' : 'ai', pre = fam === 'study' ? 'study' : 'plan', cn = d && d.plan ? d.plan.slice(-1) : '';
+          aiUI.fam = fam;
+          if (d && d.plan && d.plan.indexOf(pre) === 0) aiUI.plan = pre + (cn === '1' ? '2' : '3');
+          else if (d && d.plan) aiUI.plan = pre + cn;
+          else if (aiUI.plan.indexOf(pre) !== 0) aiUI.plan = pre + '1';
           aiShowPaywall(d, opt || {});
         });
       },
@@ -18623,7 +18639,7 @@ document.addEventListener('click', e => {
       pick: function(plan) {
         if (!AI_PLANS[plan]) return;
         aiUI.plan = plan;
-        var box = document.querySelector('#ai-pw .aipw-box'); if (box) box.setAttribute('data-p', plan);
+        var box = document.querySelector('#ai-pw .aipw-box'); if (box) box.setAttribute('data-p', aiPKey(plan));
         Array.prototype.forEach.call(document.querySelectorAll('#ai-pw .aipw-pl'), function(el) { var on = el.getAttribute('data-plan') === plan; el.classList.toggle('on', on); el.setAttribute('aria-checked', on); });
         var c = document.getElementById('ai-cta-price'); if (c) c.textContent = AI_PLANS[plan].price;
       },
@@ -28238,10 +28254,11 @@ function call(mode, payload, ckExtra, done){
 
 function errText(e){ return e === 'wait' ? 'استنى ثواني قبل الطلب الجاي.' : (MSG[e] || MSG.generic); }
 /* AI-SUB: رسالة الشات/التشخيص عند انتهاء النقاط + فتح شاشة الاشتراك لو الاشتراك خلص */
+function aiFam(){ try{ return (SCR && SCR.classList && SCR.classList.contains('nbai-focus')) ? 'study' : 'ai'; }catch(e){ return 'ai'; } }   /* STUDY-SPLIT: السياق الحالي (وضع المذاكرة = study) */
 function aiErr(e){
-  if(e === 'sub_required'){ try{ if(window.AiSub) window.AiSub.paywall({}); }catch(x){} }
+  if(e === 'sub_required'){ try{ if(window.AiSub) window.AiSub.paywall({ fam: aiFam() }); }catch(x){} }
   if(e !== 'user_limit') return errText(e);
-  return (window.AiSub && window.AiSub.plan && window.AiSub.plan() === 'plan3') ? 'خلّصت نقاطك النهاردة — بتتجدد بكرة.' : 'خلّصت نقاطك النهاردة — بتتجدد بكرة. ولو عايز نقاط أكتر دوس «رقّي الباقة».';
+  return (window.AiSub && window.AiSub.plan && (window.AiSub.top ? window.AiSub.top(aiFam()) : window.AiSub.plan() === 'plan3')) ? 'خلّصت نقاطك النهاردة — بتتجدد بكرة.' : 'خلّصت نقاطك النهاردة — بتتجدد بكرة. ولو عايز نقاط أكتر دوس «رقّي الباقة».';
 }
 
 /* تصغير الصورة في المتصفح قبل الإرسال (أقل استهلاك + أسرع) — بقى بيحافظ على الحدة: تصغير على مراحل + جودة JPEG أعلى، وبيرجّع فحص جودة (وضوح/إضاءة/دقة) كتحذير بس */
@@ -28370,7 +28387,7 @@ function buildScreen(){
       var note = document.createElement('div'); note.className = 'nbq-d';
       foot.appendChild(st); foot.appendChild(note);
       q = foot._q = { box: box, tr: box.querySelector('.nbq-tr'), fl: box.querySelector('.nbq-fl'), v: box.querySelector('.nbq-v'), m: box.querySelector('.nbq-m'), r: st.querySelector('.nbq-r'), ft: st, s: st.querySelector('.nbq-s'), up: up, d: note };
-      up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true }); });   /* AI-SUB */
+      up.addEventListener('click', function(){ if(window.AiSub) window.AiSub.paywall({ limit: true, fam: card.classList.contains('nbai-focus') ? 'study' : 'ai' }); });   /* AI-SUB + STUDY-SPLIT */
     }
     var pct = mx > 0 ? Math.max(0, Math.min(100, l / mx * 100)) : 0;
     q.v.textContent = l; q.m.textContent = mx; q.r.hidden = l > 0;
@@ -28380,7 +28397,7 @@ function buildScreen(){
     q.fl.style.width = pct + '%';
     /* AI-SUB: سطر الاشتراك + زر «رقّي الباقة» (مخفي لو على باقة البرو) */
     var sl = (window.AiSub && window.AiSub.status) ? window.AiSub.status() : '';
-    q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3');
+    q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && !(window.AiSub.top ? window.AiSub.top(card.classList.contains('nbai-focus') ? 'study' : 'ai') : window.AiSub.plan() === 'plan3'));   /* STUDY-SPLIT. القديم (للتراجع): !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3') */
     q.ft.hidden = !sl && l > 0;
     /* سطر الفوتر: في التشخيص بالصورة بس — الدقة بتزيد بزيادة زوايا التصوير */
     q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : (src === 'study' ? 'صوّر الصفحات بوضوح وفي إضاءة كويسة — لحد 4 صور في المرة الواحدة.' : '');

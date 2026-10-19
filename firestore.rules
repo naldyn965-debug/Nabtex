@@ -35,20 +35,27 @@ service cloud.firestore {
     //   AI-FREE-PLAN: the 2-day trial no longer grants points; every signed-in account gets a permanent free plan = 2 chat + 2 diagnosis per day.
     //   (old chat line: ... : ((aiTrialOk(uid) || aiFarmOk(uid)) ? 3 : 0))) · old diag line: ... : (aiFarmOk(uid) ? 3 : (aiTrialOk(uid) ? 2 : 0))))
     function aiDoc(uid) { return /databases/$(database)/documents/ai_subscriptions/$(uid); }
-    // AI-PRICE: Basic 99 / Pro 299 (old: plan1 149, plan3 300)
-    function aiPrice(plan) { return plan == 'plan1' ? 99 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 299 : -1)); }
+    // AI-PRICE: Nabtex AI Basic 149 / Plus 199 / Pro 299 (previous: plan1 99). Study plans (study1/2/3) stay 99 / 199 / 299.
+    // (older: plan1 149, plan3 300)
+    function aiPrice(plan) { return plan == 'plan1' ? 149 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 299 : (plan == 'study1' ? 99 : (plan == 'study2' ? 199 : (plan == 'study3' ? 299 : -1))))); }
+    // STUDY-SPLIT: «ذاكر مع نبتيكس» plans (study1/2/3) = same chat points + prices as plan1/2/3 but NO diagnosis points (diag stays at the free-plan allowance). Old aiPrice (to roll back): plan1 ? 99 : (plan2 ? 199 : (plan3 ? 299 : -1))
     function aiPlanIs(uid, p) {
       return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
         && get(aiDoc(uid)).data.get('plan', '') == p;
     }
     // AI-FREE-PLAN: removed (unused after the trial was dropped — the console flags unused functions). Old (to roll back):
     //   function aiTrialOk(uid) { return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(2, 'd') > request.time; }
+    function aiPlanIn(uid, ps) {
+      return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
+        && get(aiDoc(uid)).data.get('plan', '') in ps;
+    }
     function aiFarmOk(uid) {
       return exists(fsDoc(uid)) && (
         get(fsDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(7, 'd') > request.time
         || get(fsDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time);
     }
-    function aiChatLim(uid) { return aiPlanIs(uid, 'plan3') ? 20 : (aiPlanIs(uid, 'plan2') ? 15 : (aiPlanIs(uid, 'plan1') ? 10 : (aiFarmOk(uid) ? 3 : 2))); }
+    // STUDY-SPLIT: study plans share the chat limits of plan1/2/3. Old (to roll back): aiPlanIs(uid, 'plan3') ? 20 : (aiPlanIs(uid, 'plan2') ? 15 : (aiPlanIs(uid, 'plan1') ? 10 : (aiFarmOk(uid) ? 3 : 2)))
+    function aiChatLim(uid) { return aiPlanIn(uid, ['plan3', 'study3']) ? 20 : (aiPlanIn(uid, ['plan2', 'study2']) ? 15 : (aiPlanIn(uid, ['plan1', 'study1']) ? 10 : (aiFarmOk(uid) ? 3 : 2))); }
     function aiDiagLim(uid) { return aiPlanIs(uid, 'plan3') ? 15 : (aiPlanIs(uid, 'plan2') ? 10 : (aiPlanIs(uid, 'plan1') ? 5 : (aiFarmOk(uid) ? 3 : 2))); }
     function aiUN(k) { return request.resource.data.get(k, 0); }
     function aiUO(k) { return resource.data.get(k, 0); }
@@ -504,7 +511,7 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly(['uid','email','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
                     && request.resource.data.keys().hasAll(['uid','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
                     && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.plan in ['plan1', 'plan2', 'plan3']
+                    && request.resource.data.plan in ['plan1', 'plan2', 'plan3', 'study1', 'study2', 'study3']   // STUDY-SPLIT (old: ['plan1', 'plan2', 'plan3'])
                     && request.resource.data.amount == aiPrice(request.resource.data.plan)
                     && request.resource.data.currency == 'EGP'
                     && request.resource.data.phone is string

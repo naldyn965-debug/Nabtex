@@ -2811,7 +2811,8 @@ async function doFarmSubAction(action, paymentId, note) {
    مع سجل Audit. مدة الباقة شهر ميلادي من (الآن أو انتهاء الاشتراك الحالي لو لسه شغال → تجديد متراكم) والباقة المشتراة بتبقى هي الفعّالة فورًا.
    ══════════════════════════════════════════════════════════════ */
 /* AI-PRICE — القديم (للتراجع): plan1: 'الباقة الأولى (149ج)' · plan3: 'باقة البرو (300ج)' */
-    const AISUB_PLAN_LABEL = { plan1: 'الباقة الأولى (99ج)', plan2: 'الباقة الثانية (199ج)', plan3: 'باقة البرو (299ج)' };
+    /* STUDY-SPLIT: باقات «ذاكر مع نبتيكس» (بدون تشخيص). القديم (للتراجع): نفس السطر من غير study1/2/3 */
+    const AISUB_PLAN_LABEL = { plan1: 'الباقة الأولى (149ج)', plan2: 'الباقة الثانية (199ج)', plan3: 'باقة البرو (299ج)', study1: 'ذاكر — Basic (99ج)', study2: 'ذاكر — Plus (199ج)', study3: 'ذاكر — Pro (299ج)' };
 let aiAdminPays = [], aiAdminFilterVal = 'pending', aiAdminPaysUnsub = null, aiAdminAuditUnsub = null;
 
 function aiAddMonth(ms) {
