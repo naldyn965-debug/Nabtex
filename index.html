@@ -27926,6 +27926,27 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 @keyframes nbf-breathe{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
 @keyframes nbf-back{0%{box-shadow:0 0 0 0 var(--ai-ring)}100%{box-shadow:0 0 0 12px transparent}}
 @keyframes nbf-nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}60%{transform:translateX(4px)}}
+/* ═════════ شريط الكتابة في «ذاكر» — تحسين بريميوم (إضافة) ═════════
+   كله مقيّد بـ .nbai-pane.nbai-study (مفيش تأثير على «مزرعتي» ولا «سؤال عن أي حاجة» ولا التشخيص).
+   • الشريط: ارتفاع أهدى + طبقات ظل ناعمة + حلقة بنفسجية عند الكتابة.
+   • الأزرار: دايرتين بنفس المقاس، فاصل رفيع بينهم وبين حقل الكتابة، وتسلسل واضح: من غير صور = زر الصور هو الأساسي (نبضة حلقية هادية)، ومعاه إرسال هادي؛ لما الصور تتحط = الإرسال بيتحوّل للتدرّج مع نبضة واحدة.
+   للتراجع: امسح الكتلة دي. */
+.nbai-ov .nbai-pane.nbai-study .nbai-cm{padding:5px;border-radius:30px;background:var(--card);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 26px -16px rgba(76,29,149,.35),0 2px 6px -3px rgba(16,24,40,.08);transition:border-color 240ms,box-shadow 300ms var(--ai-ease)}
+[data-dark] .nbai-ov .nbai-pane.nbai-study .nbai-cm{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 12px 28px -16px rgba(0,0,0,.65)}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm:focus-within{border-color:var(--ai-ring);box-shadow:0 0 0 4px var(--ai-soft),0 14px 30px -16px var(--ai-glow)}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm .nbai-q::placeholder{font-size:13.5px;font-weight:500;color:var(--muted);opacity:.85}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm :is(.nbai-st-add,.nbai-go-ask){width:42px;height:42px}
+.nbai-ov .nbai-pane.nbai-study .nbai-st-add{position:relative;background:var(--ai-soft);box-shadow:inset 0 0 0 1px var(--ai-ring);transition:transform 180ms var(--ai-ease),background 200ms,box-shadow 220ms,opacity 180ms}
+@media (hover:hover){.nbai-ov .nbai-pane.nbai-study .nbai-st-add:not([disabled]):hover{background:var(--ai-soft2)}}
+.nbai-ov .nbai-pane.nbai-study .nbai-st-add::before{content:'';position:absolute;inset-inline-start:-6px;top:50%;width:1px;height:22px;margin-top:-11px;background:var(--line2);pointer-events:none}
+.nbai-ov .nbai-pane.nbai-study .nbai-st-th[hidden]+.nbai-cm:not(:focus-within) .nbai-st-add:not([disabled]){animation:nbf-ring 3.6s var(--ai-ease) 1.2s infinite}
+.nbai-ov .nbai-pane.nbai-study .nbai-go-ask{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 55%),var(--ai-g);transition:transform 220ms var(--ai-ease),opacity 180ms,box-shadow 260ms,background 260ms,color 260ms}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm:has(.nbai-qi:placeholder-shown):not(.nbst-ready) .nbai-go-ask{opacity:1;transform:none;box-shadow:none;background:var(--ai-soft2);color:var(--ai-tx)}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm:has(.nbai-qi:placeholder-shown):not(.nbst-ready) .nbai-go-ask[disabled]{opacity:.55}
+.nbai-ov .nbai-pane.nbai-study .nbai-go-ask::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm.nbst-ready .nbai-go-ask::after{animation:nbf-ping 900ms ease-out 1}
+@keyframes nbf-ring{0%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 0 var(--ai-ring)}60%,100%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 10px transparent}}
+@keyframes nbf-ping{0%{opacity:.55;box-shadow:0 0 0 0 var(--ai-glow)}100%{opacity:0;box-shadow:0 0 0 14px var(--ai-glow)}}
 </style>
 
 <script id="nb-farm-ai-js">
