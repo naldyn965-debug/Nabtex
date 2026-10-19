@@ -36,7 +36,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12 };
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 2400 * 1024;   /* كان 600KB لصورة واحدة — دلوقتي لحد 4 صور (≈340KB لكل واحدة) */
@@ -47,7 +47,8 @@ const MAX_IMAGE_B64 = 420 * 1024;   /* ≈ 310KB بعد فك الترميز — 
 const MAX_IMAGES = 4;
 /* وصف كل زاوية تصوير (الواجهة بتبعت slot رقم بس، والنص ثابت هنا — مفيش نص حر من العميل بيدخل البرومبت) */
 const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه الأمامي — ورقة أو ثمرة أو غيرها)', 'الجزء المصاب من الخلف (الوجه الخلفي — زي ظهر الورقة)', 'الساق أو الثمرة (لقطة قريبة)', 'النبات كامل من بعيد'];
-const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900 };
+const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 7000, study_quiz: 4500 };
+const STUDY_ATTEMPT_MS = 45000;   /* «ذاكر مع نبتكس»: الرد أطول فمحاولة الـ backend الواحدة بتاخد وقت أكبر من ATTEMPT_CAP_MS (الميزانية الكلية UPSTREAM_TIMEOUT_MS زي ما هي) */
 const MAX_WX_CHARS = 5500;
 const MAX_CTX_CHARS = 1500;
 /* اختياري: GEMINI_GROUNDING=1 يفعّل بحث جوجل (Grounding) في مرحلة التشخيص النهائي فقط لرفع دقة أسماء المبيدات المسجّلة.
@@ -265,6 +266,37 @@ SYSTEMS.decide = [
   INJECTION
 ].join('\n');
 
+/* ═══ «ذاكر مع نبتكس» (إضافة): الطالب يرفع من 1 لـ 4 صور من المحاضرة/الملزمة ← study: شرح كل جزئية بالعامية المصرية + مثال + ملخص (JSON) ← study_quiz: امتحان MCQ من نفس الصور بس (JSON).
+   للتراجع: امسح SYSTEMS.study / SYSTEMS.study_quiz و sanitizeStudy / sanitizeStudyQuiz وفرع study جوه handler وسطور study في LIMITS / OUT_TOKENS / AI_POINT. ═══ */
+SYSTEMS.study = [
+  'أنت «مذاكر نبتكس»: مدرّس خبير في الزراعة وعلوم الحياة (نبات، وقاية نباتات، تربة، إنتاج حيواني، أغذية، ميكروبيولوجي، كيمياء حيوية، وراثة، تقنيات حيوية…) بتذاكر مع طالب مصري من صور ملازمه أو سلايدات المحاضرة أو صفحات الكتاب أو ملاحظاته بخط اليد. المحتوى ممكن يكون عربي أو إنجليزي أو خليط.',
+  'هتستلم من 1 إلى 4 صور (قبل كل صورة سطر برقمها) وأحيانًا ملاحظة من الطالب. مهمتك: شرح وافٍ ودقيق لكل جزئية علمية موجودة فيها + ملخص.',
+  'القراءة: اقرأ كل صورة بعناية فائقة قبل ما تكتب: كل العناوين والفقرات والجداول والمعادلات والرسومات والأسهم والأشكال والتعليقات الجانبية. استخرج كل جزئية وكل معلومة ولا تتجاهل أي حاجة ظاهرة. لو كلمة أو رقم مش واضح في الصورة قول ده صراحة في الشرح (مثلًا «الرقم ده مش واضح في الصورة») ولا تخمّن، ولا تخترع معلومات مش موجودة في الصور. لو أكتر من صورة بتتكلم عن نفس الموضوع اربطهم ببعض.',
+  'التقسيم: قسّم المحتوى لأجزاء (parts) من 1 إلى 12 حسب الفكرة العلمية مش حسب عدد الصور، ورتّبها بترتيب ظهورها. لو المحتوى قليل أو بسيط اكتفي بعدد أجزاء أقل. لكل جزء اكتب في src أرقام الصور اللي جاي منها.',
+  'لكل جزء:',
+  '• title: عنوان قصير وواضح (والمصطلح الإنجليزي بين قوسين لو موجود في الصورة).',
+  '• explain: شرح وافٍ لكل اللي في الصورة عن الجزء ده (من 90 إلى 170 كلمة) بالعامية المصرية المبسطة جدًا، كأنك بتشرح لصاحبك اللي أول مرة يسمع الموضوع: جمل قصيرة، من غير فصحى ثقيلة ولا تعقيد، وأي مصطلح علمي أول ما يظهر اشرحه في نص جملة بكلام بسيط. المصطلحات العلمية والأسماء اللاتينية والإنجليزية بتفضل زي ما هي في الصورة. غطّي التعريفات والأسباب والخطوات والأرقام والتصنيفات والفروق المهمة، واشرح ليه وإزاي حاجة بتحصل مش بس إعادة كلام الصورة. تقدر تبرز المصطلحات الأساسية بالخط العريض (**هكذا**).',
+  '• example: مثال تبسيطي واحد (من 30 إلى 70 كلمة) من الحياة اليومية أو من الحقل بيوضّح الفكرة بتشبيه سهل، بالعامية برضه.',
+  'الملخص: summary من 5 إلى 12 نقطة قصيرة (جملة واحدة لكل نقطة بالعامية) بتلخّص كل الصور بالترتيب، وفيها أهم المعلومات والأرقام اللي لازم الطالب يحفظها.',
+  'title: عنوان قصير للمادة اللي في الصور (حد أقصى 10 كلمات).',
+  'لو أي معلومة في الصورة غلط علميًا بشكل واضح نبّه عليها بلطف جوه الشرح بجملة تبدأ بـ «ملحوظة:». ولو الصور مش واضحة خالص أو مفيهاش محتوى دراسي تقدر تشرحه ارجع {"readable":false} بس.',
+  'رجّع JSON فقط بالشكل: {"readable":true,"title":"...","parts":[{"title":"...","src":[1],"explain":"...","example":"..."}],"summary":["..."]}',
+  'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). اشرح الأرقام والجرعات اللي في الصور كما هي بالظبط ولا تضيف جرعات أو أرقام مبيدات أو أسمدة من عندك.',
+  INJECTION
+].join('\n');
+SYSTEMS.study_quiz = [
+  'أنت «مذاكر نبتكس»: مدرّس خبير في الزراعة وعلوم الحياة، بتعمل امتحان MCQ لطالب مصري بعد ما شرحتله صور من ملازمه أو سلايدات محاضرته.',
+  'هتستلم نفس الصور (قبل كل صورة سطر برقمها) + قائمة الأجزاء اللي اتشرحت (كل جزء له رقم يبدأ من 0 وعنوان) وأحيانًا ملاحظة من الطالب.',
+  'المرجع الأساسي والوحيد للأسئلة هو المكتوب والمرسوم في الصور المرفقة: ما تسألش عن أي معلومة مش موجودة في الصور حتى لو صحيحة علميًا، وما تخترعش أرقام أو تفاصيل. اقرأ الصور بعناية قبل ما تكتب أي سؤال.',
+  'لازم سؤال واحد على الأقل لكل جزء في القائمة، واتنين لو الجزء غني بالمعلومات، بحد أقصى 20 سؤال في الإجمالي. وزّع الأسئلة على كل الأجزاء ولا تكرر نفس الفكرة في سؤالين.',
+  'الأسئلة تقيس الفهم والتطبيق مش الحفظ الأعمى بس (حالة بسيطة أو موقف عملي من نفس معلومات الصور، أو مقارنة، أو سبب/نتيجة). السؤال والاختيارات بالعامية المصرية المبسطة بنفس أسلوب الشرح، والمصطلحات العلمية بتفضل زي ما هي.',
+  'كل سؤال له 4 اختيارات بالظبط، واحد صحيح فقط والباقي مشتتات معقولة ومقنعة. الاختيارات الأربعة لازم تكون متقاربة في الطول والصياغة والتفصيل بحيث الإجابة الصحيحة ما تتخمنش من طولها أو من إنها الأكتر تفصيلًا. ممنوع «كل ما سبق» و«لا شيء مما سبق» و«الاختياران أ وب».',
+  'answer: رقم الاختيار الصحيح (0 إلى 3) داخل مصفوفة options، ووزّع الإجابات الصحيحة على المواقع المختلفة. why: تفسير قصير (جملتين بالكتير) بالعامية بيشرح ليه الإجابة صحيحة ويربطها بالمكتوب في الصورة. part: رقم الجزء من القائمة.',
+  'رجّع JSON فقط بالشكل: {"questions":[{"part":0,"q":"...","options":["...","...","...","..."],"answer":2,"why":"..."}]}',
+  'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9).',
+  INJECTION
+].join('\n');
+
 const NUM_KEYS = ['irr_times', 'irr_amount', 'irr_hours', 'fert_n', 'fert_p', 'fert_k', 'fert_organic', 'fert_micro', 'fert_amount',
   'spray_conc', 'spray_water', 'spray_area', 'spray_times', 'labor', 'machines', 'temp', 'humidity', 'rain'];
 const TXT_KEYS = ['fert_name', 'fert_company', 'spray_name', 'spray_company', 'spray_pest', 'notes'];
@@ -298,7 +330,7 @@ function sanitizeLog(raw, options) {
    للتراجع: امسح الكتلة دي وسطور aiPts* جوه handler. */
 const FS_PROJECT = process.env.FIREBASE_PROJECT_ID || 'nabtex-b8475';
 const FS_DOCS = 'https://firestore.googleapis.com/v1/projects/' + FS_PROJECT + '/databases/(default)/documents';
-const AI_POINT = { analyze: 'chat', ask: 'chat', diag_q: 'diag', diagnose: 'fin' };
+const AI_POINT = { analyze: 'chat', ask: 'chat', diag_q: 'diag', diagnose: 'fin', study: 'chat' };   /* study = شرح الصور + الملخص (نقطة شات واحدة للجلسة)؛ study_quiz (الامتحان) مش هنا: بيتحقق من الاشتراك بس وبدون نقطة تانية */
 const AI_TRIAL_MS = 2 * 86400000;
 const FARM_TRIAL_MS = 7 * 86400000;
 
@@ -407,6 +439,48 @@ function sanitizeDecide(raw, ruleTone, kind) {
   return out;
 }
 
+/* تنظيف رد «ذاكر مع نبتكس» — شرح: حتى 12 جزء بنصوص محدودة + ملخص (unreadable لو الصور مش دراسية/مش مقروءة) */
+function sanitizeStudy(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+  if (raw.readable === false) return { unreadable: true };
+  const out = { title: str(raw.title, 90), parts: [], summary: [] };
+  (Array.isArray(raw.parts) ? raw.parts : []).slice(0, 12).forEach(function (p) {
+    const title = str(p && p.title, 110), explain = str(p && p.explain, 2000);
+    if (!title || !explain) return;
+    const src = (Array.isArray(p.src) ? p.src : []).map(function (v) { return parseInt(v, 10); })
+      .filter(function (v) { return Number.isInteger(v) && v >= 1 && v <= MAX_IMAGES; }).slice(0, MAX_IMAGES);
+    out.parts.push({ title: title, explain: explain, example: str(p.example, 800), src: src });
+  });
+  (Array.isArray(raw.summary) ? raw.summary : []).slice(0, 14).forEach(function (x) { const t = str(x, 280); if (t) out.summary.push(t); });
+  if (!out.parts.length) return null;
+  return out;
+}
+
+/* تنظيف رد الامتحان: كل سؤال 4 اختيارات بالظبط ومختلفة، والإجابة رقم 0..3؛ وبنخلط ترتيب الاختيارات هنا عشان ما يتحكمش ميل الموديل لموقع معين */
+function sanitizeStudyQuiz(raw, nParts) {
+  if (!raw || typeof raw !== 'object') return null;
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+  const out = { questions: [] };
+  (Array.isArray(raw.questions) ? raw.questions : []).slice(0, 24).forEach(function (it) {
+    const q = str(it && it.q, 320);
+    const opts = (Array.isArray(it && it.options) ? it.options : []).map(function (o) { return str(o, 220); });
+    const ans = typeof (it && it.answer) === 'number' ? it.answer : parseInt(it && it.answer, 10);
+    if (!q || opts.length !== 4 || opts.some(function (o) { return !o; }) || new Set(opts).size !== 4 || !Number.isInteger(ans) || ans < 0 || ans > 3) return;
+    const order = [0, 1, 2, 3];
+    for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+    const part = parseInt(it.part, 10);
+    out.questions.push({
+      part: Number.isInteger(part) && part >= 0 && part < nParts ? part : -1,
+      q: q,
+      options: order.map(function (k) { return opts[k]; }),
+      answer: order.indexOf(ans),
+      why: str(it.why, 440)
+    });
+  });
+  return out.questions.length ? out : null;
+}
+
 function cleanOptions(o) {
   const out = {};
   if (!o || typeof o !== 'object') return out;
@@ -440,6 +514,7 @@ module.exports = async function handler(req, res) {
   if (!LIMITS[mode]) return fail(res, 400, 'bad_request');
 
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
+  let studyN = 0;   /* عدد أجزاء الشرح في طلب study_quiz */
   if (mode === 'ask' && body.general === true) {
     if (!question) return fail(res, 400, 'bad_request');
     generalAsk = true;
@@ -503,6 +578,37 @@ module.exports = async function handler(req, res) {
       parts.push({ inlineData: { mimeType: im.mime, data: im.data } });
     });
     keyMaterial = crypto.createHash('sha256').update(imgs.map(function (im) { return im.slot + ':' + im.data; }).join('|')).digest('hex') + '|' + note + '|' + ctx + '|' + aud + extra;
+  } else if (mode === 'study' || mode === 'study_quiz') {
+    /* «ذاكر مع نبتكس»: من 1 لـ 4 صور (الواجهة بتصغّرهم قبل الإرسال) — نفس فحوصات صور التشخيص */
+    const rawImgs = Array.isArray(body.images) ? body.images : [];
+    if (!rawImgs.length || rawImgs.length > MAX_IMAGES) return fail(res, 400, 'bad_request');
+    const imgs = [];
+    for (let i = 0; i < rawImgs.length; i++) {
+      const img = rawImgs[i];
+      if (!img || typeof img.data !== 'string' || typeof img.mime !== 'string') return fail(res, 400, 'bad_request');
+      if (['image/jpeg', 'image/png', 'image/webp'].indexOf(img.mime) === -1 || !/^[A-Za-z0-9+/=]+$/.test(img.data)) return fail(res, 400, 'bad_request');
+      if (img.data.length > MAX_IMAGE_B64) return fail(res, 413, 'too_large');
+      imgs.push({ mime: img.mime, data: img.data });
+    }
+    const note = typeof body.note === 'string' ? body.note.replace(/[\r\n]+/g, ' ').trim().slice(0, MAX_QUESTION_CHARS) : '';
+    let titles = [];
+    let p;
+    if (mode === 'study') {
+      p = 'اشرح المحتوى العلمي في الصور دي للطالب وجهّز له الملخص.';
+    } else {
+      titles = (Array.isArray(body.parts) ? body.parts : []).filter(function (x) { return typeof x === 'string'; })
+        .slice(0, 12).map(function (x) { return x.replace(/[\r\n]+/g, ' ').trim().slice(0, 110); }).filter(Boolean);
+      if (!titles.length) return fail(res, 400, 'bad_request');
+      studyN = titles.length;
+      p = 'اعمل امتحان MCQ على الأجزاء دي (رقم كل جزء يبدأ من 0):\n' + titles.map(function (t, i) { return i + ': ' + t; }).join('\n');
+    }
+    if (note) p += '\nملاحظة الطالب: ' + note;
+    parts = [{ text: p }];
+    imgs.forEach(function (im, i) {
+      parts.push({ text: 'الصورة ' + (i + 1) + ':' });
+      parts.push({ inlineData: { mimeType: im.mime, data: im.data } });
+    });
+    keyMaterial = crypto.createHash('sha256').update(imgs.map(function (im) { return im.data; }).join('|')).digest('hex') + '|' + note + '|' + titles.join('~');
   } else if (mode === 'decide') {
     const kind = body.kind === 'spray' ? 'spray' : (body.kind === 'irr' ? 'irr' : '');
     if (!kind) return fail(res, 400, 'bad_request');
@@ -548,6 +654,10 @@ module.exports = async function handler(req, res) {
   if (aiPtsKind) {
     aiPts = await aiPointsCheck(m[1], uid, aiPtsKind);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
+  } else if (mode === 'study_quiz') {
+    /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
+    const qa = await aiPointsCheck(m[1], uid, 'chat');
+    if (qa.err && qa.err !== 'user_limit') return fail(res, qa.err === 'sub_required' ? 402 : 503, qa.err);
   }
 
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
@@ -560,7 +670,7 @@ module.exports = async function handler(req, res) {
   u.n++; globalUse.n++;
 
   const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
-  if (mode === 'log' || mode === 'diag_q' || mode === 'decide') gen.responseMimeType = 'application/json';
+  if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz') gen.responseMimeType = 'application/json';
   const reqBody = {
     systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : SYSTEMS[generalAsk ? 'general' : mode] }] },
     contents: [{ role: 'user', parts: parts }],
@@ -572,13 +682,14 @@ module.exports = async function handler(req, res) {
   /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
   const order = pickOrder(backends, await nextStart(backends.length));
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
+  const attemptCap = (mode === 'study' || mode === 'study_quiz') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
   for (let bi = 0; bi < order.length; bi++) {
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
     const ctl = new AbortController();
-    const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(ATTEMPT_CAP_MS, remain) : remain);
+    const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
       let r = await callBackend(b, reqBody, ctl.signal);
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
@@ -618,7 +729,7 @@ module.exports = async function handler(req, res) {
   const cand = j && j.candidates && j.candidates[0];
   const out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
-  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q') ? 'blocked' : 'empty'); }
+  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q' || mode === 'study' || mode === 'study_quiz') ? 'blocked' : 'empty'); }
 
   let payload;
   if (mode === 'log') {
@@ -633,6 +744,19 @@ module.exports = async function handler(req, res) {
     const q = sanitizeDiagQ(parsed);
     if (!q) return fail(res, 502, 'blocked');
     payload = { q: q };
+  } else if (mode === 'study') {
+    let parsed = null;
+    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    const st = sanitizeStudy(parsed);
+    if (!st) return fail(res, 502, 'blocked');
+    if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
+    payload = { study: st };
+  } else if (mode === 'study_quiz') {
+    let parsed = null;
+    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    const sq = sanitizeStudyQuiz(parsed, studyN);
+    if (!sq) return fail(res, 502, 'blocked');
+    payload = { quiz: sq };
   } else if (mode === 'decide') {
     let parsed = null;
     try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
