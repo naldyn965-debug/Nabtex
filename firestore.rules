@@ -40,9 +40,8 @@ service cloud.firestore {
       return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
         && get(aiDoc(uid)).data.get('plan', '') == p;
     }
-    function aiTrialOk(uid) {
-      return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(2, 'd') > request.time;
-    }
+    // AI-FREE-PLAN: removed (unused after the trial was dropped — the console flags unused functions). Old (to roll back):
+    //   function aiTrialOk(uid) { return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(2, 'd') > request.time; }
     function aiFarmOk(uid) {
       return exists(fsDoc(uid)) && (
         get(fsDoc(uid)).data.get('trialStartedAt', timestamp.value(0)) + duration.value(7, 'd') > request.time
