@@ -27949,6 +27949,110 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 @keyframes nbf-ping{0%{opacity:.55;box-shadow:0 0 0 0 var(--ai-glow)}100%{opacity:0;box-shadow:0 0 0 14px var(--ai-glow)}}
 </style>
 
+<style id="nb-farm-ai-devices">
+/* ═══════════════════════════════════════════════════════════════
+   Nabtex AI — توافق الأجهزة (موبايل صغير/عادي · موبايل بالعرض · تابلت · كمبيوتر — Android / iOS)
+   • إضافة فقط: كل القواعد تحت .nbai-ov (الواجهة المستقلة) — مفيش أي تأثير على باقي الموقع ولا على الـ JS/الـ IDs/منطق الحصص.
+   • مفيش تغيير على الموبايل العادي (360–767px بالطول): القواعد دي بتشتغل بس في الحالات اللي كانت بتبوظ.
+   • للتراجع: امسح البلوك ده بس.
+═══════════════════════════════════════════════════════════════ */
+
+/* ١) iOS < 15.4 / WebView قديم (مفيهوش dvh): الارتفاع الحقيقي اللي الموقع بيقيسه بدل 100vh (اللي بيشمل شريط المتصفح) */
+@supports not (height:100dvh){
+  .nbai-ov{height:var(--app-height,100vh)}
+}
+/* iOS: يمنع تكبير الخط في الوضع الأفقي + شكل الحقول الافتراضي */
+.nbai-ov{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.nbai-ov :is(.nbai-q,.nbst-askq){-webkit-appearance:none;appearance:none}
+
+/* ٢) شاشات ضيقة جدًا (≤359px): العنوان كان بيتغطى تحت مؤشر الرصيد + زر الترقية */
+@media (max-width:359px){
+  .nbai-ov .nbai-bar{gap:6px}
+  .nbai-ov .nbai-bar-id{gap:7px}
+  .nbai-ov .nbai-bar-ic{width:30px;height:30px;border-radius:10px}
+  .nbai-ov .nbai-bar-ic svg{width:20px;height:20px}
+  .nbai-ov .nbai-bar-t{font-size:14px;overflow:hidden;text-overflow:ellipsis}
+  .nbai-ov .nbai-hq{gap:4px}
+  .nbai-ov .nbq{gap:4px;padding-inline:8px}
+  .nbai-ov .nbq-sp{display:none}
+  .nbai-ov .nbq-tr{inset-inline:8px}
+  .nbai-ov .nbq-up{padding:0 10px}
+  .nbai-ov .nbai-tab{padding:0 4px;font-size:12.5px}
+}
+
+/* ٣) أهداف اللمس: زر الرجوع وزر «رقّي» أصغر من 44px — نوسّع منطقة الضغط فقط (من غير أي تغيير في الشكل أو المسافات) */
+@media (pointer:coarse){
+  .nbai-ov .nbq-up{position:relative}
+  .nbai-ov .nbai-back::after{content:"";position:absolute;inset:-4px;border-radius:50%}
+  .nbai-ov .nbq-up::after{content:"";position:absolute;inset:-6px -2px}
+}
+
+/* ٤) موبايل/تابلت بالعرض (الارتفاع قصير): كان الهيدر + التابات + الاقتراحات + الكتابة بياكلوا الشاشة وبيفضل سطر واحد للمحادثة.
+   بنضغط المسافات ونحوّل كروت الاقتراحات لصف أفقي واحد (نفس الأزرار ونفس الوظيفة). min-width:600px عشان الموبايل العمودي والكيبورد مايتأثروش. */
+@media (max-height:520px) and (min-width:600px){
+  .nbai-ov .nbai-bar{min-height:44px;padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px}
+  .nbai-ov .nbai-bar-s{display:none}
+  .nbai-ov .nbai-tab{height:32px}
+  .nbai-ov .nbai-pane{padding-top:6px}
+  .nbai-ov .nbai-src-b,.nbai-ov .nbai-aud-b{min-height:30px}
+  .nbai-ov .nbai-src-w{margin-bottom:4px}
+  .nbai-ov .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chips{display:flex;overflow-x:auto;padding:2px 2px 6px}
+  .nbai-ov .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip{min-height:36px;padding:0 13px 0 12px;border-radius:999px;white-space:nowrap;gap:7px}
+  .nbai-ov .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip-ic{width:22px;height:22px}
+  .nbai-ov .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-greet:only-child) .nbai-chip-ic svg{width:13px;height:13px}
+  .nbai-ov .nbai-th>.nbai-greet:only-child{margin:auto;padding:2px 4px}
+  .nbai-ov .nbai-gt{font-size:15px}
+  .nbai-ov .nbai-gs{font-size:12.5px;line-height:1.7}
+  .nbai-ov .nbai-f{margin-top:2px}
+  .nbai-ov .nbai-ov-in{padding-bottom:max(4px,env(safe-area-inset-bottom,0px))}
+  /* بعد بداية المحادثة: صف الاقتراحات يتخبّى بالعرض بس (بيرجع في الوضع العمودي أو مع «تحليل جديد») عشان المحادثة ياخدوا المساحة */
+  .nbai-ov .nbai-pane[data-p="ask"]:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbai-chips{display:none}
+  /* الكيبورد مفتوح بالعرض: نخفي التابات واختيار السياق مؤقتًا عشان المحادثة والكتابة ياخدوا المساحة */
+  .nbai-ov:has(.nbai-q:focus) :is(.nbai-tabs,.nbai-src-w){display:none}
+}
+
+/* ٥) تابلت وكمبيوتر (≥768px): كان عمود موبايل 640px صغير في وسط الشاشة — بنكبّره ونرفع الأحجام شوية (الموبايل ما بيتغيّرش) */
+@media (min-width:768px){
+  .nbai-ov .nbai-ov-in{max-width:760px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+  .nbai-ov .nbai-bar{min-height:60px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:12px}
+  .nbai-ov .nbai-bar-ic{width:40px;height:40px;border-radius:13px}
+  .nbai-ov .nbai-bar-t{font-size:17px}
+  .nbai-ov .nbai-bar-s{font-size:12px}
+  .nbai-ov .nbai-back{width:40px;height:40px}
+  .nbai-ov .nbq,.nbai-ov .nbq-up{height:36px;font-size:13px}
+  .nbai-ov .nbai-tab{height:42px;font-size:14px}
+  .nbai-ov .nbai-src-b,.nbai-ov .nbai-aud-b{min-height:40px;font-size:13.5px}
+  .nbai-ov .nbai-m{padding:13px 17px;font-size:15px}
+  .nbai-ov .nbai-m-user{max-width:78%}
+  .nbai-ov .nbai-gt{font-size:20px}
+  .nbai-ov .nbai-gs{font-size:14px}
+  .nbai-ov .nbai-chip{min-height:40px;font-size:13.5px}
+  .nbai-ov .nbai-wz-vf{height:clamp(140px,24dvh,230px)}
+  .nbai-ov .nbai-wz-t{font-size:17px}
+}
+@media (min-width:1200px){
+  .nbai-ov .nbai-ov-in{max-width:840px}
+}
+/* تابلت/كمبيوتر بالعرض الصغير (مثلاً ارتفاع قصير): نرجّع ضغط الهيدر عشان المحادثة ماتضيقش */
+@media (min-width:768px) and (max-height:520px){
+  .nbai-ov .nbai-bar{min-height:44px;padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px}
+  .nbai-ov .nbai-tab{height:32px}
+  .nbai-ov .nbai-src-b,.nbai-ov .nbai-aud-b{min-height:30px}
+  .nbai-ov .nbai-chip{min-height:36px}
+}
+
+/* ٦) كمبيوتر بماوس: شريط تمرير رفيع ظاهر للمحادثة (كان مخفي) + الاقتراحات تلتف بدل صف أفقي مش بيتسحب بالماوس */
+@media (hover:hover) and (pointer:fine){
+  .nbai-ov .nbai-th,.nbai-ov .nbai-pane[data-p="diag"]{scrollbar-width:thin;scrollbar-color:var(--ai-ring) transparent}
+  .nbai-ov .nbai-th::-webkit-scrollbar,.nbai-ov .nbai-pane[data-p="diag"]::-webkit-scrollbar{display:block;width:6px}
+  .nbai-ov .nbai-th::-webkit-scrollbar-thumb,.nbai-ov .nbai-pane[data-p="diag"]::-webkit-scrollbar-thumb{border-radius:6px;background:var(--ai-ring)}
+  .nbai-ov .nbai-th::-webkit-scrollbar-track,.nbai-ov .nbai-pane[data-p="diag"]::-webkit-scrollbar-track{background:transparent}
+}
+@media (hover:hover) and (pointer:fine) and (min-width:768px) and (min-height:700px){
+  .nbai-ov .nbai-chips{flex-wrap:wrap;overflow-x:visible}
+}
+</style>
+
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
