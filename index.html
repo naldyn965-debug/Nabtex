@@ -29389,7 +29389,7 @@ function buildScreen(){
 
   /* ── واجهة القايمة: زر ☰ + اسم الجلسة أعلى الشات، ودرج «الجلسات الأخيرة» ── */
   var SV_BUBBLE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>';
-  var svRow = document.createElement('div'); svRow.className = 'nbsv-row'; svRow.hidden = true;
+  var svRow = document.createElement('div'); svRow.className = 'nbsv-row';
   svRow.innerHTML = '<button type="button" class="nbsv-mb" aria-haspopup="dialog" aria-expanded="false" aria-label="جلسات المذاكرة المحفوظة"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M8 12h12M12 17h8"/></svg></button><div class="nbsv-ct"></div>';
   TH.ask.parentNode.insertBefore(svRow, TH.ask);
   var svMb = svRow.querySelector('.nbsv-mb'), svCt = svRow.querySelector('.nbsv-ct');
@@ -29410,13 +29410,12 @@ function buildScreen(){
   function paintDr(){
     try{
       var items = stItems(), cur = null, i;
-      svRow.hidden = !items.length;
       for(i = 0; i < items.length; i++) if(items[i].id === stCur){ cur = items[i]; break; }
       svCt.textContent = cur ? (cur.title || 'جلسة مذاكرة') : 'جلسة جديدة';
       if(!svDr.hidden) paintList();
     }catch(e){}
   }
-  function openDr(){ if(svRow.hidden) return; paintList(); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
+  function openDr(){ paintList(); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
   function closeDr(noFocus){ if(svDr.hidden) return; svDr.hidden = true; svMb.setAttribute('aria-expanded', 'false'); if(!noFocus) try{ svMb.focus({ preventScroll: true }); }catch(e){} }
   svMb.addEventListener('click', function(){ if(svDr.hidden) openDr(); else closeDr(); });
   svDr.addEventListener('click', function(ev){
