@@ -18350,7 +18350,7 @@ document.addEventListener('click', e => {
         title = 'أنت على باقة البرو'; sub = 'أعلى باقة — نقاطك بتتجدد كل يوم.';
       } else {
         plans = true;
-        if (opt && opt.limit) { title = 'عايز نقاط أكتر؟'; sub = 'نقاطك بتتجدد كل يوم — اختر الباقة المناسبة.'; }
+        if (opt && opt.limit) { title = 'عايز نقاط أكتر؟'; sub = 'نقاطك بتتجدد كل يوم — اختر الباقة المناسبة.'; if (opt.auto) { title = 'خلّصت نقاطك النهاردة'; sub = 'بتتجدد بكرة — أو كمّل دلوقتي بباقة أكتر.'; } }   /* LIMIT-PAYWALL: opt.auto = الشاشة طلعت تلقائيًا عند انتهاء النقاط. للتراجع: امسح الجزء اللي بعد opt.limit بس */
         else if (d && d.state === 'expired') { title = 'انتهت فترة اشتراكك'; sub = 'جدّد باقتك عشان تكمل استخدام المساعد الذكي.'; }
         else if (d && d.state === 'rejected') { title = 'تعذّر تفعيل طلبك الأخير'; sub = 'راجع بيانات الدفع وابعت طلبًا جديدًا.'; }
         else if (aiUI.fam === 'study') { title = 'اشترك في ذاكر مع نبتيكس'; sub = 'اسأل واذاكر بنقاط يومية — ارفع صور محاضراتك وأنا أشرحها وأختبرك فيها.'; }   /* STUDY-SPLIT */
@@ -18396,6 +18396,7 @@ document.addEventListener('click', e => {
       }
       if (opt) o._opt = opt;
       o.innerHTML = '<div class="aipw-box" data-p="' + aiPKey(aiUI.plan) + '">' + aiPaywallHTML(d, o._opt) + '</div>';
+      o.classList.toggle('aipw-lim', !!(o._opt && o._opt.limit));   /* LIMIT-PAYWALL: أنيميشن ناعم لشاشة «النقاط خلصت» (CSS: nb-ai-limit-pw) */
     }
     function aiRefreshPaywall() {
       if (!document.getElementById('ai-pw')) return;
@@ -28320,6 +28321,8 @@ function call(mode, payload, ckExtra, done){
     if(res.ok && (res.j.text || res.j.fields || res.j.q || res.j.study || res.j.quiz || res.j.cards)){
       if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:' + mode + ':' + u.uid, qt); }
       if(aiPt && res.j.points && !res.j.cached) window.AiSub.applyPoints(res.j.points);   /* AI-SUB */
+      /* LAST-POINT-PAYWALL: أول ما آخر نقطة تتصرف (الرصيد يوصل 0) بنفتح شاشة الباقات بعد ما الرد يظهر بحوالي ثانيتين ونص، من غير ما الطالب يحاول تاني. في التشخيص بنستنى النتيجة النهائية (diagnose) مش أسئلة الفحص. للتراجع: امسح السطر ده بس. */
+      if(aiPt && res.j.points && !res.j.cached && mode !== 'diag_q'){ try{ var _pp = window.AiSub.pts(mode === 'diagnose' ? 'diag' : 'chat'); if(_pp && _pp.left <= 0) aiLimitPw(2600); }catch(x){} }
       if(!nc) lsSet(key, { k: ck, at: Date.now(), j: { text: res.j.text, fields: res.j.fields, q: res.j.q } });
       done({ ok: true, j: res.j });
     } else {
@@ -28332,8 +28335,20 @@ function call(mode, payload, ckExtra, done){
 function errText(e){ return e === 'wait' ? 'استنى ثواني قبل الطلب الجاي.' : (MSG[e] || MSG.generic); }
 /* AI-SUB: رسالة الشات/التشخيص عند انتهاء النقاط + فتح شاشة الاشتراك لو الاشتراك خلص */
 function aiFam(){ try{ return (SCR && SCR.classList && SCR.classList.contains('nbai-focus')) ? 'study' : 'ai'; }catch(e){ return 'ai'; } }   /* STUDY-SPLIT: السياق الحالي (وضع المذاكرة = study) */
+/* LIMIT-PAYWALL: لما النقاط اليومية تخلص (محاولة إرسال تطلع user_limit) بنفتح شاشة الباقات بعد لحظة تسمح بقراءة رسالة الشات. مش بتظهر لصاحب أعلى باقة، ولا لو شاشة الباقات/الدفع مفتوحة، ولا أكتر من مرة كل 5 دقايق. للتراجع: امسح الدالة دي وسطر aiLimitPw جوه aiErr. */
+var _lpAt = 0;
+function aiLimitPw(delay){
+  if(!window.AiSub || typeof window.AiSub.paywall !== 'function') return;
+  var fam = aiFam();
+  if(window.AiSub.plan && (window.AiSub.top ? window.AiSub.top(fam) : window.AiSub.plan() === 'plan3')) return;
+  var now = Date.now(); if(now - _lpAt < 300000) return; _lpAt = now;
+  setTimeout(function(){
+    try{ if(document.getElementById('ai-pw') || document.getElementById('ai-co')) return; window.AiSub.paywall({ limit: true, auto: true, fam: fam }); }catch(x){}
+  }, delay || 900);
+}
 function aiErr(e){
   if(e === 'sub_required'){ try{ if(window.AiSub) window.AiSub.paywall({ fam: aiFam() }); }catch(x){} }
+  if(e === 'user_limit'){ try{ aiLimitPw(); }catch(x){} }   /* LIMIT-PAYWALL */
   if(e !== 'user_limit') return errText(e);
   return (window.AiSub && window.AiSub.plan && (window.AiSub.top ? window.AiSub.top(aiFam()) : window.AiSub.plan() === 'plan3')) ? 'خلّصت نقاطك النهاردة — بتتجدد بكرة.' : 'خلّصت نقاطك النهاردة — بتتجدد بكرة. ولو عايز نقاط أكتر دوس «رقّي الباقة».';
 }
@@ -30076,6 +30091,25 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 .nbai-opening{cursor:progress;animation:nbaiOpenPulse .9s ease-in-out infinite!important}
 @keyframes nbaiOpenPulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.nbai-opening{animation:none!important;opacity:.65}}
+</style>
+<style id="nb-ai-limit-pw">
+/* LIMIT-PAYWALL: دخول ناعم لشاشة الباقات لما النقاط تخلص (بس لما تتفتح بـ limit) — الخلفية تظهر بهدوء، الصندوق يطلع بحركة طويلة هادية، وبعدين الأيقونة والعنوان والباقات والزر يدخلوا ورا بعض. للتراجع: امسح الكتلة دي. */
+.aipw.aipw-lim{animation:aipwLimFade .5s ease both}
+.aipw.aipw-lim .aipw-box{animation:aipwLimRise .75s cubic-bezier(.16,1,.3,1) .05s both}
+.aipw.aipw-lim .aipw-ic{animation:aipwLimIc .9s cubic-bezier(.22,1,.36,1) .25s backwards,aipwLimGlow 2.4s ease-in-out 1.2s 2}
+.aipw.aipw-lim .aipw-t,.aipw.aipw-lim .aipw-s,.aipw.aipw-lim .aipw-pl,.aipw.aipw-lim .aipw-cta{animation:aipwLimIn .65s cubic-bezier(.22,1,.36,1) backwards}
+.aipw.aipw-lim .aipw-t{animation-delay:.35s}
+.aipw.aipw-lim .aipw-s{animation-delay:.45s}
+.aipw.aipw-lim .aipw-pl:nth-child(1){animation-delay:.55s}
+.aipw.aipw-lim .aipw-pl:nth-child(2){animation-delay:.67s}
+.aipw.aipw-lim .aipw-pl:nth-child(3){animation-delay:.79s}
+.aipw.aipw-lim .aipw-cta{animation-delay:.95s}
+@keyframes aipwLimFade{from{opacity:0}to{opacity:1}}
+@keyframes aipwLimRise{from{transform:translateY(34px) scale(.985);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwLimIn{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwLimIc{from{transform:scale(.6) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwLimGlow{0%,100%{box-shadow:0 8px 20px rgba(27,107,58,.3),inset 0 1px 0 rgba(255,255,255,.28)}50%{box-shadow:0 8px 28px rgba(27,107,58,.55),0 0 0 8px rgba(27,107,58,.1),inset 0 1px 0 rgba(255,255,255,.28)}}
+@media(prefers-reduced-motion:reduce){.aipw.aipw-lim,.aipw.aipw-lim :is(.aipw-box,.aipw-ic,.aipw-t,.aipw-s,.aipw-pl,.aipw-cta){animation:none!important}}
 </style>
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
