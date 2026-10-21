@@ -29981,6 +29981,8 @@ window.NbFarmAI.open = function(opener){
         openScreen(opener && opener.isConnected ? opener : null);
       };
       var d0 = window.AiSub.peek ? window.AiSub.peek() : null, early = false;
+      /* OPEN-FAST: أول فتح بعد تشغيل التطبيق (لسه مفيش حالة محمّلة) كان بيستنى 4 قراءات من الشبكة قبل ما يفتح أي حاجة. لو المستخدم اتحقق منه قبل كده (له نسخة محفوظة) بنفتح فورًا، والتحقق بيكمل في الخلفية بالظبط زي الفتح الفوري تحت (لو الصلاحية خلصت فعلًا بيقفل ويعرض الاشتراك). للتراجع: امسح السطر ده بس. */
+      if(!d0){ try{ if(localStorage.getItem('nabtex_ai_sub_v1__' + u.uid)) d0 = { hasAccess: true }; }catch(e){} }
       if(d0 && d0.hasAccess){ early = true; try{ enter(); }catch(e){ console.warn('[Nabtex Farm] ai open:', e); } }   /* فتح فوري من الحالة المحمّلة */
       window.AiSub.get(function(d){
         try{
@@ -30028,11 +30030,53 @@ window.NbFarmAI.openStudy = function(opener){
   }catch(e){}
   return window.NbFarmAI.open(opener);
 };
+/* AI-WARMUP: تحميل حالة الاشتراك والرصيد في الخلفية بعد ما الصفحة تهدا (مرة واحدة في الجلسة)، عشان أول ضغطة على «AI» أو «ذاكر مع نبتيكس» تلاقي الحالة جاهزة وتفتح فورًا. للتراجع: امسح الكتلة دي بس. */
+(function(){
+  var done = false;
+  function warm(){
+    try{
+      if(done || !window.AiSub || typeof window.AiSub.get !== 'function' || !user()) return;
+      done = true;
+      if(window.AiSub.peek && window.AiSub.peek()) return;
+      window.AiSub.get(function(){}, false);
+    }catch(e){}
+  }
+  [2500, 7000, 15000].forEach(function(ms){
+    setTimeout(function(){ if(done) return; if(typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 2000 }); else warm(); }, ms);
+  });
+})();
+/* AI-OPEN-FEEDBACK: لو الفتح لسه بيستنى الشبكة بنوضّح إن الضغطة اشتغلت (الزر بينبض) ونتجاهل الضغطات المتكررة لحد ما يفتح (أو تظهر شاشة الاشتراك، أو بعد 12 ثانية). إضافة فقط: بتلفّ open من غير ما تعدّلها. للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-ai-open-fb. */
+(function(){
+  var _o = window.NbFarmAI.open, cur = null, tmr = null, until = 0;
+  function clear(){
+    if(tmr){ clearInterval(tmr); tmr = null; }
+    if(cur){ cur.classList.remove('nbai-opening'); cur.removeAttribute('aria-busy'); cur = null; }
+    until = 0;
+  }
+  window.NbFarmAI.open = function(opener){
+    if(until > Date.now()) return;   /* الفتح شغال — الضغطة التانية بتتجاهل */
+    var r = _o.apply(this, arguments);
+    try{
+      if(!OPEN && user() && opener && opener.classList && !document.querySelector('.aipw')){
+        clear(); cur = opener; until = Date.now() + 12000;
+        opener.classList.add('nbai-opening'); opener.setAttribute('aria-busy', 'true');
+        tmr = setInterval(function(){ if(OPEN || Date.now() > until || document.querySelector('.aipw')) clear(); }, 150);
+      }
+    }catch(e){}
+    return r;
+  };
+})();
 /* AI-SUB: أي تغيير في الرصيد/الاشتراك (استخدام، شراء، يوم جديد) يعيد رسم شريط الرصيد */
 if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onChange(function(){ if(SCR && SCR._repaint){ try{ SCR._repaint(); }catch(e){} } });
 })();
 </script>
 
+<style id="nb-ai-open-fb">
+/* AI-OPEN-FEEDBACK: نبض خفيف على الزر أثناء انتظار فتح Nabtex AI. للتراجع: امسح الكتلة دي + كتلة AI-OPEN-FEEDBACK في الـ JS. */
+.nbai-opening{cursor:progress;animation:nbaiOpenPulse .9s ease-in-out infinite!important}
+@keyframes nbaiOpenPulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media(prefers-reduced-motion:reduce){.nbai-opening{animation:none!important;opacity:.65}}
+</style>
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
 .nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6d28d9 0%,#8b3fe6 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(109,40,217,.7);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
