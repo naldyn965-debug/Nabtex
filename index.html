@@ -28104,27 +28104,48 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbsv-ct{min-width:0;flex:1;font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nbai-ov .nbsv-dr{position:absolute;inset:0;z-index:60}
 .nbai-ov .nbsv-dr[hidden]{display:none}
-.nbai-ov .nbsv-sc{position:absolute;inset:0;background:rgba(0,0,0,.5);animation:nbsv-fade 220ms ease backwards}
-.nbai-ov .nbsv-pn{position:absolute;top:0;bottom:0;inset-inline-start:0;width:min(86%,330px);display:flex;flex-direction:column;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 20px) 12px calc(env(safe-area-inset-bottom,0px) + 16px);background:var(--card);color:var(--ink);border-inline-end:1px solid var(--line2);box-shadow:0 0 40px rgba(0,0,0,.28);animation:nbsv-in 260ms var(--ai-ease) backwards}
-.nbai-ov .nbsv-hd{flex:none;padding:0 8px 14px;font-size:22px;font-weight:800;letter-spacing:.01em}
-.nbai-ov .nbsv-lb{flex:none;padding:6px 10px 8px;font-size:12.5px;font-weight:700;color:var(--slate)}
-.nbai-ov .nbsv-ls{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:4px;padding-bottom:8px}
-.nbai-ov .nbsv-it{flex:none;display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;border:0;border-radius:14px;background:transparent;color:inherit;font:inherit;font-size:15px;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 160ms}
-.nbai-ov .nbsv-it svg{flex:none;opacity:.8}
-.nbai-ov .nbsv-it:active{background:var(--ai-soft)}
-.nbai-ov .nbsv-it.is-on{background:var(--ai-soft2);color:var(--ai-tx);font-weight:700}
+.nbai-ov .nbsv-sc{position:absolute;inset:0;background:rgba(20,10,46,.46);-webkit-backdrop-filter:blur(6px) saturate(1.1);backdrop-filter:blur(6px) saturate(1.1);animation:nbsv-fade 320ms ease backwards}
+.nbai-ov .nbsv-pn{position:absolute;top:0;bottom:0;inset-inline-start:0;width:min(84%,340px);display:flex;flex-direction:column;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 22px) 14px calc(env(safe-area-inset-bottom,0px) + 18px);background:radial-gradient(130% 44% at 50% 0%,var(--ai-soft2) 0%,transparent 62%),var(--card);color:var(--ink);border-start-end-radius:28px;border-end-end-radius:28px;box-shadow:0 0 0 1px var(--ai-soft2),0 24px 60px -12px rgba(30,12,70,.45);animation:nbsv-in 420ms var(--ai-ease) backwards;will-change:transform}
+.nbai-ov .nbsv-hd{flex:none;position:relative;padding:0 10px 20px;font-size:23px;font-weight:800;letter-spacing:.01em;line-height:1.35}
+.nbai-ov .nbsv-hd::after{content:"";position:absolute;inset-inline-start:10px;bottom:7px;width:38px;height:4px;border-radius:4px;background:var(--ai-g)}
+.nbai-ov .nbsv-lb{flex:none;padding:8px 12px 10px;font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--ai-tx)}
+.nbai-ov .nbsv-ls{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px;padding:2px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--ai-soft2)}
+.nbai-ov .nbsv-it{flex:none;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1px solid transparent;border-radius:18px;background:transparent;color:inherit;font:inherit;font-size:14.5px;font-weight:600;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 200ms var(--ai-ease),border-color 200ms,transform 180ms var(--ai-ease)}
+.nbai-ov .nbsv-it svg{flex:none;width:40px;height:40px;padding:10px;border-radius:13px;background:var(--ai-soft);color:var(--ai-tx);opacity:1;transition:background 200ms,color 200ms,box-shadow 200ms}
+.nbai-ov .nbsv-it:active{background:var(--ai-soft);transform:scale(.985)}
+@media (hover:hover){.nbai-ov .nbsv-it:hover{background:var(--ai-soft)}}
+.nbai-ov .nbsv-it.is-on{background:var(--ai-soft);border-color:var(--ai-ring);font-weight:700}
+.nbai-ov .nbsv-it.is-on svg{background:var(--ai-g);color:#fff;box-shadow:0 6px 12px -6px var(--ai-glow)}
 .nbai-ov .nbsv-tx{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
 .nbai-ov .nbsv-t{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
-.nbai-ov .nbsv-d{display:block;font-size:11.5px;font-weight:600;color:var(--slate)}
-.nbai-ov .nbsv-em{padding:18px 12px;font-size:13px;color:var(--slate);text-align:center}
-.nbai-ov .nbsv-new{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;align-self:center;min-height:50px;padding:0 30px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 8px 18px -10px var(--ai-glow)}
-.nbai-ov .nbsv-new:active{transform:scale(.96)}
+.nbai-ov .nbsv-d{display:block;font-size:11.5px;font-weight:600;color:#8b8fa3}
+[data-dark] .nbai-ov .nbsv-d,[data-dark] .nbai-ov .nbsv-em{color:#a3a6bd}
+.nbai-ov .nbsv-em{padding:22px 14px;margin:4px 2px;font-size:13px;color:#8b8fa3;text-align:center;border:1.5px dashed var(--ai-ring);border-radius:18px;background:var(--ai-soft)}
+.nbai-ov .nbsv-new{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;align-self:stretch;min-height:54px;padding:0 24px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 12px 24px -12px var(--ai-glow),inset 0 1px 0 rgba(255,255,255,.22);transition:transform 180ms var(--ai-ease),box-shadow 180ms}
+.nbai-ov .nbsv-new:active{transform:scale(.97)}
 .nbai-ov .nbsv-mb:focus-visible,.nbai-ov .nbsv-it:focus-visible,.nbai-ov .nbsv-new:focus-visible{outline:2px solid var(--ai-tx);outline-offset:2px}
 @keyframes nbsv-in{from{transform:translateX(100%)}to{transform:none}}
+@keyframes nbsv-out{from{transform:none}to{transform:translateX(100%)}}
 @keyframes nbsv-fade{from{opacity:0}to{opacity:1}}
+@keyframes nbsv-fade-out{from{opacity:1}to{opacity:0}}
+@keyframes nbsv-item{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 html[dir="ltr"] .nbai-ov .nbsv-pn{animation-name:nbsv-in-l}
 @keyframes nbsv-in-l{from{transform:translateX(-100%)}to{transform:none}}
-@media (prefers-reduced-motion:reduce){.nbai-ov .nbsv-sc,.nbai-ov .nbsv-pn{animation:none}}
+@keyframes nbsv-out-l{from{transform:none}to{transform:translateX(-100%)}}
+.nbai-ov .nbsv-dr.is-closing{pointer-events:none}
+.nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation:nbsv-out 280ms cubic-bezier(.4,0,.2,1) forwards}
+.nbai-ov .nbsv-dr.is-closing .nbsv-sc{animation:nbsv-fade-out 280ms ease forwards}
+html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
+.nbai-ov .nbsv-dr.is-enter :is(.nbsv-hd,.nbsv-lb,.nbsv-it,.nbsv-em,.nbsv-new){animation:nbsv-item 460ms var(--ai-ease) backwards}
+.nbai-ov .nbsv-dr.is-enter .nbsv-hd{animation-delay:90ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-lb{animation-delay:130ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-it,.nbai-ov .nbsv-dr.is-enter .nbsv-em{animation-delay:340ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-it:nth-child(1),.nbai-ov .nbsv-dr.is-enter .nbsv-em{animation-delay:170ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-it:nth-child(2){animation-delay:215ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-it:nth-child(3){animation-delay:260ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-it:nth-child(4){animation-delay:305ms}
+.nbai-ov .nbsv-dr.is-enter .nbsv-new{animation-delay:260ms}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbsv-sc,.nbai-ov .nbsv-pn,.nbai-ov .nbsv-dr.is-enter :is(.nbsv-hd,.nbsv-lb,.nbsv-it,.nbsv-em,.nbsv-new){animation:none!important}}
 </style>
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
@@ -29483,8 +29504,16 @@ function buildScreen(){
       if(!svDr.hidden) paintList();
     }catch(e){}
   }
-  function openDr(){ cvPull(false); paintList(); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
-  function closeDr(noFocus){ if(svDr.hidden) return; svDr.hidden = true; svMb.setAttribute('aria-expanded', 'false'); if(!noFocus) try{ svMb.focus({ preventScroll: true }); }catch(e){} }
+  var svT = 0;   /* مؤقّت حركة الظهور/الاختفاء */
+  function svEnd(){ clearTimeout(svT); svDr.classList.remove('is-closing', 'is-enter'); svDr.hidden = true; }
+  function openDr(){ clearTimeout(svT); svDr.classList.remove('is-closing'); cvPull(false); paintList(); svDr.classList.add('is-enter'); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); svT = setTimeout(function(){ svDr.classList.remove('is-enter'); }, 1000); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
+  function closeDr(noFocus){
+    if(svDr.hidden || svDr.classList.contains('is-closing')) return;
+    svMb.setAttribute('aria-expanded', 'false'); if(!noFocus) try{ svMb.focus({ preventScroll: true }); }catch(e){}
+    var rm = false; try{ rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
+    if(noFocus || rm){ svEnd(); return; }   /* إغلاق فوري لو الواجهة كلها اتقفلت أو المستخدم مفعّل تقليل الحركة */
+    clearTimeout(svT); svDr.classList.remove('is-enter'); svDr.classList.add('is-closing'); svT = setTimeout(svEnd, 290);
+  }
   svMb.addEventListener('click', function(){ if(svDr.hidden) openDr(); else closeDr(); });
   svDr.addEventListener('click', function(ev){
     var t = ev.target; if(!t || !t.closest) return;
