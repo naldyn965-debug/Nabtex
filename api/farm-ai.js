@@ -623,7 +623,7 @@ module.exports = async function handler(req, res) {
   } else if (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask') {
     /* «ذاكر مع نبتكس»: من 1 لـ 4 صور (الواجهة بتصغّرهم قبل الإرسال) — نفس فحوصات صور التشخيص */
     const rawImgs = Array.isArray(body.images) ? body.images : [];
-    if (!rawImgs.length || rawImgs.length > MAX_STUDY_IMAGES) return fail(res, 400, 'bad_request');
+    if ((!rawImgs.length && mode !== 'study_ask') || rawImgs.length > MAX_STUDY_IMAGES) return fail(res, 400, 'bad_request');   /* STUDY-SAVE: سؤال المتابعة ممكن من غير صور (جلسة مفتوحة على جهاز تاني: الشرح النصي كفاية). للتراجع: رجّع الشرط لـ !rawImgs.length */
     studyImgN = rawImgs.length;
     const imgs = [];
     for (let i = 0; i < rawImgs.length; i++) {
