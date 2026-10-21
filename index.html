@@ -28855,7 +28855,7 @@ function buildScreen(){
     return h;
   }
   function stExplainHtml(S){
-    var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء') + ' من ' + S.imgs.length + (S.imgs.length === 1 ? ' صورة' : ' صور') + '</div>';
+    var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء') + ' من ' + (S.nImg || S.imgs.length) + ((S.nImg || S.imgs.length) === 1 ? ' صورة' : ' صور')   /* STUDY-SAVE */ + '</div>';
     S.parts.forEach(function(p, i){
       var srcs = (p.src || []).filter(function(v){ return v >= 1 && v <= S.imgs.length; });
       h += '<section class="nbst-part"><h4 class="nbst-pt"><span class="nbst-pn">' + (i + 1) + '</span><span>' + esc(p.title) + '</span></h4>' +
@@ -29201,13 +29201,14 @@ function buildScreen(){
   paintSrc();
 
   /* ═════════ STUDY-SAVE:START — حفظ جلسات «ذاكر مع نبتكس» على الجهاز + قايمة «الجلسات الأخيرة» (إضافة) ═════════
-     • الحفظ: محلي بالكامل (IndexedDB) على جهاز الطالب — صفر قراءات/كتابات Firestore وصفر طلبات للخادم · لكل مستخدم لوحده (uid) · آخر 5 جلسات ولمدة 30 يوم.
-     • بيتحفظ: الشرح والملخص والامتحان وتقدّمه وأسئلة المتابعة + الصور (الصور في store منفصل وبتتكتب مرة واحدة، وبتتحمّل بس لما الطالب يفتح الجلسة).
+     • الحفظ المحلي (IndexedDB) على جهاز الطالب · لكل مستخدم لوحده (uid) · **مفيش أي حذف تلقائي**: كل الجلسات بتتحفظ من غير حد للعدد ولا للمدة. بيتحفظ: الشرح والملخص والامتحان وتقدّمه وأسئلة المتابعة + الصور (الصور في store منفصل وبتتحمّل بس لما الطالب يفتح الجلسة). لو المساحة خلصت بنحفظ النص من غير الصور بدل ما نمسح أي حاجة.
+     • المزامنة بين الأجهزة (Firestore، دوك واحد لكل مستخدم: study_sessions/{uid}): النص بس — من غير صور خالص، ونافذة متحرّكة بحجم محدود (CV_BUDGET) لأن الدوك حده 1MB. أي جلسة بتنزل من السحابة بتتحفظ محليًا الأول، فالمحلي هو الأصل ومفيش جلسة بتختفي من جهاز شافها. قراءة واحدة بس لكل فتحة تطبيق (لما الطالب يفتح قايمة الجلسات في وضع «ذاكر»)، والكتابة مؤجّلة 8 ثواني ومجمّعة (merge). محتاجة قاعدة study_sessions في firestore.rules.
      • العرض: زر القايمة (☰) أعلى شات «ذاكر» بيفتح «الجلسات الأخيرة» (جلسة واحدة معروضة في كل مرة) + زر «جلسة جديدة». كل جلسة نودها (DOM) بتتعلّم data-sv وبتتفصل/تتركّب من غير ما حالتها (الامتحان/الأسئلة) تتأثر.
      • لو IndexedDB مش متاح (تصفح خفي مثلًا) الحفظ بيتجاهل بصمت، والقايمة بتعرض جلسات الصفحة الحالية بس.
      • للتراجع: امسح الكتلة دي (STUDY-SAVE:START → STUDY-SAVE:END) + style#nb-study-saved-css + سطور stSave(...) / stBegin() المعلّمة STUDY-SAVE في runStudy / stLoadQuiz / stAsk + stPdfSet() في stPdfHtml / stPdf (رجّعها STUDY.sessions). */
-  var SV_DB = 'nabtex-study-v1', SV_ST = 'sessions', SV_IM = 'imgs', SV_KEEP = 5, SV_TTL = 30 * 864e5, svDb = null, svT = {}, svOff = !window.indexedDB;
-  var SVL = [], SVN = {}, stCur = null, stPend = null;   /* SVL: قايمة الجلسات المحفوظة (بيانات خفيفة) · SVN: عقد DOM للجلسات المش معروضة · stCur: الجلسة المعروضة (null = جلسة جديدة) */
+  var SV_DB = 'nabtex-study-v1', SV_ST = 'sessions', SV_IM = 'imgs', svDb = null, svT = {}, svOff = !window.indexedDB, svPers = false;
+  var SVL = [], SVN = {}, stCur = null, stPend = null;
+  var CV_COL = 'study_sessions', CV_PUSH_MS = 8000, CV_GAP = 10 * 60e3, CV_MAX = 90000, CV_BUDGET = 350000, CVM = {}, CVR = {}, cvQ = {}, cvKnown = {}, cvT = 0, cvLast = 0, cvBusy = false;   /* CVM/CVR: ميتا وبيانات جلسات السحابة (في الذاكرة) · cvQ: جلسات مستنية الرفع · cvKnown: ids الموجودة في السحابة (للحذف) */   /* SVL: قايمة الجلسات المحفوظة (بيانات خفيفة) · SVN: عقد DOM للجلسات المش معروضة · stCur: الجلسة المعروضة (null = جلسة جديدة) */
   function svOpen(cb){
     if(svOff) return cb(null);
     if(svDb) return cb(svDb);
@@ -29221,40 +29222,27 @@ function buildScreen(){
     }catch(e){ fin(null); }
   }
   function svRange(){ return IDBKeyRange.bound(uid0 + ':', uid0 + ':\uffff'); }
-  function svTs(k){ var p = String(k).split(':'); return +p[p.length - 2] || 0; }
-  /* حذف الأقدم من آخر SV_KEEP (أو من SV_TTL)؛ hard = تقليل أقوى لما المساحة تخلص */
-  function svPrune(hard, cb){
-    svOpen(function(db){
-      if(!db){ if(cb) cb(); return; }
-      var ks = [];
-      try{
-        var tx = db.transaction([SV_ST, SV_IM], 'readwrite'), a = tx.objectStore(SV_ST), b = tx.objectStore(SV_IM), keep = hard ? 2 : SV_KEEP;
-        var rq = a.openKeyCursor(svRange(), 'prev');
-        rq.onsuccess = function(){
-          var c = rq.result;
-          if(c){ ks.push(c.key); c.continue(); return; }
-          ks.forEach(function(k, i){ if(i >= keep || Date.now() - svTs(k) > SV_TTL){ a.delete(k); b.delete(k); } });
-        };
-        tx.oncomplete = tx.onerror = tx.onabort = function(){ if(cb){ var f = cb; cb = null; f(); } };
-      }catch(e){ if(cb) cb(); }
-    });
-  }
-  function svPut(S, retried){
+  function svPut(S, retried, textOnly){
     svOpen(function(db){
       if(!db) return;
-      var rec = { k: S.k, uid: uid0, id: S.id, ts: S.ts, upd: Date.now(), title: S.title, note: S.note, parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step };
-      var withImg = !S._svImg, fail = false;
+      var rec = { k: S.k, uid: uid0, id: S.id, ts: S.ts, upd: Date.now(), title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step };
+      var withImg = !S._svImg && !textOnly, fail = false;
       try{
         var tx = db.transaction([SV_ST, SV_IM], 'readwrite');
         tx.objectStore(SV_ST).put(rec);
         if(withImg) tx.objectStore(SV_IM).put({ k: S.k, imgs: S.imgs });
-        tx.oncomplete = function(){ if(withImg) S._svImg = true; if(!retried) svPrune(false); };
+        tx.oncomplete = function(){ if(withImg) S._svImg = true; svKeep(); };
         tx.onerror = tx.onabort = function(){
           if(fail) return; fail = true;
-          var er = tx.error; if(!retried && er && er.name === 'QuotaExceededError') svPrune(true, function(){ svPut(S, true); });
+          var er = tx.error; if(!retried && er && er.name === 'QuotaExceededError') svPut(S, true, true);   /* المساحة خلصت: نحفظ النص من غير الصور بدل ما نمسح أي حاجة */
         };
-      }catch(e){}
+      }catch(e){ if(!retried && e && e.name === 'QuotaExceededError') svPut(S, true, true); }
     });
+  }
+  /* بنطلب من المتصفح يثبّت التخزين (عشان مايمسحوش لوحده لما المساحة تقل) — مرة واحدة بعد أول حفظ */
+  function svKeep(){
+    if(svPers) return; svPers = true;
+    try{ if(navigator.storage && navigator.storage.persist && navigator.storage.persisted) navigator.storage.persisted().then(function(p){ if(!p) navigator.storage.persist(); }).catch(function(){}); }catch(e){}
   }
   /* هوية الجلسة: id (هو نفسه علامة data-sv على عقد الشات) + وقت الإنشاء + مفتاح التخزين */
   function stId(S){
@@ -29264,7 +29252,7 @@ function buildScreen(){
   function stSave(S){
     try{
       if(!S) return;
-      stId(S); paintDr();
+      stId(S); paintDr(); cvQueue(S);
       if(!uid0 || svOff) return;
       clearTimeout(svT[S.id]);
       svT[S.id] = setTimeout(function(){ svPut(S, false); }, 350);
@@ -29281,15 +29269,15 @@ function buildScreen(){
         rq.onsuccess = function(){
           var c = rq.result; if(!c) return;
           var v = c.value;
-          if(out.length < SV_KEEP && v && v.parts && v.parts.length && Date.now() - (v.ts || 0) <= SV_TTL) out.push({ k: v.k, id: v.id, ts: v.ts, title: v.title || (v.parts[0] && v.parts[0].title) || '' });
-          if(out.length < SV_KEEP) c.continue();
+          if(v && v.parts && v.parts.length) out.push({ k: v.k, id: v.id, ts: v.ts, upd: v.upd || 0, title: v.title || (v.parts[0] && v.parts[0].title) || '' });
+          c.continue();
         };
         tx.oncomplete = end; tx.onerror = tx.onabort = end;
       }catch(e){ end(); }
     });
   }
   /* جلسة كاملة (مع الصور) — بتتحمّل لما الطالب يفتحها بس */
-  function svGet(k, cb){
+  function svGet(k, cb, noImgs){
     svOpen(function(db){
       if(!db) return cb(null);
       var rec = null, fin = false;
@@ -29298,6 +29286,7 @@ function buildScreen(){
         var tx = db.transaction([SV_ST, SV_IM], 'readonly'), g = tx.objectStore(SV_ST).get(k);
         g.onsuccess = function(){
           if(!g.result) return; rec = g.result;
+          if(noImgs) return;
           var gi = tx.objectStore(SV_IM).get(k); gi.onsuccess = function(){ rec.imgs = gi.result && gi.result.imgs; };
         };
         tx.oncomplete = end; tx.onerror = tx.onabort = end;
@@ -29306,13 +29295,14 @@ function buildScreen(){
   }
   /* إعادة بناء جلسة محفوظة بنفس شكل الجلسة الحية (رسالة الصور ← الشرح ← الملخص ← الامتحان بتقدّمه) */
   function stBuild(r){
-    var S = { id: r.id, ts: r.ts, k: r.k, _svImg: true, imgs: r.imgs, note: r.note || '', title: r.title || '', parts: r.parts, summary: r.summary || [], quiz: (r.quiz && r.quiz.length) ? r.quiz : null, ans: r.ans || [], step: r.step || 0, revealed: false, el: null };
+    var noImg = !(r.imgs && r.imgs.length);   /* جلسة جاية من السحابة (جهاز تاني): النص بس، من غير صور */
+    var S = { id: r.id, ts: r.ts, k: r.k, _svImg: true, imgs: noImg ? [] : r.imgs, nImg: r.nImg || (noImg ? 0 : r.imgs.length), note: r.note || '', title: r.title || '', parts: r.parts, summary: r.summary || [], quiz: (r.quiz && r.quiz.length) ? r.quiz : null, ans: r.ans || [], step: r.step || 0, revealed: false, el: null };
     S.list = S.imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: String(d).replace(/^data:image\/jpeg;base64,/, '') }; });
     if(S.quiz){ if(S.step > S.quiz.length) S.step = S.quiz.length; S.ans.length = Math.min(S.ans.length, S.step); }   /* إجابة السؤال الحالي اللي ماكملتش تتعاد */
     STUDY.sessions.push(S);
     var nodes = [];
-    var shots = '<div class="nbai-shots">' + S.imgs.map(function(d, i){ return '<figure class="nbai-shot"><img src="' + d + '" alt="صورة ' + (i + 1) + '"><figcaption>صورة ' + (i + 1) + '</figcaption></figure>'; }).join('') + '</div>';
-    nodes.push(mkMsg('user', shots + (S.note ? esc(S.note) : 'اشرحلي الصور دي'), false));
+    var shots = noImg ? '' : '<div class="nbai-shots">' + S.imgs.map(function(d, i){ return '<figure class="nbai-shot"><img src="' + d + '" alt="صورة ' + (i + 1) + '"><figcaption>صورة ' + (i + 1) + '</figcaption></figure>'; }).join('') + '</div>';
+    nodes.push(mkMsg('user', shots + (S.note ? esc(S.note) : 'اشرحلي الصور دي') + (noImg && S.nImg ? '<div class="nbst-meta">' + S.nImg + (S.nImg === 1 ? ' صورة' : ' صور') + ' — متخزنة على الجهاز اللي رفعتها منه</div>' : ''), false));
     var tmp = document.createElement('div'); tmp.innerHTML = stExplainHtml(S); stDir(tmp);
     var em = mkMsg('ai', tmp.innerHTML, false); em.classList.add('nbst-msg'); nodes.push(em);
     [].forEach.call(em.querySelectorAll('.nbst-ask'), function(ab){   /* أسئلة المتابعة اللي اتسألت قبل كده */
@@ -29330,8 +29320,8 @@ function buildScreen(){
     if(S.summary.length){ var sm = mkMsg('ai', stSummaryHtml(S), false); sm.classList.add('nbst-msg'); stDir(sm); nodes.push(sm); }
     if(S.quiz){
       var box = document.createElement('div'); box.className = 'nbst-quiz'; box._s = S; S.el = box; renderQuiz(S); nodes.push(box);
-    } else {   /* الامتحان ماكانش اتحمّل قبل القفل: زر يحمّله (من غير نقطة جديدة) */
-      var ty = mkMsg('ai', esc('الامتحان ماتحمّلش قبل ما تقفل.') + '<br><button type="button" class="nbst-btn" data-nbst="retryq">حمّل الامتحان</button>', false); ty.classList.add('err'); ty._s = S; nodes.push(ty);
+    } else {   /* الامتحان ماكانش اتحمّل قبل القفل: زر يحمّله (من غير نقطة جديدة) — لو الصور مش على الجهاز ده بنوضّح بدل الزر */
+      var ty = mkMsg('ai', noImg ? esc('الامتحان ماتحمّلش قبل ما الجلسة تتقفل. افتحها على الجهاز اللي رفعت منه الصور عشان يتحمّل.') : esc('الامتحان ماتحمّلش قبل ما تقفل.') + '<br><button type="button" class="nbst-btn" data-nbst="retryq">حمّل الامتحان</button>', false); ty.classList.add('err'); ty._s = S; nodes.push(ty);
     }
     nodes.forEach(function(n){ n.setAttribute('data-sv', S.id); });
     return nodes;
@@ -29366,9 +29356,12 @@ function buildScreen(){
     if(busy){ show('استنى لحد ما الشرح يخلص وبعدها افتح جلسة تانية.', true); return; }
     closeDr(); if(id === stCur) return;
     if(SVN[id]){ show('', false); stShow(id); return; }
-    var it = SVL.filter(function(r){ return r.id === id; })[0]; if(!it) return;
-    svGet(it.k, function(r){
-      if(!r || !r.parts || !r.imgs || !r.imgs.length){ SVL = SVL.filter(function(x){ return x.id !== id; }); paintDr(); show('الجلسة دي مش موجودة على الجهاز.', true); return; }
+    var it = stItems().filter(function(r){ return r.id === id; })[0]; if(!it) return;
+    var lk = it.k || (uid0 + ':' + it.ts + ':' + id);
+    svGet(lk, function(r){
+      var c = CVR[id];   /* لو نسخة السحابة أحدث (اتعدّلت من جهاز تاني) بناخد النص منها ونفضّل صور الجهاز ده */
+      if(c && (!r || (c.u || 0) > (r.upd || 0))){ try{ var j = JSON.parse(c.d); j.k = lk; j.upd = c.u; j.imgs = r && r.imgs; r = j; }catch(e){} }
+      if(!r || !r.parts || !r.parts.length){ SVL = SVL.filter(function(x){ return x.id !== id; }); delete CVM[id]; delete CVR[id]; paintDr(); show('الجلسة دي مش موجودة.', true); return; }
       try{ show('', false); SVN[id] = stBuild(r); stShow(id); }catch(e){ console.warn('[Nabtex study] open:', e && e.message); show('ماقدرتش أفتح الجلسة دي.', true); }
     });
   }
@@ -29378,14 +29371,91 @@ function buildScreen(){
   }
   function stItems(){
     var m = {}, out = [], k;
-    SVL.forEach(function(r){ m[r.id] = { id: r.id, ts: r.ts, title: r.title }; });
-    STUDY.sessions.forEach(function(S){ if(S.id) m[S.id] = { id: S.id, ts: S.ts, title: S.title || (S.parts && S.parts[0] && S.parts[0].title) || '' }; });
+    SVL.forEach(function(r){ m[r.id] = { id: r.id, ts: r.ts, k: r.k, upd: r.upd || 0, title: r.title }; });
+    for(k in CVM){ if(!m[k] || (CVM[k].upd || 0) > (m[k].upd || 0)) m[k] = { id: k, ts: CVM[k].ts, k: CVM[k].k, upd: CVM[k].upd || 0, title: CVM[k].title }; }
+    STUDY.sessions.forEach(function(S){ if(S.id) m[S.id] = { id: S.id, ts: S.ts, k: S.k, upd: Date.now(), title: S.title || (S.parts && S.parts[0] && S.parts[0].title) || '' }; });
     for(k in m) out.push(m[k]);
     out.sort(function(a, b){ return b.ts - a.ts; });
-    return out.slice(0, SV_KEEP);
+    return out;
   }
   /* PDF الجلسة المعروضة بس (قبل كده كانت كل جلسات الصفحة) */
   function stPdfSet(){ var c = stCur && STUDY.sessions.filter(function(S){ return S.id === stCur; })[0]; return c ? [c] : STUDY.sessions.slice(); }
+
+  /* ── مزامنة السحابة (نص بس، دوك واحد لكل مستخدم) ──
+     study_sessions/{uid} = { items: { s_<id>: { ts, u, t, d } }, upd } حيث d = JSON نصي للجلسة من غير صور (حد 150KB للجلسة).
+     القراءة: مرة واحدة كل CV_GAP (أول ما الطالب يفتح القايمة)، والكتابة مؤجّلة CV_PUSH_MS ومجمّعة بـ set+merge (من غير قراءة قبلها). */
+  function cvOn(){ try{ return !!(uid0 && typeof db !== 'undefined' && db && typeof firebase !== 'undefined' && firebase.firestore && navigator.onLine !== false); }catch(e){ return false; } }
+  function cvItem(S){
+    try{
+      var d = JSON.stringify({ id: S.id, ts: S.ts, title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step });
+      return d.length > CV_MAX ? null : { ts: S.ts, u: Date.now(), t: String(S.title || '').slice(0, 120), d: d };
+    }catch(e){ return null; }
+  }
+  function cvQueue(S){ if(!S || !S.id || !uid0) return; cvQ[S.id] = S; cvSoon(); }
+  function cvSoon(){ if(!cvOn()) return; clearTimeout(cvT); cvT = setTimeout(cvPush, CV_PUSH_MS); }
+  function cvPush(){
+    clearTimeout(cvT); cvT = 0;
+    if(!cvOn()) return;
+    var FV = firebase.firestore.FieldValue, items = {}, keep = {}, cache = {}, n = 0, used = 0, snap = cvQ, ids = Object.keys(snap), gone = [];
+    ids.forEach(function(id){ var it = cvItem(snap[id]); if(it) cache[id] = it; });
+    stItems().forEach(function(x){   /* نافذة السحابة: الأحدث أولًا لحد ما حجم الدوك يوصل CV_BUDGET (الأقدم بيفضل محليًا) */
+      var sz = cache[x.id] ? cache[x.id].d.length : (CVR[x.id] ? CVR[x.id].d.length : -1);
+      if(sz < 0 || used + sz > CV_BUDGET) return;
+      used += sz; keep[x.id] = 1;
+    });
+    ids.forEach(function(id){ if(keep[id] && cache[id]){ items['s_' + id] = cache[id]; n++; } });
+    Object.keys(cvKnown).forEach(function(id){ if(!keep[id]){ items['s_' + id] = FV.delete(); gone.push(id); n++; } });   /* برّه النافذة: بيتشال من السحابة بس (النسخة المحلية فاضلة) */
+    cvQ = {};
+    if(!n) return;
+    db.collection(CV_COL).doc(uid0).set({ items: items, upd: FV.serverTimestamp() }, { merge: true }).then(function(){
+      ids.forEach(function(id){ if(items['s_' + id]) cvKnown[id] = 1; });
+      gone.forEach(function(id){ delete cvKnown[id]; delete CVM[id]; delete CVR[id]; });
+    }).catch(function(e){ ids.forEach(function(id){ if(!cvQ[id]) cvQ[id] = snap[id]; }); console.warn('[Nabtex study] cloud push:', e && e.message); });   /* فشل: يتعاد مع أول حفظ جاي */
+  }
+  function cvPull(force){
+    if(!cvOn() || cvBusy) return;
+    if(!force && cvLast && Date.now() - cvLast < CV_GAP) return;
+    cvBusy = true;
+    db.collection(CV_COL).doc(uid0).get().then(function(sn){
+      cvBusy = false; cvLast = Date.now();
+      cvMerge((sn && sn.exists && sn.data() && sn.data().items) || {});
+    }).catch(function(e){ cvBusy = false; console.warn('[Nabtex study] cloud pull:', e && e.message); });
+  }
+  /* أي جلسة جاية من السحابة (مش عندنا أو أحدث) بتتحفظ محليًا الأول (نص بس، مع الاحتفاظ بصور الجهاز لو موجودة) — وبعدها بس يبقى مسموح تتشال من السحابة */
+  function cvStore(rows, done){
+    if(!rows.length) return done();
+    svOpen(function(db){
+      if(!db) return done();
+      var fin = false; function end(){ if(fin) return; fin = true; done(); }
+      try{
+        var tx = db.transaction(SV_ST, 'readwrite'), os = tx.objectStore(SV_ST);
+        rows.forEach(function(r){ os.put(r); });
+        tx.oncomplete = tx.onerror = tx.onabort = end;
+      }catch(e){ end(); }
+    });
+  }
+  function cvMerge(items){
+    var fresh = [], loaded = {}, have = {};
+    CVM = {}; CVR = {};
+    STUDY.sessions.forEach(function(S){ if(S.id) loaded[S.id] = 1; });
+    SVL.forEach(function(r){ have[r.id] = r; });
+    Object.keys(items).forEach(function(key){
+      var c = items[key], id = key.slice(2), rec;
+      if(key.indexOf('s_') !== 0 || !c || typeof c.d !== 'string') return;
+      cvKnown[id] = 1;
+      CVR[id] = c; CVM[id] = { id: id, ts: c.ts, upd: c.u || 0, title: c.t || '', k: uid0 + ':' + c.ts + ':' + id };
+      if(loaded[id] || (have[id] && (c.u || 0) <= (have[id].upd || 0) + 1000)) return;
+      try{ rec = JSON.parse(c.d); rec.k = CVM[id].k; rec.uid = uid0; rec.upd = c.u || 0; fresh.push(rec); }catch(e){}
+    });
+    SVL.forEach(function(r){   /* محلي مش في السحابة (أو أحدث منها): يترفع */
+      var c = CVM[r.id];
+      if(!c || (r.upd || 0) > (c.upd || 0) + 1000) svGet(r.k, function(rec){ if(rec){ cvQ[r.id] = rec; cvSoon(); } }, true);
+    });
+    cvStore(fresh, function(){
+      if(fresh.length) svList(function(rows){ SVL = rows || []; paintDr(); }); else paintDr();
+      if(Object.keys(cvKnown).length) cvSoon();   /* بعد ما كل حاجة اتحفظت محليًا: ضبط نافذة السحابة */
+    });
+  }
 
   /* ── واجهة القايمة: زر ☰ + اسم الجلسة أعلى الشات، ودرج «الجلسات الأخيرة» ── */
   var SV_BUBBLE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>';
@@ -29394,7 +29464,7 @@ function buildScreen(){
   TH.ask.parentNode.insertBefore(svRow, TH.ask);
   var svMb = svRow.querySelector('.nbsv-mb'), svCt = svRow.querySelector('.nbsv-ct');
   var svDr = document.createElement('div'); svDr.className = 'nbsv-dr'; svDr.hidden = true;
-  svDr.innerHTML = '<div class="nbsv-sc"></div><aside class="nbsv-pn" role="dialog" aria-label="جلسات المذاكرة"><div class="nbsv-hd">ذاكر مع نبتكس</div><div class="nbsv-lb">الجلسات الأخيرة</div><div class="nbsv-ls" role="list"></div>' +
+  svDr.innerHTML = '<div class="nbsv-sc"></div><aside class="nbsv-pn" role="dialog" aria-label="جلسات المذاكرة"><div class="nbsv-hd">ذاكر مع نبتكس</div><div class="nbsv-lb">جلسات المذاكرة</div><div class="nbsv-ls" role="list"></div>' +
     '<button type="button" class="nbsv-new"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>جلسة جديدة</span></button></aside>';
   card.appendChild(svDr);
   var svLs = svDr.querySelector('.nbsv-ls');
@@ -29415,7 +29485,7 @@ function buildScreen(){
       if(!svDr.hidden) paintList();
     }catch(e){}
   }
-  function openDr(){ paintList(); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
+  function openDr(){ cvPull(false); paintList(); svDr.hidden = false; svMb.setAttribute('aria-expanded', 'true'); var f = svDr.querySelector('.nbsv-it.is-on') || svDr.querySelector('.nbsv-new'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
   function closeDr(noFocus){ if(svDr.hidden) return; svDr.hidden = true; svMb.setAttribute('aria-expanded', 'false'); if(!noFocus) try{ svMb.focus({ preventScroll: true }); }catch(e){} }
   svMb.addEventListener('click', function(){ if(svDr.hidden) openDr(); else closeDr(); });
   svDr.addEventListener('click', function(ev){
@@ -29430,7 +29500,8 @@ function buildScreen(){
   card.addEventListener('click', function(ev){
     try{ var t = ev.target, bx = t && t.closest && t.closest('.nbst-quiz'); if(bx && bx._s && (t.closest('.nbst-o') || t.closest('[data-nbst]'))) stSave(bx._s); }catch(e){}
   }, true);
-  svList(function(rows){ SVL = rows || []; paintDr(); });
+  svList(function(rows){ SVL = rows || []; paintDr(); if(stView === 'study') cvPull(false); });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden' && cvT && card.isConnected) cvPush(); });   /* الطالب سابك: ارفع اللي مستني دلوقتي */
   /* ═════════ STUDY-SAVE:END ═════════ */
 
   function setBusy(btn, on, label){ busy = on; btn.classList.toggle('is-busy', !!on); btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;

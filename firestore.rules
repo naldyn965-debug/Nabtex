@@ -563,6 +563,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── STUDY SESSIONS (ذاكر مع نبتكس) — مزامنة آخر الجلسات (نص بس، من غير صور) بين أجهزة نفس الحساب ──
+    // دوك واحد لكل مستخدم: study_sessions/{uid} = { items: { s_<id>: {ts,u,t,d} }, upd }. صاحبه بس يقرأ/يكتب، وحد أقصى 30 جلسة في الدوك (والكود بيكتفي بنافذة صغيرة بحجم محدود).
+    match /study_sessions/{uid} {
+      allow read:   if isSelf(uid);
+      allow create, update: if isSelf(uid)
+          && request.resource.data.keys().hasOnly(['items', 'upd'])
+          && (!('items' in request.resource.data) || (request.resource.data.items is map && request.resource.data.items.size() <= 30));
+      allow delete: if isSelf(uid);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
