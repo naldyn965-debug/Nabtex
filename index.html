@@ -27898,9 +27898,31 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbst-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-top:8px;padding:0 18px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink);font-size:12.5px;font-weight:800;cursor:pointer}
 .nbst-res .nbst-btn{margin-top:0}
 .nbst-end{align-self:stretch;display:flex;justify-content:center;padding:2px 0 8px}
-.nbst-pdf{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 22px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease)}
-.nbst-pdf:active{transform:scale(.97)}
-.nbai-ov :is(.nbai-st-add,.nbst-x,.nbst-o,.nbst-next,.nbst-btn,.nbst-pdf):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+.nbst-pdf,.nbst-cbtn{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 22px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease)}
+.nbst-pdf:active,.nbst-cbtn:active{transform:scale(.97)}
+.nbst-fc{align-self:stretch;animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbai-ov .nbst-fcprog{height:5px;border-radius:5px;background:var(--ai-soft2);overflow:hidden;margin:10px 2px 12px}
+.nbai-ov .nbst-fcprog i{display:block;height:100%;border-radius:5px;background:var(--ai-g);transition:width 360ms var(--ai-ease)}
+.nbai-ov .nbst-fcn{margin:0 4px 8px;font-size:12px;font-weight:700;color:var(--ai-tx)}
+.nbai-ov .nbst-fcc{display:block;width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:center;cursor:pointer;perspective:1100px;-webkit-tap-highlight-color:transparent;animation:nbux-rise 320ms var(--ai-ease) backwards}
+.nbai-ov .nbst-fci{display:grid;transform-style:preserve-3d;transition:transform 560ms var(--ai-ease)}
+.nbai-ov .nbst-fci.is-flip{transform:rotateY(180deg)}
+.nbai-ov .nbst-fcf,.nbai-ov .nbst-fcb{grid-area:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;padding:24px 20px;border-radius:24px;box-sizing:border-box;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.nbai-ov .nbst-fcf{background:var(--card);border:1px solid var(--ai-ring);box-shadow:0 14px 28px -20px var(--ai-glow)}
+.nbai-ov .nbst-fcb{background:var(--ai-g);color:#fff;transform:rotateY(180deg);box-shadow:0 16px 30px -18px var(--ai-glow)}
+.nbai-ov .nbst-fcl{padding:3px 12px;border-radius:999px;background:var(--ai-soft);font-size:11.5px;font-weight:800;color:var(--ai-tx)}
+.nbai-ov .nbst-fcb .nbst-fcl{background:rgba(255,255,255,.2);color:#fff}
+.nbai-ov .nbst-fct{display:block;font-size:16.5px;font-weight:800;line-height:1.8}
+.nbai-ov .nbst-fcb .nbst-fct{font-size:15.5px;font-weight:700}
+.nbai-ov .nbst-fch{font-size:11.5px;font-weight:600;color:#8b8fa3}
+.nbai-ov .nbst-fcact{display:flex;gap:10px;margin-top:12px}
+.nbai-ov .nbst-fcact[hidden]{display:none}
+.nbai-ov .nbst-fcact button{flex:1;min-height:46px;border-radius:999px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 180ms var(--ai-ease)}
+.nbai-ov .nbst-fcact button:active{transform:scale(.97)}
+.nbai-ov .nbst-fcm{border:1px solid var(--ai-ring);background:var(--card);color:var(--ink)}
+.nbai-ov .nbst-fck{border:0;background:var(--ai-g);color:#fff;box-shadow:0 10px 20px -12px var(--ai-glow)}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbst-fci,.nbai-ov .nbst-fcc,.nbai-ov .nbst-fcprog i{transition:none;animation:none}}
+.nbai-ov :is(.nbai-st-add,.nbst-x,.nbst-o,.nbst-next,.nbst-btn,.nbst-pdf,.nbst-cbtn,.nbst-fcc,.nbst-fcact button):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
 /* ظهور شرح «ذاكر» بالتتابع (العنوان ← جزء جزء ← الملخص ← الامتحان) — opacity/transform فقط ومتوقف مع prefers-reduced-motion. للتراجع: امسح الأسطر دي + دالتي stSeq/stFollow واستدعاء stSeq في runStudy. */
 @keyframes nbst-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
 .nbai-ov .nbst-in{animation:nbst-in 560ms var(--ai-ease) backwards}
@@ -28161,7 +28183,7 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 (function(){
 'use strict';
 
-var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15 };   /* لازم تساوي LIMITS في api/farm-ai.js */
+var LIM = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15, study_cards: 8 };   /* لازم تساوي LIMITS في api/farm-ai.js */
 var PTS = { analyze: 1, ask: 1, diag_q: 1, diagnose: 1, study: 1 };   /* AI-SUB: الأوضاع اللي نقاطها من اشتراك المساعد (window.AiSub) مش من LIM المحلي — «ذاكر مع نبتكس» (study) نقطة شات، وامتحانها study_quiz من غير نقطة */
 var COOLDOWN = 20000, TTL = 6*3600*1000, DAYS = 30, TMO = 60000, IMG_MAX = 1280, SHOT_MAX = 340*1024, BLUR_MIN = 35;   /* القديم (للتراجع): IMG_MAX = 800 — الدقة اترفعت لـ 1280px عشان تفاصيل الأعراض (بقع/حشرات صغيرة) تفضل واضحة، وSHOT_MAX سقف حجم كل صورة، وBLUR_MIN حد الوضوح للتحذير */
 
@@ -28272,7 +28294,7 @@ function call(mode, payload, ckExtra, done){
   if(!u) return done({ err: 'login' });
   if(!navigator.onLine) return done({ err: 'offline' });
   var ck = hash(mode + '|' + ckExtra), key = 'nbai:r:' + mode + ':' + u.uid;
-  var nc = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
+  var nc = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
   var saved = nc ? null : lsGet(key);
   if(saved && saved.k === ck && Date.now() - saved.at < TTL) return done({ ok: true, j: saved.j, cached: true });
   var qt = quotaGet(u.uid, mode);
@@ -28292,7 +28314,7 @@ function call(mode, payload, ckExtra, done){
     return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j || {} }; });
   }).then(function(res){
     clearTimeout(timer);
-    if(res.ok && (res.j.text || res.j.fields || res.j.q || res.j.study || res.j.quiz)){
+    if(res.ok && (res.j.text || res.j.fields || res.j.q || res.j.study || res.j.quiz || res.j.cards)){
       if(!res.j.cached){ qt.n++; qt.last = Date.now(); lsSet('nbai:q:' + mode + ':' + u.uid, qt); }
       if(aiPt && res.j.points && !res.j.cached) window.AiSub.applyPoints(res.j.points);   /* AI-SUB */
       if(!nc) lsSet(key, { k: ck, at: Date.now(), j: { text: res.j.text, fields: res.j.fields, q: res.j.q } });
@@ -28796,10 +28818,14 @@ function buildScreen(){
   }
   function stBusy(on){ busy = on; card.querySelector('.nbai-go-ask').disabled = on; paintStrip(); }
   function stScrollTo(el){ var sc = TH.ask; if(el && sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
-  function stPlaceEnd(){   /* زر PDF دايمًا في آخر المحادثة */
+  function stPlaceEnd(){   /* زر «كروت المراجعة» في آخر المحادثة (بيختفي لما الكروت تتولّد) — زر تحميل PDF اتشال */
     var o = TH.ask.querySelector('.nbst-end'); if(o && o.parentNode) o.parentNode.removeChild(o);
-    if(!STUDY.sessions.length) return;
-    /* تم إزالة زر «تحميل المحادثة PDF» من واجهة «ذاكر مع نبتكس» — لا يُنشأ أي عنصر هنا بعد الآن */
+    if(!STUDY.sessions.length || busy) return;
+    var S = stCur && STUDY.sessions.filter(function(x){ return x.id === stCur; })[0];
+    if(!S || !S.parts || !S.parts.length || (S.cards && S.cards.length)) return;
+    var d = document.createElement('div'); d.className = 'nbst-end';
+    d.innerHTML = '<button type="button" class="nbst-cbtn" data-nbst="cards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="14" height="14" rx="3"/><path d="M7 3.5h10.5A3.5 3.5 0 0 1 21 7v10.5"/></svg><span>كروت المراجعة</span></button>';
+    TH.ask.appendChild(d);
   }
 
   /* اختيار الصور: حتى 4 في كل مرة (بتتصغّر في المتصفح بدقة أعلى عشان النصوص تفضل مقروءة) */
@@ -28947,6 +28973,62 @@ function buildScreen(){
         if(ty.parentNode) ty.parentNode.replaceChild(box, ty); else TH.ask.appendChild(box);
         renderQuiz(S); stScrollTo(box);
       }
+      stPlaceEnd(); paintFoot();
+    });
+  }
+
+  /* ── كروت المراجعة (Flashcards): بتتولّد من نص الشرح بطلب واحد (من غير صور ومن غير نقطة تانية)، بتتحفظ مع الجلسة، والتقدم جوّه الكروت في الذاكرة بس.
+        للتراجع: امسح الكتلة دي + سطر زر cards في stPlaceEnd + أفرع cards/retryc/cflip في مستمع الضغط + حقل cards في svPut/cvItem/stBuild + css .nbst-fc* + فرع study_cards في الخادم. ── */
+  function renderCards(S){
+    var el = S.cel, cd = S.cards, n = cd ? cd.length : 0, h = '', cs, i;
+    if(!el || !n) return;
+    cs = S.cs || (S.cs = { deck: cd.map(function(_, k){ return k; }), pos: 0, known: {} });
+    var dn = cs.deck.length;
+    if(cs.pos >= dn){
+      var kn = 0; for(i = 0; i < n; i++) if(cs.known[i]) kn++;
+      var left = n - kn;
+      h = '<div class="acad-result nbst-res"><div class="acad-result-score">' + Math.round(kn / n * 100) + '%</div><div class="acad-result-lbl">عرفت ' + kn + ' من ' + n + ' كارت</div><div class="acad-result-msg">' + (left ? 'راجع الكروت الصعبة وهتثبّتها بسرعة.' : 'ممتاز! عرفت كل الكروت.') + '</div>' +
+        '<div class="acad-result-acts">' + (left ? '<button type="button" class="nbst-btn" data-nbst="crev">راجع الصعبة (' + left + ')</button>' : '') + '<button type="button" class="nbst-btn" data-nbst="crestart">ابدأ من الأول</button></div></div>';
+    } else {
+      var c = cd[cs.deck[cs.pos]], pn = S.parts[c.part] ? S.parts[c.part].title : '';
+      h = '<div class="acad-quiz-hdr"><div class="acad-quiz-title">كروت المراجعة</div><div class="acad-quiz-sub">' + dn + ' كارت من الشرح</div></div>' +
+        '<div class="nbst-fcprog"><i style="width:' + Math.round(cs.pos / dn * 100) + '%"></i></div>' +
+        '<div class="nbst-fcn">كارت ' + (cs.pos + 1) + ' من ' + dn + (pn ? ' · ' + esc(pn) : '') + '</div>' +
+        '<button type="button" class="nbst-fcc" data-nbst="cflip" aria-label="اقلب الكارت"><span class="nbst-fci"><span class="nbst-fcf"><span class="nbst-fcl">السؤال</span><span class="nbst-fct">' + esc(c.f) + '</span><span class="nbst-fch">اضغط لقلب الكارت</span></span>' +
+        '<span class="nbst-fcb"><span class="nbst-fcl">الإجابة</span><span class="nbst-fct">' + esc(c.b) + '</span></span></span></button>' +
+        '<div class="nbst-fcact" hidden><button type="button" class="nbst-fcm" data-nbst="cmiss">محتاج مراجعة</button><button type="button" class="nbst-fck" data-nbst="cknow">عرفتها</button></div>';
+    }
+    el.innerHTML = h; stDir(el, '.nbst-fct,.nbst-fcn,.acad-result-lbl');
+  }
+  function stCardAct(S, act, box){
+    var cs = S.cs; if(!cs) return;
+    if(act === 'cflip'){
+      var ci = box.querySelector('.nbst-fci'), ac = box.querySelector('.nbst-fcact');
+      if(ci) ci.classList.toggle('is-flip'); if(ac) ac.hidden = false; return;
+    }
+    if(act === 'cknow' || act === 'cmiss'){ cs.known[cs.deck[cs.pos]] = (act === 'cknow'); cs.pos++; }
+    else if(act === 'crev'){ var m = []; S.cards.forEach(function(_, k){ if(!cs.known[k]) m.push(k); }); if(!m.length) return; cs.deck = m; cs.pos = 0; }
+    else if(act === 'crestart'){ S.cs = null; }
+    else return;
+    renderCards(S); stScrollTo(box);
+  }
+  function stLoadCards(S, prev){
+    if(busy || !S || !S.parts || !S.parts.length) return;
+    if(prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    var oe = TH.ask.querySelector('.nbst-end'); if(oe && oe.parentNode) oe.parentNode.removeChild(oe);
+    stBusy(true); paintFoot();
+    var ty = typing('study'); ty.classList.add('nbst-qdots');
+    call('study_cards', { parts: S.parts.map(function(p){ return { title: p.title, explain: p.explain, example: p.example || '' }; }) }, (S.id || '') + '|' + S.parts.length, function(r){
+      stBusy(false);
+      if(!card.isConnected) return;
+      if(!r.ok || !r.j.cards || !r.j.cards.length){
+        ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(aiErr(r.err)) + '<br><button type="button" class="nbst-btn" data-nbst="retryc">جرّب تجهيز الكروت تاني</button>'; ty._s = S;
+        paintFoot(); return;
+      }
+      S.cards = r.j.cards; S.cs = null; stSave(S);
+      var box = document.createElement('div'); box.className = 'nbst-fc'; box._s = S; S.cel = box;
+      if(ty.parentNode) ty.parentNode.replaceChild(box, ty); else TH.ask.appendChild(box);
+      renderCards(S); stScrollTo(box);
       stPlaceEnd(); paintFoot();
     });
   }
@@ -29166,6 +29248,9 @@ function buildScreen(){
     if(act === 'next'){ if(!SS || !SS.revealed) return; SS.step++; SS.revealed = false; renderQuiz(SS); stScrollTo(bx); }
     else if(act === 'again'){ if(!SS) return; SS.ans = []; SS.step = 0; SS.revealed = false; renderQuiz(SS); stScrollTo(bx); }
     else if(act === 'retryq'){ var eb = a.closest('.nbai-m'); if(!busy && eb && eb._s) stLoadQuiz(eb._s, eb); }
+    else if(act === 'cards'){ var cS = stCur && STUDY.sessions.filter(function(x){ return x.id === stCur; })[0]; if(!busy && cS) stLoadCards(cS); }
+    else if(act === 'retryc'){ var ec = a.closest('.nbai-m'); if(!busy && ec && ec._s) stLoadCards(ec._s, ec); }
+    else if(act === 'cflip' || act === 'cknow' || act === 'cmiss' || act === 'crev' || act === 'crestart'){ var fb = a.closest('.nbst-fc'); if(fb && fb._s) stCardAct(fb._s, act, fb); }
     else if(act === 'pdf') stPdf();
     else if(act === 'askopen'){
       var ab = a.closest('.nbst-ask'), af = ab && ab.querySelector('.nbst-askf'); if(!af) return;
@@ -29244,7 +29329,7 @@ function buildScreen(){
   function svPut(S, retried, textOnly){
     svOpen(function(db){
       if(!db) return;
-      var rec = { k: S.k, uid: uid0, id: S.id, ts: S.ts, upd: Date.now(), title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step };
+      var rec = { k: S.k, uid: uid0, id: S.id, ts: S.ts, upd: Date.now(), title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step, cards: S.cards || null };
       var withImg = !S._svImg && !textOnly, fail = false;
       try{
         var tx = db.transaction([SV_ST, SV_IM], 'readwrite');
@@ -29316,6 +29401,8 @@ function buildScreen(){
   function stBuild(r){
     var noImg = !(r.imgs && r.imgs.length);   /* جلسة جاية من السحابة (جهاز تاني): النص بس، من غير صور */
     var S = { id: r.id, ts: r.ts, k: r.k, _svImg: true, imgs: noImg ? [] : r.imgs, nImg: r.nImg || (noImg ? 0 : r.imgs.length), note: r.note || '', title: r.title || '', parts: r.parts, summary: r.summary || [], quiz: (r.quiz && r.quiz.length) ? r.quiz : null, ans: r.ans || [], step: r.step || 0, revealed: false, el: null };
+    S.cards = (Array.isArray(r.cards) ? r.cards.filter(function(c){ return c && typeof c.f === 'string' && typeof c.b === 'string'; }) : []);
+    if(!S.cards.length) S.cards = null;
     S.list = S.imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: String(d).replace(/^data:image\/jpeg;base64,/, '') }; });
     if(S.quiz){ if(S.step > S.quiz.length) S.step = S.quiz.length; S.ans.length = Math.min(S.ans.length, S.step); }   /* إجابة السؤال الحالي اللي ماكملتش تتعاد */
     STUDY.sessions.push(S);
@@ -29342,6 +29429,7 @@ function buildScreen(){
     } else {   /* الامتحان ماكانش اتحمّل قبل القفل: زر يحمّله (من غير نقطة جديدة) — لو الصور مش على الجهاز ده بنوضّح بدل الزر */
       var ty = mkMsg('ai', noImg ? esc('الامتحان ماتحمّلش قبل ما الجلسة تتقفل. افتحها على الجهاز اللي رفعت منه الصور عشان يتحمّل.') : esc('الامتحان ماتحمّلش قبل ما تقفل.') + '<br><button type="button" class="nbst-btn" data-nbst="retryq">حمّل الامتحان</button>', false); ty.classList.add('err'); ty._s = S; nodes.push(ty);
     }
+    if(S.cards){ var cbx = document.createElement('div'); cbx.className = 'nbst-fc'; cbx._s = S; S.cel = cbx; renderCards(S); nodes.push(cbx); }
     nodes.forEach(function(n){ n.setAttribute('data-sv', S.id); });
     return nodes;
   }
@@ -29406,7 +29494,7 @@ function buildScreen(){
   function cvOn(){ try{ return !!(uid0 && typeof db !== 'undefined' && db && typeof firebase !== 'undefined' && firebase.firestore && navigator.onLine !== false); }catch(e){ return false; } }
   function cvItem(S){
     try{
-      var d = JSON.stringify({ id: S.id, ts: S.ts, title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step });
+      var d = JSON.stringify({ id: S.id, ts: S.ts, title: S.title, note: S.note, nImg: S.nImg != null ? S.nImg : (S.imgs ? S.imgs.length : 0), parts: S.parts, summary: S.summary, quiz: S.quiz, ans: S.ans, step: S.step, cards: S.cards || null });
       return d.length > CV_MAX ? null : { ts: S.ts, u: Date.now(), t: String(S.title || '').slice(0, 120), d: d };
     }catch(e){ return null; }
   }
