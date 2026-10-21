@@ -36,7 +36,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15, study_cards: 8 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 4400 * 1024;   /* كان 600KB لصورة واحدة ثم 2400KB لحد 4 صور — دلوقتي «ذاكر مع نبتكس» لحد 12 صورة (≈300KB لكل واحدة) وده تحت حد Vercel */
@@ -48,7 +48,7 @@ const MAX_IMAGES = 4;
 const MAX_STUDY_IMAGES = 12;   /* «ذاكر مع نبتكس»: السقف المطلق؛ الحد الفعلي حسب الباقة في aiAllowance (imgs): مجاني/Basic 4 · Plus 8 · Pro 12 */
 /* وصف كل زاوية تصوير (الواجهة بتبعت slot رقم بس، والنص ثابت هنا — مفيش نص حر من العميل بيدخل البرومبت) */
 const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه الأمامي — ورقة أو ثمرة أو غيرها)', 'الجزء المصاب من الخلف (الوجه الخلفي — زي ظهر الورقة)', 'الساق أو الثمرة (لقطة قريبة)', 'النبات كامل من بعيد'];
-const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 9000, study_quiz: 4500, study_ask: 1800 };
+const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 14000, study_quiz: 4500, study_ask: 1800, study_cards: 4500 };
 const STUDY_ATTEMPT_MS = 45000;   /* «ذاكر مع نبتكس»: الرد أطول فمحاولة الـ backend الواحدة بتاخد وقت أكبر من ATTEMPT_CAP_MS (الميزانية الكلية UPSTREAM_TIMEOUT_MS زي ما هي) */
 const MAX_WX_CHARS = 5500;
 const MAX_CTX_CHARS = 1500;
@@ -273,16 +273,16 @@ SYSTEMS.study = [
   'أنت «مذاكر نبتكس»: مدرّس خبير في الزراعة وعلوم الحياة (نبات، وقاية نباتات، تربة، إنتاج حيواني، أغذية، ميكروبيولوجي، كيمياء حيوية، وراثة، تقنيات حيوية…) وكمان الكيمياء بكل فروعها (عامة، عضوية، لاعضوية، تحليلية، فيزيائية) بتذاكر مع طالب مصري من صور ملازمه أو سلايدات المحاضرة أو صفحات الكتاب أو ملاحظاته بخط اليد. المحتوى ممكن يكون عربي أو إنجليزي أو خليط.',
   'اللغة: لو النص الأساسي في الصور إنجليزي اكتب كل حاجة (title وparts بكل حقولها وsummary) بالإنجليزية المبسطة جدًا برضه وبنفس الطريقة والتفصيل والترتيب بالظبط: جمل قصيرة وكلمات سهلة كأنك بتشرح لصاحبك اللي أول مرة يسمع الموضوع، وأي مصطلح علمي أول ما يظهر اشرحه في نص جملة بكلام بسيط، والتنبيه يبدأ بـ "Note:" بدل «ملحوظة:». لو النص الأساسي عربي أو خليط غالبه عربي كمّل بالعامية المصرية زي ما هو مطلوب تحت.',
   'الكيمياء والمعادلات (لو المحتوى فيه مواد كيميائية أو صيغ أو معادلات): اكتب الصيغ والمعادلات بالرموز العلمية المنظمة وبرموز يونيكود الصحيحة بدل الكتابة الملخبطة: أرقام سفلية ₀₁₂₃₄₅₆₇₈₉ (H₂O وCO₂ وCa(OH)₂)، وشحنات وأسس علوية (SO₄²⁻ وFe³⁺ وNa⁺)، والأسهم → ⇌ ↑ ↓ ودرجة الحرارة °C. كل معادلة في سطر مستقل. وازن المعادلة وراجع توازن الذرات والشحنات قبل ما تكتبها، ولو المعادلة في الصورة مش موزونة أو فيها خطأ نبّه بجملة تبدأ بـ «ملحوظة:». وأول ما تظهر معادلة أو تفاعل اشرح بكلام بسيط إيه اللي بيتفاعل وإيه الناتج والظروف (حرارة أو عامل حفاز أو وسط) وليه بيحصل. للمركبات العضوية اذكر الاسم والمجموعة الفعالة والصيغة، ولو الصيغة البنائية مرسومة صفها بالكلام بدقة (الذرات والروابط والحلقات) ولا تخمّن لو مش واضحة. الأرقام العادية تفضل بالإنجليزية (0-9) والسفلي والعلوي بيونيكود جوه الصيغ بس.',
-  'المسائل الحسابية (لو الصور فيها مسألة أو مثال محلول أو بيانات رقمية): اشرح الحل خطوة بخطوة جوه explain بالترتيب: المعطيات ← المطلوب ← القانون بالرموز ← التعويض بالأرقام والوحدات ← الناتج النهائي بوحدته، مع تفسير بسيط لكل خطوة. استخدم أرقام الصورة بالظبط. ولو محتاج ثابت قياسي أو كتلة ذرية استخدم القيمة المعروفة وقول صراحة إنها قيمة قياسية مش من الصورة. راجع الحساب مرتين، ولو معلومة لازمة ناقصة قول كده ولا تخترعها. يجوز لجزء المسألة الحسابية يوصل شرحه لحد 250 كلمة. وقاعدة عدم إضافة جرعات أو أرقام مبيدات وأسمدة من عندك تفضل سارية.',
+  'المسائل الحسابية (لو الصور فيها مسألة أو مثال محلول أو بيانات رقمية): اشرح الحل خطوة بخطوة جوه explain بالترتيب: المعطيات ← المطلوب ← القانون بالرموز ← التعويض بالأرقام والوحدات ← الناتج النهائي بوحدته، مع تفسير بسيط لكل خطوة. استخدم أرقام الصورة بالظبط. ولو محتاج ثابت قياسي أو كتلة ذرية استخدم القيمة المعروفة وقول صراحة إنها قيمة قياسية مش من الصورة. راجع الحساب مرتين، ولو معلومة لازمة ناقصة قول كده ولا تخترعها. جزء المسألة الحسابية ياخد من الشرح اللي يحتاجه عشان كل خطوة تتفهم. وقاعدة عدم إضافة جرعات أو أرقام مبيدات وأسمدة من عندك تفضل سارية.',
   'هتستلم من 1 إلى 12 صورة (قبل كل صورة سطر برقمها) وأحيانًا ملاحظة من الطالب. مهمتك: شرح وافٍ ودقيق لكل جزئية علمية موجودة فيها + ملخص.',
   'القراءة: اقرأ كل صورة بعناية فائقة قبل ما تكتب: كل العناوين والفقرات والجداول والمعادلات والرسومات والأسهم والأشكال والتعليقات الجانبية. استخرج كل جزئية وكل معلومة ولا تتجاهل أي حاجة ظاهرة. لو كلمة أو رقم مش واضح في الصورة قول ده صراحة في الشرح (مثلًا «الرقم ده مش واضح في الصورة») ولا تخمّن، ولا تخترع معلومات مش موجودة في الصور. لو أكتر من صورة بتتكلم عن نفس الموضوع اربطهم ببعض.',
   'التقسيم: قسّم المحتوى لأجزاء (parts) من 1 إلى 12 حسب الفكرة العلمية مش حسب عدد الصور، ورتّبها بترتيب ظهورها. لو المحتوى قليل أو بسيط اكتفي بعدد أجزاء أقل. لكل جزء اكتب في src أرقام الصور اللي جاي منها.',
   'لكل جزء:',
   '• title: عنوان قصير وواضح (والمصطلح الإنجليزي بين قوسين لو موجود في الصورة).',
-  '• explain: شرح وافٍ لكل اللي في الصورة عن الجزء ده (من 90 إلى 170 كلمة) بالعامية المصرية المبسطة جدًا، كأنك بتشرح لصاحبك اللي أول مرة يسمع الموضوع: جمل قصيرة، من غير فصحى ثقيلة ولا تعقيد، وأي مصطلح علمي أول ما يظهر اشرحه في نص جملة بكلام بسيط. المصطلحات العلمية والأسماء اللاتينية والإنجليزية بتفضل زي ما هي في الصورة. غطّي التعريفات والأسباب والخطوات والأرقام والتصنيفات والفروق المهمة، واشرح ليه وإزاي حاجة بتحصل مش بس إعادة كلام الصورة. تقدر تبرز المصطلحات الأساسية بالخط العريض (**هكذا**).',
-  '• example: مثال تبسيطي واحد (من 30 إلى 70 كلمة) من الحياة اليومية أو من الحقل بيوضّح الفكرة بتشبيه سهل، بالعامية برضه.',
+  '• explain: شرح وافٍ لكل اللي في الصورة عن الجزء ده بالعامية المصرية المبسطة جدًا، وبالطول اللي الطالب محتاجه عشان يفهم الجزء ده فهم كامل وعميق من غير حشو ولا اختصار مخلّ (الجزء البسيط يخلص في جمل قليلة، والجزء الصعب أو المهم ياخد راحته)، وبأسلوب سلس وقوي، كأنك بتشرح لصاحبك اللي أول مرة يسمع الموضوع: جمل قصيرة، من غير فصحى ثقيلة ولا تعقيد، وأي مصطلح علمي أول ما يظهر اشرحه في نص جملة بكلام بسيط. المصطلحات العلمية والأسماء اللاتينية والإنجليزية بتفضل زي ما هي في الصورة. غطّي التعريفات والأسباب والخطوات والأرقام والتصنيفات والفروق المهمة، واشرح ليه وإزاي حاجة بتحصل مش بس إعادة كلام الصورة. تقدر تبرز المصطلحات الأساسية بالخط العريض (**هكذا**).',
+  '• example: مثال تبسيطي واحد وقصير من الحياة اليومية أو من الحقل بيوضّح الفكرة بتشبيه سهل، بالعامية برضه.',
   '• compare (اختياري جدًا): جدول مقارنة صغير لتثبيت المعلومة، بس لو الجزء ده فيه فعلًا حاجتين أو أكتر بيتقارنوا ببعض في الصور أو بيتفرقوا عن بعض (أنواع، تصنيفات، فروق بين مفهومين، مراحل متشابهة، مقارنة بين طرق أو مركبات أو أمراض أو آفات). لو مفيش مقارنة حقيقية ما تحطش compare خالص ولا تفتعل جدول، وأغلب الأجزاء مش هتحتاج. الشكل: {"title":"عنوان قصير للمقارنة","cols":["العنصر الأول","العنصر التاني"],"rows":[["وجه المقارنة","قيمة","قيمة"]]}. cols هي أسماء الحاجات المتقارنة (من 2 إلى 4)، وكل صف في rows فيه وجه المقارنة أول خانة وبعده قيمة لكل عمود (يعني عدد خانات الصف = عدد cols + 1)، من 2 إلى 7 صفوف، والخانة جملة قصيرة أو كلمات قليلة (حد أقصى 12 كلمة). اعتمد على معلومات الصور بس ولا تخترع فروق مش فيها، وبنفس لغة الشرح، وممنوع الإيموجي، والأرقام بالإنجليزية. الجدول بيكمّل الشرح مش بيحل محله.',
-  'الملخص: summary من 5 إلى 12 نقطة قصيرة (جملة واحدة لكل نقطة بالعامية) بتلخّص كل الصور بالترتيب، وفيها أهم المعلومات والأرقام اللي لازم الطالب يحفظها.',
+  'الملخص: summary نقاط قصيرة (جملة واحدة لكل نقطة بالعامية) بتلخّص كل الصور بالترتيب، وفيها أهم المعلومات والأرقام اللي لازم الطالب يحفظها.',
   'title: عنوان قصير للمادة اللي في الصور (حد أقصى 10 كلمات).',
   'لو أي معلومة في الصورة غلط علميًا بشكل واضح نبّه عليها بلطف جوه الشرح بجملة تبدأ بـ «ملحوظة:». ولو الصور مش واضحة خالص أو مفيهاش محتوى دراسي تقدر تشرحه ارجع {"readable":false} بس.',
   'رجّع JSON فقط بالشكل: {"readable":true,"title":"...","parts":[{"title":"...","src":[1],"explain":"...","example":"...","compare":{"title":"...","cols":["...","..."],"rows":[["...","...","..."]]}}],"summary":["..."]} (حقل compare اختياري: احذفه من الأجزاء اللي مفيهاش مقارنة حقيقية)',
@@ -315,6 +315,21 @@ SYSTEMS.study_ask = [
   'الدقة: اعتمد على الصور والشرح الأصلي. لو اللي الطالب بيسأل عنه مش موجود في الصور وانت متأكد منه علميًا جاوب بوضوح وقول إنه معلومة إضافية مش من الصور. لو مش متأكد قول كده ولا تخترع. لو لقيت إن الشرح الأصلي كان فيه غلط صححه بلطف في جملة تبدأ بـ «تصحيح:». ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
   'لو سؤال الطالب مالوش علاقة بالجزء أو بالمادة العلمية اللي في الصور، رد في جملة أو اتنين إنك هنا عشان تساعده يفهم الجزء ده وارجع له بسؤال عنه.',
   'الطول: من 60 إلى 180 كلمة. نص عادي بس (مش JSON ومن غير عناوين)، ويجوز الخط العريض للمصطلحات الأساسية (**هكذا**). ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). اختم بجملة قصيرة تسأله لو لسه في نقطة مش واضحة.',
+  INJECTION
+].join('\n');
+
+/* «ذاكر مع نبتكس» — كروت المراجعة (إضافة): study_cards بيحوّل أجزاء الشرح (نص بس، من غير صور) لكروت سؤال/إجابة قصيرة للمراجعة السريعة، من غير نقطة تانية (زي الامتحان) وحده اليومي LIMITS.study_cards.
+   للتراجع: امسح SYSTEMS.study_cards و sanitizeStudyCards وفرع study_cards جوه handler وسطور study_cards في LIMITS / OUT_TOKENS. */
+SYSTEMS.study_cards = [
+  'أنت «مذاكر نبتكس»: مدرّس خبير في الزراعة وعلوم الحياة والكيمياء، بتجهّز كروت مراجعة (Flashcards) لطالب مصري من أجزاء شرح اتشرحتله قبل كده.',
+  'هتستلم قائمة الأجزاء (كل جزء له رقم يبدأ من 0 وعنوان وشرح ومثال أحيانًا). مرجعك الوحيد هو النص ده: ما تضيفش معلومة أو رقم مش موجود فيه ولا تخترع.',
+  'كل كارت بيثبّت فكرة واحدة بس. f هو وجه الكارت: سؤال قصير أو مصطلح أو موقف بيخلّي الطالب يفتكر. b هو ظهر الكارت: الإجابة الدقيقة المباشرة في جملة أو جملتين بالكتير، من غير حشو. ركّز على اللي الطالب لازم يحفظه ويفهمه (تعريفات، أسباب، خطوات، تصنيفات، فروق، أرقام مهمة، قوانين) ومتكررش نفس الفكرة في كارتين.',
+  'عدد الكروت يتناسب مع غنى المحتوى: الجزء الغني بالمعلومات ياخد كروت أكتر والجزء البسيط ياخد كروت أقل، وكل الأجزاء لازم يبقى ليها كارت على الأقل. أقصى حد إجمالي 40 كارت. ما تفتعلش كروت عشان تكتّر العدد.',
+  'اللغة: لو النص إنجليزي اكتب f وb بإنجليزية بسيطة وسلسة. غير كده اكتب بالعربية الفصحى المبسطة السلسة: جمل قصيرة وواضحة بدون عامية وبدون ألفاظ مهجورة، والمصطلحات العلمية تفضل زي ما هي.',
+  'الكيمياء: اكتب الصيغ والمعادلات برموز يونيكود (H₂O وSO₄²⁻ و→ ⇌) وراجع التوازن قبل ما تكتب أي معادلة. المسائل الحسابية: لو كارت عن قانون أو خطوة حل استخدم نفس القيم والخطوات اللي في الشرح بالظبط.',
+  'part: رقم الجزء اللي الكارت طالع منه.',
+  'رجّع JSON فقط بالشكل: {"cards":[{"part":0,"f":"...","b":"..."}]}',
+  'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
   INJECTION
 ].join('\n');
 
@@ -472,11 +487,11 @@ function sanitizeStudy(raw) {
   if (raw.readable === false) return { unreadable: true };
   const out = { title: str(raw.title, 90), parts: [], summary: [] };
   (Array.isArray(raw.parts) ? raw.parts : []).slice(0, 12).forEach(function (p) {
-    const title = str(p && p.title, 110), explain = str(p && p.explain, 2000);
+    const title = str(p && p.title, 110), explain = str(p && p.explain, 6000);
     if (!title || !explain) return;
     const src = (Array.isArray(p.src) ? p.src : []).map(function (v) { return parseInt(v, 10); })
       .filter(function (v) { return Number.isInteger(v) && v >= 1 && v <= MAX_STUDY_IMAGES; }).slice(0, MAX_STUDY_IMAGES);
-    const part = { title: title, explain: explain, example: str(p.example, 800), src: src };
+    const part = { title: title, explain: explain, example: str(p.example, 2000), src: src };
     /* compare (اختياري): جدول مقارنة صغير — 2..4 أعمدة × 2..7 صفوف، وأي جدول ناقص/ملخبط بيتشال من غير ما يأثر على الشرح */
     const c = p.compare;
     if (c && typeof c === 'object') {
@@ -493,7 +508,7 @@ function sanitizeStudy(raw) {
     }
     out.parts.push(part);
   });
-  (Array.isArray(raw.summary) ? raw.summary : []).slice(0, 14).forEach(function (x) { const t = str(x, 280); if (t) out.summary.push(t); });
+  (Array.isArray(raw.summary) ? raw.summary : []).slice(0, 14).forEach(function (x) { const t = str(x, 400); if (t) out.summary.push(t); });
   if (!out.parts.length) return null;
   return out;
 }
@@ -520,6 +535,24 @@ function sanitizeStudyQuiz(raw, nParts) {
     });
   });
   return out.questions.length ? out : null;
+}
+
+/* تنظيف رد كروت المراجعة: كارت = وجه وظهر نصوص قصيرة + رقم الجزء، من غير تكرار، وحد أقصى 40 */
+function sanitizeStudyCards(raw, nParts) {
+  if (!raw || typeof raw !== 'object') return null;
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+  const out = [], seen = new Set();
+  (Array.isArray(raw.cards) ? raw.cards : []).slice(0, 48).forEach(function (it) {
+    if (out.length >= 40) return;
+    const f = str(it && it.f, 240), b = str(it && it.b, 520);
+    if (!f || !b) return;
+    const k = f.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    const part = parseInt(it.part, 10);
+    out.push({ part: Number.isInteger(part) && part >= 0 && part < nParts ? part : -1, f: f, b: b });
+  });
+  return out.length ? { cards: out } : null;
 }
 
 function cleanOptions(o) {
@@ -666,6 +699,19 @@ module.exports = async function handler(req, res) {
       parts.push({ inlineData: { mimeType: im.mime, data: im.data } });
     });
     keyMaterial = crypto.createHash('sha256').update(imgs.map(function (im) { return im.data; }).join('|')).digest('hex') + '|' + note + '|' + titles.join('~') + '|' + askKey;
+  } else if (mode === 'study_cards') {
+    /* كروت المراجعة: نص الأجزاء بس (من غير صور) — حد أقصى 12 جزء */
+    const cl = function (x, n) { return typeof x === 'string' ? x.replace(/[\r\n]+/g, ' ').trim().slice(0, n) : ''; };
+    const items = (Array.isArray(body.parts) ? body.parts : []).slice(0, 12).map(function (x) {
+      if (!x || typeof x !== 'object' || Array.isArray(x)) return null;
+      return { t: cl(x.title, 110), e: typeof x.explain === 'string' ? x.explain.trim().slice(0, 6000) : '', x: typeof x.example === 'string' ? x.example.trim().slice(0, 2000) : '' };
+    }).filter(function (x) { return x && x.t && x.e; });
+    if (!items.length) return fail(res, 400, 'bad_request');
+    studyN = items.length;
+    const pc = 'اعمل كروت مراجعة من الأجزاء دي (رقم كل جزء يبدأ من 0):\n\n' + items.map(function (x, i) { return i + ': ' + x.t + '\nالشرح: ' + x.e + (x.x ? '\nالمثال: ' + x.x : ''); }).join('\n\n');
+    if (pc.length > 90000) return fail(res, 413, 'too_large');
+    parts = [{ text: pc }];
+    keyMaterial = pc;
   } else if (mode === 'decide') {
     const kind = body.kind === 'spray' ? 'spray' : (body.kind === 'irr' ? 'irr' : '');
     if (!kind) return fail(res, 400, 'bad_request');
@@ -711,7 +757,7 @@ module.exports = async function handler(req, res) {
   if (aiPtsKind) {
     aiPts = await aiPointsCheck(m[1], uid, aiPtsKind);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
-  } else if (mode === 'study_quiz' || mode === 'study_ask') {   /* study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
+  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') {   /* study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
     stQa = await aiPointsCheck(m[1], uid, 'chat');
     if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
@@ -732,7 +778,7 @@ module.exports = async function handler(req, res) {
   u.n++; globalUse.n++;
 
   const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
-  if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz') gen.responseMimeType = 'application/json';
+  if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') gen.responseMimeType = 'application/json';
   const reqBody = {
     systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : SYSTEMS[generalAsk ? 'general' : mode] }] },
     contents: [{ role: 'user', parts: parts }],
@@ -744,7 +790,7 @@ module.exports = async function handler(req, res) {
   /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
   const order = pickOrder(backends, await nextStart(backends.length));
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
-  const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
+  const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
   for (let bi = 0; bi < order.length; bi++) {
     const b = order[bi];
@@ -791,7 +837,7 @@ module.exports = async function handler(req, res) {
   const cand = j && j.candidates && j.candidates[0];
   const out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
-  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q' || mode === 'study' || mode === 'study_quiz') ? 'blocked' : 'empty'); }
+  if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') ? 'blocked' : 'empty'); }
 
   let payload;
   if (mode === 'log') {
@@ -819,6 +865,12 @@ module.exports = async function handler(req, res) {
     const sq = sanitizeStudyQuiz(parsed, studyN);
     if (!sq) return fail(res, 502, 'blocked');
     payload = { quiz: sq };
+  } else if (mode === 'study_cards') {
+    let parsed = null;
+    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    const sc = sanitizeStudyCards(parsed, studyN);
+    if (!sc) return fail(res, 502, 'blocked');
+    payload = { cards: sc.cards };
   } else if (mode === 'decide') {
     let parsed = null;
     try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
