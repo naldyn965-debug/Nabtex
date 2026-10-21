@@ -28117,7 +28117,7 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbsv-t{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
 .nbai-ov .nbsv-d{display:block;font-size:11.5px;font-weight:600;color:var(--slate)}
 .nbai-ov .nbsv-em{padding:18px 12px;font-size:13px;color:var(--slate);text-align:center}
-.nbai-ov .nbsv-new{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;align-self:center;min-height:50px;padding:0 30px;border:0;border-radius:999px;background:var(--ink);color:var(--card);font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+.nbai-ov .nbsv-new{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;align-self:center;min-height:50px;padding:0 30px;border:0;border-radius:999px;background:var(--ai-g);color:#fff;font:inherit;font-size:15.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 8px 18px -10px var(--ai-glow)}
 .nbai-ov .nbsv-new:active{transform:scale(.96)}
 .nbai-ov .nbsv-mb:focus-visible,.nbai-ov .nbsv-it:focus-visible,.nbai-ov .nbsv-new:focus-visible{outline:2px solid var(--ai-tx);outline-offset:2px}
 @keyframes nbsv-in{from{transform:translateX(100%)}to{transform:none}}
@@ -28778,9 +28778,7 @@ function buildScreen(){
   function stPlaceEnd(){   /* زر PDF دايمًا في آخر المحادثة */
     var o = TH.ask.querySelector('.nbst-end'); if(o && o.parentNode) o.parentNode.removeChild(o);
     if(!STUDY.sessions.length) return;
-    var d = document.createElement('div'); d.className = 'nbst-end';
-    d.innerHTML = '<button type="button" class="nbst-pdf" data-nbst="pdf">' + IC_DL + '<span>تحميل المحادثة PDF</span></button>';
-    TH.ask.appendChild(d);
+    /* تم إزالة زر «تحميل المحادثة PDF» من واجهة «ذاكر مع نبتكس» — لا يُنشأ أي عنصر هنا بعد الآن */
   }
 
   /* اختيار الصور: حتى 4 في كل مرة (بتتصغّر في المتصفح بدقة أعلى عشان النصوص تفضل مقروءة) */
