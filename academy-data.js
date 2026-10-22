@@ -976,7 +976,7 @@ if(w.xp-w.spent<CRED)throw new Error('nocredit');
 var m=mut(w,'reward_redemption',f);
 tx.set(eR,m.e);tx.set(wR,m.t);tx.set(uR,{paidCourses:firebase.firestore.FieldValue.arrayUnion(c)},{merge:true})})})})
 }).then(function(){T('تم الاستبدال — الدورة متاحة الآن','ok');NBXP.render('nbxp-card')})
-.catch(function(x){if(btn)btn.disabled=false;T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':'تعذر الاستبدال — حاول مجدداً','err')})}
+.catch(function(x){if(btn)btn.disabled=false;if(!(x&&(x.message==='owned'||x.message==='nocredit')))console.warn('[XP] redeem',(x&&x.code)||x);T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':'تعذر الاستبدال ('+String((x&&x.code)||(x&&x.message)||'error').replace(/[<>&"]/g,'').slice(0,60)+') — حاول مجدداً','err')})}
 }})();
 window.NBXP=NBXP;
 
