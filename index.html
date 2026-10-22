@@ -28209,6 +28209,10 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbdc-bar{position:relative;height:6px;margin-top:10px;border-radius:3px;background:var(--ai-soft2);overflow:hidden}
 .nbdc-bar[hidden]{display:none}
 .nbdc-bar i{position:absolute;top:0;bottom:0;min-width:3px;border-radius:3px;transition:inset-inline-start 320ms var(--ai-ease),width 320ms var(--ai-ease)}
+.nbdc-bar.is-seg{display:flex;gap:4px;height:7px;background:none;overflow:visible}
+.nbdc-bar.is-seg i{position:static;flex:1;min-width:0;border-radius:4px;background:var(--ai-soft2);transition:background 300ms var(--ai-ease)}
+.nbdc-bar.is-seg i.is-done{background:var(--wz-ok)}
+.nbdc-bar.is-seg i.is-cur{background:var(--ai-g)}
 .nbdc-bd{background:var(--wz-ok)}
 .nbdc-bc{background:var(--ai-g);opacity:.92;box-shadow:0 0 0 1px var(--card)}
 
@@ -28217,12 +28221,15 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbdc-th{padding:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ai-ease)}
 .nbdc-th:active{transform:scale(.95)}
 
-.nbdc-act{display:flex;align-items:stretch;gap:8px;margin-top:10px}
-.nbdc-st{flex:none;display:grid;place-items:center;width:46px;min-height:48px;padding:0;border:1px solid var(--line2);border-radius:16px;background:var(--card);color:var(--ink2);cursor:pointer;transition:transform 160ms var(--ai-ease),opacity 180ms,background 180ms}
-.nbdc-st:active{transform:scale(.94)}
-.nbdc-st[disabled]{opacity:.38;cursor:default}
-@media (hover:hover){.nbdc-st:not([disabled]):hover{background:var(--ai-soft)}}
-.nbdc-go{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:6px 12px;border:0;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%),var(--ai-g);color:#fff;font-family:inherit;cursor:pointer;box-shadow:0 10px 20px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease),opacity 180ms,box-shadow 220ms}
+.nbdc-act{margin-top:10px}
+.nbdc-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.nbdc-nav[hidden]{display:none}
+.nbdc-nl{flex:1;min-width:0;text-align:center;font-size:11.5px;font-weight:700;color:var(--muted)}
+.nbdc-nv{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:42px;padding:0 12px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--ink2);font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;transition:transform 160ms var(--ai-ease),opacity 180ms,background 180ms}
+.nbdc-nv:active{transform:scale(.95)}
+.nbdc-nv[disabled]{opacity:.38;cursor:default}
+@media (hover:hover){.nbdc-nv:not([disabled]):hover{background:var(--ai-soft)}}
+.nbdc-go{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:6px 12px;border:0;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%),var(--ai-g);color:#fff;font-family:inherit;cursor:pointer;box-shadow:0 10px 20px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease),opacity 180ms,box-shadow 220ms}
 .nbdc-go>span{font-size:13.5px;font-weight:800;line-height:1.45}
 .nbdc-go>small{font-size:10.5px;font-weight:700;line-height:1.4;opacity:.86}
 .nbdc-go:active{transform:scale(.98)}
@@ -29756,14 +29763,17 @@ function buildScreen(){
     for(i = 0; i < ks.length; i++){ if(!s) s = ks[i]; if(ks[i + 1] !== ks[i] + 1){ out.push([s, ks[i]]); s = 0; } }
     return out;
   }
+  function dcWinDone(D, a, N){ var e = Math.min(D.total, a + N), p; for(p = a + 1; p <= e; p++) if(!D.done[p]) return false; return true; }   /* الدفعة اللي بتبدأ بعد a صفحة اتشرحت كلها؟ */
+  function dcFindAt(D, from, dir, N){ var a; for(a = from + dir * N; a >= 0 && a < D.total; a += dir * N) if(!dcWinDone(D, a, N)) return a; return -1; }   /* أقرب دفعة لسه ماتشرحتش في الاتجاه ده (-1 = مفيش): الأسهم بتتنقّل بينهم بس عشان مفيش شرح مكرر */
+  function dcBt(n){ return n === 1 ? 'دفعة' : (n === 2 ? 'دفعتين' : (n <= 10 ? n + ' دفعات' : n + ' دفعة')); }
   function dcSet(el, h){ if(el._h !== h){ el._h = h; el.innerHTML = h; } }   /* بنكتب بس لو المحتوى اتغيّر (من غير وميض ولا إعادة تشغيل حركات) */
 
   /* ── العناصر: كارت الملف (قبل شريط الصور) + زر الرفع جنب زر الصور + input الملف ── */
   var dcEl = document.createElement('div');
   dcEl.className = 'nbdc'; dcEl.hidden = true; dcEl.setAttribute('role', 'region'); dcEl.setAttribute('aria-label', 'ملف المذاكرة');
-  dcEl.innerHTML = '<div class="nbdc-hd"></div><div class="nbdc-ok" role="status" hidden></div><div class="nbdc-bar" role="progressbar" aria-label="تقدّم الشرح في الملف" aria-valuemin="0" hidden></div><div class="nbst-row nbdc-row" hidden></div><div class="nbdc-act"></div>';
+  dcEl.innerHTML = '<div class="nbdc-hd"></div><div class="nbdc-bar" role="progressbar" aria-label="تقدّم الشرح في الملف" aria-valuemin="0" hidden></div><div class="nbdc-ok" role="status" hidden></div><div class="nbst-row nbdc-row" hidden></div><div class="nbdc-act"></div><div class="nbdc-nav" hidden></div>';
   stStrip.parentNode.insertBefore(dcEl, stStrip);
-  var dcHd = dcEl.querySelector('.nbdc-hd'), dcOk = dcEl.querySelector('.nbdc-ok'), dcBar = dcEl.querySelector('.nbdc-bar'), dcRow = dcEl.querySelector('.nbdc-row'), dcAct = dcEl.querySelector('.nbdc-act');
+  var dcHd = dcEl.querySelector('.nbdc-hd'), dcOk = dcEl.querySelector('.nbdc-ok'), dcBar = dcEl.querySelector('.nbdc-bar'), dcRow = dcEl.querySelector('.nbdc-row'), dcAct = dcEl.querySelector('.nbdc-act'), dcNav = dcEl.querySelector('.nbdc-nav');
   var dcBtn = document.createElement('button');
   dcBtn.type = 'button'; dcBtn.className = 'nbai-st-doc'; dcBtn.hidden = true; dcBtn.title = 'رفع ملف PDF'; dcBtn.setAttribute('aria-label', 'رفع ملف PDF'); dcBtn.innerHTML = DCI.add;
   stAdd.parentNode.insertBefore(dcBtn, stAdd.nextSibling);
@@ -29779,24 +29789,28 @@ function buildScreen(){
     dcEl.hidden = !vis;
     if(!vis){ if(dcLbI >= 0) dcLbClose(true); return; }
     var N = dcSize(), ae = document.activeElement, fk = (ae && dcEl.contains(ae)) ? (ae.getAttribute('data-dc') || '') + '|' + (ae.getAttribute('data-i') || '') : '';
-    var L = D && D.last, doneN = D ? dcDoneN(D) : 0, K = D ? Math.ceil(D.total / N) : 0, h = '', i;
+    var L = D && D.last, endMode = !!(L && L.end), doneN = D ? dcDoneN(D) : 0, K = D ? Math.ceil(D.total / N) : 0, h = '', i;
     var from = D ? (D.win ? D.win[0] : D.at + 1) : 0, to = D ? (D.win ? D.win[1] : Math.min(D.total, D.at + N)) : 0;
     /* الرأس: اسم الملف + عدد الصفحات + أزرار المعاينة/الإغلاق */
     dcSet(dcHd, '<span class="nbdc-ic" aria-hidden="true">' + DCI.pdf + '</span><span class="nbdc-tt"><b class="nbdc-nm"><bdi>' + esc(D ? D.name : dcOpening) + '</bdi></b><small class="nbdc-sb">' +
       (!D ? 'جاري فتح الملف…' : (doneN ? 'تم شرح <b>' + doneN + '</b> من ' + dcPg(D.total) : dcPg(D.total) + ' · ' + dcPg(N) + ' في كل مرة حسب باقتك')) + '</small></span>' +
-      (D ? '<button type="button" class="nbdc-tg" data-dc="tg" aria-pressed="' + (D.open ? 'true' : 'false') + '" aria-label="معاينة الصفحات" title="معاينة الصفحات">' + DCI.eye + '</button>' : '') +
+      (D && !endMode ? '<button type="button" class="nbdc-tg" data-dc="tg" aria-pressed="' + (D.open ? 'true' : 'false') + '" aria-label="معاينة الصفحات" title="معاينة الصفحات">' + DCI.eye + '</button>' : '') +
       '<button type="button" class="nbdc-x" data-dc="x" aria-label="' + (D ? 'إغلاق الملف' : 'إلغاء فتح الملف') + '" title="' + (D ? 'إغلاق الملف' : 'إلغاء') + '"' + (busy ? ' disabled' : '') + '>' + DCI.x + '</button>');
-    /* الخطوة اللي بعدها: بعد ما دفعة تخلص الطالب يكمّل أو يرفع ملف جديد */
+    /* الخطوة اللي بعدها: بعد ما دفعة تخلص بيظهر إنها خلصت، والطالب يكمّل بالزر الرئيسي أو يرفع ملف جديد (من الباقي هنا) */
     dcOk.hidden = !(L && !busy);
     dcSet(dcOk, (L && !busy) ? '<span class="nbdc-okic" aria-hidden="true">' + DCI.ok + '</span><span class="nbdc-okt">' +
-      (L.end ? 'خلّصت الملف كله — اتشرحت ' + dcPg(D.total) : 'خلّصنا ' + dcRg(L.from, L.to) + ' — جاهز تكمّل ' + dcRg(D.at + 1, Math.min(D.total, D.at + N)) + '؟') +
-      '</span><button type="button" class="nbdc-nw" data-dc="new">ملف جديد</button>' : '');
-    /* شريط التقدّم: الأخضر = اللي اتشرح، البنفسجي = الدفعة الحالية */
+      (endMode ? 'خلّصت الملف كله — اتشرحت ' + dcPg(D.total) : 'خلّصنا ' + dcRg(L.from, L.to)) + '</span>' +
+      (endMode ? '' : '<button type="button" class="nbdc-nw" data-dc="new">ملف جديد</button>') : '');
+    /* شريط التقدّم: مربع لكل دفعة (أخضر = اتشرحت · بنفسجي = الحالية · رمادي = لسه) — ولو الدفعات كتير شريط متصل */
     dcBar.hidden = !D;
     if(D){
-      var pc = function(x){ return (x / D.total * 100).toFixed(2); };
-      dcRuns(D).forEach(function(r){ h += '<i class="nbdc-bd" style="inset-inline-start:' + pc(r[0] - 1) + '%;width:' + pc(r[1] - r[0] + 1) + '%"></i>'; });
-      h += '<i class="nbdc-bc" style="inset-inline-start:' + pc(from - 1) + '%;width:' + pc(to - from + 1) + '%"></i>';
+      var seg = K <= 24, pc = function(x){ return (x / D.total * 100).toFixed(2); };
+      dcBar.className = 'nbdc-bar' + (seg ? ' is-seg' : '');
+      if(seg) for(i = 0; i < K; i++) h += '<i class="' + (dcWinDone(D, i * N, N) ? 'is-done' : (!endMode && D.at >= i * N && D.at < (i + 1) * N ? 'is-cur' : '')) + '"></i>';
+      else {
+        dcRuns(D).forEach(function(r){ h += '<i class="nbdc-bd" style="inset-inline-start:' + pc(r[0] - 1) + '%;width:' + pc(r[1] - r[0] + 1) + '%"></i>'; });
+        if(!endMode) h += '<i class="nbdc-bc" style="inset-inline-start:' + pc(from - 1) + '%;width:' + pc(to - from + 1) + '%"></i>';
+      }
       dcSet(dcBar, h);
       dcBar.setAttribute('aria-valuemax', String(D.total)); dcBar.setAttribute('aria-valuenow', String(doneN));
       dcBar.setAttribute('aria-valuetext', 'تم شرح ' + doneN + ' من ' + D.total + ' صفحة');
@@ -29808,21 +29822,24 @@ function buildScreen(){
       for(i = D.pages.length + D.bad; i < D.want; i++) h += '<div class="nbst-th is-load" aria-busy="true"><span class="nbai-wz-spin" aria-hidden="true"></span></div>';
     }
     dcRow.hidden = !h; dcSet(dcRow, h);
-    /* الأسهم + الزر الرئيسي */
-    h = '';
+    /* الزر الرئيسي (إجراء واحد واضح) + صف تنقّل بين الدفعات اللي لسه ماتشرحتش بس */
+    h = ''; var nh = '';
     if(D){
-      var wait = busy || stLoad > 0, endMode = !!(L && L.end), allDone = true, p2;
+      var wait = busy || stLoad > 0, allDone = true, p2, pv = dcFindAt(D, D.at, -1, N), nx = dcFindAt(D, D.at, 1, N), left = 0;
       for(p2 = from; p2 <= to; p2++) if(!D.done[p2]){ allDone = false; break; }
-      h = '<button type="button" class="nbdc-st" data-dc="prev" aria-label="الدفعة السابقة" title="الدفعة السابقة"' + (wait || D.at <= 0 ? ' disabled' : '') + '>' + DCI.prev + '</button>';
-      if(endMode) h += '<button type="button" class="nbdc-go" data-dc="new"' + (busy ? ' disabled' : '') + '><span>ارفع ملف جديد</span><small>أو راجع أي دفعة بالأسهم</small></button>';
-      else if(busy && L) h += '<button type="button" class="nbdc-go" disabled><span>بجهّز الامتحان…</span><small>وبعدها تكمّل ' + dcRg(from, to) + '</small></button>';
-      else if(busy) h += '<button type="button" class="nbdc-go" disabled><span>جاري شرح ' + dcRg(from, to) + '…</span><small>استنى لحد ما الشرح والامتحان يخلصوا</small></button>';
-      else if(stLoad > 0) h += '<button type="button" class="nbdc-go" disabled><span>بجهّز ' + dcRg(from, to) + '…</span><small>' + D.pages.length + ' من ' + D.want + '</small></button>';
-      else if(!D.pages.length) h += '<button type="button" class="nbdc-go is-sec" data-dc="retry"><span>حمّل ' + dcRg(from, to) + '</span><small>اضغط لتجهيز الصفحات</small></button>';
-      else h += '<button type="button" class="nbdc-go" data-dc="go"><span>اشرح ' + dcRg(from, to) + '</span><small>الدفعة ' + (Math.floor(D.at / N) + 1) + ' من ' + K + ' · ' + (allDone ? 'اتشرحت قبل كده · ' : '') + 'بنقطة واحدة</small></button>';
-      h += '<button type="button" class="nbdc-st" data-dc="next" aria-label="الدفعة التالية" title="الدفعة التالية"' + (wait || D.at + N >= D.total ? ' disabled' : '') + '>' + DCI.next + '</button>';
+      for(i = 0; i < K; i++) if(!dcWinDone(D, i * N, N)) left++;
+      if(endMode) h = '<button type="button" class="nbdc-go" data-dc="new"' + (busy ? ' disabled' : '') + '><span>ارفع ملف جديد</span><small>وابدأ مذاكرة ملف تاني</small></button>';
+      else if(busy && L) h = '<button type="button" class="nbdc-go" disabled><span>بجهّز الامتحان…</span><small>وبعدها تكمّل ' + dcRg(from, to) + '</small></button>';
+      else if(busy) h = '<button type="button" class="nbdc-go" disabled><span>جاري شرح ' + dcRg(from, to) + '…</span><small>استنى لحد ما الشرح والامتحان يخلصوا</small></button>';
+      else if(stLoad > 0) h = '<button type="button" class="nbdc-go" disabled><span>بجهّز ' + dcRg(from, to) + '…</span><small>' + D.pages.length + ' من ' + D.want + '</small></button>';
+      else if(allDone) h = '<button type="button" class="nbdc-go is-sec" disabled><span>' + dcRg(from, to) + ' اتشرحوا</span><small>اختار دفعة تانية بالأسهم</small></button>';
+      else if(!D.pages.length) h = '<button type="button" class="nbdc-go is-sec" data-dc="retry"><span>حمّل ' + dcRg(from, to) + '</span><small>اضغط لتجهيز الصفحات</small></button>';
+      else h = '<button type="button" class="nbdc-go" data-dc="go"><span>اشرح ' + dcRg(from, to) + '</span><small>بنقطة واحدة</small></button>';
+      if(!endMode && (pv >= 0 || nx >= 0)) nh = '<button type="button" class="nbdc-nv" data-dc="prev" aria-label="الدفعة السابقة اللي لسه ماتشرحتش"' + (wait || pv < 0 ? ' disabled' : '') + '>' + DCI.prev + '<span>السابقة</span></button>' +
+        '<span class="nbdc-nl">باقي ' + dcBt(left) + '</span>' +
+        '<button type="button" class="nbdc-nv" data-dc="next" aria-label="الدفعة التالية اللي لسه ماتشرحتش"' + (wait || nx < 0 ? ' disabled' : '') + '><span>التالية</span>' + DCI.next + '</button>';
     }
-    dcSet(dcAct, h);
+    dcSet(dcAct, h); dcNav.hidden = !nh; dcSet(dcNav, nh);
     /* الدفعة اللي بعدها بتتجهّز بعد ما الشرح والامتحان يخلصوا (مش وقت الحركات) */
     if(D && D.need && !busy && !stLoad){
       D.need = false;
@@ -29965,9 +29982,8 @@ function buildScreen(){
   }
   function dcStep(dir){
     var D = DOC; if(!D || busy || stLoad) return;
-    var N = dcSize(), at = D.at + dir * N;
-    if(at < 0) at = 0;
-    if(at >= D.total || at === D.at) return;
+    var N = dcSize(), at = dcFindAt(D, D.at, dir, N);   /* بيتخطّى الدفعات اللي اتشرحت (من غير شرح مكرر) */
+    if(at < 0) return;
     D.at = at; D.last = null; D.need = false; D.open = true;
     dcBatch();
   }
@@ -29992,11 +30008,16 @@ function buildScreen(){
   function dcDone(S){
     var R = dcRun; dcRun = null;
     if(!R || R.D !== DOC) return;
-    var D = DOC, end = R.to >= D.total;
+    var D = DOC, N = dcSize(), a;
     R.pages.forEach(function(n){ D.done[n] = 1; });
+    var end = dcDoneN(D) >= D.total;
     D.last = { from: R.pages[0], to: R.pages[R.pages.length - 1], end: end };
     D.pages = []; D.win = null; D.want = 0; D.bad = 0; D.open = false;   /* الصور اتبعتت: نقفل المعاينة عشان الشات ياخد مساحته */
-    if(!end){ D.at = R.to; D.need = true; }   /* مؤشر الدفعة اللي بعدها (بتتجهّز لما busy يخلص) */
+    if(!end){   /* أقرب دفعة لسه ماتشرحتش بعد اللي خلصت (ولو مفيش بنلف لأول واحدة ناقصة) — بتتجهّز لما busy يخلص */
+      a = R.to; while(a < D.total && dcWinDone(D, a, N)) a += N;
+      if(a >= D.total){ a = 0; while(a < D.total && dcWinDone(D, a, N)) a += N; }
+      D.at = Math.min(a, D.total - 1); D.need = true;
+    }
     dcPaint();
   }
 
