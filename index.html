@@ -28173,6 +28173,82 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbsv-dr.is-enter .nbsv-new{animation-delay:260ms}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbsv-sc,.nbai-ov .nbsv-pn,.nbai-ov .nbsv-dr.is-enter :is(.nbsv-hd,.nbsv-lb,.nbsv-it,.nbsv-em,.nbsv-new){animation:none!important}}
 </style>
+
+<style id="nb-study-doc-css">
+/* STUDY-DOC: كارت ملف الـ PDF (دفعات الصفحات + المعاينة) وزر الرفع لوضع «ذاكر مع نبتكس» — كله تحت .nbai-ov ومفيش تأثير على باقي الموقع. للتراجع: امسح الـ style ده + كتلة STUDY-DOC في nb-farm-ai-js + سطور STUDY-DOC المعلّمة. */
+.nbai-ov .nbai-st-doc{flex:none;display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);box-shadow:inset 0 0 0 1px var(--ai-ring);cursor:pointer;transition:transform 180ms var(--ai-ease),background 200ms,opacity 180ms}
+.nbai-ov .nbai-st-doc[hidden]{display:none}
+.nbai-ov .nbai-st-doc:active{transform:scale(.92)}
+.nbai-ov .nbai-st-doc[disabled]{opacity:.4;cursor:default}
+@media (hover:hover){.nbai-ov .nbai-st-doc:not([disabled]):hover{background:var(--ai-soft2)}}
+
+.nbai-ov .nbdc{display:block;margin-top:8px;padding:10px 12px 12px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--ai-soft),transparent 72%),var(--card);box-shadow:0 12px 26px -20px var(--ai-glow);animation:nbux-rise 260ms var(--ai-ease) backwards}
+.nbai-ov .nbdc[hidden]{display:none}
+.nbai-ov .nbdc:not([hidden])+.nbai-st-th{display:none}
+.nbai-ov.nbst-kb .nbdc{display:none}
+
+.nbdc-hd{display:flex;align-items:center;gap:10px}
+.nbdc-ic{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--ai-g);color:#fff;box-shadow:0 8px 16px -10px var(--ai-glow)}
+.nbdc-tt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nbdc-nm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:800;line-height:1.5;color:var(--ink)}
+.nbdc-sb{display:block;font-size:11.5px;font-weight:600;line-height:1.5;color:var(--muted)}
+.nbdc-sb b{color:var(--wz-ok);font-weight:800}
+.nbdc-tg,.nbdc-x{flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0;border:0;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms,opacity 180ms}
+.nbdc-tg[aria-pressed="true"]{background:var(--ai-g);color:#fff}
+.nbdc-tg:active,.nbdc-x:active{transform:scale(.9)}
+.nbdc-x[disabled]{opacity:.4;cursor:default}
+
+.nbdc-ok{display:flex;align-items:center;gap:8px;margin-top:10px;padding:7px 8px 7px 10px;border:1px solid var(--wz-ok-br);border-radius:14px;background:var(--wz-ok-bg);color:var(--wz-ok);font-size:12px;font-weight:800;line-height:1.6;animation:nbux-rise 320ms var(--ai-ease) backwards}
+.nbdc-ok[hidden]{display:none}
+.nbdc-okic{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--wz-ok);color:var(--card)}
+.nbdc-okt{flex:1;min-width:0}
+.nbdc-nw{flex:none;min-height:34px;padding:0 13px;border:1px solid var(--wz-ok-br);border-radius:999px;background:var(--card);color:var(--wz-ok);font-size:11.5px;font-weight:800;cursor:pointer;transition:transform 160ms var(--ai-ease)}
+.nbdc-nw:active{transform:scale(.95)}
+.nbdc-nw[disabled]{opacity:.45;cursor:default}
+
+.nbdc-bar{position:relative;height:6px;margin-top:10px;border-radius:3px;background:var(--ai-soft2);overflow:hidden}
+.nbdc-bar[hidden]{display:none}
+.nbdc-bar i{position:absolute;top:0;bottom:0;min-width:3px;border-radius:3px;transition:inset-inline-start 320ms var(--ai-ease),width 320ms var(--ai-ease)}
+.nbdc-bd{background:var(--wz-ok)}
+.nbdc-bc{background:var(--ai-g);opacity:.92;box-shadow:0 0 0 1px var(--card)}
+
+.nbdc-row{margin-top:10px;animation:nbux-rise 240ms var(--ai-ease) backwards}
+.nbdc-row[hidden]{display:none}
+.nbdc-th{padding:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ai-ease)}
+.nbdc-th:active{transform:scale(.95)}
+
+.nbdc-act{display:flex;align-items:stretch;gap:8px;margin-top:10px}
+.nbdc-st{flex:none;display:grid;place-items:center;width:46px;min-height:48px;padding:0;border:1px solid var(--line2);border-radius:16px;background:var(--card);color:var(--ink2);cursor:pointer;transition:transform 160ms var(--ai-ease),opacity 180ms,background 180ms}
+.nbdc-st:active{transform:scale(.94)}
+.nbdc-st[disabled]{opacity:.38;cursor:default}
+@media (hover:hover){.nbdc-st:not([disabled]):hover{background:var(--ai-soft)}}
+.nbdc-go{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:6px 12px;border:0;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%),var(--ai-g);color:#fff;font-family:inherit;cursor:pointer;box-shadow:0 10px 20px -12px var(--ai-glow);transition:transform 180ms var(--ai-ease),opacity 180ms,box-shadow 220ms}
+.nbdc-go>span{font-size:13.5px;font-weight:800;line-height:1.45}
+.nbdc-go>small{font-size:10.5px;font-weight:700;line-height:1.4;opacity:.86}
+.nbdc-go:active{transform:scale(.98)}
+.nbdc-go[disabled]{opacity:.55;cursor:default;box-shadow:none}
+.nbdc-go.is-sec{background:var(--ai-soft);color:var(--ai-tx);box-shadow:inset 0 0 0 1px var(--ai-ring)}
+
+.nbai-ov .nbdc-lb{position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;background:rgba(10,6,24,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:nbsv-fade 220ms ease backwards}
+.nbai-ov .nbdc-lb[hidden]{display:none}
+.nbdc-lbh{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 10px}
+.nbdc-lbt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;color:#fff;text-align:center}
+.nbdc-lbt b{font-size:14px;font-weight:800;line-height:1.5}
+.nbdc-lbt small{font-size:11.5px;font-weight:600;line-height:1.4;opacity:.75}
+.nbdc-lbb{flex:none;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms,opacity 180ms}
+.nbdc-lbb:active{transform:scale(.9)}
+.nbdc-lbb[disabled]{opacity:.3;cursor:default}
+.nbdc-lbb[aria-pressed="true"]{background:#fff;color:#1e1b4b}
+.nbdc-lbv{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:pan-x pan-y pinch-zoom}
+.nbdc-lbv img{position:absolute;inset:4px 12px;width:calc(100% - 24px);height:calc(100% - 8px);object-fit:contain;cursor:zoom-in;-webkit-user-select:none;user-select:none}
+.nbdc-lbv.is-zoom{overflow:auto;-webkit-overflow-scrolling:touch}
+.nbdc-lbv.is-zoom img{position:static;display:block;width:230%;max-width:none;height:auto;margin:4px 0;border-radius:4px;background:#fff;cursor:zoom-out}
+.nbdc-lbf{flex:none;display:flex;align-items:center;justify-content:center;gap:18px;padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 14px)}
+
+.nbai-ov :is(.nbdc button,.nbai-st-doc):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:2px}
+.nbai-ov .nbdc-lb button:focus-visible{outline:2.5px solid #fff;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.nbai-ov :is(.nbdc,.nbdc-row,.nbdc-ok,.nbdc-lb){animation:none!important}.nbdc-bar i{transition:none}}
+</style>
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
@@ -28772,7 +28848,7 @@ function buildScreen(){
   var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
   var LTR4 = ['أ', 'ب', 'ج', 'د'];
   TH.study = TH.ask;   /* نفس عنصر الشات؛ المحتوى هو اللي بيتبدّل */
-  GREET.study = gr('ذاكر مع نبتكس', 'ارفع صور المحاضرة أو الملزمة (عدد الصور في كل مرة حسب باقتك)، وأنا أشرحلك كل جزئية فيها بالبلدي ومعاها مثال بسيط، وأعملك ملخص، وبعدها امتحان تختبر بيه نفسك على نفس الصور.');
+  GREET.study = gr('ذاكر مع نبتكس', /* STUDY-DOC: ذكر ملف PDF في الترحيب — القديم (للتراجع): 'ارفع صور المحاضرة أو الملزمة (عدد الصور في كل مرة حسب باقتك)، وأنا أشرحلك كل جزئية فيها…' */ 'ارفع صور المحاضرة أو الملزمة، أو ملف PDF كامل وأنا أقسّمه دفعات (عدد الصور في كل مرة حسب باقتك)، وأنا أشرحلك كل جزئية فيها بالبلدي ومعاها مثال بسيط، وأعملك ملخص، وبعدها امتحان تختبر بيه نفسك على نفس الصور.');
 
   /* شريط الصور المختارة + حالة الأزرار */
   function paintStrip(){
@@ -28790,6 +28866,7 @@ function buildScreen(){
     stStrip.innerHTML = '<div class="nbst-hd"><span class="nbst-ht">الصور المختارة</span><span class="nbst-cnt" aria-live="polite"><span class="nbst-segs" aria-hidden="true">' + segs + '</span><bdi dir="ltr">' + tot + '/' + ST_MAX + '</bdi></span></div><div class="nbst-row">' + h + '</div>';
     stAdd.disabled = busy || (n + stLoad) >= ST_MAX;
     stCm.classList.toggle('nbst-ready', on && n > 0 && !stLoad && !busy);
+    try{ dcPaint(); }catch(e){}   /* STUDY-DOC: كارت ملف الـ PDF بيتزامن مع نفس الحالة. للتراجع: امسح السطر ده */
   }
   /* AI-IMGS: لما حالة الاشتراك تتحمّل/تتغيّر الحد والعدّاد يتحدّثوا (من غير ما يمسّ الصور المختارة) */
   try{ if(window.AiSub && window.AiSub.onChange) window.AiSub.onChange(function(){ if(card.isConnected){ paintStrip(); } }); if(window.AiSub && window.AiSub.get) window.AiSub.get(function(){ if(card.isConnected){ paintStrip(); } }); }catch(e){}
@@ -29135,6 +29212,7 @@ function buildScreen(){
     if(!u){ show(esc(MSG.login), true); return; }
     if(stLoad){ show('استنى لحظة لحد ما الصور تتجهّز.', true); return; }
     if(!stImgs.length){ show('أضف صورة واحدة على الأقل من أيقونة الصور عشان نبدأ.', true); return; }
+    try{ dcPre(); }catch(e){}   /* STUDY-DOC: لو الصور من دفعة ملف PDF بنكتب ملاحظة بالصفحات (لو الطالب ماكتبش حاجة). للتراجع: امسح السطر ده */
     var note = stQi.value.trim().slice(0, 300), imgs = stImgs.map(function(x){ return x.d; });
     var list = imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; });
     show('', false);
@@ -29156,6 +29234,7 @@ function buildScreen(){
       }
       var S = { imgs: imgs, list: list, note: note, title: st.title || '', parts: st.parts, summary: st.summary || [], quiz: null, ans: [], step: 0, revealed: false, el: null };
       STUDY.sessions.push(S); stSave(S);   /* STUDY-SAVE */
+      try{ dcDone(S); }catch(e){}   /* STUDY-DOC: دفعة الملف اتشرحت ← المؤشر يتقدّم للدفعة اللي بعدها. للتراجع: امسح السطر ده */
       stSeq(S, ty, function(){   /* الشرح جزء جزء ← الملخص ← الامتحان */
         if(!card.isConnected) return;
         var wait = 0;
@@ -29643,6 +29722,384 @@ function buildScreen(){
   svList(function(rows){ SVL = rows || []; paintDr(); if(stView === 'study') cvPull(false); });
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden' && cvT && card.isConnected) cvPush(); });   /* الطالب سابك: ارفع اللي مستني دلوقتي */
   /* ═════════ STUDY-SAVE:END ═════════ */
+
+  /* ═════════ STUDY-DOC:START — رفع ملف PDF في «ذاكر مع نبتكس» ودفعات الصفحات (إضافة) ═════════
+     الطالب يرفع ملف PDF ← بيتحوّل لصور جوه المتصفح (pdf.js بيتحمّل عند الطلب بس من cdnjs، يعني مفيش أي تحميل لو محدّش رفع PDF) ← كارت الملف فوق شريط الكتابة بيعرض أول دفعة صفحات
+     (عددها = عدد الصور المسموح في باقته ST_MAX: الخطة المجانية/Basic 4 · Plus 8 · Pro 12) مع معاينة (ضغطة على الصفحة = عرض كبير + تكبير + تنقّل بين صفحات الدفعة)
+     ← زر «اشرح الصفحات a–b» بيشغّل نفس runStudy بتاع الصور (شرح ← ملخص ← امتحان ← كروت) من غير أي تغيير في الخادم ولا في نقاط الباقة ← لما الشرح والامتحان يخلصوا الكارت بيتقدّم لوحده
+     للدفعة اللي بعدها (بتتجهّز وهو بيذاكر)، والطالب يختار: يكمّل نفس الملف (أو يتنقّل بين الدفعات بالأسهم) أو يرفع ملف جديد. كل دفعة بتتحفظ كجلسة عادية في «الجلسات الأخيرة».
+     • الملف نفسه مابيتخزّنش (لا على الجهاز ولا على السحابة) — الصفحات بتتحوّل في الذاكرة بس، وبنفس حدود حجم الصور العادية (ST_SHRINK).
+     • الربط بالكود الأصلي = 4 سطور معلّمة STUDY-DOC: dcPaint() في آخر paintStrip، وdcPre() قبل قراءة الملاحظة في runStudy، وdcDone(S) بعد حفظ الجلسة في runStudy، ونص الترحيب GREET.study.
+     للتراجع: امسح الكتلة دي (STUDY-DOC:START → STUDY-DOC:END) + style#nb-study-doc-css + السطور الأربعة المعلّمة STUDY-DOC (ورجّع نص GREET.study). */
+  var DOC = null, dcOpening = '', dcOpenTok = 0, dcRun = null, dcAuto = '', dcLibQ = null, dcTok = 0, dcLb = null, dcLbI = -1, dcLbRet = null;
+  var DC_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.', DC_MB = 50;   /* نسخة ثابتة من pdf.js (UMD) — والعامل (worker) من نفس النسخة */
+  function dcSvg(d, s, w){ return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; }
+  var DCI = {
+    pdf: dcSvg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>', 20, 2),
+    add: dcSvg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14h6"/>', 21, 2),
+    eye: dcSvg('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', 18, 2),
+    x: dcSvg('<path d="M6 6l12 12M18 6 6 18"/>', 16, 2.4),
+    prev: dcSvg('<path d="M9 6l6 6-6 6"/>', 20, 2.6),   /* RTL: «السابق» ناحية اليمين */
+    next: dcSvg('<path d="M15 6l-6 6 6 6"/>', 20, 2.6),   /* RTL: «التالي» ناحية الشمال */
+    ok: dcSvg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 14, 3),
+    zoom: dcSvg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>', 20, 2.2)
+  };
+
+  /* ── مساعدات عرض ── */
+  function dcSize(){ stSync(); return ST_MAX; }
+  function dcPg(n){ return n === 1 ? 'صفحة واحدة' : (n === 2 ? 'صفحتين' : (n <= 10 ? n + ' صفحات' : n + ' صفحة')); }
+  function dcRg(a, b){ return a === b ? 'الصفحة <bdi dir="ltr">' + a + '</bdi>' : 'الصفحات <bdi dir="ltr">' + a + '–' + b + '</bdi>'; }
+  function dcShort(nm){ var s = String(nm || '').replace(/\.pdf$/i, '').trim(); return s.length > 60 ? s.slice(0, 59) + '…' : (s || 'ملف'); }
+  function dcDoneN(D){ return Object.keys(D.done).length; }
+  function dcRuns(D){   /* الصفحات اللي اتشرحت متجمّعة في مدى متصل (للشريط) */
+    var ks = Object.keys(D.done).map(Number).sort(function(a, b){ return a - b; }), out = [], s = 0, i;
+    for(i = 0; i < ks.length; i++){ if(!s) s = ks[i]; if(ks[i + 1] !== ks[i] + 1){ out.push([s, ks[i]]); s = 0; } }
+    return out;
+  }
+  function dcSet(el, h){ if(el._h !== h){ el._h = h; el.innerHTML = h; } }   /* بنكتب بس لو المحتوى اتغيّر (من غير وميض ولا إعادة تشغيل حركات) */
+
+  /* ── العناصر: كارت الملف (قبل شريط الصور) + زر الرفع جنب زر الصور + input الملف ── */
+  var dcEl = document.createElement('div');
+  dcEl.className = 'nbdc'; dcEl.hidden = true; dcEl.setAttribute('role', 'region'); dcEl.setAttribute('aria-label', 'ملف المذاكرة');
+  dcEl.innerHTML = '<div class="nbdc-hd"></div><div class="nbdc-ok" role="status" hidden></div><div class="nbdc-bar" role="progressbar" aria-label="تقدّم الشرح في الملف" aria-valuemin="0" hidden></div><div class="nbst-row nbdc-row" hidden></div><div class="nbdc-act"></div>';
+  stStrip.parentNode.insertBefore(dcEl, stStrip);
+  var dcHd = dcEl.querySelector('.nbdc-hd'), dcOk = dcEl.querySelector('.nbdc-ok'), dcBar = dcEl.querySelector('.nbdc-bar'), dcRow = dcEl.querySelector('.nbdc-row'), dcAct = dcEl.querySelector('.nbdc-act');
+  var dcBtn = document.createElement('button');
+  dcBtn.type = 'button'; dcBtn.className = 'nbai-st-doc'; dcBtn.hidden = true; dcBtn.title = 'رفع ملف PDF'; dcBtn.setAttribute('aria-label', 'رفع ملف PDF'); dcBtn.innerHTML = DCI.add;
+  stAdd.parentNode.insertBefore(dcBtn, stAdd.nextSibling);
+  var dcFile = document.createElement('input');
+  dcFile.type = 'file'; dcFile.accept = 'application/pdf,.pdf'; dcFile.hidden = true; dcFile.className = 'nbai-doc-file';
+  stCm.appendChild(dcFile);
+
+  /* ── رسم الكارت (بيتنده من آخر paintStrip، فبيتزامن تلقائي مع busy / stLoad / تغيّر الباقة) ── */
+  function dcPaint(){
+    if(!dcEl) return;
+    var on = src === 'study', D = DOC, vis = on && !!(D || dcOpening);
+    dcBtn.hidden = !on; dcBtn.disabled = !!(busy || dcOpening);
+    dcEl.hidden = !vis;
+    if(!vis){ if(dcLbI >= 0) dcLbClose(true); return; }
+    var N = dcSize(), ae = document.activeElement, fk = (ae && dcEl.contains(ae)) ? (ae.getAttribute('data-dc') || '') + '|' + (ae.getAttribute('data-i') || '') : '';
+    var L = D && D.last, doneN = D ? dcDoneN(D) : 0, K = D ? Math.ceil(D.total / N) : 0, h = '', i;
+    var from = D ? (D.win ? D.win[0] : D.at + 1) : 0, to = D ? (D.win ? D.win[1] : Math.min(D.total, D.at + N)) : 0;
+    /* الرأس: اسم الملف + عدد الصفحات + أزرار المعاينة/الإغلاق */
+    dcSet(dcHd, '<span class="nbdc-ic" aria-hidden="true">' + DCI.pdf + '</span><span class="nbdc-tt"><b class="nbdc-nm"><bdi>' + esc(D ? D.name : dcOpening) + '</bdi></b><small class="nbdc-sb">' +
+      (!D ? 'جاري فتح الملف…' : (doneN ? 'تم شرح <b>' + doneN + '</b> من ' + dcPg(D.total) : dcPg(D.total) + ' · ' + dcPg(N) + ' في كل مرة حسب باقتك')) + '</small></span>' +
+      (D ? '<button type="button" class="nbdc-tg" data-dc="tg" aria-pressed="' + (D.open ? 'true' : 'false') + '" aria-label="معاينة الصفحات" title="معاينة الصفحات">' + DCI.eye + '</button>' : '') +
+      '<button type="button" class="nbdc-x" data-dc="x" aria-label="' + (D ? 'إغلاق الملف' : 'إلغاء فتح الملف') + '" title="' + (D ? 'إغلاق الملف' : 'إلغاء') + '"' + (busy ? ' disabled' : '') + '>' + DCI.x + '</button>');
+    /* الخطوة اللي بعدها: بعد ما دفعة تخلص الطالب يكمّل أو يرفع ملف جديد */
+    dcOk.hidden = !(L && !busy);
+    dcSet(dcOk, (L && !busy) ? '<span class="nbdc-okic" aria-hidden="true">' + DCI.ok + '</span><span class="nbdc-okt">' +
+      (L.end ? 'خلّصت الملف كله — اتشرحت ' + dcPg(D.total) : 'خلّصنا ' + dcRg(L.from, L.to) + ' — جاهز تكمّل ' + dcRg(D.at + 1, Math.min(D.total, D.at + N)) + '؟') +
+      '</span><button type="button" class="nbdc-nw" data-dc="new">ملف جديد</button>' : '');
+    /* شريط التقدّم: الأخضر = اللي اتشرح، البنفسجي = الدفعة الحالية */
+    dcBar.hidden = !D;
+    if(D){
+      var pc = function(x){ return (x / D.total * 100).toFixed(2); };
+      dcRuns(D).forEach(function(r){ h += '<i class="nbdc-bd" style="inset-inline-start:' + pc(r[0] - 1) + '%;width:' + pc(r[1] - r[0] + 1) + '%"></i>'; });
+      h += '<i class="nbdc-bc" style="inset-inline-start:' + pc(from - 1) + '%;width:' + pc(to - from + 1) + '%"></i>';
+      dcSet(dcBar, h);
+      dcBar.setAttribute('aria-valuemax', String(D.total)); dcBar.setAttribute('aria-valuenow', String(doneN));
+      dcBar.setAttribute('aria-valuetext', 'تم شرح ' + doneN + ' من ' + D.total + ' صفحة');
+    }
+    /* معاينة صفحات الدفعة الحالية (صفحة تظهر أول ما تتجهّز) */
+    h = '';
+    if(D && D.open){
+      D.pages.forEach(function(p, k){ h += '<button type="button" class="nbst-th nbdc-th" data-dc="pv" data-i="' + k + '" aria-label="معاينة صفحة ' + p.n + '"><img src="' + p.pv + '" alt="صفحة ' + p.n + '"><span class="nbst-no" aria-hidden="true">' + p.n + '</span></button>'; });
+      for(i = D.pages.length + D.bad; i < D.want; i++) h += '<div class="nbst-th is-load" aria-busy="true"><span class="nbai-wz-spin" aria-hidden="true"></span></div>';
+    }
+    dcRow.hidden = !h; dcSet(dcRow, h);
+    /* الأسهم + الزر الرئيسي */
+    h = '';
+    if(D){
+      var wait = busy || stLoad > 0, endMode = !!(L && L.end), allDone = true, p2;
+      for(p2 = from; p2 <= to; p2++) if(!D.done[p2]){ allDone = false; break; }
+      h = '<button type="button" class="nbdc-st" data-dc="prev" aria-label="الدفعة السابقة" title="الدفعة السابقة"' + (wait || D.at <= 0 ? ' disabled' : '') + '>' + DCI.prev + '</button>';
+      if(endMode) h += '<button type="button" class="nbdc-go" data-dc="new"' + (busy ? ' disabled' : '') + '><span>ارفع ملف جديد</span><small>أو راجع أي دفعة بالأسهم</small></button>';
+      else if(busy && L) h += '<button type="button" class="nbdc-go" disabled><span>بجهّز الامتحان…</span><small>وبعدها تكمّل ' + dcRg(from, to) + '</small></button>';
+      else if(busy) h += '<button type="button" class="nbdc-go" disabled><span>جاري شرح ' + dcRg(from, to) + '…</span><small>استنى لحد ما الشرح والامتحان يخلصوا</small></button>';
+      else if(stLoad > 0) h += '<button type="button" class="nbdc-go" disabled><span>بجهّز ' + dcRg(from, to) + '…</span><small>' + D.pages.length + ' من ' + D.want + '</small></button>';
+      else if(!D.pages.length) h += '<button type="button" class="nbdc-go is-sec" data-dc="retry"><span>حمّل ' + dcRg(from, to) + '</span><small>اضغط لتجهيز الصفحات</small></button>';
+      else h += '<button type="button" class="nbdc-go" data-dc="go"><span>اشرح ' + dcRg(from, to) + '</span><small>الدفعة ' + (Math.floor(D.at / N) + 1) + ' من ' + K + ' · ' + (allDone ? 'اتشرحت قبل كده · ' : '') + 'بنقطة واحدة</small></button>';
+      h += '<button type="button" class="nbdc-st" data-dc="next" aria-label="الدفعة التالية" title="الدفعة التالية"' + (wait || D.at + N >= D.total ? ' disabled' : '') + '>' + DCI.next + '</button>';
+    }
+    dcSet(dcAct, h);
+    /* الدفعة اللي بعدها بتتجهّز بعد ما الشرح والامتحان يخلصوا (مش وقت الحركات) */
+    if(D && D.need && !busy && !stLoad){
+      D.need = false;
+      setTimeout(function(){ if(DOC === D && !busy && !stLoad && !D.pages.length && card.isConnected) dcBatch(); }, 500);
+    }
+    if(fk && !(ae && ae.isConnected)){   /* الزر اللي كان عليه الفوكس اتبدّل: نرجّع الفوكس لنظيره */
+      var q = fk.split('|'), nf = dcEl.querySelector('[data-dc="' + q[0] + '"]' + (q[1] ? '[data-i="' + q[1] + '"]' : ''));
+      if(nf && !nf.disabled) try{ nf.focus({ preventScroll: true }); }catch(e){}
+    }
+    if(dcLbI >= 0) dcLbPaint();
+  }
+
+  /* ── تحميل pdf.js عند الطلب فقط ── */
+  function dcPdfLib(){ return window.pdfjsLib || window['pdfjs-dist/build/pdf'] || null; }
+  function dcLoadLib(cb){
+    var L = dcPdfLib();
+    if(L){ dcCfg(L); return cb(true); }
+    if(dcLibQ){ dcLibQ.push(cb); return; }
+    dcLibQ = [cb];
+    var s = document.createElement('script');
+    function fin(ok){ var q = dcLibQ; dcLibQ = null; if(ok) dcCfg(dcPdfLib()); else if(s.parentNode) s.parentNode.removeChild(s); q.forEach(function(f){ f(ok); }); }
+    s.src = DC_LIB + 'min.js'; s.async = true;
+    s.onload = function(){ fin(!!dcPdfLib()); }; s.onerror = function(){ fin(false); };
+    document.head.appendChild(s);
+  }
+  function dcCfg(L){ try{ if(L && L.GlobalWorkerOptions && !L.GlobalWorkerOptions.workerSrc) L.GlobalWorkerOptions.workerSrc = DC_LIB + 'worker.min.js'; }catch(e){} }
+
+  /* ── فتح ملف: تحقق ← قراءة ← pdf.js ← أول دفعة ── */
+  function dcAsk(){
+    if(busy){ show('استنى لحد ما الشرح يخلص وبعدها ارفع ملف جديد.', true); return; }
+    if(dcOpening) return;
+    try{ dcFile.click(); }catch(e){}
+  }
+  function dcPick(file){
+    if(!file) return;
+    if(busy){ show('استنى لحد ما الشرح يخلص وبعدها ارفع ملف جديد.', true); return; }
+    if(!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name || ''))){ show('الملف لازم يكون PDF. لو ملفك PowerPoint أو Word احفظه PDF الأول وارفعه.', true); return; }
+    if(file.size > DC_MB * 1048576){ show('الملف أكبر من ' + DC_MB + ' ميجا. جرّب ملف أصغر أو قسّمه لأجزاء.', true); return; }
+    if(!DOC && stImgs.length){ show('فيه صور مختارة دلوقتي — اشرحها أو احذفها الأول وبعدها ارفع الملف.', true); return; }
+    if(stLoad){ show('استنى لحظة لحد ما الصور تتجهّز.', true); return; }
+    show('', false);
+    var tk = ++dcOpenTok;
+    dcOpening = file.name || 'document.pdf'; dcPaint();
+    function fail(e){
+      if(tk !== dcOpenTok) return;
+      dcOpening = ''; dcPaint();
+      show(e && e.nb === 'lib' ? 'تعذّر تحميل أداة قراءة الـ PDF. اتأكد من الإنترنت وجرّب تاني.' :
+        (e && e.name === 'PasswordException' ? 'الملف ده محمي بكلمة سر. فُك الحماية وارفعه تاني.' :
+        (e && e.nb === 'empty' ? 'الملف فاضي (مفيهوش صفحات).' : 'ما قدرتش أقرأ الملف ده. اتأكد إنه PDF سليم.')), true);
+    }
+    dcLoadLib(function(ok){
+      if(tk !== dcOpenTok) return;
+      if(!ok){ fail({ nb: 'lib' }); return; }
+      var fr = new FileReader();
+      fr.onerror = function(){ fail(null); };
+      fr.onload = function(){
+        var task;
+        try{ task = dcPdfLib().getDocument({ data: new Uint8Array(fr.result), isEvalSupported: false }); }catch(e){ fail(e); return; }   /* isEvalSupported:false = تحصين pdf.js من تنفيذ كود جوه الخطوط */
+        task.promise.then(function(pdf){
+          if(tk !== dcOpenTok || !card.isConnected){ try{ pdf.destroy(); }catch(e){} return; }
+          if(!pdf.numPages){ try{ pdf.destroy(); }catch(e){} fail({ nb: 'empty' }); return; }
+          dcAttach(file, pdf);
+        }, fail);
+      };
+      fr.readAsArrayBuffer(file);
+    });
+  }
+  function dcAttach(file, pdf){
+    var old = DOC; if(old && old.pdf){ try{ old.pdf.destroy(); }catch(e){} }
+    dcTok++; stImgs = []; stLoad = 0; dcOpening = '';
+    if(dcAuto && stQi.value.trim() === dcAuto){ stQi.value = ''; fit(); } dcAuto = '';
+    DOC = { name: file.name || 'document.pdf', pdf: pdf, total: pdf.numPages, at: 0, done: {}, pages: [], want: 0, bad: 0, win: null, open: true, last: null, need: false };
+    dcBatch();
+  }
+  function dcClose(){
+    if(busy){ show('استنى لحد ما الشرح يخلص.', true); return; }
+    var D = DOC;
+    if(!D){ if(dcOpening){ dcOpenTok++; dcOpening = ''; dcPaint(); } return; }
+    DOC = null; dcTok++; dcRun = null;
+    try{ D.pdf.destroy(); }catch(e){}
+    stImgs = []; stLoad = 0;
+    if(dcAuto && stQi.value.trim() === dcAuto){ stQi.value = ''; fit(); } dcAuto = '';
+    if(dcLbI >= 0) dcLbClose(true);
+    show('', false); paintStrip();
+  }
+
+  /* ── تحويل صفحة لصورة: نسخة كاملة للإرسال (بنفس سقف حجم الصور العادية) + نسخة معاينة صغيرة ── */
+  function dcPage(pdf, no, cb){
+    var fin = false;
+    function out(r){ if(fin) return; fin = true; cb(r); }
+    pdf.getPage(no).then(function(pg){
+      var v1 = pg.getViewport({ scale: 1 }), sc = Math.min(4, ST_SHRINK.max / Math.max(v1.width, v1.height)), vp = pg.getViewport({ scale: sc });
+      var cv = document.createElement('canvas'), cx;
+      cv.width = Math.max(1, Math.round(vp.width)); cv.height = Math.max(1, Math.round(vp.height));
+      cx = cv.getContext('2d', { alpha: false }); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+      return pg.render({ canvasContext: cx, viewport: vp }).promise.then(function(){
+        var CAP = ST_SHRINK.cap, w = cv.width, h = cv.height, work = cv, d = '', q, tries, c2;
+        for(tries = 0; tries < 4; tries++){
+          if(tries){
+            w = Math.round(w * 0.8); h = Math.round(h * 0.8);
+            work = document.createElement('canvas'); work.width = w; work.height = h;
+            c2 = work.getContext('2d'); c2.fillStyle = '#fff'; c2.fillRect(0, 0, w, h); c2.imageSmoothingQuality = 'high'; c2.drawImage(cv, 0, 0, w, h);
+          }
+          q = 0.84; d = work.toDataURL('image/jpeg', q);
+          while(d.length > CAP && q > 0.5){ q -= 0.08; d = work.toDataURL('image/jpeg', q); }
+          if(d.length <= CAP) break;
+        }
+        var ps = Math.min(1, 640 / Math.max(cv.width, cv.height)), pc = document.createElement('canvas'), pv;
+        pc.width = Math.max(1, Math.round(cv.width * ps)); pc.height = Math.max(1, Math.round(cv.height * ps));
+        var c3 = pc.getContext('2d'); c3.fillStyle = '#fff'; c3.fillRect(0, 0, pc.width, pc.height); c3.imageSmoothingQuality = 'high'; c3.drawImage(cv, 0, 0, pc.width, pc.height);
+        pv = pc.toDataURL('image/jpeg', 0.72);
+        try{ pg.cleanup(); }catch(e){}
+        cv.width = cv.height = 0;   /* تحرير الذاكرة */
+        return d.length > CAP + 20 * 1024 ? null : { d: d, pv: pv };
+      });
+    }).then(out, function(){ out(null); });
+  }
+  /* تجهيز الدفعة الحالية (D.at … D.at+N): الصور الكاملة بتتحط في stImgs عشان نفس زر الإرسال/Enter/runStudy يشتغلوا من غير أي تغيير */
+  function dcBatch(){
+    var D = DOC; if(!D) return;
+    var N = dcSize(), from = D.at + 1, to = Math.min(D.total, D.at + N), tk = ++dcTok;
+    D.pages = []; D.bad = 0; D.win = [from, to]; D.want = to - from + 1; D.need = false;
+    stImgs = []; stLoad = D.want; show('', false); paintStrip();
+    (function next(no){
+      if(tk !== dcTok || DOC !== D || !card.isConnected) return;
+      if(no > to){
+        stLoad = 0;
+        if(!D.pages.length) show('ما قدرتش أحوّل الصفحات دي لصور. جرّب تاني أو ارفع ملف تاني.', true);
+        else if(D.bad) show(D.bad === 1 ? 'صفحة واحدة ماتحوّلتش — باقي الصفحات جاهزة.' : D.bad + ' صفحات ماتحوّلوش — باقي الصفحات جاهزة.', true);
+        paintStrip(); return;
+      }
+      dcPage(D.pdf, no, function(r){
+        if(tk !== dcTok || DOC !== D || !card.isConnected) return;
+        stLoad--;
+        if(r){ D.pages.push({ n: no, d: r.d, pv: r.pv }); stImgs.push({ d: r.d, qc: null, pg: no }); } else D.bad++;
+        paintStrip();
+        setTimeout(function(){ next(no + 1); }, 0);   /* نسيب المتصفح يتنفّس بين كل صفحة والتانية */
+      });
+    })(from);
+  }
+  function dcStep(dir){
+    var D = DOC; if(!D || busy || stLoad) return;
+    var N = dcSize(), at = D.at + dir * N;
+    if(at < 0) at = 0;
+    if(at >= D.total || at === D.at) return;
+    D.at = at; D.last = null; D.need = false; D.open = true;
+    dcBatch();
+  }
+  function dcGo(){
+    var D = DOC; if(!D || busy || stLoad) return;
+    if(!D.pages.length){ dcBatch(); return; }
+    var same = stImgs.length === D.pages.length && D.pages.every(function(p, i){ return stImgs[i] && stImgs[i].d === p.d; });
+    if(!same){ stImgs = D.pages.map(function(p){ return { d: p.d, qc: null, pg: p.n }; }); paintStrip(); }
+    runStudy();
+  }
+
+  /* ── ربط runStudy: قبل الإرسال (ملاحظة تلقائية بالصفحات لو الطالب ماكتبش حاجة) وبعد نجاح الشرح (تقدّم المؤشر) ── */
+  function dcPre(){
+    dcRun = null;
+    var D = DOC; if(!D || !D.pages.length || stImgs.length !== D.pages.length) return;
+    for(var i = 0; i < D.pages.length; i++) if(!stImgs[i] || stImgs[i].d !== D.pages[i].d) return;
+    var a = D.pages[0].n, b = D.pages[D.pages.length - 1].n, v = stQi.value.trim();
+    dcRun = { D: D, pages: D.pages.map(function(p){ return p.n; }), to: D.win ? D.win[1] : b };
+    if(!v || v === dcAuto){ dcAuto = (a === b ? 'الصفحة ' + a : 'الصفحات ' + a + '–' + b) + ' من «' + dcShort(D.name) + '»'; stQi.value = dcAuto; }
+    D.last = null;
+  }
+  function dcDone(S){
+    var R = dcRun; dcRun = null;
+    if(!R || R.D !== DOC) return;
+    var D = DOC, end = R.to >= D.total;
+    R.pages.forEach(function(n){ D.done[n] = 1; });
+    D.last = { from: R.pages[0], to: R.pages[R.pages.length - 1], end: end };
+    D.pages = []; D.win = null; D.want = 0; D.bad = 0; D.open = false;   /* الصور اتبعتت: نقفل المعاينة عشان الشات ياخد مساحته */
+    if(!end){ D.at = R.to; D.need = true; }   /* مؤشر الدفعة اللي بعدها (بتتجهّز لما busy يخلص) */
+    dcPaint();
+  }
+
+  /* ── المعاينة الكبيرة لصفحات الدفعة (تكبير + تنقّل + سحب + Esc) ── */
+  function dcLbBuild(){
+    if(dcLb) return dcLb;
+    var e = document.createElement('div');
+    e.className = 'nbdc-lb'; e.hidden = true; e.setAttribute('role', 'dialog'); e.setAttribute('aria-modal', 'true'); e.setAttribute('aria-label', 'معاينة الصفحة');
+    e.innerHTML = '<div class="nbdc-lbh"><button type="button" class="nbdc-lbb" data-lb="x" aria-label="إغلاق المعاينة">' + DCI.x + '</button><div class="nbdc-lbt" aria-live="polite"></div><button type="button" class="nbdc-lbb" data-lb="z" aria-pressed="false" aria-label="تكبير الصفحة">' + DCI.zoom + '</button></div>' +
+      '<div class="nbdc-lbv" dir="ltr"><img alt=""></div>' +
+      '<div class="nbdc-lbf"><button type="button" class="nbdc-lbb" data-lb="p" aria-label="الصفحة السابقة">' + DCI.prev + '</button><button type="button" class="nbdc-lbb" data-lb="n" aria-label="الصفحة التالية">' + DCI.next + '</button></div>';
+    card.appendChild(e); dcLb = e;
+    e.addEventListener('click', function(ev){
+      var t = ev.target; if(!t || !t.closest) return;
+      var b = t.closest('[data-lb]');
+      if(b){ if(b.disabled) return; var k = b.getAttribute('data-lb'); if(k === 'x') dcLbClose(); else if(k === 'p') dcLbGo(-1); else if(k === 'n') dcLbGo(1); else if(k === 'z') dcLbZoom(); return; }
+      if(t.tagName === 'IMG') dcLbZoom();
+    });
+    var tx = 0, ty = 0, vw = e.querySelector('.nbdc-lbv');
+    vw.addEventListener('touchstart', function(ev){ var c = ev.touches && ev.touches[0]; if(c){ tx = c.clientX; ty = c.clientY; } }, { passive: true });
+    vw.addEventListener('touchend', function(ev){
+      var c = ev.changedTouches && ev.changedTouches[0]; if(!c || vw.classList.contains('is-zoom')) return;
+      var dx = c.clientX - tx, dy = c.clientY - ty;
+      if(Math.abs(dx) > 56 && Math.abs(dy) < 70) dcLbGo(dx < 0 ? 1 : -1);   /* RTL: السحب ناحية الشمال = الصفحة اللي بعدها */
+    }, { passive: true });
+    return e;
+  }
+  function dcLbOpen(i){
+    var D = DOC; if(!D || !D.pages[i]) return;
+    var e = dcLbBuild(); dcLbRet = document.activeElement; dcLbI = i;
+    e.querySelector('.nbdc-lbv').classList.remove('is-zoom'); e.querySelector('[data-lb="z"]').setAttribute('aria-pressed', 'false');
+    e.hidden = false; dcLbPaint();
+    try{ e.querySelector('[data-lb="x"]').focus({ preventScroll: true }); }catch(x){}
+  }
+  function dcLbPaint(){
+    var D = DOC, p = D && D.pages[dcLbI];
+    if(!dcLb || dcLbI < 0) return;
+    if(!p){ dcLbClose(true); return; }
+    var im = dcLb.querySelector('img'), src2 = p.d || p.pv;
+    if(im.getAttribute('data-n') !== String(p.n)){ im.src = src2; im.setAttribute('data-n', String(p.n)); }
+    im.alt = 'صفحة ' + p.n;
+    dcSet(dcLb.querySelector('.nbdc-lbt'), '<b>صفحة <bdi dir="ltr">' + p.n + '</bdi></b><small><bdi dir="ltr">' + (dcLbI + 1) + ' / ' + D.pages.length + '</bdi> في الدفعة دي</small>');
+    dcLb.querySelector('[data-lb="p"]').disabled = dcLbI <= 0;
+    dcLb.querySelector('[data-lb="n"]').disabled = dcLbI >= D.pages.length - 1;
+  }
+  function dcLbGo(d){
+    var D = DOC; if(!D || dcLbI < 0) return;
+    var j = dcLbI + d; if(j < 0 || j >= D.pages.length) return;
+    dcLbI = j;
+    var vw = dcLb.querySelector('.nbdc-lbv'); vw.classList.remove('is-zoom'); dcLb.querySelector('[data-lb="z"]').setAttribute('aria-pressed', 'false');
+    dcLbPaint();
+  }
+  function dcLbZoom(){
+    if(!dcLb || dcLbI < 0) return;
+    var vw = dcLb.querySelector('.nbdc-lbv'), zb = dcLb.querySelector('[data-lb="z"]'), on = !vw.classList.contains('is-zoom');
+    vw.classList.toggle('is-zoom', on); zb.setAttribute('aria-pressed', on ? 'true' : 'false'); zb.setAttribute('aria-label', on ? 'تصغير الصفحة' : 'تكبير الصفحة');
+    if(on){ vw.scrollTop = 0; vw.scrollLeft = Math.max(0, (vw.scrollWidth - vw.clientWidth) / 2); }
+  }
+  function dcLbClose(quiet){
+    if(!dcLb || dcLbI < 0) return;
+    dcLb.hidden = true; dcLbI = -1;
+    var r = dcLbRet; dcLbRet = null;
+    if(!quiet && r && r.isConnected) try{ r.focus({ preventScroll: true }); }catch(e){}
+  }
+
+  /* ── الأحداث ── */
+  dcEl.addEventListener('click', function(ev){
+    var t = ev.target, b = t && t.closest && t.closest('[data-dc]'); if(!b || !dcEl.contains(b) || b.disabled) return;
+    var a = b.getAttribute('data-dc');
+    if(a === 'go') dcGo();
+    else if(a === 'prev') dcStep(-1);
+    else if(a === 'next') dcStep(1);
+    else if(a === 'tg'){ if(DOC){ DOC.open = !DOC.open; dcPaint(); } }
+    else if(a === 'x') dcClose();
+    else if(a === 'new') dcAsk();
+    else if(a === 'retry') dcBatch();
+    else if(a === 'pv') dcLbOpen(+b.getAttribute('data-i'));
+  });
+  dcBtn.addEventListener('click', dcAsk);
+  dcFile.addEventListener('change', function(){ var f = this.files && this.files[0]; try{ this.value = ''; }catch(e){} dcPick(f); });
+  /* لو الملف مفتوح، إضافة صور لوحدها بتتقفل (عشان دفعة الملف ماتتخلطش بصور تانية) مع تلميح بدل ما الضغطة تضيع */
+  card.addEventListener('click', function(ev){
+    var t = ev.target; if(!DOC || !t || !t.closest || !t.closest('.nbai-st-add,.nbst-slot')) return;
+    ev.stopPropagation(); ev.preventDefault();
+    show('الملف مفتوح دلوقتي — اقفله (×) لو عايز ترفع صور لوحدها.', true);
+  }, true);
+  card.addEventListener('keydown', function(ev){   /* المعاينة الكبيرة: Esc يقفلها (مش الواجهة كلها) · الأسهم تنقّل · Tab محبوس جواها */
+    if(dcLbI < 0) return;
+    var k = ev.key;
+    if(k === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); dcLbClose(); }
+    else if(k === 'ArrowLeft'){ ev.preventDefault(); dcLbGo(1); }
+    else if(k === 'ArrowRight'){ ev.preventDefault(); dcLbGo(-1); }
+    else if(k === 'Tab'){
+      var bs = [].filter.call(dcLb.querySelectorAll('button'), function(x){ return !x.disabled; });
+      if(!bs.length) return;
+      var ix = bs.indexOf(document.activeElement);
+      if(ev.shiftKey && ix <= 0){ ev.preventDefault(); bs[bs.length - 1].focus(); }
+      else if(!ev.shiftKey && (ix === -1 || ix === bs.length - 1)){ ev.preventDefault(); bs[0].focus(); }
+    }
+  }, true);
+  try{ new MutationObserver(function(){ if(card.hidden && dcLbI >= 0) dcLbClose(true); }).observe(card, { attributes: true, attributeFilter: ['hidden'] }); }catch(e){}   /* الواجهة اتقفلت: المعاينة تتقفل معاها */
+  dcPaint();
+  /* ═════════ STUDY-DOC:END ═════════ */
 
   function setBusy(btn, on, label){ busy = on; btn.classList.toggle('is-busy', !!on); btn.disabled = on || (btn.classList.contains('nbai-go-diag') && !ready()); btn.textContent = on ? 'جارٍ التحليل...' : label;
     if(btn.classList.contains('nbai-go-diag')) card.querySelector('.nbai-pane[data-p="diag"]').classList.toggle('nbai-diag-busy', !!on); }
