@@ -28256,6 +28256,22 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbdc-lb button:focus-visible{outline:2.5px solid #fff;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.nbai-ov :is(.nbdc,.nbdc-row,.nbdc-ok,.nbdc-lb){animation:none!important}.nbdc-bar i{transition:none}}
 </style>
+<style id="nb-study-bar-polish">
+/* STUDY-BAR-POLISH: تلميع شريط الكتابة في «ذاكر مع نبتيكس» فقط — بصري بحت (مفيش تغيير في السلوك أو الـ IDs أو الـ handlers).
+   • الدواير التلاتة (صور / PDF / إرسال) بنفس المقاس 40px، وأيقونات بنفس الحجم البصري ومتمركزة
+   • سطر حقل الكتابة = ارتفاع الأزرار (40px) فالنص والأيقونات على محور واحد
+   • هالة التنبيه حوالين زر الصور أهدى (كانت كبيرة وبتخلّي الزر شكله أكبر من باقي الأزرار)
+   للتراجع: امسح الـ style ده كله + ارجّع نص الـ placeholder في paintStudy للقديم. */
+.nbai-ov .nbai-pane.nbai-study .nbai-cm .nbai-q{min-height:40px;padding:8px 14px;line-height:24px}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm :is(.nbai-st-add,.nbai-st-doc,.nbai-go-ask){flex:none;width:40px;height:40px;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm .nbai-st-add svg{width:19px;height:19px;display:block}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm .nbai-st-doc svg{width:22px;height:22px;display:block}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm .nbai-go-ask svg{width:19px;height:19px;display:block}
+.nbai-ov .nbai-pane.nbai-study .nbai-cm:has(.nbai-qi:placeholder-shown):not(.nbst-ready) .nbai-go-ask{box-shadow:inset 0 0 0 1px var(--ai-ring)}
+.nbai-ov .nbai-pane.nbai-study .nbai-st-th[hidden]+.nbai-cm:not(:focus-within) .nbai-st-add:not([disabled]){animation:nbf-ring-soft 4.2s var(--ai-ease) 1.2s infinite}
+@keyframes nbf-ring-soft{0%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 0 var(--ai-soft2)}60%,100%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 6px transparent}}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-pane.nbai-study .nbai-st-th[hidden]+.nbai-cm:not(:focus-within) .nbai-st-add:not([disabled]){animation:none}}
+</style>
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
@@ -28899,7 +28915,7 @@ function buildScreen(){
     askPane.classList.toggle('nbai-study', on);
     stFocus(on);
     stAdd.hidden = !on;
-    stQi.setAttribute('placeholder', on ? 'اكتب ملاحظة أو اسم المادة (اختياري)…' : ST_PH);
+    stQi.setAttribute('placeholder', on ? 'أضف ملاحظة أو اسم المادة' : ST_PH);   /* STUDY-BAR-POLISH: نص أقصر وسطر واحد — القديم (للتراجع): 'اكتب ملاحظة أو اسم المادة (اختياري)…' */
     paintStrip();
   }
   /* تبديل محتوى الشات بين مجموعة الاستشارة (مزرعتي / أي حاجة) ومجموعة «ذاكر» */
@@ -30559,6 +30575,60 @@ window.NbFarmAI.openStudy = function(opener){
     return r;
   };
 })();
+/* STUDY-PORTAL: انتقال «دخول عالم المذاكرة» عند الضغط على زر «ذاكر مع نبتيكس» في الرئيسية فقط — إضافة بصرية بحتة: بوابة بنفسجية بتتفتح من مكان الزر وتغطي الشاشة (أيقونة بترتسم + عنوان + شريط تجهيز)، وتحتها بنفتح Nabtex AI بنفس المسار الأصلي بالظبط (openStudy)، وبعدين البوابة بتتلاشى وعناصر الواجهة بتدخل ورا بعض. لو المستخدم مش مسجّل دخول أو الجهاز مفعّل «تقليل الحركة» بنفتح فورًا من غير انتقال. إضافة فقط: بتلفّ openStudy من غير ما تعدّله. للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-study-portal. */
+(function(){
+  var _os = window.NbFarmAI.openStudy, run = false, MIN = 1100, UNDER = 560;
+  function still(){ try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+  function dots(){
+    var h = '', i, s;
+    for(i = 0; i < 26; i++){
+      s = (1.5 + Math.random() * 2.2).toFixed(1);
+      h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--y:' + (8 + Math.random() * 86).toFixed(1) + '%;--s:' + s + 'px;--d:' + (2.6 + Math.random() * 2.4).toFixed(1) + 's;--dl:' + (Math.random() * 1.6).toFixed(2) + 's"></i>';
+    }
+    return h;
+  }
+  function world(){   /* دخول عناصر واجهة المذاكرة ورا بعض (Web Animations: مفيش لمس لأي CSS animation موجود) */
+    var s = SCR; if(!s || !s.querySelector) return;
+    [['.nbai-bar', -18, 0], ['.nbai-pane:not([hidden]) .nbai-th', 14, 110], ['.nbai-pane:not([hidden]) .nbai-cm', 26, 200]].forEach(function(it){
+      var n = s.querySelector(it[0]); if(!n || !n.animate) return;
+      try{ n.animate([{ opacity: 0, transform: 'translateY(' + it[1] + 'px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 760, delay: 140 + it[2], easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }); }catch(e){}
+    });
+  }
+  window.NbFarmAI.openStudy = function(opener){
+    var self = this, args = arguments;
+    if(run) return;
+    try{
+      if(OPEN || !user() || still() || !opener || !opener.getBoundingClientRect || !document.body) return _os.apply(self, args);
+    }catch(e){ return _os.apply(self, args); }
+    run = true;
+    var el, t0 = Date.now(), opened = false, skip = false, poll = null;
+    try{
+      var rc = opener.getBoundingClientRect(), cx = rc.left + rc.width / 2, cy = rc.top + rc.height / 2, W = window.innerWidth, H = window.innerHeight;
+      var r = Math.ceil(Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy))) + 12;
+      el = document.createElement('div'); el.className = 'nbsp'; el.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--cx', cx + 'px'); el.style.setProperty('--cy', cy + 'px'); el.style.setProperty('--r', r + 'px');
+      el.innerHTML = '<div class="nbsp-bg"></div><div class="nbsp-glow"></div><div class="nbsp-st">' + dots() + '</div>' +
+        '<div class="nbsp-core"><div class="nbsp-orb"><svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="nbsp-ic"><path pathLength="1" d="M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z"/><path pathLength="1" d="M12 6.5v13"/></svg></div>' +
+        '<div class="nbsp-t">ذاكر مع نبتيكس</div><div class="nbsp-s">مساحتك الخاصة للمذاكرة والتركيز</div><div class="nbsp-pg"><i></i></div></div>';
+      el.addEventListener('click', function(){ skip = true; });
+      el.addEventListener('wheel', function(e){ e.preventDefault(); }, { passive: false });
+      el.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
+      document.body.appendChild(el);
+      try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+    }catch(e){ run = false; if(el && el.parentNode) el.parentNode.removeChild(el); return _os.apply(self, args); }
+    /* الفتح الفعلي تحت البوابة بعد ما تغطي الشاشة (عشان الرئيسية ما تختفيش قبل الدايرة ما توصل) */
+    setTimeout(function(){ try{ _os.apply(self, args); }catch(e){} opened = true; }, UNDER);
+    function leave(){
+      if(poll){ clearInterval(poll); poll = null; }
+      el.classList.add('is-out'); world();
+      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); run = false; }, 760);
+    }
+    poll = setInterval(function(){
+      var n = Date.now() - t0, ready = opened && (OPEN || document.querySelector('.aipw'));
+      if(n >= 5000 || (ready && (n >= MIN || (skip && n >= UNDER + 160)))) leave();   /* 5 ثواني حد أمان لو الفتح اتأخر أو فشل */
+    }, 50);
+  };
+})();
 /* AI-SUB: أي تغيير في الرصيد/الاشتراك (استخدام، شراء، يوم جديد) يعيد رسم شريط الرصيد */
 if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onChange(function(){ if(SCR && SCR._repaint){ try{ SCR._repaint(); }catch(e){} } });
 })();
@@ -30570,6 +30640,38 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @keyframes nbaiOpenPulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.nbai-opening{animation:none!important;opacity:.65}}
 </style>
+<style id="nb-study-portal">
+/* STUDY-PORTAL: انتقال «دخول عالم المذاكرة» من زر «ذاكر مع نبتيكس» (الرئيسية). كله مقيّد بـ .nbsp (بتتضاف للصفحة أثناء الانتقال وتتشال بعده) — مفيش تأثير على أي حاجة تانية. للتراجع: امسح الكتلة دي + كتلة STUDY-PORTAL في الـ JS. */
+.nbsp{position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:9500;overflow:hidden;direction:rtl;color:#fff;font-family:inherit;touch-action:none;-webkit-tap-highlight-color:transparent;background:#12062e;clip-path:circle(var(--r,150vmax) at var(--cx,50%) var(--cy,50%));animation:nbspExpand 640ms cubic-bezier(.7,0,.2,1) both;will-change:clip-path,opacity,transform}
+.nbsp.is-out{animation:nbspOut 700ms cubic-bezier(.4,0,.2,1) forwards;pointer-events:none}
+.nbsp-bg{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 40%,#4c1d95 0%,#2e1065 38%,#160a35 74%,#0b0420 100%)}
+.nbsp-glow{position:absolute;inset:-20%;pointer-events:none;background:radial-gradient(circle at 22% 28%,rgba(139,92,246,.55),transparent 42%),radial-gradient(circle at 80% 72%,rgba(34,197,94,.2),transparent 42%),radial-gradient(circle at 70% 18%,rgba(196,181,253,.22),transparent 36%);animation:nbspDrift 6s ease-in-out infinite alternate}
+.nbsp-st{position:absolute;inset:0;pointer-events:none}
+.nbsp-st i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:#fff;box-shadow:0 0 7px rgba(196,181,253,.9);opacity:0;animation:nbspTw var(--d) ease-in-out var(--dl) infinite}
+.nbsp-core{position:absolute;left:50%;top:50%;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(86vw,340px);margin:-120px 0 0 calc(min(86vw,340px) / -2);text-align:center}
+.nbsp.is-out .nbsp-core{animation:nbspCoreOut 560ms cubic-bezier(.5,0,.9,.4) forwards}
+.nbsp-orb{position:relative;display:grid;place-items:center;width:112px;height:112px;margin-bottom:12px;border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.3),rgba(255,255,255,.06) 62%);border:1px solid rgba(255,255,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 44px rgba(139,92,246,.55);animation:nbspOrb 720ms cubic-bezier(.34,1.5,.64,1) 180ms both,nbspGlow 2.2s ease-in-out 1s infinite}
+.nbsp-orb::before,.nbsp-orb::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(196,181,253,.6);opacity:0;pointer-events:none;animation:nbspRing 1.5s cubic-bezier(.2,.6,.3,1) 520ms 2}
+.nbsp-orb::after{animation-delay:860ms}
+.nbsp-ic path{stroke-dasharray:1;stroke-dashoffset:1;opacity:0;animation:nbspDraw 780ms cubic-bezier(.65,0,.35,1) 440ms forwards}
+.nbsp-t{font-size:25px;font-weight:800;line-height:1.3;letter-spacing:.2px;text-shadow:0 2px 18px rgba(139,92,246,.6);animation:nbspRise 700ms cubic-bezier(.22,1,.36,1) 560ms both}
+.nbsp-s{font-size:13.5px;font-weight:500;line-height:1.6;color:rgba(255,255,255,.74);animation:nbspRise 700ms cubic-bezier(.22,1,.36,1) 700ms both}
+.nbsp-pg{width:132px;height:3px;margin-top:10px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.14);animation:nbspRise 500ms ease 780ms both}
+.nbsp-pg i{display:block;width:100%;height:100%;border-radius:3px;background:linear-gradient(90deg,#c4b5fd,#fff);transform-origin:100% 50%;transform:scaleX(0);animation:nbspPg 1000ms cubic-bezier(.4,0,.2,1) 420ms forwards}
+@keyframes nbspExpand{from{clip-path:circle(0px at var(--cx,50%) var(--cy,50%))}}
+@keyframes nbspOut{0%,22%{opacity:1;transform:none}100%{opacity:0;transform:scale(1.07)}}
+@keyframes nbspCoreOut{to{opacity:0;transform:scale(1.5)}}
+@keyframes nbspDrift{from{transform:translate3d(-3%,-2%,0) scale(1)}to{transform:translate3d(3%,3%,0) scale(1.1)}}
+@keyframes nbspTw{0%,100%{opacity:0;transform:translateY(0) scale(.6)}50%{opacity:.9;transform:translateY(-14px) scale(1)}}
+@keyframes nbspOrb{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+@keyframes nbspGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 44px rgba(139,92,246,.5)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 70px rgba(167,139,250,.8)}}
+@keyframes nbspRing{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(2.4)}}
+@keyframes nbspDraw{0%{opacity:0;stroke-dashoffset:1}8%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
+@keyframes nbspRise{from{opacity:0;transform:translateY(14px);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+@keyframes nbspPg{to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.nbsp{display:none}}
+</style>
+
 <style id="nb-ai-limit-pw">
 /* LIMIT-PAYWALL: دخول ناعم لشاشة الباقات لما النقاط تخلص (بس لما تتفتح بـ limit) — الخلفية تظهر بهدوء، الصندوق يطلع بحركة طويلة هادية، وبعدين الأيقونة والعنوان والباقات والزر يدخلوا ورا بعض. للتراجع: امسح الكتلة دي. */
 .aipw.aipw-lim{animation:aipwLimFade .5s ease both}
