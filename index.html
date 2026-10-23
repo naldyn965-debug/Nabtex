@@ -5743,10 +5743,6 @@ body.modal-open { overflow: hidden; }
       <div class="nbvf-fail nbvf-w" id="nbvf-fail">تم إنشاء حسابك، لكن تعذّر إرسال رسالة التأكيد الآن. اضغط «إعادة إرسال الرسالة» للمحاولة مرة أخرى.</div>
       <p class="nbvf-txt nbvf-o">شكراً لك، تم توثيق بريدك الإلكتروني وأصبح حسابك مؤكّداً.</p>
       <div class="nbvf-act nbvf-w">
-        <a class="nbvf-btn nbvf-pri" id="nbvf-open" href="mailto:">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5l7.6 5.2a1.6 1.6 0 001.8 0l7.6-5.2"/></svg>
-          فتح البريد الوارد
-        </a>
         <button type="button" class="nbvf-btn nbvf-sec" id="nbvf-resend" onclick="nbResendVerification()">إعادة إرسال الرسالة</button>
         <button type="button" class="nbvf-link" onclick="nbCheckVerified(false)">لقد أكّدت بريدي</button>
       </div>
@@ -10749,11 +10745,6 @@ function nbOpenVerifySheet(email, sent) {
   var bg = nbVfSetState('wait');
   if (!bg) return;
   document.getElementById('nbvf-email').textContent = email || '';
-  var open = document.getElementById('nbvf-open');
-  var url = nbInboxUrl(email);
-  open.href = url;
-  if (url.indexOf('mailto:') === 0) { open.removeAttribute('target'); open.removeAttribute('rel'); }
-  else { open.target = '_blank'; open.rel = 'noopener noreferrer'; }
   document.getElementById('nbvf-fail').classList.toggle('on', !sent);
   bg.classList.add('on');
   bg.setAttribute('aria-hidden', 'false');
