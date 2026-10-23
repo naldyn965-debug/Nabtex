@@ -411,7 +411,7 @@ function aiAllowance(ai, farm, now) {
   return { chat: farmOk ? 3 : 2, diag: farmOk ? 3 : 2, imgs: 4 };   /* FREE-2: نقطتين بدل نقطة. القديم (للتراجع): farmOk ? 3 : 1 */
 }
 /* قبل الاتصال بجيميناي: فحص الاشتراك + الرصيد المتبقي. بيرجّع { err } أو { day, lim, used } */
-async function aiPointsCheck(tok, uid, kind) {
+async function aiPointsCheck(tok, uid, kind, dev) {
   const day = cairoDay();
   const r = await Promise.all([fsRead('ai_subscriptions/' + uid, tok), fsRead('farm_subscriptions/' + uid, tok), fsRead('ai_usage/' + uid + '_' + day, tok)]);
   if (!r[0] || !r[1] || !r[2]) return { err: 'sub_check' };
@@ -420,6 +420,10 @@ async function aiPointsCheck(tok, uid, kind) {
   const cap = kind === 'chat' ? lim.chat : lim.diag;
   if (!cap) return { err: 'sub_required', lim: lim };
   if (kind === 'fin' ? used.fin >= used.diag * 2 : used[kind] >= cap) return { err: 'user_limit', lim: lim };
+  /* DEVICE-POOL: حساب مش على باقة مدفوعة → استهلاك الجهاز كله (كل الحسابات اللي دخلت منه النهارده) ما يعدّيش حد الحساب ده. للتراجع: امسح الـ if ده وكتلة DEVICE-POOL تحت aiCharge وسطر devAdd جوه handler. */
+  if (dev && kind !== 'fin' && !(r[0].paidUntil > Date.now())) {
+    if ((await devGet(dev, day, kind)) >= cap) return { err: 'user_limit', lim: lim };
+  }
   return { day: day, lim: lim, used: used };
 }
 /* بعد نجاح الرد: صرف نقطة واحدة (increment) — القواعد بترفض أي تجاوز للحد، فالرد بيتشال لو اترفض */
@@ -439,6 +443,40 @@ async function aiCharge(tok, uid, day, kind) {
     if (r.ok) return 'ok';
     return (r.status === 403 || r.status === 409) ? 'denied' : 'error';
   } catch (e) { return 'error'; } finally { clearTimeout(t); }
+}
+
+/* ═══ DEVICE-POOL — نقاط الجهاز اليومية (شات/تشخيص) متشاركة بين كل الحسابات على نفس الجهاز، فإنشاء حساب جديد ما يرجّعش نقاط اتصرفت.
+   العدّاد في Upstash (نفس متغيرات البيئة بتاعة راوتر الـ backends)؛ لو Upstash مش متظبط أو الهيدر ناقص → الفحص ده بيتخطّى (الحدود الأصلية لكل حساب شغّالة زي ما هي). ═══ */
+function devIdOf(req) {
+  const v = String((req.headers && req.headers['x-nb-device']) || '').trim();
+  return /^[A-Za-z0-9_-]{16,64}$/.test(v) ? v : '';
+}
+function devKey(dev, day, kind) {
+  return 'nbx:dev:' + day + ':' + kind + ':' + crypto.createHash('sha256').update(dev).digest('hex').slice(0, 32);
+}
+async function devGet(dev, day, kind) {
+  if (!(UPSTASH_URL && UPSTASH_TOKEN)) return 0;
+  const c = new AbortController();
+  const t = setTimeout(function () { c.abort(); }, 1500);
+  try {
+    const r = await fetch(UPSTASH_URL + '/get/' + devKey(dev, day, kind), { headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN }, signal: c.signal });
+    const j = r.ok ? await r.json() : null;
+    const n = j ? parseInt(j.result, 10) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch (e) { return 0; } finally { clearTimeout(t); }
+}
+async function devAdd(dev, day, kind) {
+  if (!dev || !(UPSTASH_URL && UPSTASH_TOKEN)) return;
+  const c = new AbortController();
+  const t = setTimeout(function () { c.abort(); }, 1500);
+  try {
+    const k = devKey(dev, day, kind);
+    await fetch(UPSTASH_URL + '/pipeline', {
+      method: 'POST', signal: c.signal,
+      headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify([['INCR', k], ['EXPIRE', k, 172800]])
+    });
+  } catch (e) { /* best-effort */ } finally { clearTimeout(t); }
 }
 
 function sanitizeDiagQ(raw) {
@@ -761,13 +799,14 @@ module.exports = async function handler(req, res) {
 
   /* اشتراك المساعد الذكي + النقاط اليومية (شات / تشخيص): لازم اشتراك أو تجربة أو اشتراك إدارة المزرعة، وفيه رصيد اليوم */
   const aiPtsKind = AI_POINT[mode] || '';
+  const devHdr = devIdOf(req);   /* DEVICE-POOL */
   let aiPts = null;
   if (aiPtsKind) {
-    aiPts = await aiPointsCheck(m[1], uid, aiPtsKind);
+    aiPts = await aiPointsCheck(m[1], uid, aiPtsKind, devHdr);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
   } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') {   /* study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
-    stQa = await aiPointsCheck(m[1], uid, 'chat');
+    stQa = await aiPointsCheck(m[1], uid, 'chat', devHdr);
     if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
   }
   /* «ذاكر مع نبتكس»: عدد الصور حسب الباقة (مجاني/Basic 4 · Plus 8 · Pro 12) — الواجهة بتمنع ده أصلًا، وده الحكم النهائي */
@@ -896,6 +935,7 @@ module.exports = async function handler(req, res) {
       const ch = await aiCharge(m[1], uid, aiPts.day, aiPtsKind);
       if (ch === 'denied') return fail(res, 429, 'user_limit');
       if (ch === 'ok') { if (aiPtsKind === 'fin') aiPts.used.fin++; else aiPts.used[aiPtsKind]++; }
+      if (ch === 'ok' && aiPtsKind !== 'fin') await devAdd(devHdr, aiPts.day, aiPtsKind);   /* DEVICE-POOL: النقطة اتحسبت على الجهاز كمان */
       else console.error('[farm-ai] point charge failed (non-denied)');
     }
     ptsOut = { chat: { left: Math.max(0, aiPts.lim.chat - aiPts.used.chat), max: aiPts.lim.chat }, diag: { left: Math.max(0, aiPts.lim.diag - aiPts.used.diag), max: aiPts.lim.diag } };
