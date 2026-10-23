@@ -10606,12 +10606,29 @@ async function signInWithEmail(email, password) {
   try {
     const _nbCred = await auth.signInWithEmailAndPassword(email, password);
     /* حسابات جديدة (بعد NB_VF_ENFORCE_FROM) لازم تأكّد البريد قبل الدخول — الحسابات القديمة لا تتأثر */
-    if (_nbCred && _nbCred.user && !_nbCred.user.emailVerified && nbVfMustVerify(_nbCred.user)) {
+    if (_nbCred && _nbCred.user && nbVfMustVerify(_nbCred.user)) {
       _nbVfCred = { email: email, password: password };
-      await auth.signOut();
-      closeAuth();
-      nbOpenVerifySheet(email, true);
-      return;
+      if (!_nbCred.user.emailVerified) {
+        /* لسه ما أكّدش بريده بعد إنشاء الحساب: رابط واحد فقط (رابط إنشاء الحساب/تأكيد البريد) */
+        _nbVfMode = 'verify';
+        var _nbVfSent2 = await nbSendVerificationEmail(_nbCred.user);
+        await auth.signOut();
+        closeAuth();
+        nbOpenVerifySheet(email, _nbVfSent2);
+        return;
+      }
+      if (await nbVfIsFirstLogin(_nbCred.user.uid)) {
+        /* أول دخول بعد تأكيد البريد: بدون رابط ثاني — نسجّل إن أول دخول تم */
+        nbVfMarkFirstLogin(_nbCred.user.uid);
+      } else {
+        /* من تاني دخول فصاعدًا: رابط تأكيد هوية عند كل تسجيل دخول (بيحدّ من مشاركة الحسابات) */
+        _nbVfMode = 'login';
+        await auth.signOut(); // نخرّج الجلسة فورًا — الدخول الفعلي بعد الضغط على الرابط فقط
+        var _nbVfLoginSent = await nbSendLoginLink(email);
+        closeAuth();
+        nbOpenVerifySheet(email, _nbVfLoginSent);
+        return;
+      }
     }
     showToast('✅ تم تسجيل الدخول بنجاح', 'ok');
     closeAuth();
@@ -10643,6 +10660,7 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     const _nbVfSent = await nbSendVerificationEmail(userCred.user);
+    _nbVfMode = 'verify';
     /* Firebase بيسجّل الدخول تلقائياً بعد الإنشاء — نخرّج الحساب لحد ما البريد يتأكّد (الدخول بعد التأكيد فقط) */
     _nbVfCred = { email: email, password: password };
     try { await auth.signOut(); } catch (e) { console.error(e); }
@@ -10659,6 +10677,7 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
 
 /* ═══ Email verification (signup) — إرسال رسالة تأكيد البريد + شاشة التأكيد. لا يمنع الدخول ولا يغيّر أي وظيفة قائمة ═══ */
 var _nbVfTimer = null, _nbVfLeft = 0, _nbVfBusy = false, _nbVfErr = '';
+var _nbVfMode = 'verify'; // 'verify' = تأكيد بريد عند إنشاء الحساب | 'login' = رابط تأكيد هوية عند تسجيل الدخول
 var _nbVfCred = null, _nbVfChk = false; // بيانات الحساب الجديد في الذاكرة فقط (لا تُحفظ) لحد ما يتأكد البريد
 var NB_VF_ENFORCE_FROM = Date.UTC(2026, 9, 23, 14, 34, 30); // 2026-10-23 17:34 بتوقيت القاهرة — الحسابات المُنشأة قبل هذه اللحظة (كل المستخدمين الحاليين) لا يُطلب منها التأكيد أبدًا
 function nbVfMustVerify(u) {
@@ -10688,6 +10707,34 @@ async function nbSendVerificationEmail(user) {
   } catch (e) {
     _nbVfErr = (e && e.code) || '';
     console.error('sendEmailVerification error:', e);
+    return false;
+  } finally {
+    auth.languageCode = prevLang;
+  }
+}
+
+async function nbVfIsFirstLogin(uid) { // true = الحساب لسه ما خدش أول دخول (وثيقة المستخدم موجودة وعليها علامة غير مسجّلة). أي فشل في القراءة = نطلب الرابط
+  try {
+    var d = await db.collection('users').doc(uid).get();
+    return !!(d.exists && d.data().nbFirstLoginDone !== true);
+  } catch (e) { console.error(e); return false; }
+}
+function nbVfMarkFirstLogin(uid) {
+  try { db.collection('users').doc(uid).set({ nbFirstLoginDone: true }, { merge: true }).catch(console.error); } catch (e) { console.error(e); }
+}
+
+async function nbSendLoginLink(email) { // رابط دخول بالبريد (Email Link) — الضغط عليه يؤكد الهوية ويكمل الدخول
+  if (!email) return false;
+  var prevLang = auth.languageCode;
+  _nbVfErr = '';
+  try {
+    auth.languageCode = 'ar';
+    await auth.sendSignInLinkToEmail(email, { url: window.location.origin + '/', handleCodeInApp: true });
+    try { localStorage.setItem('nbVfLoginEmail', email); } catch (e) {}
+    return true;
+  } catch (e) {
+    _nbVfErr = (e && e.code) || '';
+    console.error('sendSignInLinkToEmail error:', e);
     return false;
   } finally {
     auth.languageCode = prevLang;
@@ -10776,6 +10823,23 @@ function nbCloseVerify() {
 
 async function nbResendVerification() {
   if (_nbVfBusy || _nbVfLeft > 0 || _nbVfChk) return;
+  if (_nbVfMode === 'login') { // إعادة إرسال رابط تأكيد الهوية (مش محتاج جلسة)
+    var _nbVfEm = (_nbVfCred && _nbVfCred.email) || '';
+    if (!_nbVfEm) { showToast('⚠️ سجّل الدخول أولاً لإعادة إرسال الرابط', 'err'); return; }
+    _nbVfBusy = true;
+    nbVfRender();
+    var _nbVfOk = await nbSendLoginLink(_nbVfEm);
+    _nbVfBusy = false;
+    if (_nbVfOk) {
+      document.getElementById('nbvf-fail').classList.remove('on');
+      showToast('✅ تم إرسال الرابط مرة أخرى', 'ok');
+      nbVfStartCooldown(60);
+    } else {
+      showToast(_nbVfErr === 'auth/too-many-requests' ? '❌ محاولات كثيرة، حاول لاحقاً' : '❌ تعذر إرسال الرابط، حاول بعد قليل', 'err');
+      nbVfRender();
+    }
+    return;
+  }
   _nbVfBusy = true;
   nbVfRender();
   var u = auth.currentUser, temp = false;
@@ -10796,6 +10860,15 @@ async function nbResendVerification() {
 
 async function nbCheckVerified(silent) {
   if (_nbVfChk || _nbVfBusy) return;
+  if (_nbVfMode === 'login') { // الدخول بيتم بالضغط على الرابط (ممكن يتفتح في تبويب تاني ويتزامن هنا)
+    if (auth.currentUser) {
+      nbVfSetState('ok'); clearInterval(_nbVfTimer); _nbVfCred = null;
+      try { showPage('profile'); } catch (e) {}
+    } else if (!silent) {
+      showToast('لم يتم تأكيد الدخول بعد، افتح الرسالة واضغط على الرابط', 'inf');
+    }
+    return;
+  }
   _nbVfChk = true;
   var u = auth.currentUser, temp = false;
   try {
@@ -10811,6 +10884,7 @@ async function nbCheckVerified(silent) {
       nbVfSetState('ok'); clearInterval(_nbVfTimer);
       if (temp) { // اتأكد → نكمّل الدخول (بنفس خطوات ما بعد الإنشاء القديمة)
         _nbVfCred = null;
+        if (nbVfMustVerify(u)) nbVfMarkFirstLogin(u.uid);
         showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
         showPage('profile');
         setTimeout(() => loadUserProfile(), 500);
@@ -11625,6 +11699,29 @@ async function hResetPassword(event) {
   }).catch(() => {
     clean();
     showToast('⚠️ رابط تأكيد البريد غير صالح أو منتهي الصلاحية', 'err');
+  });
+})();
+
+/* ═══ Login Link Handler — لو الصفحة اتفتحت من رابط تأكيد الدخول (Email Link) نكمّل تسجيل الدخول ═══ */
+(function checkLoginEmailLink() {
+  var href = window.location.href, isLink = false;
+  try { isLink = auth.isSignInWithEmailLink(href); } catch (e) {}
+  if (!isLink) return;
+  var email = '';
+  try { email = localStorage.getItem('nbVfLoginEmail') || ''; } catch (e) {}
+  if (!email) email = (window.prompt('اكتب بريدك الإلكتروني لتأكيد تسجيل الدخول') || '').trim();
+  var clean = function () { try { history.replaceState(null, '', window.location.pathname + window.location.hash); } catch (e) {} };
+  if (!email) { clean(); showToast('⚠️ لازم تكتب بريدك الإلكتروني لتأكيد الدخول', 'err'); return; }
+  auth.signInWithEmailLink(email, href).then(function () {
+    clean();
+    try { localStorage.removeItem('nbVfLoginEmail'); } catch (e) {}
+    try { var _nbvfBg = document.getElementById('nbvf-bg'); if (_nbvfBg) { _nbvfBg.classList.remove('on'); _nbvfBg.setAttribute('aria-hidden', 'true'); } clearInterval(_nbVfTimer); _nbVfCred = null; } catch (e) {}
+    showToast('✅ تم تأكيد هويتك وتسجيل الدخول', 'ok');
+    try { showPage('profile'); } catch (e) {}
+  }).catch(function (e) {
+    clean();
+    var code = e && e.code;
+    showToast(code === 'auth/invalid-email' ? '⚠️ البريد غير مطابق للرابط' : '⚠️ رابط تأكيد الدخول غير صالح أو منتهي الصلاحية، سجّل الدخول من جديد', 'err');
   });
 })();
 </script>
