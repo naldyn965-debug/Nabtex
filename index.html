@@ -5749,7 +5749,6 @@ body.modal-open { overflow: hidden; }
         </a>
         <button type="button" class="nbvf-btn nbvf-sec" id="nbvf-resend" onclick="nbResendVerification()">إعادة إرسال الرسالة</button>
         <button type="button" class="nbvf-link" onclick="nbCheckVerified(false)">لقد أكّدت بريدي</button>
-        <button type="button" class="nbvf-link nbvf-skip" onclick="nbCloseVerify()">تخطي الآن</button>
       </div>
       <div class="nbvf-act nbvf-o"><button type="button" class="nbvf-btn nbvf-pri" onclick="nbCloseVerify()">متابعة</button></div>
     </div>
@@ -10612,7 +10611,15 @@ function changePassword() {
 // ======================== AUTH FUNCTIONS ========================
 async function signInWithEmail(email, password) {
   try {
-    await auth.signInWithEmailAndPassword(email, password);
+    const _nbCred = await auth.signInWithEmailAndPassword(email, password);
+    /* حسابات جديدة (بعد NB_VF_ENFORCE_FROM) لازم تأكّد البريد قبل الدخول — الحسابات القديمة لا تتأثر */
+    if (_nbCred && _nbCred.user && !_nbCred.user.emailVerified && nbVfMustVerify(_nbCred.user)) {
+      _nbVfCred = { email: email, password: password };
+      await auth.signOut();
+      closeAuth();
+      nbOpenVerifySheet(email, true);
+      return;
+    }
     showToast('✅ تم تسجيل الدخول بنجاح', 'ok');
     closeAuth();
     showPage('profile');
@@ -10643,10 +10650,10 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     const _nbVfSent = await nbSendVerificationEmail(userCred.user);
-    showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
+    /* Firebase بيسجّل الدخول تلقائياً بعد الإنشاء — نخرّج الحساب لحد ما البريد يتأكّد (الدخول بعد التأكيد فقط) */
+    _nbVfCred = { email: email, password: password };
+    try { await auth.signOut(); } catch (e) { console.error(e); }
     closeAuth();
-    showPage('profile');
-    setTimeout(() => loadUserProfile(), 500);
     try { nbOpenVerifySheet(email, _nbVfSent); } catch (e) { console.error(e); }
   } catch (error) {
     let msg = 'فشل التسجيل: ';
@@ -10659,6 +10666,17 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
 
 /* ═══ Email verification (signup) — إرسال رسالة تأكيد البريد + شاشة التأكيد. لا يمنع الدخول ولا يغيّر أي وظيفة قائمة ═══ */
 var _nbVfTimer = null, _nbVfLeft = 0, _nbVfBusy = false, _nbVfErr = '';
+var _nbVfCred = null, _nbVfChk = false; // بيانات الحساب الجديد في الذاكرة فقط (لا تُحفظ) لحد ما يتأكد البريد
+var NB_VF_ENFORCE_FROM = Date.UTC(2026, 9, 23, 14, 34, 30); // 2026-10-23 17:34 بتوقيت القاهرة — الحسابات المُنشأة قبل هذه اللحظة (كل المستخدمين الحاليين) لا يُطلب منها التأكيد أبدًا
+function nbVfMustVerify(u) {
+  var t = (u && u.metadata && u.metadata.creationTime) ? Date.parse(u.metadata.creationTime) : 0;
+  return t >= NB_VF_ENFORCE_FROM;
+}
+async function nbVfTempSignIn() { // دخول مؤقت للتحقق/إعادة الإرسال فقط — بيرجّع المستخدم أو null
+  if (!_nbVfCred) return null;
+  try { return (await auth.signInWithEmailAndPassword(_nbVfCred.email, _nbVfCred.password)).user; }
+  catch (e) { console.error(e); return null; }
+}
 
 async function nbSendVerificationEmail(user) {
   if (!user) return false;
@@ -10755,18 +10773,28 @@ function nbOpenVerifiedSheet() {
 function nbCloseVerify() {
   var bg = document.getElementById('nbvf-bg');
   if (!bg) return;
+  var wasWait = bg.dataset.state === 'wait';
   bg.classList.remove('on');
   bg.setAttribute('aria-hidden', 'true');
   clearInterval(_nbVfTimer);
+  _nbVfCred = null;
+  if (wasWait) { // الإغلاق (X) قبل التأكيد = بدون دخول
+    if (auth.currentUser && !auth.currentUser.emailVerified) auth.signOut().catch(console.error);
+    showToast('فعّل بريدك من الرابط المُرسل إليك، ثم سجّل الدخول', 'inf');
+  } else if (!auth.currentUser) { // تم التأكيد من الرابط (من غير جلسة) → نفتح تسجيل الدخول
+    openAuth('login');
+  }
 }
 
 async function nbResendVerification() {
-  if (_nbVfBusy || _nbVfLeft > 0) return;
-  var u = auth.currentUser;
-  if (!u) { showToast('⚠️ سجّل الدخول أولاً لإعادة إرسال الرسالة', 'err'); return; }
+  if (_nbVfBusy || _nbVfLeft > 0 || _nbVfChk) return;
   _nbVfBusy = true;
   nbVfRender();
+  var u = auth.currentUser, temp = false;
+  if (!u) { u = await nbVfTempSignIn(); temp = !!u; }
+  if (!u) { _nbVfBusy = false; nbVfRender(); showToast('⚠️ سجّل الدخول أولاً لإعادة إرسال الرسالة', 'err'); return; }
   var ok = await nbSendVerificationEmail(u);
+  if (temp) { try { await auth.signOut(); } catch (e) { console.error(e); } }
   _nbVfBusy = false;
   if (ok) {
     document.getElementById('nbvf-fail').classList.remove('on');
@@ -10779,12 +10807,31 @@ async function nbResendVerification() {
 }
 
 async function nbCheckVerified(silent) {
-  var u = auth.currentUser;
-  if (!u) return;
-  try { await u.reload(); }
-  catch (e) { if (!silent) showToast('⚠️ تعذر التحقق الآن، حاول مرة أخرى', 'err'); return; }
-  if (u.emailVerified) { nbVfSetState('ok'); clearInterval(_nbVfTimer); }
-  else if (!silent) showToast('لم يتم تأكيد البريد بعد، افتح الرسالة واضغط على رابط التأكيد', 'inf');
+  if (_nbVfChk || _nbVfBusy) return;
+  _nbVfChk = true;
+  var u = auth.currentUser, temp = false;
+  try {
+    if (!u) { u = await nbVfTempSignIn(); temp = !!u; }
+    if (!u) return;
+    try { await u.reload(); }
+    catch (e) {
+      if (temp) { try { await auth.signOut(); } catch (e2) {} }
+      if (!silent) showToast('⚠️ تعذر التحقق الآن، حاول مرة أخرى', 'err');
+      return;
+    }
+    if (u.emailVerified) {
+      nbVfSetState('ok'); clearInterval(_nbVfTimer);
+      if (temp) { // اتأكد → نكمّل الدخول (بنفس خطوات ما بعد الإنشاء القديمة)
+        _nbVfCred = null;
+        showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
+        showPage('profile');
+        setTimeout(() => loadUserProfile(), 500);
+      }
+    } else {
+      if (temp) { try { await auth.signOut(); } catch (e) { console.error(e); } }
+      if (!silent) showToast('لم يتم تأكيد البريد بعد، افتح الرسالة واضغط على رابط التأكيد', 'inf');
+    }
+  } finally { _nbVfChk = false; }
 }
 
 /* لما المستخدم يرجع من تبويب/تطبيق البريد، نتحقق تلقائياً لو الشاشة مفتوحة */
