@@ -18,6 +18,9 @@
  *   السياق (history ≤ 6 رسائل + ملخص المزرعة) بيجي من الواجهة في كل طلب، فتبديل الـ backend ما بيأثرش عليه.
  *   اختياري: UPSTASH_REDIS_REST_URL/TOKEN لعدّاد تناوب مشترك بين كل instances (من غيره العدّاد محلي لكل instance).
  * - الموديل: GEMINI_MODEL (اختياري) — الافتراضي gemini-3.5-flash-lite (الأخف والأعلى حدودًا في الباقة المجانية).
+ * - حلّال المسائل (Groq) — «ذاكر مع نبتيكس» فقط: المفتاح GROQ_API_KEY بيتقرا من متغير البيئة على Vercel بنفس طريقة GEMINI_API_KEY ومن الخادم فقط.
+ *   لو موجود: جيميناي بيشرح الصور زي ما هو وبيعلّم الأجزاء اللي هي مسائل (رياضيات/فيزياء/كيمياء/إحصاء) ويكتب نص المسألة، وGroq (نص بس) بيحل المسألة بتفكير ومراجعة ويستبدل شرح الجزء ده بالحل.
+ *   لو مش موجود أو فشل أو الوقت/الحصة مش كفاية: شرح جيميناي بيفضل زي ما هو (من غير أي تغيير في الرد). اختياري: GROQ_MODEL (الافتراضي openai/gpt-oss-120b) · GROQ_EFFORT (low|medium|high — الافتراضي medium) · GROQ_MAX_PROBLEMS (1..4 — الافتراضي 1 عشان حد 8000 توكن/دقيقة في الباقة المجانية).
  * - حماية الباقة المجانية (best-effort على مستوى instance الخادم، + حدود الواجهة):
  *     1) لازم مستخدم مسجّل (تحقق من Firebase ID token عبر Identity Toolkit — مجاني)
  *     2) حد يومي لكل مستخدم لكل وضع (LIMITS) + حد يومي إجمالي للموقع (DAILY_GLOBAL)
@@ -50,6 +53,17 @@ const MAX_STUDY_IMAGES = 12;   /* «ذاكر مع نبتكس»: السقف ال�
 const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه الأمامي — ورقة أو ثمرة أو غيرها)', 'الجزء المصاب من الخلف (الوجه الخلفي — زي ظهر الورقة)', 'الساق أو الثمرة (لقطة قريبة)', 'النبات كامل من بعيد'];
 const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 20000, study_quiz: 4500, study_ask: 1800, study_cards: 4500 };
 const STUDY_ATTEMPT_MS = 45000;   /* «ذاكر مع نبتكس»: الرد أطول فمحاولة الـ backend الواحدة بتاخد وقت أكبر من ATTEMPT_CAP_MS (الميزانية الكلية UPSTREAM_TIMEOUT_MS زي ما هي) */
+/* ═══ Groq — حلّال مسائل «ذاكر مع نبتيكس» (إضافة): المفتاح من متغير البيئة بس، ومن غيره الكود كله بيتجاهل الحلّال.
+   للتراجع: امسح الكتلة دي + SYSTEMS.solve + SOLVER_FLAG/STUDY_SYS + solveStudyProblems/cleanSolve/solverCool + سطر _pb في sanitizeStudy + سطر t0 + سطر solveStudyProblems في فرع study + (mode === 'study' ? STUDY_SYS : …) في systemInstruction. ═══ */
+const GROQ_KEY = process.env.GROQ_API_KEY || '';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';   /* deepseek-r1-distill-llama-70b اتقفل عند Groq في 2025-10-02؛ البديل الرسمي gpt-oss-120b */
+const GROQ_EFFORT = /^(low|medium|high)$/.test(process.env.GROQ_EFFORT || '') ? process.env.GROQ_EFFORT : 'medium';
+const GROQ_MAX_PROBLEMS = Math.min(4, Math.max(1, parseInt(process.env.GROQ_MAX_PROBLEMS, 10) || 1));   /* الباقة المجانية: 8000 توكن/دقيقة للموديل → مسألة واحدة في الطلب افتراضيًا */
+const GROQ_MAX_OUT = 5000;          /* max_completion_tokens (التفكير + الحل) — مع المدخلات تفضل تحت حد الدقيقة المجاني */
+const GROQ_SOLVE_CAP_MS = 30000;    /* أقصى وقت لمرحلة الحل */
+const GROQ_MIN_BUDGET_MS = 6000;    /* لو الباقي أقل من كده نسيب شرح جيميناي زي ما هو */
+const FN_BUDGET_MS = 55000;         /* الدالة maxDuration 60 ومهلة الواجهة 60 — لازم نرد قبلهم */
 const MAX_WX_CHARS = 5500;
 const MAX_CTX_CHARS = 1500;
 /* اختياري: GEMINI_GROUNDING=1 يفعّل بحث جوجل (Grounding) في مرحلة التشخيص النهائي فقط لرفع دقة أسماء المبيدات المسجّلة.
@@ -335,6 +349,22 @@ SYSTEMS.study_cards = [
   INJECTION
 ].join('\n');
 
+/* حلّال المسائل (Groq): بيستلم نص المسألة بس (من غير صور) ويرجّع نص عادي بنفس أسلوب شرح «ذاكر» (عامية مصرية، يونيكود، من غير LaTeX) عشان يتعرض بنفس دالة fmt في الواجهة. */
+SYSTEMS.solve = [
+  'أنت «حلّال مسائل نبتيكس»: مدرّس خبير في الرياضيات والفيزياء والكيمياء بكل فروعها (عامة وعضوية ولاعضوية وتحليلية وفيزيائية) والإحصاء والحسابات الزراعية، بتحل مسألة لطالب جامعي مصري.',
+  'هتستلم نص المسألة كما استخرجه مساعد القراءة من صورة الطالب (من غير الصورة نفسها، وممكن يكون فيه خطأ قراءة بسيط). لو معطى أو رقم أو شكل لازم للحل ناقص أو غامض في النص قول ده صراحة وصرّح بالافتراض المعقول اللي اعتمدت عليه، ولا تخترع أرقام.',
+  'طريقة الحل (إلزامية): افهم المسألة كاملة وحل كل الأسئلة الفرعية (أ، ب، ج…) بالترتيب. حل المسألة بدقة، وقبل ما تكتب أي ناتج نهائي راجعه بطريقة مستقلة (تعويض عكسي، أو تحليل الأبعاد والوحدات، أو تقدير تقريبي منطقي، أو موازنة الذرات والشحنات والكتلة)، ولو المراجعة كشفت خطأ صحّحه قبل الإخراج. استخدم الثوابت والكتل الذرية القياسية المعروفة وقول صراحة إنها قيم قياسية مش من المسألة.',
+  'شكل الإجابة بالترتيب: المعطيات ← المطلوب ← القانون أو الفكرة بالرموز ← خطوات الحل بالتعويض بالأرقام والوحدات مع تفسير بسيط لكل خطوة (ليه عملناها) ← الناتج النهائي بوحدته مكتوب بالخط العريض (**هكذا**) في سطر مستقل ← سطر مراجعة قصير بيأكد إن الناتج منطقي وصحيح.',
+  'التنسيق: نص عادي بس وكل خطوة في سطر مستقل (يجوز تبدأ بـ «الخطوة 1:»). ممنوع LaTeX وأي علامات $ أو \\( أو \\[ ، وممنوع عناوين markdown (#) والجداول والإيموجي. اكتب الرياضيات برموز يونيكود: × ÷ − ± √ ² ³ ½ π Δ ° ≈ ≠ ≤ ≥ ∞ ∑ ∫ ، والكسور على شكل a/b (وبين قوسين لو معقدة)، والكيمياء بأرقام سفلية H₂O وشحنات SO₄²⁻ وأسهم → ⇌ وكل معادلة في سطر مستقل وموزونة. الأرقام العادية بالإنجليزية (0-9). ما تستخدمش علامة * غير للخط العريض المزدوج.',
+  'اللغة: عامية مصرية مبسطة جدًا وجمل قصيرة كأنك بتشرح لصاحبك، والمصطلحات العلمية تفضل زي ما هي. لو المسألة مكتوبة بالإنجليزية اكتب الحل بإنجليزية بسيطة وواضحة بنفس الترتيب. ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
+  'الطول: بالقدر اللي يخلي كل خطوة مفهومة وبحد أقصى حوالي 350 كلمة، واختصر التفكير الداخلي. رجّع نص الحل بس من غير مقدمة ولا ترحيب.',
+  INJECTION
+].join('\n');
+
+/* بيتضاف لتعليمات وضع study بس لو مفتاح Groq موجود (من غيره التعليمات زي ما هي بالظبط): جيميناي بيعلّم الأجزاء اللي هي مسائل ويكتب نصها للحلّال. */
+const SOLVER_FLAG = 'إضافة (حقل problem — اختياري جدًا): لو الجزء ده كله عبارة عن مسألة أو تمرين حسابي أو مثال محلول في الرياضيات أو الفيزياء أو الكيمياء أو الإحصاء أو الحسابات الزراعية (فيه معطيات رقمية ومطلوب ناتج) فضيف لهذا الجزء حقل problem فيه نص المسألة كاملة كما هي في الصورة بدقة: كل المعطيات والأرقام والوحدات والرموز والمعادلات والمطلوب وكل الأسئلة الفرعية، بحد أقصى 1500 حرف. المحرك اللي هيحل المسألة بيشوف النص ده بس ومش بيشوف الصورة، فلو فيها شكل أو جدول أو رسم أو دائرة كهربية صفه بالكلام جوه النص بتفاصيله (مثال: «الشكل: ...»). سيب شرحك العادي في explain زي ما هو. كل مسألة في جزء مستقل لوحدها (لو الصورة فيها أكتر من مسألة اعمل جزء لكل مسألة). لا تضيف problem لأجزاء الشرح النظري أو التعريفات أو القوانين من غير مسألة فعلية، ولا تحطه في أكتر من 4 أجزاء.';
+const STUDY_SYS = GROQ_KEY ? SYSTEMS.study.replace(INJECTION, SOLVER_FLAG + '\n' + INJECTION) : SYSTEMS.study;
+
 const NUM_KEYS = ['irr_times', 'irr_amount', 'irr_hours', 'fert_n', 'fert_p', 'fert_k', 'fert_organic', 'fert_micro', 'fert_amount',
   'spray_conc', 'spray_water', 'spray_area', 'spray_times', 'labor', 'machines', 'temp', 'humidity', 'rain'];
 const TXT_KEYS = ['fert_name', 'fert_company', 'spray_name', 'spray_company', 'spray_pest', 'notes'];
@@ -532,6 +562,8 @@ function sanitizeStudy(raw) {
     const src = (Array.isArray(p.src) ? p.src : []).map(function (v) { return parseInt(v, 10); })
       .filter(function (v) { return Number.isInteger(v) && v >= 1 && v <= MAX_STUDY_IMAGES; }).slice(0, MAX_STUDY_IMAGES);
     const part = { title: title, explain: explain, example: str(p.example, 2000), src: src };
+    const pb = str(p.problem, 1500);   /* SOLVER: نص المسألة لو جيميناي علّم الجزء — non-enumerable فمش بيتسلسل في الرد للواجهة */
+    if (pb) Object.defineProperty(part, '_pb', { value: pb, enumerable: false });
     /* compare (اختياري): جدول مقارنة صغير — 2..4 أعمدة × 2..7 صفوف، وأي جدول ناقص/ملخبط بيتشال من غير ما يأثر على الشرح */
     const c = p.compare;
     if (c && typeof c === 'object') {
@@ -558,6 +590,72 @@ function sanitizeStudy(raw) {
   if (!out.parts.length) return null;
   return out;
 }
+
+/* SOLVER: تنظيف نص الحل — بنشيل وسوم التفكير (لو الموديل أرسلها)، ولو الموديل سرّب LaTeX نحوّله لرموز يونيكود، وبنشيل العناوين والأسوار */
+function cleanSolve(t) {
+  let x = String(t || '').replace(/\r/g, '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?think>/gi, '');
+  x = x.replace(/```[a-z]*\n?/gi, '').replace(/^\s{0,3}#{1,6}\s+/gm, '');
+  for (let i = 0; i < 3; i++) x = x.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)').replace(/\\sqrt\s*\{([^{}]*)\}/g, '√($1)');
+  x = x.replace(/\\(?:text|mathrm|mathbf|operatorname)\s*\{([^{}]*)\}/g, '$1')
+    .replace(/\\times/g, '×').replace(/\\cdot/g, '·').replace(/\\div/g, '÷').replace(/\\pm/g, '±').replace(/\\approx/g, '≈').replace(/\\neq/g, '≠')
+    .replace(/\\le(?:q)?\b/g, '≤').replace(/\\ge(?:q)?\b/g, '≥').replace(/\\(?:rightarrow|to)\b/g, '→').replace(/\\rightleftharpoons/g, '⇌').replace(/\\Delta/g, 'Δ')
+    .replace(/\\pi\b/g, 'π').replace(/\\circ/g, '°').replace(/\\infty/g, '∞').replace(/\\(?:left|right)\b/g, '').replace(/\\[,;:! ]/g, ' ')
+    .replace(/\\[()\[\]]/g, '').replace(/\$+/g, '');
+  return x.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 6000);
+}
+
+/* SOLVER: بيحل الأجزاء اللي جيميناي علّمها كمسائل (حتى GROQ_MAX_PROBLEMS) من نصها بس ويستبدل explain بالحل. ما بيرميش أي خطأ: أي فشل/تأخير/حصة خالصة = شرح جيميناي يفضل زي ما هو. */
+async function solveStudyProblems(st, t0) {
+  try {
+    if (!GROQ_KEY || !st || !Array.isArray(st.parts)) return;
+    const targets = st.parts.filter(function (p) { return p && p._pb && p._pb.length >= 15; }).slice(0, GROQ_MAX_PROBLEMS);
+    if (!targets.length) return;
+    if ((solverCool.get('groq') || 0) > Date.now()) return;
+    const budget = Math.min(GROQ_SOLVE_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
+    if (budget < GROQ_MIN_BUDGET_MS) return;
+    const effort = budget >= 20000 ? GROQ_EFFORT : 'low';   /* الوقت ضيق → تفكير أخف عشان نلحق نرد */
+    const ctl = new AbortController();
+    const timer = setTimeout(function () { ctl.abort(); }, budget);
+    try {
+      await Promise.all(targets.map(async function (p) {
+        try {
+          const r = await fetch(GROQ_URL, {
+            method: 'POST', signal: ctl.signal,
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+            body: JSON.stringify({
+              model: GROQ_MODEL, temperature: 0.3, max_completion_tokens: GROQ_MAX_OUT, reasoning_effort: effort, include_reasoning: false,
+              messages: [
+                { role: 'system', content: SYSTEMS.solve },
+                { role: 'user', content: 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' }
+              ]
+            })
+          });
+          const raw = await r.text();
+          if (!r.ok) {
+            console.error('[farm-ai] groq http ' + r.status);
+            let ms = 0;
+            if (r.status === 429) {
+              const ra = parseFloat(r.headers && r.headers.get ? r.headers.get('retry-after') : '');
+              ms = Number.isFinite(ra) ? Math.min(120000, Math.max(5000, Math.ceil(ra * 1000))) : 60000;
+              if (/per day|TPD/i.test(raw)) ms = 30 * 60000;   /* الحصة اليومية خلصت: نعيد المحاولة بعد نص ساعة */
+            } else if (r.status === 413) ms = 30000;   /* الطلب أكبر من حد التوكن/دقيقة */
+            else if (r.status === 401 || r.status === 403 || r.status === 404) ms = 30 * 60000;   /* مفتاح غلط أو موديل مقفول */
+            else if (r.status >= 500) ms = 15000;
+            if (ms) solverCool.set('groq', Date.now() + ms);
+            return;
+          }
+          let j = null;
+          try { j = JSON.parse(raw); } catch (e) { return; }
+          const ch = j && j.choices && j.choices[0];
+          if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
+          const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
+          if (out.length >= 60) p.explain = out;   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي */
+        } catch (e) { console.error('[farm-ai] groq solve failed:', e && e.name); }
+      }));
+    } finally { clearTimeout(timer); }
+  } catch (e) { console.error('[farm-ai] solver stage error:', e && e.name); }
+}
+const solverCool = new Map();   /* تبريد مؤقت لو Groq رجّع 429/413/401/5xx — best-effort على مستوى الـ instance */
 
 /* تنظيف رد الامتحان: كل سؤال 4 اختيارات بالظبط ومختلفة، والإجابة رقم 0..3؛ وبنخلط ترتيب الاختيارات هنا عشان ما يتحكمش ميل الموديل لموقع معين */
 function sanitizeStudyQuiz(raw, nParts) {
@@ -611,6 +709,7 @@ function cleanOptions(o) {
 }
 
 module.exports = async function handler(req, res) {
+  const t0 = Date.now();   /* SOLVER: بداية الطلب (لحساب الوقت المتبقي لمرحلة الحل) */
   if (req.method !== 'POST') return fail(res, 405, 'method_not_allowed', { Allow: 'POST' });
   const site = String((req.headers && req.headers['sec-fetch-site']) || '');
   if (site === 'cross-site') return fail(res, 403, 'forbidden');
@@ -827,7 +926,7 @@ module.exports = async function handler(req, res) {
   const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
   if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') gen.responseMimeType = 'application/json';
   const reqBody = {
-    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : SYSTEMS[generalAsk ? 'general' : mode] }] },
+    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : (mode === 'study' ? STUDY_SYS : SYSTEMS[generalAsk ? 'general' : mode]) }] },
     contents: [{ role: 'user', parts: parts }],
     generationConfig: gen
   };
@@ -905,6 +1004,7 @@ module.exports = async function handler(req, res) {
     const st = sanitizeStudy(parsed);
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
+    if (GROQ_KEY) await solveStudyProblems(st, t0);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
     payload = { study: st };
   } else if (mode === 'study_quiz') {
     let parsed = null;
