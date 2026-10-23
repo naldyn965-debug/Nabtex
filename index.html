@@ -10694,19 +10694,24 @@ async function nbSendVerificationEmail(user) {
   if (!user) return false;
   var prevLang = auth.languageCode; // نرجّعها بعد الإرسال حتى لا تتأثر باقي رسائل Firebase (مثل إعادة تعيين كلمة المرور)
   _nbVfErr = '';
+  /* محاولات متدرّجة: (1) عربي + رابط الرجوع (2) عربي بدون رابط (3) اللغة الافتراضية بدون رابط — نفس مسار إعادة تعيين كلمة المرور الشغّال.
+     بنوقف فورًا عند أخطاء الحد/الشبكة لأن إعادة المحاولة مش هتفيد */
+  var _nbTries = [['ar', true], ['ar', false], [prevLang, false]];
+  var _nbStop = { 'auth/too-many-requests': 1, 'auth/network-request-failed': 1, 'auth/quota-exceeded': 1, 'auth/user-disabled': 1, 'auth/user-token-expired': 1, 'auth/user-not-found': 1 };
   try {
-    auth.languageCode = 'ar';
-    try {
-      await user.sendEmailVerification({ url: window.location.origin + '/' });
-    } catch (e1) {
-      if (e1 && (e1.code === 'auth/unauthorized-continue-uri' || e1.code === 'auth/invalid-continue-uri' || e1.code === 'auth/missing-continue-uri')) {
-        await user.sendEmailVerification();
-      } else { throw e1; }
+    for (var i = 0; i < _nbTries.length; i++) {
+      try {
+        auth.languageCode = _nbTries[i][0];
+        if (_nbTries[i][1]) await user.sendEmailVerification({ url: window.location.origin + '/' });
+        else await user.sendEmailVerification();
+        _nbVfErr = '';
+        return true;
+      } catch (e) {
+        _nbVfErr = (e && e.code) || '';
+        console.error('sendEmailVerification error (try ' + (i + 1) + '/' + _nbTries.length + '):', e);
+        if (_nbStop[_nbVfErr]) break;
+      }
     }
-    return true;
-  } catch (e) {
-    _nbVfErr = (e && e.code) || '';
-    console.error('sendEmailVerification error:', e);
     return false;
   } finally {
     auth.languageCode = prevLang;
