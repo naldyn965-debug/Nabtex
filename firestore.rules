@@ -65,16 +65,22 @@ service cloud.firestore {
 
     // ── USERS: access fields (paidCourses / suspendedCourses) are no longer self-editable ──
     // Admin: unrestricted. Student: every other field stays freely writable, but paidCourses may grow by
-    // exactly ONE course, and only in the same write that creates a brand-new reward_redemption event
-    // (the 1000-XP spend itself is validated by the xp_events / xp_wallet rules below).
+    // exactly ONE course, and only for a course whose reward_redemption event (xp_events/{uid}_rd_{course}) already exists.
+    // That event can only be created by the xp_events / xp_wallet rules below, which validate the 1000-XP spend.
+    // The grant is a SEPARATE request after the spend commit: the spend (event + wallet) already uses most of the
+    // 1,000-expressions-per-request budget, so a third write (users) in the same commit exceeded it -> permission-denied.
+    // Old (to roll back, together with the matching redeem() in academy-data.js): same-commit check
+    //   let w = getAfter(/databases/$(database)/documents/xp_wallet/$(uid)).data;
+    //   let e = getAfter(/databases/$(database)/documents/xp_events/$(w.last)).data;
+    //   return e.type == 'reward_redemption' && e.uid == uid && !exists(/databases/$(database)/documents/xp_events/$(w.last))
+    //     && uNew('paidCourses') == uOld('paidCourses').concat([e.cid]);
     function uOld(f) { return resource == null ? [] : resource.data.get(f, []); }
     function uNew(f) { return request.resource.data.get(f, []); }
     function uRdOk(uid) {
-      let w = getAfter(/databases/$(database)/documents/xp_wallet/$(uid)).data;
-      let e = getAfter(/databases/$(database)/documents/xp_events/$(w.last)).data;
-      return e.type == 'reward_redemption' && e.uid == uid
-        && !exists(/databases/$(database)/documents/xp_events/$(w.last))
-        && uNew('paidCourses') == uOld('paidCourses').concat([e.cid]);
+      let n = uNew('paidCourses');
+      let c = n[n.size() - 1];
+      let e = get(/databases/$(database)/documents/xp_events/$(uid + '_rd_' + c)).data;
+      return n == uOld('paidCourses').concat([c]) && e.type == 'reward_redemption' && e.uid == uid;
     }
 
     match /users/{uid} {

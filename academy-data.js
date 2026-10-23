@@ -968,15 +968,19 @@ var u=uid(),D=DB();if(!u||!D||!ELIG[c])return;
 if(!window.confirm('استبدال 1 كريدت (1000 XP) بالدورة: '+ELIG[c]+'؟'))return;
 if(btn){if(btn.disabled)return;btn.disabled=true}
 var f={key:'rd_'+c,cid:c},eid=u+'_'+f.key,eR=D.collection('xp_events').doc(eid),wR=D.collection('xp_wallet').doc(u),uR=D.collection('users').doc(u);
+/* REDEEM-SPLIT: الخصم (event + wallet) في transaction، وتفعيل الدورة (users.paidCourses) في كتابة منفصلة بعده — كتابة users جوه نفس الـ commit كانت بتعدّي حد 1000 تعبير للطلب في firestore.rules (permission-denied). لو التفعيل فشل بعد الخصم: الضغط على «استبدال» تاني بيكمّل التفعيل من غير خصم تاني (es.exists). للتراجع: رجّع tx.set(uR,{paidCourses:arrayUnion(c)},{merge:true}) جوه الـ transaction، وارجع uRdOk القديمة في firestore.rules. */
+var paid=false;
 D.runTransaction(function(tx){
 return tx.get(eR).then(function(es){return tx.get(wR).then(function(ws){return tx.get(uR).then(function(us){
 var w=Object.assign(W0(u),ws.exists?ws.data():{});
-if(es.exists||(us.exists&&(us.data().paidCourses||[]).indexOf(c)>-1))throw new Error('owned');
+if(us.exists&&(us.data().paidCourses||[]).indexOf(c)>-1)throw new Error('owned');
+if(es.exists)return 'grant';
 if(w.xp-w.spent<CRED)throw new Error('nocredit');
 var m=mut(w,'reward_redemption',f);
-tx.set(eR,m.e);tx.set(wR,m.t);tx.set(uR,{paidCourses:firebase.firestore.FieldValue.arrayUnion(c)},{merge:true})})})})
-}).then(function(){T('تم الاستبدال — الدورة متاحة الآن','ok');NBXP.render('nbxp-card')})
-.catch(function(x){if(btn)btn.disabled=false;if(!(x&&(x.message==='owned'||x.message==='nocredit')))console.warn('[XP] redeem',(x&&x.code)||x);T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':'تعذر الاستبدال ('+String((x&&x.code)||(x&&x.message)||'error').replace(/[<>&"]/g,'').slice(0,60)+') — حاول مجدداً','err')})}
+tx.set(eR,m.e);tx.set(wR,m.t);return 'spent'})})})
+}).then(function(){paid=true;return uR.set({paidCourses:firebase.firestore.FieldValue.arrayUnion(c)},{merge:true})})
+.then(function(){T('تم الاستبدال — الدورة متاحة الآن','ok');NBXP.render('nbxp-card')})
+.catch(function(x){if(btn)btn.disabled=false;if(!(x&&(x.message==='owned'||x.message==='nocredit')))console.warn('[XP] redeem',(x&&x.code)||x);var cd=String((x&&x.code)||(x&&x.message)||'error').replace(/[<>&"]/g,'').slice(0,60);T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':paid?'تم خصم الكريدت لكن تعذر تفعيل الدورة ('+cd+') — اضغط استبدال مرة أخرى بدون خصم جديد':'تعذر الاستبدال ('+cd+') — حاول مجدداً','err')})}
 }})();
 window.NBXP=NBXP;
 
