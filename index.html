@@ -28790,6 +28790,20 @@ function diagCtx(farm, uid){
   return c;
 }
 
+/* DEVICE-POOL: معرّف ثابت للجهاز (localStorage + كوكي احتياطي) بيتبعت للخادم عشان نقاط الخطة المجانية تتحسب على الجهاز مش على كل حساب. للتراجع: امسح الدالة دي وهيدر X-NB-Device في call. */
+function nbDevId(){
+  var k = 'nbDevId', v = '', re = /^[A-Za-z0-9_-]{16,64}$/;
+  try { v = localStorage.getItem(k) || ''; } catch(e){}
+  if(!re.test(v)){ try { var mm = /(?:^|;\s*)nbDevId=([A-Za-z0-9_-]{16,64})/.exec(document.cookie || ''); v = mm ? mm[1] : ''; } catch(e){ v = ''; } }
+  if(!re.test(v)){
+    try { v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ''; } catch(e){ v = ''; }
+    if(!re.test(v)) v = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 8);
+  }
+  try { localStorage.setItem(k, v); } catch(e){}
+  try { document.cookie = 'nbDevId=' + v + '; max-age=31536000; path=/; SameSite=Lax'; } catch(e){}
+  return v;
+}
+
 /* استدعاء الخادم — بيحترم الحد اليومي لكل وضع + الكاش + الفاصل الزمني، ويرجّع { ok, j, err, cached } */
 function call(mode, payload, ckExtra, done){
   var u = user();
@@ -28809,7 +28823,7 @@ function call(mode, payload, ckExtra, done){
   u.getIdToken().then(function(tok){
     return fetch('/api/farm-ai', {
       method: 'POST', signal: ctl ? ctl.signal : undefined,
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok, 'X-NB-Device': nbDevId() },
       body: JSON.stringify(Object.assign({ mode: mode }, payload))
     });
   }).then(function(r){
