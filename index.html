@@ -5674,6 +5674,87 @@ body.modal-open { overflow: hidden; }
   #auth-bg,#auth-bg *,#auth-bg *::before,#auth-bg *::after{animation:none !important;transition-duration:.01ms !important}
 }
 </style>
+<!-- ═══ EMAIL VERIFICATION SHEET — شاشة تأكيد البريد بعد إنشاء الحساب (عرض فقط، لا تلمس أي منطق قائم) ═══ -->
+<style id="nbvf-css">
+@keyframes nbvfIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes nbvfRing{0%{transform:scale(.8);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+@keyframes nbvfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes nbvfDraw{to{stroke-dashoffset:0}}
+@keyframes nbvfPop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+#nbvf-bg{position:fixed;inset:0;z-index:810;display:none;align-items:center;justify-content:center;padding:16px}
+#nbvf-bg.on{display:flex;animation:bgIn .25s ease}
+#nbvf-bg .nbvf-veil{position:absolute;inset:0;background:rgba(6,16,10,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%)}
+#nbvf-bg .nbvf-box{position:relative;width:100%;max-width:400px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;border-radius:28px;background:var(--bg);border:1px solid var(--line);box-shadow:0 30px 80px -20px rgba(8,18,11,.55);animation:nbvfIn .5s var(--ease-out) both;font-family:var(--f-ui)}
+#nbvf-bg .nbvf-box::-webkit-scrollbar{display:none}
+#nbvf-bg .nbvf-x{position:absolute;top:14px;left:14px;z-index:2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);transition:background-color .2s ease,transform .2s ease}
+#nbvf-bg .nbvf-x:hover{background:rgba(255,255,255,.28)}
+#nbvf-bg .nbvf-x:active{transform:scale(.92)}
+#nbvf-bg .nbvf-hero{position:relative;height:168px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 90% at 18% 0%,rgba(229,163,67,.38) 0%,rgba(229,163,67,0) 55%),linear-gradient(150deg,#0f552e 0%,#1B6B3A 52%,#2d9a58 100%)}
+#nbvf-bg .nbvf-hero::before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-90px;bottom:-150px;background:rgba(255,255,255,.07)}
+#nbvf-bg .nbvf-hero::after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;left:-50px;bottom:-70px;background:rgba(255,255,255,.06)}
+#nbvf-bg .nbvf-orb{position:relative;z-index:1;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 16px 36px -10px rgba(0,0,0,.45);animation:nbvfFloat 3.8s ease-in-out infinite}
+#nbvf-bg .nbvf-orb::before,#nbvf-bg .nbvf-orb::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:nbvfRing 2.6s ease-out infinite}
+#nbvf-bg .nbvf-orb::after{animation-delay:1.3s}
+#nbvf-bg .nbvf-orb svg{width:44px;height:44px;color:var(--brand)}
+#nbvf-bg .nbvf-ic-ok{display:none}
+#nbvf-bg[data-state="ok"] .nbvf-ic-w{display:none}
+#nbvf-bg[data-state="ok"] .nbvf-ic-ok{display:block}
+#nbvf-bg[data-state="ok"] .nbvf-orb{animation:nbvfPop .5s var(--ease-out) both}
+#nbvf-bg[data-state="ok"] .nbvf-orb::before,#nbvf-bg[data-state="ok"] .nbvf-orb::after{animation:none;opacity:0}
+#nbvf-bg .nbvf-ic-ok path{stroke-dasharray:30;stroke-dashoffset:30;animation:nbvfDraw .5s ease .2s forwards}
+#nbvf-bg .nbvf-body{padding:22px 24px calc(22px + env(safe-area-inset-bottom,0px));text-align:center}
+#nbvf-bg .nbvf-title{font-family:var(--f-ui);font-size:clamp(21px,6vw,24px);font-weight:800;line-height:1.35;color:var(--ink);margin:0}
+#nbvf-bg .nbvf-txt{font-size:14px;line-height:1.8;color:var(--slate);margin:8px 0 0}
+#nbvf-bg .nbvf-mail{margin:10px auto 0;max-width:100%;padding:10px 14px;border-radius:14px;background:var(--bg3);border:1px solid var(--line2);color:var(--ink);font-size:14px;font-weight:700;direction:ltr;text-align:center;word-break:break-all}
+#nbvf-bg .nbvf-hint{font-size:12.5px;line-height:1.85;color:var(--muted);margin:12px 0 0}
+#nbvf-bg .nbvf-fail{display:none;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:rgba(192,57,43,.09);border:1px solid rgba(192,57,43,.28);color:#c0392b;font-size:12.5px;font-weight:700;line-height:1.7}
+#nbvf-bg .nbvf-fail.on{display:block}
+#nbvf-bg .nbvf-act{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+#nbvf-bg .nbvf-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;padding:0 16px;border-radius:16px;font-family:var(--f-ui);font-size:14.5px;font-weight:800;text-decoration:none;cursor:pointer;transition:transform .2s var(--ease-out),box-shadow .2s ease,background-color .2s ease,opacity .2s ease}
+#nbvf-bg .nbvf-btn:active{transform:scale(.98)}
+#nbvf-bg .nbvf-pri{border:0;color:#fff;background:linear-gradient(135deg,var(--brand-l),var(--brand));box-shadow:0 10px 22px -10px rgba(27,107,58,.7)}
+#nbvf-bg .nbvf-pri:hover{box-shadow:0 14px 26px -10px rgba(27,107,58,.8)}
+#nbvf-bg .nbvf-sec{border:1px solid var(--line2);color:var(--ink);background:var(--card)}
+#nbvf-bg .nbvf-sec:hover:not(:disabled){background:var(--bg3)}
+#nbvf-bg .nbvf-sec:disabled{opacity:.6;cursor:not-allowed}
+#nbvf-bg .nbvf-link{border:0;background:transparent;padding:6px;font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--brand);cursor:pointer}
+#nbvf-bg .nbvf-skip{color:var(--muted);font-weight:600}
+#nbvf-bg[data-state="ok"] .nbvf-w{display:none}
+#nbvf-bg:not([data-state="ok"]) .nbvf-o{display:none}
+@media (prefers-reduced-motion:reduce){#nbvf-bg,#nbvf-bg *,#nbvf-bg *::before,#nbvf-bg *::after{animation:none !important;transition-duration:.01ms !important}#nbvf-bg .nbvf-ic-ok path{stroke-dashoffset:0}}
+</style>
+<div id="nbvf-bg" data-state="wait" aria-hidden="true">
+  <div class="nbvf-veil" onclick="nbCloseVerify()"></div>
+  <div class="nbvf-box" role="dialog" aria-modal="true" aria-labelledby="nbvf-title">
+    <button type="button" class="nbvf-x" onclick="nbCloseVerify()" aria-label="إغلاق">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="nbvf-hero">
+      <div class="nbvf-orb">
+        <svg class="nbvf-ic-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5l7.6 5.2a1.6 1.6 0 001.8 0l7.6-5.2"/></svg>
+        <svg class="nbvf-ic-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+    </div>
+    <div class="nbvf-body">
+      <h3 class="nbvf-title" id="nbvf-title">تحقق من بريدك الإلكتروني</h3>
+      <p class="nbvf-txt nbvf-w">أرسلنا رسالة تأكيد إلى</p>
+      <div class="nbvf-mail nbvf-w" id="nbvf-email"></div>
+      <p class="nbvf-hint nbvf-w">افتح الرسالة واضغط على رابط تأكيد البريد الإلكتروني لتوثيق حسابك. إن لم تجدها خلال دقائق، تفقّد مجلد الرسائل غير المرغوب فيها (Spam).</p>
+      <div class="nbvf-fail nbvf-w" id="nbvf-fail">تم إنشاء حسابك، لكن تعذّر إرسال رسالة التأكيد الآن. اضغط «إعادة إرسال الرسالة» للمحاولة مرة أخرى.</div>
+      <p class="nbvf-txt nbvf-o">شكراً لك، تم توثيق بريدك الإلكتروني وأصبح حسابك مؤكّداً.</p>
+      <div class="nbvf-act nbvf-w">
+        <a class="nbvf-btn nbvf-pri" id="nbvf-open" href="mailto:">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5l7.6 5.2a1.6 1.6 0 001.8 0l7.6-5.2"/></svg>
+          فتح البريد الوارد
+        </a>
+        <button type="button" class="nbvf-btn nbvf-sec" id="nbvf-resend" onclick="nbResendVerification()">إعادة إرسال الرسالة</button>
+        <button type="button" class="nbvf-link" onclick="nbCheckVerified(false)">لقد أكّدت بريدي</button>
+        <button type="button" class="nbvf-link nbvf-skip" onclick="nbCloseVerify()">تخطي الآن</button>
+      </div>
+      <div class="nbvf-act nbvf-o"><button type="button" class="nbvf-btn nbvf-pri" onclick="nbCloseVerify()">متابعة</button></div>
+    </div>
+  </div>
+</div>
 <script id="authx-js">
 /* Auth redesign — view sync + motion hooks only.
    Does NOT touch auth logic: it observes which form the existing swAuth()/showForgotPassword()/
@@ -10561,10 +10642,12 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
       role: role,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+    const _nbVfSent = await nbSendVerificationEmail(userCred.user);
     showToast('✅ تم إنشاء الحساب بنجاح', 'ok');
     closeAuth();
     showPage('profile');
     setTimeout(() => loadUserProfile(), 500);
+    try { nbOpenVerifySheet(email, _nbVfSent); } catch (e) { console.error(e); }
   } catch (error) {
     let msg = 'فشل التسجيل: ';
     if (error.code === 'auth/email-already-in-use') msg += 'البريد الإلكتروني مستخدم بالفعل';
@@ -10573,6 +10656,142 @@ async function signUpWithEmail(name, email, password, role, confirmPassword) {
     showToast(msg, 'err');
   }
 }
+
+/* ═══ Email verification (signup) — إرسال رسالة تأكيد البريد + شاشة التأكيد. لا يمنع الدخول ولا يغيّر أي وظيفة قائمة ═══ */
+var _nbVfTimer = null, _nbVfLeft = 0, _nbVfBusy = false, _nbVfErr = '';
+
+async function nbSendVerificationEmail(user) {
+  if (!user) return false;
+  var prevLang = auth.languageCode; // نرجّعها بعد الإرسال حتى لا تتأثر باقي رسائل Firebase (مثل إعادة تعيين كلمة المرور)
+  _nbVfErr = '';
+  try {
+    auth.languageCode = 'ar';
+    try {
+      await user.sendEmailVerification({ url: window.location.origin + '/' });
+    } catch (e1) {
+      if (e1 && (e1.code === 'auth/unauthorized-continue-uri' || e1.code === 'auth/invalid-continue-uri' || e1.code === 'auth/missing-continue-uri')) {
+        await user.sendEmailVerification();
+      } else { throw e1; }
+    }
+    return true;
+  } catch (e) {
+    _nbVfErr = (e && e.code) || '';
+    console.error('sendEmailVerification error:', e);
+    return false;
+  } finally {
+    auth.languageCode = prevLang;
+  }
+}
+
+function _nbVfAr(n) { return String(n).replace(/\d/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d]; }); }
+
+function nbInboxUrl(email) {
+  var d = ((email || '').split('@')[1] || '').toLowerCase();
+  if (/^(gmail|googlemail)\.com$/.test(d)) return 'https://mail.google.com/';
+  if (/^(outlook|hotmail|live|msn)\./.test(d)) return 'https://outlook.live.com/mail/';
+  if (/^yahoo\./.test(d) || /^ymail\.com$/.test(d)) return 'https://mail.yahoo.com/';
+  if (/^(icloud|me|mac)\.com$/.test(d)) return 'https://www.icloud.com/mail';
+  if (/^(proton\.me|protonmail\.com)$/.test(d)) return 'https://mail.proton.me/';
+  return 'mailto:';
+}
+
+function nbVfSetState(state) {
+  var bg = document.getElementById('nbvf-bg');
+  if (!bg) return null;
+  bg.dataset.state = state;
+  var t = document.getElementById('nbvf-title');
+  if (t) t.textContent = state === 'ok' ? 'تم تأكيد بريدك بنجاح' : 'تحقق من بريدك الإلكتروني';
+  return bg;
+}
+
+function nbVfRender() {
+  var b = document.getElementById('nbvf-resend');
+  if (!b) return;
+  if (_nbVfLeft > 0) {
+    b.disabled = true;
+    b.textContent = 'يمكنك إعادة الإرسال بعد ' + _nbVfAr(_nbVfLeft) + ' ثانية';
+  } else {
+    b.disabled = _nbVfBusy;
+    b.textContent = 'إعادة إرسال الرسالة';
+  }
+}
+
+function nbVfStartCooldown(sec) {
+  clearInterval(_nbVfTimer);
+  _nbVfLeft = sec;
+  nbVfRender();
+  _nbVfTimer = setInterval(function () {
+    _nbVfLeft--;
+    if (_nbVfLeft <= 0) { _nbVfLeft = 0; clearInterval(_nbVfTimer); }
+    nbVfRender();
+  }, 1000);
+}
+
+function nbOpenVerifySheet(email, sent) {
+  var bg = nbVfSetState('wait');
+  if (!bg) return;
+  document.getElementById('nbvf-email').textContent = email || '';
+  var open = document.getElementById('nbvf-open');
+  var url = nbInboxUrl(email);
+  open.href = url;
+  if (url.indexOf('mailto:') === 0) { open.removeAttribute('target'); open.removeAttribute('rel'); }
+  else { open.target = '_blank'; open.rel = 'noopener noreferrer'; }
+  document.getElementById('nbvf-fail').classList.toggle('on', !sent);
+  bg.classList.add('on');
+  bg.setAttribute('aria-hidden', 'false');
+  if (sent) { nbVfStartCooldown(60); }
+  else { clearInterval(_nbVfTimer); _nbVfLeft = 0; nbVfRender(); }
+}
+
+function nbOpenVerifiedSheet() {
+  var bg = nbVfSetState('ok');
+  if (!bg) return false;
+  clearInterval(_nbVfTimer);
+  bg.classList.add('on');
+  bg.setAttribute('aria-hidden', 'false');
+  return true;
+}
+
+function nbCloseVerify() {
+  var bg = document.getElementById('nbvf-bg');
+  if (!bg) return;
+  bg.classList.remove('on');
+  bg.setAttribute('aria-hidden', 'true');
+  clearInterval(_nbVfTimer);
+}
+
+async function nbResendVerification() {
+  if (_nbVfBusy || _nbVfLeft > 0) return;
+  var u = auth.currentUser;
+  if (!u) { showToast('⚠️ سجّل الدخول أولاً لإعادة إرسال الرسالة', 'err'); return; }
+  _nbVfBusy = true;
+  nbVfRender();
+  var ok = await nbSendVerificationEmail(u);
+  _nbVfBusy = false;
+  if (ok) {
+    document.getElementById('nbvf-fail').classList.remove('on');
+    showToast('✅ تم إرسال رسالة التأكيد مرة أخرى', 'ok');
+    nbVfStartCooldown(60);
+  } else {
+    showToast(_nbVfErr === 'auth/too-many-requests' ? '❌ محاولات كثيرة، حاول لاحقاً' : '❌ تعذر إرسال الرسالة، حاول بعد قليل', 'err');
+    nbVfRender();
+  }
+}
+
+async function nbCheckVerified(silent) {
+  var u = auth.currentUser;
+  if (!u) return;
+  try { await u.reload(); }
+  catch (e) { if (!silent) showToast('⚠️ تعذر التحقق الآن، حاول مرة أخرى', 'err'); return; }
+  if (u.emailVerified) { nbVfSetState('ok'); clearInterval(_nbVfTimer); }
+  else if (!silent) showToast('لم يتم تأكيد البريد بعد، افتح الرسالة واضغط على رابط التأكيد', 'inf');
+}
+
+/* لما المستخدم يرجع من تبويب/تطبيق البريد، نتحقق تلقائياً لو الشاشة مفتوحة */
+document.addEventListener('visibilitychange', function () {
+  var bg = document.getElementById('nbvf-bg');
+  if (document.visibilityState === 'visible' && bg && bg.classList.contains('on') && bg.dataset.state === 'wait') nbCheckVerified(true);
+});
 
 async function sendPasswordReset(email) {
   try {
@@ -11355,6 +11574,22 @@ async function hResetPassword(event) {
     showResetPasswordForm();
   }).catch(() => {
     showToast('⚠️ رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية', 'err');
+  });
+})();
+
+/* ═══ Email Verification Link Handler — لو الصفحة اتفتحت من رابط تأكيد البريد (mode=verifyEmail) نفعّل الكود ونعرض شاشة النجاح ═══ */
+(function checkVerifyEmailLink() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') !== 'verifyEmail' || !params.get('oobCode')) return;
+  const oobCode = params.get('oobCode');
+  const clean = () => { try { history.replaceState(null, '', window.location.pathname + window.location.hash); } catch (e) {} };
+  auth.applyActionCode(oobCode).then(() => {
+    clean();
+    if (!nbOpenVerifiedSheet()) showToast('✅ تم تأكيد بريدك الإلكتروني بنجاح', 'ok');
+    if (auth.currentUser) auth.currentUser.reload().catch(() => {});
+  }).catch(() => {
+    clean();
+    showToast('⚠️ رابط تأكيد البريد غير صالح أو منتهي الصلاحية', 'err');
   });
 })();
 </script>
