@@ -10617,18 +10617,7 @@ async function signInWithEmail(email, password) {
         nbOpenVerifySheet(email, _nbVfSent2);
         return;
       }
-      if (await nbVfIsFirstLogin(_nbCred.user.uid)) {
-        /* أول دخول بعد تأكيد البريد: بدون رابط ثاني — نسجّل إن أول دخول تم */
-        nbVfMarkFirstLogin(_nbCred.user.uid);
-      } else {
-        /* من تاني دخول فصاعدًا: رابط تأكيد هوية عند كل تسجيل دخول (بيحدّ من مشاركة الحسابات) */
-        _nbVfMode = 'login';
-        await auth.signOut(); // نخرّج الجلسة فورًا — الدخول الفعلي بعد الضغط على الرابط فقط
-        var _nbVfLoginSent = await nbSendLoginLink(email);
-        closeAuth();
-        nbOpenVerifySheet(email, _nbVfLoginSent);
-        return;
-      }
+      /* تم إلغاء رابط تأكيد الهوية عند كل تسجيل دخول — البريد المؤكّد يدخل مباشرة */
     }
     showToast('✅ تم تسجيل الدخول بنجاح', 'ok');
     closeAuth();
