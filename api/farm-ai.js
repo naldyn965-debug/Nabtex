@@ -21,6 +21,7 @@
  * - حلّال المسائل (Groq) — «ذاكر مع نبتيكس» فقط: المفتاح GROQ_API_KEY بيتقرا من متغير البيئة على Vercel بنفس طريقة GEMINI_API_KEY ومن الخادم فقط.
  *   لو موجود: جيميناي بيشرح الصور زي ما هو وبيعلّم الأجزاء اللي هي مسائل (رياضيات/فيزياء/كيمياء/إحصاء) ويكتب نص المسألة، وGroq (نص بس) بيحل المسألة بتفكير ومراجعة ويستبدل شرح الجزء ده بالحل.
  *   لو مش موجود أو فشل أو الوقت/الحصة مش كفاية: شرح جيميناي بيفضل زي ما هو (من غير أي تغيير في الرد). اختياري: GROQ_MODEL (الافتراضي openai/gpt-oss-120b) · GROQ_EFFORT (low|medium|high — الافتراضي medium) · GROQ_MAX_PROBLEMS (1..4 — الافتراضي 1 عشان حد 8000 توكن/دقيقة في الباقة المجانية).
+ *   مفاتيح Groq الإضافية (اختيارية): GROQ_API_KEY_2 · GROQ_API_KEY_3 · GROQ_API_KEY_4 — الطلبات بتتوزّع على المفاتيح الموجودة بالتتابع (نفس فكرة تناوب backends جيميناي: دور دائري + تبريد مؤقت للمفتاح اللي بيرجّع 429/خطأ + انتقال تلقائي للتالي في نفس الطلب). من غيرهم السلوك زي ما هو بالظبط بمفتاح واحد.
  * - حماية الباقة المجانية (best-effort على مستوى instance الخادم، + حدود الواجهة):
  *     1) لازم مستخدم مسجّل (تحقق من Firebase ID token عبر Identity Toolkit — مجاني)
  *     2) حد يومي لكل مستخدم لكل وضع (LIMITS) + حد يومي إجمالي للموقع (DAILY_GLOBAL)
@@ -54,8 +55,11 @@ const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه ال
 const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 20000, study_quiz: 4500, study_ask: 1800, study_cards: 4500 };
 const STUDY_ATTEMPT_MS = 45000;   /* «ذاكر مع نبتكس»: الرد أطول فمحاولة الـ backend الواحدة بتاخد وقت أكبر من ATTEMPT_CAP_MS (الميزانية الكلية UPSTREAM_TIMEOUT_MS زي ما هي) */
 /* ═══ Groq — حلّال مسائل «ذاكر مع نبتيكس» (إضافة): المفتاح من متغير البيئة بس، ومن غيره الكود كله بيتجاهل الحلّال.
-   للتراجع: امسح الكتلة دي + SYSTEMS.solve + SOLVER_FLAG/STUDY_SYS + solveStudyProblems/cleanSolve/solverCool + سطر _pb في sanitizeStudy + سطر t0 + سطر solveStudyProblems في فرع study + (mode === 'study' ? STUDY_SYS : …) في systemInstruction. ═══ */
-const GROQ_KEY = process.env.GROQ_API_KEY || '';
+   للتراجع: امسح الكتلة دي (وGROQ_KEYS/groqNextStart/groqOrder) + SYSTEMS.solve + SOLVER_FLAG/STUDY_SYS + solveStudyProblems/cleanSolve/solverCool + سطر _pb في sanitizeStudy + سطر t0 + سطر solveStudyProblems في فرع study + (mode === 'study' ? STUDY_SYS : …) في systemInstruction. ═══ */
+/* GROQ-MULTIKEY: حتى 4 مفاتيح (GROQ_API_KEY + _2 + _3 + _4) بتتوزّع عليهم الطلبات بالتتابع؛ المفاتيح الفاضية أو المكررة بتتجاهل. GROQ_KEY = أول مفتاح موجود (بيفضل هو علامة «الحلّال متاح» في الأماكن اللي بتفحصه تحت). */
+const GROQ_KEYS = ['GROQ_API_KEY', 'GROQ_API_KEY_2', 'GROQ_API_KEY_3', 'GROQ_API_KEY_4'].map(function (n, i) { return { name: 'groq' + (i + 1), key: String(process.env[n] || '').trim() }; })
+  .filter(function (x, i, a) { return x.key && a.findIndex(function (y) { return y.key === x.key; }) === i; });
+const GROQ_KEY = GROQ_KEYS.length ? GROQ_KEYS[0].key : '';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';   /* deepseek-r1-distill-llama-70b اتقفل عند Groq في 2025-10-02؛ البديل الرسمي gpt-oss-120b */
 const GROQ_EFFORT = /^(low|medium|high)$/.test(process.env.GROQ_EFFORT || '') ? process.env.GROQ_EFFORT : 'medium';
@@ -629,53 +633,88 @@ async function solveStudyProblems(st, t0) {
     if (!GROQ_KEY || !st || !Array.isArray(st.parts)) return;
     const targets = st.parts.filter(function (p) { return p && p._pb && p._pb.length >= 15; }).slice(0, GROQ_MAX_PROBLEMS);
     if (!targets.length) return;
-    if ((solverCool.get('groq') || 0) > Date.now()) return;
+    const gStart = await groqNextStart(GROQ_KEYS.length);   /* GROQ-MULTIKEY */
+    if (!groqOrder(gStart).length) return;   /* كل المفاتيح في تبريد */
     const budget = Math.min(GROQ_SOLVE_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < GROQ_MIN_BUDGET_MS) return;
     const effort = budget >= 20000 ? GROQ_EFFORT : 'low';   /* الوقت ضيق → تفكير أخف عشان نلحق نرد */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
     try {
-      await Promise.all(targets.map(async function (p) {
+      await Promise.all(targets.map(async function (p, ti) {
         try {
           const ts = Date.now();
-          const r = await fetch(GROQ_URL, {
-            method: 'POST', signal: ctl.signal,
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-            body: JSON.stringify({
-              model: GROQ_MODEL, temperature: 0.3, max_completion_tokens: GROQ_MAX_OUT, reasoning_effort: effort, include_reasoning: false,
-              messages: [
-                { role: 'system', content: SYSTEMS.solve },
-                { role: 'user', content: 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' }
-              ]
-            })
-          });
-          const raw = await r.text();
-          if (!r.ok) {
-            console.error('[farm-ai] groq http ' + r.status);
-            let ms = 0;
-            if (r.status === 429) {
-              const ra = parseFloat(r.headers && r.headers.get ? r.headers.get('retry-after') : '');
-              ms = Number.isFinite(ra) ? Math.min(120000, Math.max(5000, Math.ceil(ra * 1000))) : 60000;
-              if (/per day|TPD/i.test(raw)) ms = 30 * 60000;   /* الحصة اليومية خلصت: نعيد المحاولة بعد نص ساعة */
-            } else if (r.status === 413) ms = 30000;   /* الطلب أكبر من حد التوكن/دقيقة */
-            else if (r.status === 401 || r.status === 403 || r.status === 404) ms = 30 * 60000;   /* مفتاح غلط أو موديل مقفول */
-            else if (r.status >= 500) ms = 15000;
-            if (ms) solverCool.set('groq', Date.now() + ms);
+          const keys = groqOrder(gStart + ti);   /* GROQ-MULTIKEY: كل مسألة تبدأ من مفتاح مختلف، ولو المفتاح فشل (429/413/401/5xx) بتجرّب اللي بعده */
+          for (let ki = 0; ki < keys.length; ki++) {
+            const gk = keys[ki];
+            const r = await fetch(GROQ_URL, {
+              method: 'POST', signal: ctl.signal,
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gk.key },
+              body: JSON.stringify({
+                model: GROQ_MODEL, temperature: 0.3, max_completion_tokens: GROQ_MAX_OUT, reasoning_effort: effort, include_reasoning: false,
+                messages: [
+                  { role: 'system', content: SYSTEMS.solve },
+                  { role: 'user', content: 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' }
+                ]
+              })
+            });
+            const raw = await r.text();
+            if (!r.ok) {
+              console.error('[farm-ai] groq ' + gk.name + ' http ' + r.status);
+              let ms = 0;
+              if (r.status === 429) {
+                const ra = parseFloat(r.headers && r.headers.get ? r.headers.get('retry-after') : '');
+                ms = Number.isFinite(ra) ? Math.min(120000, Math.max(5000, Math.ceil(ra * 1000))) : 60000;
+                if (/per day|TPD/i.test(raw)) ms = 30 * 60000;   /* الحصة اليومية خلصت: نعيد المحاولة بعد نص ساعة */
+              } else if (r.status === 413) ms = 30000;   /* الطلب أكبر من حد التوكن/دقيقة */
+              else if (r.status === 401 || r.status === 403 || r.status === 404) ms = 30 * 60000;   /* مفتاح غلط أو موديل مقفول */
+              else if (r.status >= 500) ms = 15000;
+              if (ms) solverCool.set(gk.name, Date.now() + ms);
+              if (ms) continue;   /* GROQ-MULTIKEY: جرّب المفتاح اللي بعده */
+              return;
+            }
+            let j = null;
+            try { j = JSON.parse(raw); } catch (e) { return; }
+            const ch = j && j.choices && j.choices[0];
+            if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
+            const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
+            if (out.length >= 60) { p.explain = out; delete p.ans; delete p.ai; console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + gk.name + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل (ومعاه اسم المفتاح groq1..groq4 مش قيمته) */
             return;
           }
-          let j = null;
-          try { j = JSON.parse(raw); } catch (e) { return; }
-          const ch = j && j.choices && j.choices[0];
-          if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
-          const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
-          if (out.length >= 60) { p.explain = out; delete p.ans; delete p.ai; console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل */
         } catch (e) { console.error('[farm-ai] groq solve failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
   } catch (e) { console.error('[farm-ai] solver stage error:', e && e.name); }
 }
-const solverCool = new Map();   /* تبريد مؤقت لو Groq رجّع 429/413/401/5xx — best-effort على مستوى الـ instance */
+const solverCool = new Map();   /* تبريد مؤقت لو Groq رجّع 429/413/401/5xx — best-effort على مستوى الـ instance (GROQ-MULTIKEY: لكل مفتاح لوحده بالاسم groq1..groq4) */
+
+/* GROQ-MULTIKEY: تناوب دائري بين مفاتيح Groq — نفس منطق راوتر جيميناي (nextStart/pickOrder) بس بعدّاد منفصل عشان ما يتداخلش معاه:
+   عدّاد مشترك على Upstash لو متظبط (مفتاح nbx:groq:rr)، وإلا عدّاد محلي لكل instance. */
+let groqRrLocal = 0;
+async function groqNextStart(n) {
+  if (n < 2) return 0;
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    const c = new AbortController();
+    const t = setTimeout(function () { c.abort(); }, 1500);
+    try {
+      const r = await fetch(UPSTASH_URL + '/incr/nbx:groq:rr', { headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN }, signal: c.signal });
+      const j = r.ok ? await r.json() : null;
+      if (j && Number.isFinite(j.result) && j.result > 0) return (j.result - 1) % n;
+    } catch (e) { /* نكمّل بالعدّاد المحلي */ } finally { clearTimeout(t); }
+  }
+  const s = groqRrLocal % n;
+  groqRrLocal = (groqRrLocal + 1) % 1000000000;
+  return s;
+}
+/* المفاتيح اللي مش في تبريد بالترتيب الدائري من نقطة البداية (فاضية = كلهم في تبريد → شرح جيميناي يفضل زي ما هو) */
+function groqOrder(start) {
+  const now = Date.now(), n = GROQ_KEYS.length, ready = [];
+  for (let i = 0; i < n; i++) {
+    const k = GROQ_KEYS[(start + i) % n];
+    if ((solverCool.get(k.name) || 0) <= now) ready.push(k);
+  }
+  return ready;
+}
 
 /* تنظيف رد الامتحان: كل سؤال 4 اختيارات بالظبط ومختلفة، والإجابة رقم 0..3؛ وبنخلط ترتيب الاختيارات هنا عشان ما يتحكمش ميل الموديل لموقع معين */
 function sanitizeStudyQuiz(raw, nParts) {
