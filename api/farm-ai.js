@@ -787,6 +787,7 @@ async function auditStudyAnswers(st, t0) {
             let ms = 0;
             if (r.status === 429) { ms = /per-day|per day/i.test(raw) ? 30 * 60000 : 60000; }   /* حد يومي للموديلات المجانية: نعيد المحاولة بعد نص ساعة */
             else if (r.status === 401 || r.status === 402 || r.status === 403 || r.status === 404) ms = 30 * 60000;   /* مفتاح غلط / رصيد / موديل مقفول */
+            else if (r.status === 400) ms = 10 * 60000;   /* غالبًا معرّف موديل غلط/مقفول: ما نكرّرش الطلب ونحرق الحصة اليومية المجانية */
             else if (r.status >= 500) ms = 15000;
             if (ms) orCoolUntil = Date.now() + ms;
             return;
