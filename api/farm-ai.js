@@ -619,6 +619,7 @@ async function solveStudyProblems(st, t0) {
     try {
       await Promise.all(targets.map(async function (p) {
         try {
+          const ts = Date.now();
           const r = await fetch(GROQ_URL, {
             method: 'POST', signal: ctl.signal,
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
@@ -649,7 +650,7 @@ async function solveStudyProblems(st, t0) {
           const ch = j && j.choices && j.choices[0];
           if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
           const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
-          if (out.length >= 60) p.explain = out;   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي */
+          if (out.length >= 60) { p.explain = out; console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل */
         } catch (e) { console.error('[farm-ai] groq solve failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
