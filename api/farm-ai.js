@@ -281,14 +281,6 @@ SYSTEMS.decide = [
   INJECTION
 ].join('\n');
 
-/* KATEX-MATH (إضافة): قاعدة LaTeX موحّدة لكل أوضاع «ذاكر مع نبتكس» — الواجهة بتعرضها بـ KaTeX (renderMath في index.html). LATEX_JSON بس للأوضاع اللي بترجّع JSON (study / study_quiz / study_cards). للتراجع: امسح الكتلة دي وسطور LATEX_RULES / LATEX_JSON قبل INJECTION في SYSTEMS.* وبلوك fixTex. */
-const LATEX_RULES = [
-  'المعادلات والرموز العلمية (إلزامي، وهذه القاعدة تلغي أي تعليمة سابقة بكتابة الصيغ برموز يونيكود): اكتب أي معادلة أو قانون أو رمز علمي أو صيغة كيميائية بصيغة Standard LaTeX فقط، والواجهة بتحوّلها لشكل رياضي منسّق. استخدم $...$ للمعادلة المدمجة وسط الجملة (مثال: القانون $F = m \\cdot a$ بيربط القوة بالكتلة)، واستخدم $$...$$ للمعادلة الممتدة في سطر مستقل. كل معادلة تتكتب كاملة بين علامتي $ في سطر واحد بدون ما تنزل سطر جديد جواها.',
-  'الكيمياء: اكتب الصيغ والتفاعلات بـ LaTeX عادي من غير حزم إضافية، الرمز الكيميائي داخل \\mathrm{} (مثال: $\\mathrm{H_2O}$ و$\\mathrm{SO_4^{2-}}$ و$\\mathrm{Fe^{3+}}$)، والتفاعل مثل $$\\mathrm{2H_2 + O_2 \\rightarrow 2H_2O}$$ والتفاعل العكسي بـ \\rightleftharpoons والغاز المتصاعد \\uparrow والراسب \\downarrow. ممنوع \\ce{}.',
-  'الأرقام داخل المعادلات بالإنجليزية (0-9). الكلمات العربية والشرح ما تتكتبش جوه علامات $ أبدًا: الشرح بره المعادلة، وجوه المعادلة رموز وأرقام ووحدات بس (الوحدة بـ \\text{} أو \\mathrm{}). ما تستخدمش علامة $ لأي غرض تاني (زي العملة) عشان ما تتحولش لمعادلة بالغلط. استخدم أوامر LaTeX القياسية فقط (\\frac و\\sqrt و\\cdot و\\times و\\Delta و\\int و\\sum وغيرها).'
-].join('\n');
-const LATEX_JSON = 'مهم جدًا: الرد JSON، فأي backslash داخل نص JSON لازم يتكتب مزدوج عشان يفضل سليم بعد قراءة الـ JSON (يعني تكتب \\\\frac و\\\\mathrm و\\\\rightarrow و\\\\times بدل \\frac و\\mathrm و\\rightarrow و\\times).';
-
 /* ═══ «ذاكر مع نبتكس» (إضافة): الطالب يرفع من 1 لـ 12 صورة (4 مجاني/Basic · 8 Plus · 12 Pro) من المحاضرة/الملزمة ← study: شرح كل جزئية بالعامية المصرية + مثال + ملخص (JSON) ← study_quiz: امتحان MCQ من نفس الصور بس (JSON).
    للتراجع: امسح SYSTEMS.study / SYSTEMS.study_quiz و sanitizeStudy / sanitizeStudyQuiz وفرع study جوه handler وسطور study في LIMITS / OUT_TOKENS / AI_POINT. ═══ */
 SYSTEMS.study = [
@@ -313,8 +305,6 @@ SYSTEMS.study = [
   'لو أي معلومة في الصورة غلط علميًا بشكل واضح نبّه عليها بلطف جوه الشرح بجملة تبدأ بـ «ملحوظة:». ولو الصور مش واضحة خالص أو مفيهاش محتوى دراسي تقدر تشرحه ارجع {"readable":false} بس.',
   'رجّع JSON فقط بالشكل: {"readable":true,"title":"...","parts":[{"title":"...","src":[1],"explain":"...","example":"...","compare":{"title":"...","cols":["...","..."],"rows":[["...","...","..."]]},"mnemonic":{"text":"...","how":"..."}}],"summary":["..."]} (حقلا compare وmnemonic اختياريان: احذف كل واحد منهم من الأجزاء اللي مفيهاش مقارنة حقيقية أو حاجة بتتحفظ)',
   'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). اشرح الأرقام والجرعات اللي في الصور كما هي بالظبط ولا تضيف جرعات أو أرقام مبيدات أو أسمدة من عندك.',
-  LATEX_RULES,
-  LATEX_JSON,
   INJECTION
 ].join('\n');
 SYSTEMS.study_quiz = [
@@ -330,8 +320,6 @@ SYSTEMS.study_quiz = [
   'answer: رقم الاختيار الصحيح (0 إلى 3) داخل مصفوفة options، ووزّع الإجابات الصحيحة على المواقع المختلفة. why: تفسير قصير (جملتين بالكتير) بالعربية الفصحى المبسطة بيشرح ليه الإجابة صحيحة ويربطها بالمكتوب في الصورة. part: رقم الجزء من القائمة.',
   'رجّع JSON فقط بالشكل: {"questions":[{"part":0,"q":"...","options":["...","...","...","..."],"answer":2,"why":"..."}]}',
   'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9).',
-  LATEX_RULES,
-  LATEX_JSON,
   INJECTION
 ].join('\n');
 
@@ -345,7 +333,6 @@ SYSTEMS.study_ask = [
   'الدقة: اعتمد على الصور والشرح الأصلي. لو اللي الطالب بيسأل عنه مش موجود في الصور وانت متأكد منه علميًا جاوب بوضوح وقول إنه معلومة إضافية مش من الصور. لو مش متأكد قول كده ولا تخترع. لو لقيت إن الشرح الأصلي كان فيه غلط صححه بلطف في جملة تبدأ بـ «تصحيح:». ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
   'لو سؤال الطالب مالوش علاقة بالجزء أو بالمادة العلمية اللي في الصور، رد في جملة أو اتنين إنك هنا عشان تساعده يفهم الجزء ده وارجع له بسؤال عنه.',
   'الطول: من 60 إلى 180 كلمة. نص عادي بس (مش JSON ومن غير عناوين)، ويجوز الخط العريض للمصطلحات الأساسية (**هكذا**). ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). اختم بجملة قصيرة تسأله لو لسه في نقطة مش واضحة.',
-  LATEX_RULES,
   INJECTION
 ].join('\n');
 
@@ -362,8 +349,6 @@ SYSTEMS.study_cards = [
   'part: رقم الجزء اللي الكارت طالع منه.',
   'رجّع JSON فقط بالشكل: {"cards":[{"part":0,"f":"...","b":"..."}]}',
   'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
-  LATEX_RULES,
-  LATEX_JSON,
   INJECTION
 ].join('\n');
 
@@ -373,10 +358,9 @@ SYSTEMS.solve = [
   'هتستلم نص المسألة كما استخرجه مساعد القراءة من صورة الطالب (من غير الصورة نفسها، وممكن يكون فيه خطأ قراءة بسيط). لو معطى أو رقم أو شكل لازم للحل ناقص أو غامض في النص قول ده صراحة وصرّح بالافتراض المعقول اللي اعتمدت عليه، ولا تخترع أرقام.',
   'طريقة الحل (إلزامية): افهم المسألة كاملة وحل كل الأسئلة الفرعية (أ، ب، ج…) بالترتيب. حل المسألة بدقة، وقبل ما تكتب أي ناتج نهائي راجعه بطريقة مستقلة (تعويض عكسي، أو تحليل الأبعاد والوحدات، أو تقدير تقريبي منطقي، أو موازنة الذرات والشحنات والكتلة)، ولو المراجعة كشفت خطأ صحّحه قبل الإخراج. استخدم الثوابت والكتل الذرية القياسية المعروفة وقول صراحة إنها قيم قياسية مش من المسألة.',
   'شكل الإجابة بالترتيب: المعطيات ← المطلوب ← القانون أو الفكرة بالرموز ← خطوات الحل بالتعويض بالأرقام والوحدات مع تفسير بسيط لكل خطوة (ليه عملناها) ← الناتج النهائي بوحدته مكتوب بالخط العريض (**هكذا**) في سطر مستقل ← سطر مراجعة قصير بيأكد إن الناتج منطقي وصحيح.',
-  'التنسيق: نص عادي بس وكل خطوة في سطر مستقل (يجوز تبدأ بـ «الخطوة 1:»)، وممنوع عناوين markdown (#) والجداول والإيموجي. الرياضيات والفيزياء والكيمياء تتكتب بـ LaTeX حسب قاعدة المعادلات المذكورة تحت ($...$ و$$...$$ فقط، وممنوع \\( و\\[ ). الرد هنا نص عادي مش JSON فاكتب الـ backslash مفرد عادي. الأرقام العادية بالإنجليزية (0-9). ما تستخدمش علامة * غير للخط العريض المزدوج.',
+  'التنسيق: نص عادي بس وكل خطوة في سطر مستقل (يجوز تبدأ بـ «الخطوة 1:»). ممنوع LaTeX وأي علامات $ أو \\( أو \\[ ، وممنوع عناوين markdown (#) والجداول والإيموجي. اكتب الرياضيات برموز يونيكود: × ÷ − ± √ ² ³ ½ π Δ ° ≈ ≠ ≤ ≥ ∞ ∑ ∫ ، والكسور على شكل a/b (وبين قوسين لو معقدة)، والكيمياء بأرقام سفلية H₂O وشحنات SO₄²⁻ وأسهم → ⇌ وكل معادلة في سطر مستقل وموزونة. الأرقام العادية بالإنجليزية (0-9). ما تستخدمش علامة * غير للخط العريض المزدوج.',
   'اللغة: عامية مصرية مبسطة جدًا وجمل قصيرة كأنك بتشرح لصاحبك، والمصطلحات العلمية تفضل زي ما هي. لو المسألة مكتوبة بالإنجليزية اكتب الحل بإنجليزية بسيطة وواضحة بنفس الترتيب. ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
   'الطول: بالقدر اللي يخلي كل خطوة مفهومة وبحد أقصى حوالي 350 كلمة، واختصر التفكير الداخلي. رجّع نص الحل بس من غير مقدمة ولا ترحيب.',
-  LATEX_RULES,
   INJECTION
 ].join('\n');
 
@@ -569,15 +553,10 @@ function sanitizeDecide(raw, ruleTone, kind) {
   return out;
 }
 
-/* KATEX-MATH: لو الموديل كتب backslash مفرد جوه JSON فـ \f \b \t \r بتتحوّل لحروف تحكّم (\frac ← form-feed + "rac")؛ بنرجّعها backslash + حرف. \n مش بنلمسها (ممكن تكون سطر جديد حقيقي) — الحماية الأساسية هي تعليمة الـ backslash المزدوج في LATEX_JSON. */
-function fixTex(s) {
-  return s.replace(/\f/g, '\\f').replace(/\x08/g, '\\b').replace(/\r(?=[a-zA-Z])/g, '\\r').replace(/\t(?=[a-zA-Z])/g, '\\t');
-}
-
 /* تنظيف رد «ذاكر مع نبتكس» — شرح: حتى 12 جزء بنصوص محدودة + ملخص (unreadable لو الصور مش دراسية/مش مقروءة) */
 function sanitizeStudy(raw) {
   if (!raw || typeof raw !== 'object') return null;
-  const str = function (x, n) { return typeof x === 'string' ? fixTex(x).trim().slice(0, n) : ''; };
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
   if (raw.readable === false) return { unreadable: true };
   const out = { title: str(raw.title, 90), parts: [], summary: [] };
   (Array.isArray(raw.parts) ? raw.parts : []).slice(0, 20).forEach(function (p) {   /* STUDY-FULL: كان 12 */
@@ -635,15 +614,12 @@ function sanitizeStudy(raw) {
 function cleanSolve(t) {
   let x = String(t || '').replace(/\r/g, '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?think>/gi, '');
   x = x.replace(/```[a-z]*\n?/gi, '').replace(/^\s{0,3}#{1,6}\s+/gm, '');
-  /* KATEX-MATH: القديم (للتراجع — كان بيحوّل LaTeX ليونيكود ويشيل علامات $):
-       for (let i = 0; i < 3; i++) x = x.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)').replace(/\\sqrt\s*\{([^{}]*)\}/g, '√($1)');
-       x = x.replace(/\\(?:text|mathrm|mathbf|operatorname)\s*\{([^{}]*)\}/g, '$1')
-         .replace(/\\times/g, '×').replace(/\\cdot/g, '·').replace(/\\div/g, '÷').replace(/\\pm/g, '±').replace(/\\approx/g, '≈').replace(/\\neq/g, '≠')
-         .replace(/\\le(?:q)?\b/g, '≤').replace(/\\ge(?:q)?\b/g, '≥').replace(/\\(?:rightarrow|to)\b/g, '→').replace(/\\rightleftharpoons/g, '⇌').replace(/\\Delta/g, 'Δ')
-         .replace(/\\pi\b/g, 'π').replace(/\\circ/g, '°').replace(/\\infty/g, '∞').replace(/\\(?:left|right)\b/g, '').replace(/\\[,;:! ]/g, ' ')
-         .replace(/\\[()\[\]]/g, '').replace(/\$+/g, '');
-  */
-  x = x.replace(/\\[()\[\]]/g, '');   /* بنشيل \( \[ بس — $ و$$ لازم تفضل عشان KaTeX */
+  for (let i = 0; i < 3; i++) x = x.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)').replace(/\\sqrt\s*\{([^{}]*)\}/g, '√($1)');
+  x = x.replace(/\\(?:text|mathrm|mathbf|operatorname)\s*\{([^{}]*)\}/g, '$1')
+    .replace(/\\times/g, '×').replace(/\\cdot/g, '·').replace(/\\div/g, '÷').replace(/\\pm/g, '±').replace(/\\approx/g, '≈').replace(/\\neq/g, '≠')
+    .replace(/\\le(?:q)?\b/g, '≤').replace(/\\ge(?:q)?\b/g, '≥').replace(/\\(?:rightarrow|to)\b/g, '→').replace(/\\rightleftharpoons/g, '⇌').replace(/\\Delta/g, 'Δ')
+    .replace(/\\pi\b/g, 'π').replace(/\\circ/g, '°').replace(/\\infty/g, '∞').replace(/\\(?:left|right)\b/g, '').replace(/\\[,;:! ]/g, ' ')
+    .replace(/\\[()\[\]]/g, '').replace(/\$+/g, '');
   return x.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 6000);
 }
 
@@ -704,7 +680,7 @@ const solverCool = new Map();   /* تبريد مؤقت لو Groq رجّع 429/41
 /* تنظيف رد الامتحان: كل سؤال 4 اختيارات بالظبط ومختلفة، والإجابة رقم 0..3؛ وبنخلط ترتيب الاختيارات هنا عشان ما يتحكمش ميل الموديل لموقع معين */
 function sanitizeStudyQuiz(raw, nParts) {
   if (!raw || typeof raw !== 'object') return null;
-  const str = function (x, n) { return typeof x === 'string' ? fixTex(x).trim().slice(0, n) : ''; };
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
   const out = { questions: [] };
   (Array.isArray(raw.questions) ? raw.questions : []).slice(0, 24).forEach(function (it) {
     const q = str(it && it.q, 320);
@@ -728,7 +704,7 @@ function sanitizeStudyQuiz(raw, nParts) {
 /* تنظيف رد كروت المراجعة: كارت = وجه وظهر نصوص قصيرة + رقم الجزء، من غير تكرار، وحد أقصى 40 */
 function sanitizeStudyCards(raw, nParts) {
   if (!raw || typeof raw !== 'object') return null;
-  const str = function (x, n) { return typeof x === 'string' ? fixTex(x).trim().slice(0, n) : ''; };
+  const str = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
   const out = [], seen = new Set();
   (Array.isArray(raw.cards) ? raw.cards : []).slice(0, 48).forEach(function (it) {
     if (out.length >= 40) return;
