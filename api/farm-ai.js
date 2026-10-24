@@ -560,6 +560,60 @@ function sanitizeDecide(raw, ruleTone, kind) {
   return out;
 }
 
+/* STUDY-JSON (إضافة): قراءة متسامحة لرد «ذاكر» — جيميناي أحيانًا بيرجّع JSON فيه علامة " جوه النص من غير \ أو \ غلط (مسائل كيمياء/رياضة) أو سطر جديد خام أو فاصلة زيادة أو رد مقطوع؛ JSON.parse العادي بيفشل وقتها والطالب يشوف «ما قدرتش أحلّل الصورة». أي JSON سليم بيتقرا زي ما هو بالظبط. للتراجع: امسح الدالة دي وارجع سطر parsed في فرع study لـ JSON.parse الأصلي. */
+function parseStudyJson(src) {
+  let t = String(src || '').trim().replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+  try { return JSON.parse(t); } catch (e) { /* نصلّح */ }
+  const a = t.indexOf('{');
+  if (a === -1) return null;
+  t = t.slice(a);
+  let o = '', inS = false;
+  const stack = [], nxt = /\s*([\s\S])/y;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inS) {
+      if (c === '\\') {
+        const n = t[i + 1];
+        if (n !== undefined && '"\\/bfnrt'.indexOf(n) !== -1) { o += c + n; i++; }
+        else if (n === 'u' && /^[0-9a-fA-F]{4}$/.test(t.substr(i + 2, 4))) { o += t.substr(i, 6); i += 5; }
+        else o += '\\\\';
+      } else if (c === '"') {
+        nxt.lastIndex = i + 1;
+        const m = nxt.exec(t), f = m ? m[1] : '';
+        if (f === '' || f === ',' || f === '}' || f === ']' || f === ':') { o += c; inS = false; } else o += '\\"';
+      } else if (c === '\n') o += '\\n';
+      else if (c === '\r') o += '\\r';
+      else if (c === '\t') o += '\\t';
+      else o += c;
+    } else {
+      o += c;
+      if (c === '"') inS = true;
+      else if (c === '{') stack.push('}');
+      else if (c === '[') stack.push(']');
+      else if (c === '}' || c === ']') { stack.pop(); if (!stack.length) break; }
+    }
+  }
+  const fix = function (x) { return x.replace(/,(\s*[}\]])/g, '$1'); };
+  try { return JSON.parse(fix(o)); } catch (e) { /* ممكن الرد مقطوع */ }
+  /* رد مقطوع (وصل لحد التوكنز): نقفل النص والأقواس ونشيل آخر عنصر ناقص لحد ما يتقري */
+  let x = o;
+  for (let k = 0; k < 8 && x; k++) {
+    let st = [], s2 = false;
+    for (let i = 0; i < x.length; i++) {
+      const c = x[i];
+      if (s2) { if (c === '\\') i++; else if (c === '"') s2 = false; }
+      else if (c === '"') s2 = true; else if (c === '{') st.push('}'); else if (c === '[') st.push(']'); else if (c === '}' || c === ']') st.pop();
+    }
+    let y = x + (s2 ? '"' : '');
+    y = y.replace(/[\s,:]+$/, '');
+    try { return JSON.parse(fix(y + st.reverse().join(''))); } catch (e) { /* نقصّ آخر عنصر */ }
+    const cut = x.lastIndexOf(',');
+    if (cut < 1) break;
+    x = x.slice(0, cut);
+  }
+  return null;
+}
+
 /* تنظيف رد «ذاكر مع نبتكس» — شرح: حتى 12 جزء بنصوص محدودة + ملخص (unreadable لو الصور مش دراسية/مش مقروءة) */
 function sanitizeStudy(raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -1135,9 +1189,30 @@ module.exports = async function handler(req, res) {
     return fail(res, 502, 'upstream_error');
   }
 
-  const cand = j && j.candidates && j.candidates[0];
-  const out = cand && cand.content && cand.content.parts
+  let cand = j && j.candidates && j.candidates[0];
+  let out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
+  /* STUDY-RETRY (إضافة): «ذاكر مع نبتكس» — لو رد جيميناي طلع فاضي (candidates فاضية / finishReason غير STOP) أو JSON مكسور ومش مقروء، بنعيد الطلب مرة واحدة تلقائيًا جوّه نفس الطلب بدل ما الطالب يشوف «ما قدرتش أحلّل الصورة». النقطة بتتصرف بعد النجاح بس فمفيش صرف زيادة، والحد اليومي ما بيتأثرش. أي فشل في المحاولة التانية = السلوك القديم زي ما هو. السطر في Logs بيوضّح السبب الحقيقي. للتراجع: امسح البلوك ده ورجّع cand/out لـ const. */
+  if (mode === 'study' && !(out && sanitizeStudy(parseStudyJson(out)))) {
+    console.error('[farm-ai] study: unusable reply — finish:', cand && cand.finishReason, '| block:', j && j.promptFeedback && j.promptFeedback.blockReason, '| chars:', out.length, '| http:', up.status);
+    if (deadline - Date.now() > 20000) {
+      try {
+        const rb = order[order.length > 1 ? 1 : 0];
+        const rBody = Object.assign({}, reqBody, { generationConfig: Object.assign({}, gen, { temperature: 0.2 }) });
+        const ctl2 = new AbortController();
+        const tm2 = setTimeout(function () { ctl2.abort(); }, Math.min(STUDY_ATTEMPT_MS, deadline - Date.now()));
+        try {
+          const r2 = await callBackend(rb, rBody, ctl2.signal);
+          const t2 = await r2.text();
+          let j2 = null; try { j2 = JSON.parse(t2); } catch (e) { /* غير JSON */ }
+          const c2 = r2.ok && j2 && j2.candidates && j2.candidates[0];
+          const o2 = c2 && c2.content && c2.content.parts ? c2.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
+          if (o2 && sanitizeStudy(parseStudyJson(o2))) { j = j2; cand = c2; out = o2; }
+          else console.error('[farm-ai] study retry also unusable — http', r2.status, '| finish:', c2 && c2.finishReason);
+        } finally { clearTimeout(tm2); }
+      } catch (e) { console.error('[farm-ai] study retry failed:', e && e.name); }
+    }
+  }
   if (!out) { console.error('[farm-ai] empty response, finish:', cand && cand.finishReason); return fail(res, 502, (mode === 'diagnose' || mode === 'diag_q' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') ? 'blocked' : 'empty'); }
 
   let payload;
@@ -1155,7 +1230,7 @@ module.exports = async function handler(req, res) {
     payload = { q: q };
   } else if (mode === 'study') {
     let parsed = null;
-    try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
+    parsed = parseStudyJson(out);   /* STUDY-JSON: كان JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')) */
     const st = sanitizeStudy(parsed);
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
