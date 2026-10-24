@@ -28335,6 +28335,32 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-ov .nbst-in .nbst-ex{animation:nbux-rise 480ms var(--ai-ease) 560ms backwards}
 .nbai-ov .nbst-in .nbst-mn{animation:nbux-rise 480ms var(--ai-ease) 520ms backwards}
 .nbai-ov .nbst-li-in{animation:nbux-rise 440ms var(--ai-ease) backwards}
+/* QSOLVE (إضافة): جزء «سؤال محلول» — بيظهر لما الصور تكون أسئلة؛ الأجزاء الشرحية العادية ما بتتأثرش. للتراجع: امسح الأسطر دي + دوال stQHtml/stQMeta/stPE/stIsQ وسطورها في الجافاسكربت */
+.nbai-ov .nbst-qpart{border-color:var(--ai-ring);background:linear-gradient(180deg,var(--ai-soft),transparent 46%),var(--bg2)}
+.nbai-ov .nbst-kd{display:inline-flex;align-items:center;margin-bottom:7px;padding:2px 11px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.7}
+.nbai-ov .nbst-kd.is-q{background:var(--ai-g);color:#fff}
+.nbai-ov .nbst-kd.is-t{background:var(--ai-soft);color:var(--ai-tx);box-shadow:inset 0 0 0 1px var(--ai-ring)}
+.nbai-ov .nbst-q{margin-top:9px;padding:11px 12px;border:1px solid var(--ai-ring);border-inline-start:3px solid var(--ai-tx);border-radius:12px;background:var(--card)}
+.nbai-ov .nbst-ql{display:block;margin-bottom:3px;font-size:11px;font-weight:800;color:var(--ai-tx)}
+.nbai-ov .nbst-qt{font-size:14px;font-weight:700;line-height:1.95;color:var(--ink)}
+.nbai-ov .nbst-qo{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.nbai-ov .nbst-qi{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);font-size:13px;line-height:1.8;color:var(--ink2)}
+.nbai-ov .nbst-qi>i{flex:none;display:grid;place-items:center;min-width:24px;height:24px;margin-top:1px;padding:0 3px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 1px var(--line2);font-style:normal;font-size:12px;font-weight:800;color:var(--ink2)}
+.nbai-ov .nbst-qi>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.nbai-ov .nbst-qi.ok{border-color:var(--wz-ok-br);background:var(--wz-ok-bg);color:var(--ink);font-weight:700}
+.nbai-ov .nbst-qi.ok>i{background:var(--wz-ok);color:var(--card);box-shadow:none}
+.nbai-ov .nbst-qi>em{flex:none;display:inline-flex;align-items:center;gap:3px;align-self:center;font-style:normal;font-size:10.5px;font-weight:800;color:var(--wz-ok)}
+.nbai-ov .nbst-qi>em u{text-decoration:none}
+.nbai-ov .nbst-qa{margin-top:10px;padding:9px 12px;border:1px solid var(--wz-ok-br);border-radius:12px;background:var(--wz-ok-bg)}
+.nbai-ov .nbst-qa>b{display:block;margin-bottom:1px;font-size:11px;font-weight:800;color:var(--wz-ok)}
+.nbai-ov .nbst-qa>div{font-size:14px;font-weight:800;line-height:1.9;color:var(--ink)}
+.nbai-ov .nbst-qxl{margin-top:12px;font-size:11px;font-weight:800;color:var(--ai-tx)}
+.nbai-ov .nbst-qxl+.nbst-px{margin-top:2px}
+.nbai-ov .nbst-in .nbst-kd{animation:nbux-pop 420ms var(--ai-spring) 80ms backwards}
+.nbai-ov .nbst-in .nbst-q{animation:nbux-rise 480ms var(--ai-ease) 280ms backwards}
+.nbai-ov .nbst-in .nbst-qa{animation:nbux-rise 480ms var(--ai-ease) 520ms backwards}
+.nbai-ov .nbst-in .nbst-qi.ok>em{animation:nbux-pop 420ms var(--ai-spring) 640ms backwards}
+.nbai-ov .nbst-in .nbst-qpart .nbst-px{animation-delay:700ms}
 /* مظهر الصور المرفقة (ذاكر): صينية مرتبة + صور بنسبة الورقة + ترقيم + مكان إضافة. للتراجع: امسح الأسطر دي + ارجع paintStrip والسطر اللي فيه .nbst-slot في click. */
 .nbai-ov .nbai-st-th{display:block;margin-top:8px;padding:10px 12px 12px;overflow:visible;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--ai-soft),transparent 72%),var(--card);box-shadow:0 12px 26px -20px var(--ai-glow);animation:nbux-rise 260ms var(--ai-ease) backwards}
 .nbai-ov .nbai-st-th[hidden]{display:none}
@@ -29406,7 +29432,7 @@ function buildScreen(){
     try{ ta.blur(); }catch(e){} card.classList.remove('nbst-kb');   /* يقفل الكيبورد ويرجّع شريط الكتابة الأساسي عشان الطالب يشوف الرد */
     box._busy = true; ta.disabled = true; go.disabled = true; lst.appendChild(qb); lst.appendChild(wait);
     try{ wait.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){}
-    call('study_ask', { images: sel, part: { title: p.title, explain: p.explain, example: p.example || '' }, q: q, hist: qa.slice(-2) }, S.list.length + '|' + box.getAttribute('data-p') + '|' + q, function(r){
+    call('study_ask', { images: sel, part: { title: p.title, explain: stPE(p), example: p.example || '' }, q: q, hist: qa.slice(-2) }, S.list.length + '|' + box.getAttribute('data-p') + '|' + q, function(r){
       if(!card.isConnected) return;
       box._busy = false; ta.disabled = false; go.disabled = false;
       var ok = r.ok && r.j && typeof r.j.text === 'string' && r.j.text.trim();
@@ -29435,23 +29461,53 @@ function buildScreen(){
     if(!m || typeof m.text !== 'string' || !m.text) return '';
     return '<div class="' + cls + '"><b class="' + cls + 'l">حيلة حفظ</b><div class="' + cls + 't">' + fmt(m.text) + '</div>' + (m.how ? '<div class="' + cls + 'h">' + fmt(m.how) + '</div>' : '') + '</div>';
   }
+  /* QSOLVE: جزء «سؤال محلول» (p.kind === 'q' من الخادم): نص السؤال + الاختيارات مع تحديد الصحيحة + صندوق الإجابة الصحيحة. c = 'nbst-q' (الشات) أو 'p-sq' (الـ PDF). الأجزاء الشرحية العادية ما بتعدّيش هنا خالص.
+     للتراجع: امسح الدوال stIsQ/stQHtml/stQMeta/stPE وكل سطر فيه isQ/hasQ/stQHtml/stPE في stExplainHtml وstSummaryHtml وstLoadCards وstAsk والـ PDF + css .nbst-q* + .p-sq* + بلوك question في الخادم */
+  function stIsQ(p){ return !!(p && p.kind === 'q' && typeof p.q === 'string' && p.q); }
+  function stQLtr(p){ var a = p.q, la = (a.match(/[A-Za-z]/g) || []).length, ar = (a.match(/[؀-ۿ]/g) || []).length; return la > ar; }
+  function stQHtml(p, c){
+    if(!stIsQ(p)) return '';
+    var en = stQLtr(p), L = en ? ['A', 'B', 'C', 'D', 'E', 'F'] : ['أ', 'ب', 'ج', 'د', 'هـ', 'و'], ai = Array.isArray(p.ai) ? p.ai : [], opts = Array.isArray(p.opts) ? p.opts : [];
+    var h = '<div class="' + c + '"' + (en ? ' dir="ltr"' : '') + '><b class="' + c + 'l">السؤال</b><div class="' + c + 't">' + fmt(p.q) + '</div>';
+    if(opts.length) h += '<ol class="' + c + 'o">' + opts.map(function(o, k){
+      var ok = ai.indexOf(k) !== -1;
+      return '<li class="' + c + 'i' + (ok ? ' ok' : '') + '"><i>' + (L[k] || (k + 1)) + '</i><span>' + fmt(o) + '</span>' + (ok ? '<em>' + IC_OK + '<u>صحيحة</u></em>' : '') + '</li>';
+    }).join('') + '</ol>';
+    var an = p.ans || (ai.length ? ai.map(function(k){ return opts[k]; }).filter(Boolean).join(' / ') : '');
+    if(an) h += '<div class="' + c + 'a"><b>' + (ai.length > 1 ? 'الإجابات الصحيحة' : 'الإجابة الصحيحة') + '</b><div>' + (ai.length && opts.length ? ai.map(function(k){ return L[k] || (k + 1); }).join(' + ') + ' — ' : '') + fmt(an) + '</div></div>';
+    return h + '</div>';
+  }
+  /* سطر العدّ: «3 أسئلة محلولة» أو «2 جزء شرح و3 أسئلة محلولة» (جلسة فيها أسئلة بس؛ الجلسات الشرحية بتفضل بنصها القديم) */
+  function stQMeta(nq, nt){
+    var q = nq === 1 ? 'سؤال محلول' : (nq === 2 ? 'سؤالان محلولان' : (nq <= 10 ? nq + ' أسئلة محلولة' : nq + ' سؤالًا محلولًا'));
+    var t = nt === 1 ? 'جزء شرح' : (nt === 2 ? 'جزءان للشرح' : (nt <= 10 ? nt + ' أجزاء للشرح' : nt + ' جزءًا للشرح'));
+    return nt ? t + ' و' + q : q;
+  }
+  /* نص الجزء لكروت المراجعة وسؤال المتابعة: السؤال ← الاختيارات ← الإجابة الصحيحة ← الشرح (الجزء الشرحي = explain زي ما هو) */
+  function stPE(p){
+    if(!stIsQ(p)) return p.explain;
+    var L = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'], ai = Array.isArray(p.ai) ? p.ai : [], an = p.ans || (ai.length && p.opts ? ai.map(function(k){ return p.opts[k]; }).filter(Boolean).join(' / ') : '');
+    return 'السؤال: ' + p.q.replace(/[\r\n]+/g, ' ') + (p.opts && p.opts.length ? '\nالاختيارات: ' + p.opts.map(function(o, k){ return (L[k] || (k + 1)) + ') ' + o; }).join(' | ') : '') + (an ? '\nالإجابة الصحيحة: ' + an : '') + '\nالشرح: ' + p.explain;
+  }
   function stExplainHtml(S){
-    var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء') + ' من ' + (S.nImg || S.imgs.length) + ((S.nImg || S.imgs.length) === 1 ? ' صورة' : ' صور')   /* STUDY-SAVE */ + '</div>';
+    var nq = S.parts.filter(stIsQ).length, nt = S.parts.length - nq, hasQ = nq > 0 && nt > 0;   /* QSOLVE */
+    var h = '<div class="nbst-h">' + esc(S.title || 'شرح الصور') + '</div><div class="nbst-meta">' + (nq ? stQMeta(nq, nt) : S.parts.length + (S.parts.length === 1 ? ' جزء' : ' أجزاء')) + ' من ' + (S.nImg || S.imgs.length) + ((S.nImg || S.imgs.length) === 1 ? ' صورة' : ' صور')   /* STUDY-SAVE */ + '</div>';
     S.parts.forEach(function(p, i){
-      var srcs = (p.src || []).filter(function(v){ return v >= 1 && v <= S.imgs.length; });
-      h += '<section class="nbst-part"><h4 class="nbst-pt"><span class="nbst-pn">' + (i + 1) + '</span><span>' + esc(p.title) + '</span></h4>' +
+      var srcs = (p.src || []).filter(function(v){ return v >= 1 && v <= S.imgs.length; }), isQ = stIsQ(p);
+      h += '<section class="nbst-part' + (isQ ? ' nbst-qpart' : '') + '">' + (hasQ ? '<span class="nbst-kd ' + (isQ ? 'is-q' : 'is-t') + '">' + (isQ ? 'سؤال محلول' : 'شرح') + '</span>' : '') + '<h4 class="nbst-pt"><span class="nbst-pn">' + (i + 1) + '</span><span>' + esc(p.title) + '</span></h4>' +
         (srcs.length ? '<span class="nbst-src">من ' + (srcs.length > 1 ? 'الصور ' : 'الصورة ') + srcs.join('، ') + '</span>' : '') +
+        (isQ ? stQHtml(p, 'nbst-q') + '<div class="nbst-qxl">' + (p.ans ? 'شرح الإجابة' : 'الحل والشرح') + '</div>' : '') +
         '<div class="nbst-px">' + fmt(p.explain) + '</div>' +
         stCmpHtml(p.compare, 'nbst-cmp') +
         stMnHtml(p.mnemonic, 'nbst-mn') +
         (p.example ? '<div class="nbst-ex"><span class="nbst-exl">مثال تبسيطي</span>' + fmt(p.example) + '</div>' : '') +
-        '<div class="nbst-ask" data-s="' + STUDY.sessions.indexOf(S) + '" data-p="' + i + '"><button type="button" class="nbst-askb" data-nbst="askopen" aria-expanded="false">مش فاهم الجزء ده؟ اسأل</button>' +
+        '<div class="nbst-ask" data-s="' + STUDY.sessions.indexOf(S) + '" data-p="' + i + '"><button type="button" class="nbst-askb" data-nbst="askopen" aria-expanded="false">' + (isQ ? 'مش فاهم الحل؟ اسأل' : 'مش فاهم الجزء ده؟ اسأل') + '</button>' +
         '<div class="nbst-askf" hidden><div class="nbst-askl"></div><div class="nbst-askr"><textarea class="nbst-askq" rows="1" maxlength="300" placeholder="اكتب اللي مش فاهمه…" aria-label="سؤالك عن الجزء ده"></textarea><button type="button" class="nbst-asks" data-nbst="askgo">اسأل</button></div></div></div></section>';
     });
     return h;
   }
   function stSummaryHtml(S){
-    return '<div class="nbst-h">ملخص الصور</div><ul class="nbst-sum">' + S.summary.map(function(x){ return '<li><span>' + fmt(x) + '</span></li>'; }).join('') + '</ul>';
+    return '<div class="nbst-h">' + (S.parts.length && S.parts.every(stIsQ) ? 'ملخص الأسئلة — أهم ما اختبرته' : 'ملخص الصور') + '</div><ul class="nbst-sum">' + S.summary.map(function(x){ return '<li><span>' + fmt(x) + '</span></li>'; }).join('') + '</ul>';
   }
 
   /* ── الامتحان التفاعلي (نفس طريقة كورسات نبتكس: اختيار ← تلوين + تفسير ← التالي ← نتيجة %) ── */
@@ -29555,7 +29611,7 @@ function buildScreen(){
     var oe = TH.ask.querySelector('.nbst-end'); if(oe && oe.parentNode) oe.parentNode.removeChild(oe);
     stBusy(true); paintFoot();
     var ty = typing('study'); ty.classList.add('nbst-qdots');
-    call('study_cards', { parts: S.parts.map(function(p){ return { title: p.title, explain: p.explain, example: p.example || '' }; }) }, (S.id || '') + '|' + S.parts.length, function(r){
+    call('study_cards', { parts: S.parts.map(function(p){ return { title: p.title, explain: stPE(p), example: p.example || '' }; }) }, (S.id || '') + '|' + S.parts.length, function(r){
       stBusy(false);
       if(!card.isConnected) return;
       if(!r.ok || !r.j.cards || !r.j.cards.length){
@@ -29580,7 +29636,7 @@ function buildScreen(){
     try{ sc.scrollBy({ top: dy, behavior: 'smooth' }); }catch(e){ sc.scrollTop += dy; }
   }
   /* شرح/امتحان بالإنجليزي: النص الإنجليزي بس يتعرض LTR (العربي زي ما هو RTL من غير أي تغيير) */
-  var ST_DIR = '.nbst-px,.nbst-ex,.nbst-mnt,.nbst-mnh,.nbst-pt,.nbst-h,.nbst-sum li,.acad-qtext,.acad-opt,.acad-exp,.nbst-cmpt,.nbst-cmp th,.nbst-cmp td';
+  var ST_DIR = '.nbst-px,.nbst-ex,.nbst-mnt,.nbst-mnh,.nbst-pt,.nbst-h,.nbst-sum li,.acad-qtext,.acad-opt,.acad-exp,.nbst-cmpt,.nbst-cmp th,.nbst-cmp td,.nbst-qt,.nbst-qi span';
   function stDir(root, sel){
     [].forEach.call(root.querySelectorAll(sel || ST_DIR), function(e){
       var t = (e.textContent || '').replace(/\(إجابتك\)/g, ''), la = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length;
@@ -29701,6 +29757,9 @@ function buildScreen(){
       '.p-pt{font-size:1rem;font-weight:800;margin:0 0 4px}.p-pt span{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#1B6B3A;color:#fff;font-size:12px;margin-inline-end:8px}' +
       '.p-qa{margin-top:10px;padding:8px 11px;border-inline-start:3px solid #1B6B3A;background:#fff;border-radius:6px;font-size:13px}.p-qa b{color:#1B6B3A}.p-qq{font-weight:700;margin-top:4px}.p-qr{margin-bottom:6px}' +
       '.p-cmp{margin-top:10px;break-inside:avoid;border:1px solid #84b896;border-radius:8px;overflow:hidden;background:#fff}.p-cmpt{padding:5px 10px;font-size:12px;font-weight:800;color:#1B6B3A;background:#eef8f0}.p-cmp table{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.7}.p-cmp th,.p-cmp td{padding:5px 9px;text-align:start;vertical-align:top;border-top:1px solid #e2eee5}.p-cmp thead th{border-top:0;font-weight:800;background:#f5fbf6}.p-cmp tbody th{font-weight:800;background:#f5fbf6}.p-cmp th+th,.p-cmp th+td,.p-cmp td+td{border-inline-start:1px solid #e2eee5}' +
+      '.p-sq{margin:8px 0 4px;padding:9px 12px;border:1px solid #d6cdf3;border-inline-start:3px solid #6d28d9;border-radius:8px;background:#fff;break-inside:avoid}.p-sql{display:block;color:#6d28d9;font-size:11px;font-weight:800}.p-sqt{font-weight:700;font-size:13.5px}' +
+      '.p-sqo{list-style:none;margin:8px 0 0;padding:0}.p-sqi{display:flex;gap:8px;align-items:flex-start;padding:5px 10px;margin:4px 0;border:1px solid #e2eee5;border-radius:8px;font-size:13px;line-height:1.7}.p-sqi i{font-style:normal;font-weight:800;flex:none;min-width:18px}.p-sqi span{flex:1;min-width:0}.p-sqi.ok{border-color:#27ae60;background:#eafaf0;color:#1c7a43;font-weight:700}.p-sqi em{font-style:normal;flex:none;font-size:11px;font-weight:800}.p-sqi u{text-decoration:none}.p-sqi svg{display:none}' +
+      '.p-sqa{margin-top:8px;padding:7px 11px;border-radius:8px;background:#eafaf0;border:1px solid #27ae60;color:#1c7a43;font-size:13px}.p-sqa b{display:block;font-size:11px}.p-sqa div{font-weight:800}.p-sqx{margin:10px 0 2px;color:#1B6B3A;font-size:11px;font-weight:800}' +
       '.p-px{font-size:13.5px}.p-ex{margin-top:8px;padding:8px 11px;border:1px dashed #84b896;border-radius:8px;font-size:13px;background:#fff}.p-ex b{display:block;color:#1B6B3A;font-size:11px}' +
       '.p-mn{margin-top:8px;padding:8px 11px;border:1px solid #84b896;border-inline-start:3px solid #1B6B3A;border-radius:8px;font-size:13px;background:#fff;break-inside:avoid}.p-mnl{display:block;color:#1B6B3A;font-size:11px;font-weight:800}.p-mnt{font-weight:800}.p-mnh{margin-top:3px}' +
       'ul.p-sum{margin:0;padding-inline-start:20px;font-size:13.5px}ul.p-sum li{margin-bottom:3px}' +
@@ -29717,7 +29776,7 @@ function buildScreen(){
         '<div class="p-imgs">' + S.imgs.map(function(d, i){ return '<img src="' + d + '" alt="صورة ' + (i + 1) + '">'; }).join('') + '</div>' + (S.note ? '<div class="p-note">ملاحظتك: ' + esc(S.note) + '</div>' : '') +
         '<h2 class="p-h">شرح الأجزاء</h2>';
       S.parts.forEach(function(p, i){
-        body += '<div class="p-part"><h3 class="p-pt"><span>' + (i + 1) + '</span>' + esc(p.title) + '</h3><div class="p-px">' + fmt(p.explain) + '</div>' + stCmpHtml(p.compare, 'p-cmp') + stMnHtml(p.mnemonic, 'p-mn') + (p.example ? '<div class="p-ex"><b>مثال تبسيطي</b>' + fmt(p.example) + '</div>' : '') +
+        body += '<div class="p-part"><h3 class="p-pt"><span>' + (i + 1) + '</span>' + esc(p.title) + '</h3>' + (stIsQ(p) ? stQHtml(p, 'p-sq') + '<div class="p-sqx">' + (p.ans ? 'شرح الإجابة' : 'الحل والشرح') + '</div>' : '') + '<div class="p-px">' + fmt(p.explain) + '</div>' + stCmpHtml(p.compare, 'p-cmp') + stMnHtml(p.mnemonic, 'p-mn') + (p.example ? '<div class="p-ex"><b>مثال تبسيطي</b>' + fmt(p.example) + '</div>' : '') +
           ((p.qa && p.qa.length) ? '<div class="p-qa">' + p.qa.map(function(x){ return '<div class="p-qq"><b>سؤالك:</b> ' + esc(x.q) + '</div><div class="p-qr"><b>الرد:</b> ' + fmt(x.a) + '</div>'; }).join('') + '</div>' : '') + '</div>';
       });
       if(S.summary.length) body += '<h2 class="p-h">ملخص الصور</h2><ul class="p-sum">' + S.summary.map(function(x){ return '<li>' + fmt(x) + '</li>'; }).join('') + '</ul>';
@@ -29736,7 +29795,7 @@ function buildScreen(){
     });
     try{   /* نص إنجليزي في الـ PDF يتعرض LTR (مستند inert: الصور مابتتحمّلش تاني) */
       var pd = document.implementation.createHTMLDocument(''); pd.body.innerHTML = body;
-      stDir(pd.body, '.p-px,.p-ex,.p-mnt,.p-mnh,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li,.p-cmpt,.p-cmp th,.p-cmp td,.p-qq,.p-qr'); body = pd.body.innerHTML;
+      stDir(pd.body, '.p-px,.p-ex,.p-mnt,.p-mnh,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li,.p-cmpt,.p-cmp th,.p-cmp td,.p-qq,.p-qr,.p-sqt,.p-sqi span'); body = pd.body.innerHTML;
     }catch(e){}
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + esc(ttl) + ' — Nabtex AI</title>' +
       '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"><style>' + css + '</style></head><body>' +
