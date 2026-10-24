@@ -1888,10 +1888,6 @@ body.modal-open { overflow: hidden; }
 [data-dark] .fgd-tip{background:rgba(197,240,98,.08);border-color:#3a4a24;color:#cfe5a0}
 [data-dark] .fgd-tip svg{stroke:#c5f062}
 </style>
-<!-- KATEX-MATH: تنسيق معادلات LaTeX اللي بيولّدها الذكاء الاصطناعي في «ذاكر مع نبتكس» (defer = من غير ما يعطّل تحميل الصفحة). للتراجع: امسح الـ3 أسطر دي + بلوك KATEX-MATH في nb-farm-ai-js + سطور KATEX-MATH في nb-farm-ai-study. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
   <!-- Liquid Glass — hidden SVG refraction filters (feDisplacementMap + feSpecularLighting).
@@ -28218,11 +28214,6 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 <style id="nb-farm-ai-study">
 /* «ذاكر مع نبتكس» — كل القواعد تحت .nbai-ov (مفيش تأثير على باقي الموقع). الامتحان بيستخدم كلاسات كورسات الأكاديمية (acad-*) زي ما هي. للتراجع: امسح البلوك ده بس. */
 .nbai-ov .nbai-src-b{padding:0 6px}
-/* KATEX-MATH: المعادلات دايمًا LTR جوه الواجهة العربية، والمعادلة الطويلة بتتسكرول أفقيًا بدل ما تكسر التصميم */
-.nbai-ov .katex{direction:ltr;unicode-bidi:isolate;font-size:1.06em}
-.nbai-ov .katex-display{margin:.7em 0;overflow-x:auto;overflow-y:hidden;padding:2px 0;-webkit-overflow-scrolling:touch}
-.nbai-ov .katex-display>.katex{white-space:nowrap}
-.nbai-ov .katex-error{font-size:.92em}
 /* أيقونة إضافة الصور في شريط الكتابة */
 .nbai-st-add{flex:none;display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);cursor:pointer;transition:transform 180ms var(--ai-ease),background 180ms,opacity 180ms}
 .nbai-st-add:active{transform:scale(.92)}
@@ -28735,26 +28726,6 @@ function hash(str){ var h = 5381; for(var i = 0; i < str.length; i++) h = ((h <<
 function fmt(text){
   return esc(text).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/^\s*[*•-]\s+/gm, '• ').replace(/\n/g, '<br>');
 }
-/* KATEX-MATH: تحويل LaTeX ($...$ مدمج و$$...$$ سطر مستقل) لمعادلات منسّقة بعد ما الرد يتكتب في الـ DOM. renderMath بتتنادي على أي عنصر، وmathWatch بتراقب الكارت كله (شرح/امتحان/كروت/أسئلة متابعة/جلسات محفوظة) فمفيش داعي لاستدعاء يدوي في كل مكان. للتراجع: امسح الدالتين وسطر mathWatch(card). */
-var MATH_OPTS = { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false, strict: 'ignore', errorColor: '#c0392b' };
-function renderMath(root){
-  if(!root || typeof window.renderMathInElement !== 'function') return false;
-  try{ if((root.textContent || '').indexOf('$') !== -1) window.renderMathInElement(root, MATH_OPTS); }catch(e){}
-  return true;
-}
-function mathWatch(root){
-  if(!root || typeof MutationObserver === 'undefined') return;
-  var mo, timer = 0, tries = 0;
-  function run(){
-    timer = 0;
-    mo.disconnect();   /* عشان تعديل KaTeX نفسه ما يشغّلش المراقب تاني */
-    var ready = renderMath(root);
-    mo.observe(root, { childList: true, subtree: true, characterData: true });
-    if(!ready && tries++ < 20) timer = setTimeout(run, 500);   /* KaTeX لسه بيتحمّل من الـ CDN */
-  }
-  mo = new MutationObserver(function(){ if(!timer) timer = setTimeout(run, 80); });
-  mo.observe(root, { childList: true, subtree: true, characterData: true });
-}
 
 function quotaGet(uid, mode){ var q = lsGet('nbai:q:' + mode + ':' + uid); return (q && q.day === today()) ? q : { day: today(), n: 0, last: 0 }; }
 function left(mode){ var u = user(); return u ? Math.max(0, LIM[mode] - quotaGet(u.uid, mode).n) : LIM[mode]; }
@@ -28977,7 +28948,6 @@ function buildScreen(){
   if(CHAT.uid !== uid0) CHAT = { uid: uid0, ask: [], diag: [] };
   var card = document.createElement('div');
   card.className = 'nbai-ov'; card.hidden = true; card._uid = uid0;
-  mathWatch(card);   /* KATEX-MATH */
   card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'nbai-ov-t');
   /* أيقونات اقتراحات الأسئلة (SVG خطّي صغير) */
   function ci(d){ return '<span class="nbai-chip-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg></span>'; }
@@ -29828,12 +29798,10 @@ function buildScreen(){
       stDir(pd.body, '.p-px,.p-ex,.p-mnt,.p-mnh,.p-qt,.p-pt,.p-why,.p-o,.p-title,ul.p-sum li,.p-cmpt,.p-cmp th,.p-cmp td,.p-qq,.p-qr,.p-sqt,.p-sqi span'); body = pd.body.innerHTML;
     }catch(e){}
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + esc(ttl) + ' — Nabtex AI</title>' +
-      '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">' +
-      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"><\/script>' +   /* KATEX-MATH: للتراجع امسح السطر ده وسكربت KATEX-MATH آخر الصفحة */
-      '<style>.katex{direction:ltr;unicode-bidi:isolate}.katex-display{overflow-x:auto;overflow-y:hidden}' + css + '</style></head><body>' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"><style>' + css + '</style></head><body>' +
       '<div class="p-tb"><button onclick="window.close()" style="background:#f3faf4;color:#1e2a24;border:1.5px solid #e2eee5">← رجوع</button><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>' +
       '<div class="p-wrap"><div class="p-head"><div class="p-brand">🛡️ Nabtex AI — ذاكر مع نبتكس</div><div class="p-date">' + esc(dt) + '</div></div>' + body +
-      '<div class="p-foot">© نبتيكس Nabtex — تم إصدار هذا الملف من Nabtex AI (ذاكر مع نبتكس)</div></div><script>window.addEventListener("load",function(){try{renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}],throwOnError:false,strict:"ignore"})}catch(e){}})<\/script></body></html>';
+      '<div class="p-foot">© نبتيكس Nabtex — تم إصدار هذا الملف من Nabtex AI (ذاكر مع نبتكس)</div></div></body></html>';
   }
   function stPdf(){
     if(!stPdfSet().length) return;
