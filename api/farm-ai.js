@@ -687,6 +687,30 @@ function sanitizeStudy(raw) {
 }
 
 /* SOLVER: تنظيف نص الحل — بنشيل وسوم التفكير (لو الموديل أرسلها)، ولو الموديل سرّب LaTeX نحوّله لرموز يونيكود، وبنشيل العناوين والأسوار */
+/* ANS-SYNC: الإجابة المعلّمة من جيميناي (ans / ai) ما تفضلش ظاهرة إلا لو حل Groq (الإجابة بالخط العريض) بيأكدها؛ غير كده بتتشال بدل ما تتعارض مع الشرح. للتراجع: امسح الدالتين + شرط ansAgrees في فرع الحل. */
+function normAns(t) {
+  return String(t || '').replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); })
+    .toLowerCase().replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+    .replace(/[^\p{L}\p{N}.]/gu, '');
+}
+function ansAgrees(p, out) {
+  const segs = (String(out || '').match(/\*\*([^*\n]{1,240})\*\*/g) || []).slice(0, 4).map(function (x) { return x.replace(/\*/g, ''); });
+  if (!segs.length) return false;
+  const cands = [], labels = [];
+  if (p.ans) cands.push(normAns(p.ans));
+  if (Array.isArray(p.ai) && Array.isArray(p.opts)) p.ai.forEach(function (i) { if (p.opts[i]) cands.push(normAns(p.opts[i])); labels.push(String(i + 1)); });
+  const hit = function (sg, c) {
+    if (!sg || !c) return false;
+    if (/^\d+(\.\d+)?$/.test(c)) return new RegExp('(^|[^0-9.])' + c.replace(/\./g, '\\.') + '($|[^0-9]|\\.(?![0-9]))').test(sg);
+    return (c.length >= 2 && sg.indexOf(c) !== -1) || (sg.length >= 3 && c.indexOf(sg) !== -1);
+  };
+  return segs.some(function (sg) {
+    const n = normAns(sg);
+    if (cands.some(function (c) { return hit(n, c); })) return true;
+    const digs = sg.replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).match(/\d+/g) || [];
+    return labels.some(function (l) { return digs.indexOf(l) !== -1; });
+  });
+}
 function cleanSolve(t) {
   let x = String(t || '').replace(/\r/g, '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?think>/gi, '');
   x = x.replace(/```[a-z]*\n?/gi, '').replace(/^\s{0,3}#{1,6}\s+/gm, '');
@@ -760,7 +784,7 @@ async function solveStudyProblems(st, t0) {
             const ch = j && j.choices && j.choices[0];
             if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
             const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
-            if (out.length >= 60) { p.explain = out; if (isPb) { delete p.ans; delete p.ai; }   /* GROQ-ALLQ: الأسئلة العادية بتفضل بإجابتها المعلّمة من جيميناي، والمراجعة بتقارن */
+            if (out.length >= 60) { p.explain = out; if (isPb || !ansAgrees(p, out)) { delete p.ans; delete p.ai; }   /* ANS-SYNC */   /* GROQ-ALLQ: الأسئلة العادية بتفضل بإجابتها المعلّمة من جيميناي، والمراجعة بتقارن */
                 console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + gk.name + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل (ومعاه اسم المفتاح groq1..groq4 مش قيمته) */
             return;
           }
