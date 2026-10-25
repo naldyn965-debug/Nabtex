@@ -28034,6 +28034,19 @@ html:has(.nbai-ov:not([hidden])){overflow:hidden}
 .nbai-dots i:nth-child(2){animation-delay:.15s}
 .nbai-dots i:nth-child(3){animation-delay:.3s}
 .nbai-dots::after{content:"بيحلّل…";margin-inline-start:8px;font-size:12px;font-weight:700;color:var(--slate)}
+/* NBW-WAIT: تجربة انتظار «بريميوم» في «ذاكر» (وضع الأسئلة والشرح) بدل «بيحلّل…» الثابتة — مراحل شغل بتتبدّل بنعومة (إحساس إن الشغل ماشي فعلًا) + شريط تقدّم بيسبق في الأول وبيهدّى تدريجيًا ومايوصلش 100% لحد ما الرد يوصل + نصيحة مفيدة بعد شوية. الشريط والمراحل زمنية (مش مربوطة بتقدّم حقيقي من الخادم). الكل مقيّد بـ .nbw/.nbw-on (بتتشال تلقائيًا أول ما الرد يحلّ محل الفقاعة) ومتوقف مع prefers-reduced-motion. للتراجع: امسح الكتلة دي + دالة stWait وسطر استدعائها في runStudy. */
+.nbai-m-ai:has(.nbw){min-width:min(270px,88%)}
+.nbai-m-ai.nbw-on .nbai-dots::after{content:none}
+.nbw-s{margin-inline-start:8px;font-size:12px;font-weight:700;color:var(--slate);transition:opacity .22s ease,transform .22s ease}
+.nbw-s.is-out{opacity:0;transform:translateY(4px)}
+.nbw{display:block;margin-top:9px}
+.nbw-bar{display:block;position:relative;height:5px;border-radius:99px;background:var(--ai-soft2);overflow:hidden;direction:rtl}
+.nbw-bar i{display:block;height:100%;width:100%;border-radius:inherit;background:var(--ai-g);transform-origin:100% 50%;transform:scaleX(.05);transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.nbw-bar::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(100%);animation:nbwSheen 1.9s ease-in-out infinite}
+@keyframes nbwSheen{to{transform:translateX(-100%)}}
+.nbw-tip{display:block;margin-top:8px;font-size:11px;line-height:1.6;color:var(--muted);opacity:0;transform:translateY(3px);transition:opacity .5s ease,transform .5s ease}
+.nbw-tip.is-on{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.nbw-bar::after{animation:none;display:none}.nbw-bar i,.nbw-s,.nbw-tip{transition:none}}
 /* صور التشخيص جوه فقاعة المستخدم */
 .nbai-m .nbai-shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:min(236px,66vw);margin-bottom:8px}
 .nbai-m .nbai-shot{margin:0}
@@ -29187,6 +29200,36 @@ function buildScreen(){
     var d = mkMsg('ai', '<span class="nbai-dots" role="img" aria-label="المساعد بيكتب"><i></i><i></i><i></i></span>', false);
     TH[t].appendChild(d); toEnd(t); return d;
   }
+  /* NBW-WAIT: تجربة انتظار «بريميوم» لفقاعة «ذاكر» (بتتشغّل من runStudy بس). مراحل شغل بتتبدّل بنعومة + شريط تقدّم زمني مابيوصلش 100% قبل الرد + نصيحة بعد 14 ث. بتقف لوحدها أول ما الفقاعة تتبدّل بالرد/الخطأ. مفيش أي تأثير على الطلب نفسه. للتراجع: امسح الدالة دي وسطر stWait في runStudy وكتلة NBW-WAIT في css. */
+  function stWait(ty, qmK, nImg){
+    try{
+      var dots = ty && ty.querySelector('.nbai-dots'); if(!dots || !dots.parentNode) return;
+      var ST = qmK
+        ? [nImg > 1 ? 'بقرا ' + nImg + ' صور وبحدّد الأسئلة…' : 'بقرا الصورة وبحدّد الأسئلة…', 'بفهم كل سؤال لوحده…', 'بحلّ وبراجع الإجابة الصحيحة…', 'بكتب سبب كل اختيار…', 'لسه بدقّق — الإجابة الدقيقة بتاخد وقتها…']
+        : [nImg > 1 ? 'بقرا ' + nImg + ' صور وبفهم المحتوى…' : 'بقرا الصورة وبفهم المحتوى…', 'بقسّم المحاضرة لأجزاء…', 'بجهّز الشرح والأمثلة…', 'برتّب الملخّص…', 'لسه بدقّق — الشرح الكويس بياخد وقته…'];
+      var AT = [0, 4500, 12000, 24000, 42000];
+      var sp = document.createElement('span'); sp.className = 'nbw-s'; sp.setAttribute('aria-live', 'polite'); sp.textContent = ST[0];
+      dots.appendChild(sp);
+      var w = document.createElement('span'); w.className = 'nbw';
+      w.innerHTML = '<span class="nbw-bar" aria-hidden="true"><i></i></span><span class="nbw-tip"></span>';
+      dots.parentNode.insertBefore(w, dots.nextSibling);
+      ty.classList.add('nbw-on');
+      var bar = w.querySelector('i'), tip = w.querySelector('.nbw-tip'), t0 = Date.now(), cur = 0, tipOn = false;
+      tip.textContent = qmK ? 'نصيحة: ارفع سؤال واحد في كل مرة لو عايز أدق إجابة.' : 'الجلسة بتتحفظ تلقائي — هتلاقيها في «جلسات المذاكرة».';
+      var iv = setInterval(function(){
+        var t = Date.now() - t0;
+        if(!ty.contains(w) || t > 180000){ clearInterval(iv); return; }   /* الفقاعة اتبدّلت بالرد/الخطأ */
+        bar.style.transform = 'scaleX(' + (0.05 + 0.87 * (1 - Math.exp(-t / 17000))).toFixed(3) + ')';   /* بيسبق في الأول وبيهدّى تدريجيًا (أقصى حد ~92%) */
+        var k = cur; while(k + 1 < AT.length && t >= AT[k + 1]) k++;
+        if(k !== cur){
+          cur = k;
+          if(NOANIM) sp.textContent = ST[k];
+          else { sp.classList.add('is-out'); setTimeout(function(){ sp.textContent = ST[cur]; sp.classList.remove('is-out'); }, 230); }
+        }
+        if(!tipOn && t >= 14000){ tipOn = true; tip.classList.add('is-on'); }
+      }, 400);
+    }catch(e){}
+  }
   /* ظهور الرد بنعومة: الكلمات تظهر تباعًا (الإجمالي ≤ ~2.4 ث مهما كان طول الرد) + الفقاعة تتفتح من حجم الكتابة لحجمها الكامل */
   var NOANIM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function wordsIn(el){
@@ -29921,6 +29964,7 @@ function buildScreen(){
     TH.ask.appendChild(mkMsg('user', shots + (note ? esc(note) : (qmOn ? 'حلّ الأسئلة دي' : 'اشرحلي الصور دي')), false));   /* STUDY-QMODE */
     stImgs = []; stQi.value = ''; fit();
     var ty = typing('study');
+    try{ stWait(ty, qmOn, imgs.length); }catch(e){}   /* NBW-WAIT: تجربة انتظار بريميوم. للتراجع: امسح السطر ده */
     stBusy(true); paintFoot();
     call('study', qmOn ? { images: list, note: note, qmode: true } : { images: list, note: note }, imgs.length + '|' + note + (qmOn ? '|qm' : ''), function(r){   /* STUDY-QMODE: وضع الأسئلة الفائق = qmode:true (من غيره الطلب والمفتاح زي ما كانوا بالظبط) */
       var st = r.ok && r.j.study && r.j.study.parts && r.j.study.parts.length ? r.j.study : null;
@@ -30264,6 +30308,8 @@ function buildScreen(){
   }
   function stShow(id){
     stDetach(); stCur = id || null;
+    /* STUDY-QMODE-SESSION: فتح جلسة من «جلسات المذاكرة» بيحوّل الواجهة لوضع الجلسة نفسها (وضع الأسئلة الفائق ↔ وضع الشرح) بدل ما تفضل على الوضع اللي كان شغّال قبلها. الجلسة الجديدة (id فاضي) ما بتتغيّرش. على باقة مش Plus/Pro الوضع بيتقفل تلقائيًا (qmPlan جوه paintQm). للتراجع: امسح السطر ده بس. */
+    try{ var qS = stCur && STUDY.sessions.filter(function(x){ return x.id === stCur; })[0]; if(qS){ var qW = !!qS.qm; if(qW !== qm){ qm = qW; lsSet('nbai:qm', qm ? 1 : 0); } paintStudy(); } }catch(e){}
     if(stCur && SVN[stCur]) SVN[stCur].forEach(function(n){ TH.ask.appendChild(n); });
     if(stCur) stPlaceEnd();
     paintDr(); try{ toEnd('ask'); }catch(e){}
@@ -31596,6 +31642,8 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
    ١) لوجو Nabtex AI على نفس مربّع لوجو المساعد  ٢) زر «جرّب مجانًا» كزر ثانوي احترافي  ٣) باقة البرو: ذهبي فاتح لامع بدل الذهبي الغامق */
 .aipw-ic{background:linear-gradient(135deg,#6d28d9 0%,#9333ea 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 4px rgba(124,58,237,.08),0 12px 24px -10px rgba(109,40,217,.8)}
 [data-dark] .aipw-ic{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 4px rgba(168,85,247,.16),0 12px 24px -10px rgba(147,51,234,.75)}
+/* AIPW-IC-SCROLL-FIX: على iOS (Safari/WebKit) رسمة الأيقونة (SVG أبيض) كانت بتختفي ويفضل المربع البنفسجي فاضي لما شاشة الباقات تتسكرول، لأن الـ SVG عليه filter:drop-shadow جوه صندوق بيتسكرول (overflow-y:auto) وعليه أنيميشن وخلفية blur — الفلتر على SVG جوه طبقة بتتسكرول بيفشل في الرسم هناك. الحل: نلغي الفلتر على الـ SVG ده بس (ظل خفيف جدًا)، ونثبّته في طبقة رسم خاصة بيه. مقيّد بـ .aipw-ic بس (شاشة الباقات) ومفيش تأثير على باقي الموقع. للتراجع: امسح القاعدة دي. */
+.aipw-ic svg{filter:none!important;-webkit-filter:none!important;-webkit-transform:translateZ(0);transform:translateZ(0)}
 
 /* زر التجربة المجانية (#ai-trial فقط — زر «إغلاق» بيفضل زي ما هو) */
 #ai-trial.aipw-trial{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:12px;row-gap:1px;min-height:58px;margin-top:12px;padding:10px 20px;border:1.5px solid rgba(27,107,58,.3);border-radius:99px;background:linear-gradient(135deg,var(--brand-mist),var(--card));color:var(--brand);font-size:14.5px;font-weight:900;line-height:1.35;text-align:start;box-shadow:0 8px 18px -10px rgba(27,107,58,.45);transition:border-color .2s,background .2s,box-shadow .2s,transform .15s}
