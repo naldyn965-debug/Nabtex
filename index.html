@@ -28766,6 +28766,11 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-qm-tx{gap:3px}
 .nbai-ov .nbai-qm-tx small{text-wrap:balance}
 @media (max-height:640px){.nbai-ov .nbai-qm{margin:8px 0 10px}.nbai-ov .nbai-qm-b{padding:9px 12px}}
+/* STUDY-QMODE-PLAN: حالة القفل (مش على Plus/Pro) — الزرار يفضل قابل للضغط (بيفتح الباقات) بس بشارة «Plus · Pro» بدل المفتاح */
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-sw{display:none}
+.nbai-ov .nbai-qm-b.is-lock::after{content:'Plus · Pro';flex:none;direction:ltr;padding:6px 11px 6px 28px;border-radius:999px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") 9px center/13px 13px no-repeat,var(--ai-g);color:#fff;font-size:11.5px;font-weight:800;line-height:1.2;letter-spacing:.01em;box-shadow:0 6px 14px -8px var(--ai-glow)}
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-ic{background:var(--ai-soft2);color:var(--ai-tx)}
+.nbai-ov .nbai-qm-b.nbai-qm-nudge{animation:nbf-nudge 420ms var(--ai-ease)}
 .nbai-ov .nbai-qm-b.is-on .nbai-qm-ic{animation:nbqv-halo 2.9s ease-out infinite}
 .nbai-ov .nbai-qm-b.is-on .nbai-qm-sw{box-shadow:0 0 14px -2px var(--ai-glow)}
 .nbai-ov.nbai-qfx .nbai-qm-b .nbai-qm-ic{animation:nbqv-pop 760ms var(--ai-spring)}
@@ -29410,12 +29415,14 @@ function buildScreen(){
   var qm = lsGet('nbai:qm') === 1, qmEl = card.querySelector('.nbai-qm'), qmB = card.querySelector('.nbai-qm-b'), qmS = card.querySelector('.nbai-qm-s');
   function paintQm(){
     if(!qmEl || !qmB) return;
+    try{ qmPlan(); }catch(e){}   /* STUDY-QMODE-PLAN: الوضع ده لباقتي Plus وPro بس */
     var on = src === 'study';
     qmEl.hidden = !on;
     qmB.classList.toggle('is-on', qm); qmB.setAttribute('aria-checked', qm ? 'true' : 'false'); qmB.disabled = !!busy;
     if(qmS) qmS.textContent = qm ? 'شغّال — هحل كل سؤال بالإجابة الصحيحة وسبب كل اختيار.' : 'لو صورك أسئلة شغّله وهحلها من غير شرح للمحاضرة.';
     if(on && qm) stQi.setAttribute('placeholder', 'أضف اسم المادة (اختياري)');
     try{ qvSync(); }catch(e){}   /* STUDY-QMODE-VISUAL */
+    try{ qmLockUI(); }catch(e){}   /* STUDY-QMODE-PLAN */
   }
   if(qmB) qmB.addEventListener('click', function(){ if(busy) return; qm = !qm; lsSet('nbai:qm', qm ? 1 : 0); paintStudy(); });
   /* STUDY-QMODE-VISUAL: الفصل البصري بين وضع الشرح ووضع الأسئلة الفائق (بصري بحت — بيقرا qm/src بس ومابيغيّرهم). بيحط .nbai-qmode على الواجهة، ويبدّل سطر الهيدر ونص الترحيب، وبيشغّل موجة اللون من مكان اللمس لما المستخدم هو اللي بدّل (مش عند الفتح). للتراجع: امسح الكتلة دي + سطر qvSync في paintQm + css اسمه nb-ai-qmode-visual. */
@@ -29456,6 +29463,42 @@ function buildScreen(){
     }
   }
   try{ new MutationObserver(function(){ try{ qvSync(); }catch(e){} }).observe(TH.ask, { childList: true }); }catch(e){}   /* لو الترحيب اتبنى من جديد (جلسة جديدة / تبديل) يفضل مطابق للوضع */
+  /* STUDY-QMODE-PLAN: «وضع الأسئلة الفائق» متاح على باقتي Plus وPro بس (plan2/plan3 و study2/study3). الباقة المجانية وBasic: الكارت بيظهر بقفل «Plus · Pro» والضغطة عليه بتفتح شاشة الباقات (على باقة Plus مختارة مسبقًا) من غير ما الوضع يشتغل. الإطفاء مسموح دايمًا. الخادم هو الحكم النهائي (api/farm-ai.js: plan_required). للتراجع: امسح الكتلة دي + سطر qmPlan/qmLockUI في paintQm + تعديل qmOn في runStudy + مفتاح plan_required + css .is-lock. */
+  MSG.plan_required = 'وضع الأسئلة الفائق متاح على باقتي Plus وPro بس — رقّي باقتك لتفعيله.';
+  function qmPlanOk(p){ return p === 'plan2' || p === 'plan3' || p === 'study2' || p === 'study3'; }
+  function qmPeek(){ try{ return (window.AiSub && window.AiSub.peek) ? window.AiSub.peek() : null; }catch(e){ return null; } }
+  function qmLocked(){ var d = qmPeek(); return !!d && !qmPlanOk(d.plan); }   /* مقفول بس لو حالة الاشتراك اتحمّلت وطلعت مش Plus/Pro */
+  function qmPlan(){ if(qm && qmLocked()){ qm = false; lsSet('nbai:qm', 0); } }   /* اختيار محفوظ قديم لحساب مش على Plus/Pro: بيتقفل */
+  function qmLockUI(){
+    var lk = qmLocked();
+    qmB.classList.toggle('is-lock', lk);
+    if(lk){ if(qmS) qmS.textContent = 'متاح على باقتي Plus وPro — دوس لعرض الباقات.'; qmB.setAttribute('aria-label', 'وضع الأسئلة الفائق — متاح على باقتي Plus وPro'); }
+    else qmB.removeAttribute('aria-label');
+  }
+  function qmUpsell(){
+    qmB.classList.remove('nbai-qm-nudge'); void qmB.offsetWidth; qmB.classList.add('nbai-qm-nudge');
+    setTimeout(function(){ qmB.classList.remove('nbai-qm-nudge'); }, 520);
+    try{ window.AiSub.paywall({ fam: 'study' }); }catch(e){ return; }
+    var n = 0, iv = setInterval(function(){   /* لما شاشة الباقات تظهر: اختار Plus مسبقًا (الافتراضي كان Basic) */
+      n++;
+      if(document.getElementById('ai-pw')){
+        clearInterval(iv);
+        try{ var p = window.AiSub.plan(); if(!p || p === 'plan1' || p === 'study1') window.AiSub.pick((p && p.indexOf('plan') === 0 ? 'plan' : 'study') + '2'); }catch(e){}
+      }else if(n > 30) clearInterval(iv);
+    }, 120);
+  }
+  if(qmEl) qmEl.addEventListener('click', function(e){   /* capture على الأب: بيسبق المعالج الأصلي ويوقفه لو الباقة مش مسموحة */
+    var t = e.target; if(!(t && t.closest && t.closest('.nbai-qm-b'))) return;
+    if(busy || qm) return;   /* الإطفاء مسموح دايمًا */
+    var d = qmPeek();
+    if(d && qmPlanOk(d.plan)) return;   /* مسموح: المعالج الأصلي يكمّل زي ما هو */
+    e.stopImmediatePropagation(); e.preventDefault();
+    var go = function(p){ if(qmPlanOk(p)){ qm = true; lsSet('nbai:qm', 1); paintStudy(); } else qmUpsell(); };
+    if(d) go(d.plan);
+    else if(window.AiSub && window.AiSub.get) window.AiSub.get(function(x){ go(x && x.plan); });
+    else qmUpsell();
+  }, true);
+  try{ if(window.AiSub && window.AiSub.onChange) window.AiSub.onChange(function(){ if(card.isConnected){ try{ paintStudy(); }catch(x){} } }); }catch(e){}   /* حالة الاشتراك اتحمّلت/اتغيّرت: القفل يتحدّث */
   var IC_X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
   var LTR4 = ['أ', 'ب', 'ج', 'د'];
@@ -29857,7 +29900,7 @@ function buildScreen(){
     if(stLoad){ show('استنى لحظة لحد ما الصور تتجهّز.', true); return; }
     if(!stImgs.length){ show('أضف صورة واحدة على الأقل من أيقونة الصور عشان نبدأ.', true); return; }
     try{ dcPre(); }catch(e){}   /* STUDY-DOC: لو الصور من دفعة ملف PDF بنكتب ملاحظة بالصفحات (لو الطالب ماكتبش حاجة). للتراجع: امسح السطر ده */
-    var qmOn = !!qm;   /* STUDY-QMODE: لقطة من الاختيار وقت الإرسال */
+    var qmOn = !!qm && !qmLocked();   /* STUDY-QMODE: لقطة من الاختيار وقت الإرسال — STUDY-QMODE-PLAN: وضع الأسئلة لباقتي Plus وPro بس */
     var note = stQi.value.trim().slice(0, 300), imgs = stImgs.map(function(x){ return x.d; });
     var list = imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; });
     show('', false);
