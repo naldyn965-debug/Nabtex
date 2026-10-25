@@ -129,11 +129,17 @@ function pickOrder(backends, start) {
 /* STUDY-ORDER (إضافة): «ذاكر مع نبتكس» فقط — الرد طويل (20-45ث) فأي backend بيعلّق أو بيفشل بيستهلك الميزانية (50ث) ومفيش وقت للتحويل للتالي → «حصلت مشكلة مؤقتة» بعد انتظار طويل، والضغطة التانية بتنجح لأن التناوب بيودّيك backend تاني.
    الحل: الـ backend اللي علّق/رجّع 5xx في وضع الدراسة بيتأخر لآخر الدور 10 دقايق (studyCool لوحده، ما بيأثرش على باقي الأوضاع)، وrelay نتليفاي دايمًا في الآخر لأن مهلة Functions عندهم 10-26ث أقل من وقت الرد. من غير أي relay أو لو الكل سليم الترتيب زي ما هو بالظبط. للتراجع: امسح الكتلة دي + سطر studyReorder + سطري studyCool.set + سطر لوج study timing. */
 const studyCool = new Map();
-const STUDY_SLOW_URL = /netlify|workers\.dev/i;   /* relay Cloudflare (workers.dev) علّق 45ث كاملة في لوج Vercel (relay3 AbortError) → آخر الدور في وضع الدراسة */
+const STUDY_SKIP_URL = /netlify/i;       /* مهلة Functions عندهم 10-26ث: في لوج Vercel رجّع 502 بعد 31ث — مستحيل يكمّل رد «ذاكر» فبيتشال من الدور (لو هو الوحيد بيفضل) */
+const STUDY_SLOW_URL = /workers\.dev/i;  /* relay Cloudflare علّق 45ث كاملة في لوج Vercel (AbortError) → آخر الدور */
+const STUDY_FALLBACK_MODEL = /^[A-Za-z0-9._:\/-]{3,100}$/.test(process.env.GEMINI_STUDY_FALLBACK_MODEL || '') ? process.env.GEMINI_STUDY_FALLBACK_MODEL : '';   /* اختياري: موديل بديل للمحاولة التانية لما 503 (الموديل نفسه مزحوم عند جوجل — تبديل المفتاح ما بيفيدش) */
 function studyReorder(order) {
   const now = Date.now(), good = [], bad = [];
-  order.forEach(function (b) { if ((studyCool.get(b.name) || 0) > now || (b.url && STUDY_SLOW_URL.test(b.url))) bad.push(b); else good.push(b); });
-  return good.concat(bad);
+  order.forEach(function (b) {
+    if (b.url && STUDY_SKIP_URL.test(b.url) && order.length > 1) return;
+    if ((studyCool.get(b.name) || 0) > now || (b.url && STUDY_SLOW_URL.test(b.url))) bad.push(b); else good.push(b);
+  });
+  /* 503 (الموديل مزحوم) عابر غالبًا: الـ backends السليمة بتتعاد مرة تانية (علامة again) قبل الـ backends البطيئة، والتكرار بيتخطّى لو الباقي أقل من 28ث أو الـ backend اتعلّق/فشل بـ 502/504 */
+  return good.concat(good.map(function (b) { return Object.assign({}, b, { again: true }); }), bad);
 }
 
 function callBackend(b, bodyObj, signal, model) {
@@ -1334,10 +1340,11 @@ module.exports = async function handler(req, res) {
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
+    if (b.again && (remain < 28000 || (studyCool.get(b.name) || 0) > Date.now())) continue;   /* STUDY-ORDER */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
-      let r = await callBackend(b, reqBody, ctl.signal, mode === 'study' ? STUDY_MODEL : '');   /* STUDY-MODEL */
+      let r = await callBackend(b, reqBody, ctl.signal, mode === 'study' ? ((b.again && STUDY_FALLBACK_MODEL) || STUDY_MODEL) : '');   /* STUDY-MODEL + STUDY-ORDER */
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
         console.error('[farm-ai] grounding rejected, retrying without it');
         delete reqBody.tools;
@@ -1350,7 +1357,8 @@ module.exports = async function handler(req, res) {
       console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status);
       if (r.status === 429) rateLimited = true;
       if (v.cool) cooldown.set(b.name, Date.now() + v.cool);
-      if (mode === 'study' && r.status >= 500) studyCool.set(b.name, Date.now() + 600000);   /* STUDY-ORDER */
+      if (mode === 'study' && (r.status === 502 || r.status === 504)) studyCool.set(b.name, Date.now() + 600000);   /* STUDY-ORDER: 503 = موديل مزحوم (عابر) فمش بنأخّر الـ backend بسببه */
+      if (mode === 'study' && r.status === 503 && bi < order.length - 1) await new Promise(function (rs) { setTimeout(rs, 1500); });   /* STUDY-ORDER: نفس خفيف قبل المحاولة اللي بعدها */
       if (!v.next) break;
     } catch (e) {
       lastErr = e; up = null;
