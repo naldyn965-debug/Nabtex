@@ -23,6 +23,7 @@
  *   لو مش موجود أو فشل أو الوقت/الحصة مش كفاية: شرح جيميناي بيفضل زي ما هو (من غير أي تغيير في الرد). اختياري: GROQ_MODEL (الافتراضي openai/gpt-oss-120b) · GROQ_EFFORT (low|medium|high — الافتراضي medium) · GROQ_MAX_PROBLEMS (1..4 — الافتراضي 3؛ لو 429 بتتكرر على مفتاح واحد قلّله لـ 1 بسبب حد 8000 توكن/دقيقة في الباقة المجانية).
  *   مفاتيح Groq الإضافية (اختيارية): GROQ_API_KEY_2 · GROQ_API_KEY_3 · GROQ_API_KEY_4 — الطلبات بتتوزّع على المفاتيح الموجودة بالتتابع (نفس فكرة تناوب backends جيميناي: دور دائري + تبريد مؤقت للمفتاح اللي بيرجّع 429/خطأ + انتقال تلقائي للتالي في نفس الطلب). من غيرهم السلوك زي ما هو بالظبط بمفتاح واحد.
  *   مراجعة مستقلة للحلول (OpenRouter) — اختيارية: OPENROUTER_API_KEY + OPENROUTER_MODEL (موديل واحد أو أكتر مفصولين بفاصلة، التاني والتالت احتياطي لو الأول اتقفل) · OPENROUTER_MAX_PROBLEMS (1..4 — الافتراضي 4: المسائل المعلّمة ثم الأسئلة النظرية). بعد حل المسائل المعلّمة، موديل تاني بيحل المسألة من الصفر ويقارن بالناتج: لو طابق بيتضاف سطر «اتراجع»، ولو اختلف بيتضاف تنبيه للطالب. أي فشل/تأخير/حصة خالصة = الحل يفضل زي ما هو. من غير المتغيرين دول الدالة ما بتتصلش بـ OpenRouter خالص.
+ *   OR-MULTIKEY (اختياري): OPENROUTER_RELAY_URLS = رابط/روابط Edge Function على Supabase (openrouter-relay) بيحمل مفتاح OpenRouter التاني عنده كـ secret، وبيتربط بنفس RELAY_SECRET (= GEMINI_RELAY_SECRET). المفتاح المحلي على Vercel + الـ relay بيتناوبوا بنفس فكرة مفاتيح Groq (دور دائري + تبريد + انتقال تلقائي للتالي في نفس الطلب). من غير المتغير ده السلوك زي ما هو بالظبط بمفتاح Vercel لوحده.
  * - حماية الباقة المجانية (best-effort على مستوى instance الخادم، + حدود الواجهة):
  *     1) لازم مستخدم مسجّل (تحقق من Firebase ID token عبر Identity Toolkit — مجاني)
  *     2) حد يومي لكل مستخدم لكل وضع (LIMITS) + حد يومي إجمالي للموقع (DAILY_GLOBAL)
@@ -781,13 +782,57 @@ function groqOrder(start) {
    بتراجع الأجزاء اللي جيميناي علّمها كمسائل (_pb) بعد الحل (سواء حلّها Groq أو فضل شرح جيميناي): موديل تاني بيحل من الصفر ويقارن؛ بيتضاف سطر في آخر explain بس (مفيش تغيير في شكل الرد للواجهة).
    للتراجع: امسح الكتلة دي + سطر auditStudyAnswers في فرع study جوه handler. ═══ */
 const OR_KEY = String(process.env.OPENROUTER_API_KEY || '').trim();
+/* OR-MULTIKEY: backends المراجعة = مفتاح Vercel المحلي (or1) + relays على Supabase (orrelay1..) — نفس بنية buildBackends بتاعة جيميناي. للتراجع: امسح الكتلة دي + orNextStart/orOrder/orCall + حلقة المحاولات في auditStudyAnswers. */
+const OR_RELAY_URLS = String(process.env.OPENROUTER_RELAY_URLS || process.env.OPENROUTER_RELAY_URL || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); });
+const OR_BACKENDS = [];
+if (OR_KEY) OR_BACKENDS.push({ name: 'or1', key: OR_KEY });
+if (RELAY_SECRET) OR_RELAY_URLS.forEach(function (u, i) { OR_BACKENDS.push({ name: 'orrelay' + (i + 1), url: u }); });
 const OR_MODELS = String(process.env.OPENROUTER_MODEL || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9._:\/-]{3,100}$/.test(x); }).slice(0, 3);
 const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OR_MAX_PROBLEMS = Math.min(4, Math.max(1, parseInt(process.env.OPENROUTER_MAX_PROBLEMS, 10) || 4));   /* AUDIT-THEORY: كان 2؛ دلوقتي المسائل + الأسئلة النظرية معًا (الأولوية للحسابية). لو الحد اليومي المجاني في OpenRouter بيخلص بسرعة قلّله بمتغير OPENROUTER_MAX_PROBLEMS */
 const OR_MAX_OUT = 6000;           /* max_tokens (التفكير + الرد) */
 const OR_CAP_MS = 25000;           /* أقصى وقت لمرحلة المراجعة */
 const OR_MIN_BUDGET_MS = 8000;     /* لو الباقي أقل من كده نسيب الحل من غير مراجعة */
-let orCoolUntil = 0;               /* تبريد مؤقت لو OpenRouter رجّع 429/401/402/5xx — best-effort على مستوى الـ instance */
+const orCool = new Map();          /* تبريد مؤقت لو OpenRouter رجّع 429/401/402/5xx — best-effort على مستوى الـ instance (OR-MULTIKEY: لكل backend لوحده بالاسم or1 / orrelay1..) */
+/* OR-MULTIKEY: تناوب دائري بين backends المراجعة — نفس منطق groqNextStart/groqOrder: عدّاد مشترك على Upstash لو متظبط (مفتاح nbx:or:rr) وإلا عدّاد محلي */
+let orRrLocal = 0;
+async function orNextStart(n) {
+  if (n < 2) return 0;
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    const c = new AbortController();
+    const t = setTimeout(function () { c.abort(); }, 1500);
+    try {
+      const r = await fetch(UPSTASH_URL + '/incr/nbx:or:rr', { headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN }, signal: c.signal });
+      const j = r.ok ? await r.json() : null;
+      if (j && Number.isFinite(j.result) && j.result > 0) return (j.result - 1) % n;
+    } catch (e) { /* نكمّل بالعدّاد المحلي */ } finally { clearTimeout(t); }
+  }
+  const s = orRrLocal % n;
+  orRrLocal = (orRrLocal + 1) % 1000000000;
+  return s;
+}
+function orOrder(start) {
+  const now = Date.now(), n = OR_BACKENDS.length, ready = [];
+  for (let i = 0; i < n; i++) {
+    const b = OR_BACKENDS[(start + i) % n];
+    if ((orCool.get(b.name) || 0) <= now) ready.push(b);
+  }
+  return ready;
+}
+function orCall(b, bodyObj, signal) {
+  if (b.url) {   /* relay على Supabase: بيحمل مفتاحه عنده وبيرجّع نفس status ونص OpenRouter */
+    return fetch(b.url, {
+      method: 'POST', signal: signal,
+      headers: { 'Content-Type': 'application/json', 'x-relay-secret': RELAY_SECRET },
+      body: JSON.stringify({ body: bodyObj })
+    });
+  }
+  return fetch(OR_URL, {
+    method: 'POST', signal: signal,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + b.key, 'X-Title': 'Nabtex' },
+    body: JSON.stringify(bodyObj)
+  });
+}
 SYSTEMS.audit = [
   'أنت «مراجع نبتيكس»: مدقّق مستقل وصارم لحلول المسائل (رياضيات وفيزياء وكيمياء وإحصاء وحسابات زراعية).',
   'هتستلم نص مسألة وحلًا مقترحًا ليها. مهمتك التأكد إن الناتج النهائي صح.',
@@ -826,19 +871,20 @@ function auditInput(p) {
 }
 async function auditStudyAnswers(st, t0) {
   try {
-    if (!OR_KEY || !OR_MODELS.length || !st || !Array.isArray(st.parts)) return;
+    if (!OR_BACKENDS.length || !OR_MODELS.length || !st || !Array.isArray(st.parts)) return;
     /* AUDIT-THEORY: الحسابية المعلّمة الأول، وبعدها أجزاء الأسئلة النظرية (kind:'q' من غير problem) — الإجمالي حتى OR_MAX_PROBLEMS */
     const cmpT = st.parts.filter(function (p) { return p && p._pb && p._pb.length >= 15 && p.explain; });
     const thrT = st.parts.filter(function (p) { return p && !p._pb && p.kind === 'q' && p.q && p.explain; });
     const targets = cmpT.concat(thrT).slice(0, OR_MAX_PROBLEMS);
     if (!targets.length) return;
-    if (orCoolUntil > Date.now()) return;
+    const oStart = await orNextStart(OR_BACKENDS.length);   /* OR-MULTIKEY */
+    if (!orOrder(oStart).length) return;   /* كل الـ backends في تبريد */
     const budget = Math.min(OR_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < OR_MIN_BUDGET_MS) return;
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
     try {
-      await Promise.all(targets.map(async function (p) {
+      await Promise.all(targets.map(async function (p, ti) {
         try {
           const ts = Date.now();
           const au = auditInput(p);   /* AUDIT-THEORY */
@@ -850,22 +896,28 @@ async function auditStudyAnswers(st, t0) {
             ]
           };
           if (OR_MODELS.length > 1) body.models = OR_MODELS; else body.model = OR_MODELS[0];
-          const r = await fetch(OR_URL, {
-            method: 'POST', signal: ctl.signal,
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OR_KEY, 'X-Title': 'Nabtex' },
-            body: JSON.stringify(body)
-          });
-          const raw = await r.text();
-          if (!r.ok) {
-            console.error('[farm-ai] audit http ' + r.status);
-            let ms = 0;
-            if (r.status === 429) { ms = /per-day|per day/i.test(raw) ? 30 * 60000 : 60000; }   /* حد يومي للموديلات المجانية: نعيد المحاولة بعد نص ساعة */
-            else if (r.status === 401 || r.status === 402 || r.status === 403 || r.status === 404) ms = 30 * 60000;   /* مفتاح غلط / رصيد / موديل مقفول */
-            else if (r.status === 400) ms = 10 * 60000;   /* غالبًا معرّف موديل غلط/مقفول: ما نكرّرش الطلب ونحرق الحصة اليومية المجانية */
-            else if (r.status >= 500) ms = 15000;
-            if (ms) orCoolUntil = Date.now() + ms;
-            return;
+          let r = null, raw = '', ob = null;
+          const obs = orOrder(oStart + ti);   /* OR-MULTIKEY: كل مراجعة تبدأ من backend مختلف، ولو فشل (429/401/402/5xx/اتصال) بتجرّب اللي بعده في نفس الطلب */
+          for (let oi = 0; oi < obs.length; oi++) {
+            ob = obs[oi];
+            let rr = null, rt = '';
+            try { rr = await orCall(ob, body, ctl.signal); rt = await rr.text(); }
+            catch (e) { if (ctl.signal.aborted) return; console.error('[farm-ai] audit ' + ob.name + ' network:', e && e.name); orCool.set(ob.name, Date.now() + 15000); continue; }
+            if (!rr.ok) {
+              console.error('[farm-ai] audit ' + ob.name + ' http ' + rr.status);
+              let ms = 0;
+              if (rr.status === 429) { ms = /per-day|per day/i.test(rt) ? 30 * 60000 : 60000; }   /* حد يومي للموديلات المجانية: نعيد المحاولة بعد نص ساعة */
+              else if (rr.status === 401 || rr.status === 402 || rr.status === 403 || rr.status === 404) ms = 30 * 60000;   /* مفتاح غلط / رصيد / موديل مقفول / relay مش منشور */
+              else if (rr.status === 400) ms = 10 * 60000;   /* غالبًا معرّف موديل غلط/مقفول: ما نكرّرش الطلب ونحرق الحصة اليومية المجانية */
+              else if (rr.status >= 500) ms = 15000;
+              if (ms) orCool.set(ob.name, Date.now() + ms);
+              if (ms) continue;   /* OR-MULTIKEY: جرّب الـ backend اللي بعده */
+              return;
+            }
+            r = rr; raw = rt;
+            break;
           }
+          if (!r) return;
           let j = null;
           try { j = JSON.parse(raw); } catch (e) { return; }
           const ch = j && j.choices && j.choices[0];
@@ -879,7 +931,7 @@ async function auditStudyAnswers(st, t0) {
             ? 'تنبيه مراجعة: مراجعة مستقلة طلّعت ناتج مختلف' + (v.final ? ' (' + v.final + ')' : '') + (v.where ? '. الخطأ المحتمل: ' + v.where : '') + '. راجع الحل بنفسك أو مع مدرّسك قبل ما تعتمد عليه.'
             : 'Review warning: an independent review got a different result' + (v.final ? ' (' + v.final + ')' : '') + (v.where ? '. Possible error: ' + v.where : '') + '. Please double-check the solution yourself or with your instructor before relying on it.';
           p.explain = p.explain + '\n\n' + note;
-          console.log('[farm-ai] audit: ' + (v.agree ? 'agree' : 'DISAGREE') + ' ' + (Date.now() - ts) + 'ms');   /* بيظهر في Vercel Logs */
+          console.log('[farm-ai] audit: ' + (v.agree ? 'agree' : 'DISAGREE') + ' ' + (ob ? ob.name + ' ' : '') + (Date.now() - ts) + 'ms');   /* بيظهر في Vercel Logs */
         } catch (e) { console.error('[farm-ai] audit failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
@@ -1255,7 +1307,7 @@ module.exports = async function handler(req, res) {
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
     if (GROQ_KEY) await solveStudyProblems(st, t0);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
-    if (OR_KEY && OR_MODELS.length) await auditStudyAnswers(st, t0);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
+    if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
     payload = { study: st };
   } else if (mode === 'study_quiz') {
     let parsed = null;
