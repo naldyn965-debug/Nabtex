@@ -28759,7 +28759,13 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-qm-b{position:relative;overflow:hidden;isolation:isolate}
 .nbai-ov .nbai-qm-b::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 32%,var(--ai-soft2) 50%,transparent 68%);background-size:260% 100%;background-position:130% 0;opacity:0;transition:opacity 500ms var(--ai-ease)}
 .nbai-ov .nbai-qm-b.is-on::before{opacity:1;animation:nbqv-sheen 4.6s ease-in-out infinite}
-.nbai-ov .nbai-qm-b.is-on{box-shadow:0 0 0 1px var(--ai-ring),0 14px 30px -16px var(--ai-glow)}
+.nbai-ov .nbai-qm-b.is-on{box-shadow:0 0 0 1px var(--ai-ring),0 8px 18px -14px var(--ai-glow)}
+/* مسافات وراحة بصرية: فاصل واضح بين كارت الوضع وشريط الكتابة (كانوا لازقين) + حشو أريح + نص الوصف متوازن من غير كلمة يتيمة */
+.nbai-ov .nbai-qm{margin:12px 0 16px}
+.nbai-ov .nbai-qm-b{gap:12px;padding:12px 14px;border-radius:20px}
+.nbai-ov .nbai-qm-tx{gap:3px}
+.nbai-ov .nbai-qm-tx small{text-wrap:balance}
+@media (max-height:640px){.nbai-ov .nbai-qm{margin:8px 0 10px}.nbai-ov .nbai-qm-b{padding:9px 12px}}
 .nbai-ov .nbai-qm-b.is-on .nbai-qm-ic{animation:nbqv-halo 2.9s ease-out infinite}
 .nbai-ov .nbai-qm-b.is-on .nbai-qm-sw{box-shadow:0 0 14px -2px var(--ai-glow)}
 .nbai-ov.nbai-qfx .nbai-qm-b .nbai-qm-ic{animation:nbqv-pop 760ms var(--ai-spring)}
