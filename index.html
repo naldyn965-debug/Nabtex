@@ -19032,7 +19032,8 @@ document.addEventListener('click', e => {
       peek: function() { var d = aiMem.d; return (d && aiMem.uid === uid() && aiMem.day === aiDay()) ? d : null; },
       onChange: function(fn) { if (typeof fn === 'function') aiListeners.push(fn); },
       paywall: function(opt) {
-        aiLoad(true, function(d) {
+        var pk0 = (opt && opt.qm) ? window.AiSub.peek() : null;   /* QM-TAP-FIX: من كارت «وضع الأسئلة» بنفتح فورًا من الحالة المحمّلة بدل ما نستنى استعلامات Firestore (كانت بتبان إن الضغطة مش بتستجيب). القديم (للتراجع): aiLoad(true, function(d) { ... }) من غير الفرع ده */
+        (pk0 ? function(cb) { cb(pk0); } : function(cb) { aiLoad(true, cb); })(function(d) {
           /* STUDY-SPLIT: السياق (ذاكر / Nabtex AI): صاحب باقة Nabtex AI بيشوف باقات Nabtex AI حتى من جوه «ذاكر» (باقاته بتشمل المذاكرة أصلًا، وشراء «ذاكر» هيقلّل باقته). الافتراضي: الباقة الأعلى من باقته. القديم (للتراجع): if (d && d.plan === 'plan1') aiUI.plan = 'plan2'; else if (d && d.plan === 'plan2') aiUI.plan = 'plan3'; */
           var fam = (opt && opt.fam === 'study' && !(d && d.plan && d.plan.indexOf('plan') === 0)) ? 'study' : 'ai', pre = fam === 'study' ? 'study' : 'plan', cn = d && d.plan ? d.plan.slice(-1) : '';
           aiUI.fam = fam;
@@ -29428,7 +29429,7 @@ function buildScreen(){
     var on = src === 'study';
     qmEl.hidden = !on;
     qmB.classList.toggle('is-on', qm); qmB.setAttribute('aria-checked', qm ? 'true' : 'false'); qmB.disabled = !!busy;
-    if(qmS) qmS.textContent = qm ? 'شغّال — هحل كل سؤال بالإجابة الصحيحة وسبب كل اختيار.' : 'لو صورك أسئلة شغّله وهحلها من غير شرح للمحاضرة.';
+    if(qmS && !qmLocked()) qmS.textContent = qm ? 'شغّال — هحل كل سؤال بالإجابة الصحيحة وسبب كل اختيار.' : 'لو صورك أسئلة شغّله وهحلها من غير شرح للمحاضرة.';   /* QM-TAP-FIX: وهو مقفول qmLockUI هو اللي بيكتب النص (مرة واحدة). القديم (للتراجع): if(qmS) qmS.textContent = ... */
     if(on && qm) stQi.setAttribute('placeholder', 'أضف اسم المادة (اختياري)');
     try{ qvSync(); }catch(e){}   /* STUDY-QMODE-VISUAL */
     try{ qmLockUI(); }catch(e){}   /* STUDY-QMODE-PLAN */
@@ -29481,12 +29482,13 @@ function buildScreen(){
   function qmLockUI(){
     var lk = qmLocked();
     qmB.classList.toggle('is-lock', lk);
-    if(lk){ if(qmS) qmS.innerHTML = '<span class="nbai-qm-l1">متاح على باقة <bdi dir="ltr">Plus</bdi> أو <bdi dir="ltr">Pro</bdi></span><span class="nbai-qm-l2">دوس لعرض الباقات</span>';   /* QM-LOCK-UI-2: سطرين منسّقين بدل جملة واحدة بتلف. القديم (للتراجع): qmS.textContent = 'متاح على باقة Plus أو Pro — دوس لعرض الباقات.'; */ qmB.setAttribute('aria-label', 'وضع الأسئلة الفائق — متاح على باقة Plus أو Pro'); }   /* QM-LOCK-UI. القديم (للتراجع): 'متاح على باقتي Plus وPro — دوس لعرض الباقات.' / 'وضع الأسئلة الفائق — متاح على باقتي Plus وPro' (الواو كانت بتلزق في Pro وتتقرأ Prog) */
+    if(lk){ if(qmS && !(qmS.firstElementChild && qmS.firstElementChild.className === 'nbai-qm-l1')) qmS.innerHTML = '<span class="nbai-qm-l1">متاح على باقة <bdi dir="ltr">Plus</bdi> أو <bdi dir="ltr">Pro</bdi></span><span class="nbai-qm-l2">دوس لعرض الباقات</span>';   /* QM-LOCK-UI-2: سطرين منسّقين بدل جملة واحدة بتلف. القديم (للتراجع): qmS.textContent = 'متاح على باقة Plus أو Pro — دوس لعرض الباقات.'; */ qmB.setAttribute('aria-label', 'وضع الأسئلة الفائق — متاح على باقة Plus أو Pro'); }   /* QM-LOCK-UI. القديم (للتراجع): 'متاح على باقتي Plus وPro — دوس لعرض الباقات.' / 'وضع الأسئلة الفائق — متاح على باقتي Plus وPro' (الواو كانت بتلزق في Pro وتتقرأ Prog) */
     else qmB.removeAttribute('aria-label');
   }
   function qmUpsell(){
     qmB.classList.remove('nbai-qm-nudge'); void qmB.offsetWidth; qmB.classList.add('nbai-qm-nudge');
     setTimeout(function(){ qmB.classList.remove('nbai-qm-nudge'); }, 520);
+    if(document.getElementById('ai-pw')) return;   /* QM-TAP-FIX: الشاشة مفتوحة/بتتفتح — مفيش فتح مكرر */
     try{ window.AiSub.paywall({ fam: 'study', qm: true }); }catch(e){ return; }   /* QM-PAYWALL. القديم (للتراجع): window.AiSub.paywall({ fam: 'study' }) */
     var n = 0, iv = setInterval(function(){   /* لما شاشة الباقات تظهر: اختار Plus مسبقًا (الافتراضي كان Basic) */
       n++;
