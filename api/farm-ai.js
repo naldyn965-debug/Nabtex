@@ -129,7 +129,7 @@ function pickOrder(backends, start) {
 /* STUDY-ORDER (إضافة): «ذاكر مع نبتكس» فقط — الرد طويل (20-45ث) فأي backend بيعلّق أو بيفشل بيستهلك الميزانية (50ث) ومفيش وقت للتحويل للتالي → «حصلت مشكلة مؤقتة» بعد انتظار طويل، والضغطة التانية بتنجح لأن التناوب بيودّيك backend تاني.
    الحل: الـ backend اللي علّق/رجّع 5xx في وضع الدراسة بيتأخر لآخر الدور 10 دقايق (studyCool لوحده، ما بيأثرش على باقي الأوضاع)، وrelay نتليفاي دايمًا في الآخر لأن مهلة Functions عندهم 10-26ث أقل من وقت الرد. من غير أي relay أو لو الكل سليم الترتيب زي ما هو بالظبط. للتراجع: امسح الكتلة دي + سطر studyReorder + سطري studyCool.set + سطر لوج study timing. */
 const studyCool = new Map();
-const STUDY_SLOW_URL = /netlify/i;
+const STUDY_SLOW_URL = /netlify|workers\.dev/i;   /* relay Cloudflare (workers.dev) علّق 45ث كاملة في لوج Vercel (relay3 AbortError) → آخر الدور في وضع الدراسة */
 function studyReorder(order) {
   const now = Date.now(), good = [], bad = [];
   order.forEach(function (b) { if ((studyCool.get(b.name) || 0) > now || (b.url && STUDY_SLOW_URL.test(b.url))) bad.push(b); else good.push(b); });
