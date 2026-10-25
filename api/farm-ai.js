@@ -36,8 +36,11 @@
 const crypto = require('crypto');
 
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
-/* STUDY-MODEL (اختياري): GEMINI_STUDY_MODEL = موديل أقوى لقراءة صور «ذاكر مع نبتيكس» بس (أخطاء قراءة الصور/الأسئلة). من غيره كل حاجة بتستخدم MODEL زي ما هي. للتراجع: امسح السطر ده + باراميتر model في callBackend + شرط studyModel في فرع الـ study */
+/* STUDY-MODEL (اختياري): GEMINI_STUDY_MODEL = موديل أقوى لأسئلة الطالب بس («ذاكر مع نبتيكس» — وضع study_ask) عشان إجابات أدق؛ كل حاجة تانية (قراءة الصور، الشرح، الامتحان، الكروت، باقي الأوضاع) بتفضل على MODEL الطبيعي. GEMINI_STRONG_MODES (اختياري، افتراضي study_ask) = أوضاع تانية تستخدم الموديل الأقوى، مفصولة بفاصلة (مثلًا study_ask,study_quiz). لو الأقوى حصته خلصت، الطلب بيتعاد بـ MODEL تلقائيًا. للتراجع: امسح الكتلة دي + modelFor في callBackend/الفرع/STUDY-FALLBACK */
 const STUDY_MODEL = /^[A-Za-z0-9._:\/-]{3,100}$/.test(process.env.GEMINI_STUDY_MODEL || '') ? process.env.GEMINI_STUDY_MODEL : '';
+const STRONG_MODES = String(process.env.GEMINI_STRONG_MODES || 'study_ask').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+let strongOffUntil = 0;   /* لو الموديل الأقوى حصته خلصت أو اسمه غلط: نوقفه فترة ونروح للطبيعي علطول بدل ما كل سؤال يجرّب ويفشل الأول (best-effort على مستوى الـ instance) */
+function modelFor(mode) { return STUDY_MODEL && STUDY_MODEL !== MODEL && Date.now() >= strongOffUntil && STRONG_MODES.indexOf(mode) !== -1 ? STUDY_MODEL : ''; }
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 /* مفتاح Firebase Web (عام أصلًا في index.html) — بنستخدمه بس للتحقق من توكن المستخدم */
 const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM';
@@ -71,7 +74,7 @@ const GROQ_MAX_PROBLEMS = Math.min(12, Math.max(1, parseInt(process.env.GROQ_MAX
 const GROQ_MAX_OUT = 5000;          /* max_completion_tokens (التفكير + الحل) — مع المدخلات تفضل تحت حد الدقيقة المجاني */
 const GROQ_SOLVE_CAP_MS = 30000;    /* أقصى وقت لمرحلة الحل */
 const GROQ_MIN_BUDGET_MS = 6000;    /* لو الباقي أقل من كده نسيب شرح جيميناي زي ما هو */
-const FN_BUDGET_MS = 55000;         /* الدالة maxDuration 60 ومهلة الواجهة 60 — لازم نرد قبلهم */
+const FN_BUDGET_MS = 46000;         /* الدالة maxDuration 60 ومهلة الواجهة 60 — لازم نرد قبلهم */   /* TIMING: كان 55000 — الواجهة بتقطع عند 60ث من لحظة الضغط (بتشمل رفع الصور) فالرد لازم يوصل قبل كده بهامش */
 const MAX_WX_CHARS = 5500;
 const MAX_CTX_CHARS = 1500;
 /* اختياري: GEMINI_GROUNDING=1 يفعّل بحث جوجل (Grounding) في مرحلة التشخيص النهائي فقط لرفع دقة أسماء المبيدات المسجّلة.
@@ -126,6 +129,10 @@ function pickOrder(backends, start) {
   return cooling.slice(0, 1).map(function (x) { return x.b; });
 }
 
+/* DIAG: أول 160 حرف من رسالة الخطأ (بتبيّن نوع الحصة: في الدقيقة / اليوم / توكن) في Vercel Logs */
+function errBrief(t) {
+  try { const j = JSON.parse(t); const m = j && j.error && (j.error.message || j.error.status); return m ? ' | ' + String(m).replace(/\s+/g, ' ').slice(0, 160) : ''; } catch (e) { return ''; }
+}
 function callBackend(b, bodyObj, signal, model) {
   const mdl = model || MODEL;   /* STUDY-MODEL */
   if (b.url) {   /* relay: بيحمل مفتاحه محليًا وبيرجّع نفس status ونص جيميناي */
@@ -1326,7 +1333,7 @@ module.exports = async function handler(req, res) {
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
-      let r = await callBackend(b, reqBody, ctl.signal, mode === 'study' ? STUDY_MODEL : '');   /* STUDY-MODEL */
+      let r = await callBackend(b, reqBody, ctl.signal, modelFor(mode));   /* STUDY-MODEL */
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
         console.error('[farm-ai] grounding rejected, retrying without it');
         delete reqBody.tools;
@@ -1336,7 +1343,7 @@ module.exports = async function handler(req, res) {
       const v = judgeUpstream(r.status, t);
       up = r; text = t; lastErr = null;
       if (!v) break;   /* نجاح */
-      console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status);
+      console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status + errBrief(t));
       if (r.status === 429) rateLimited = true;
       if (v.cool) cooldown.set(b.name, Date.now() + v.cool);
       if (!v.next) break;
@@ -1345,6 +1352,33 @@ module.exports = async function handler(req, res) {
       console.error('[farm-ai] backend ' + b.name + ' unreachable:', e && e.name);
       cooldown.set(b.name, Date.now() + 15000);
     } finally { clearTimeout(timer); }
+  }
+  /* STUDY-FALLBACK: لو الموديل الأقوى (GEMINI_STUDY_MODEL) وكل الـ backends رجّعت 429/5xx (حصته المجانية أقل بكتير)، نعيد المرة دي بالموديل الأساسي (MODEL) في نفس الطلب بدل ما الطالب يشوف خطأ. من غير GEMINI_STUDY_MODEL مفيش أي تأثير. للتراجع: امسح الكتلة دي. */
+  if (modelFor(mode) && (!up || !up.ok) && (rateLimited || (up && (up.status === 429 || up.status >= 500 || up.status === 404 || (up.status === 400 && /model/i.test(text || '')))))) {
+    console.error('[farm-ai] ' + mode + ': ' + modelFor(mode) + ' unavailable, falling back to ' + MODEL);
+    strongOffUntil = Date.now() + ((rateLimited || (up && up.status === 429)) ? (/PerDay/i.test(text || '') ? 30 * 60000 : 60000) : 10 * 60000);   /* حصة يومية: نص ساعة · دقيقة: 60ث · اسم موديل غلط/5xx: 10 دقايق */
+    for (let fi = 0; fi < order.length; fi++) {
+      const fb = order[fi];
+      const remainF = deadline - Date.now();
+      if (remainF < 12000) break;
+      const ctlF = new AbortController();
+      const timerF = setTimeout(function () { ctlF.abort(); }, fi < order.length - 1 ? Math.min(STUDY_ATTEMPT_MS, remainF) : remainF);
+      try {
+        const rF = await callBackend(fb, reqBody, ctlF.signal, '');
+        const tF = await rF.text();
+        const vF = judgeUpstream(rF.status, tF);
+        up = rF; text = tF; lastErr = null;
+        if (!vF) { rateLimited = false; break; }
+        console.error('[farm-ai] backend ' + fb.name + ' (fallback) \u2192 http ' + rF.status + errBrief(tF));
+        if (rF.status === 429) rateLimited = true;
+        if (vF.cool) cooldown.set(fb.name, Date.now() + vF.cool);
+        if (!vF.next) break;
+      } catch (e) {
+        lastErr = e; up = null;
+        console.error('[farm-ai] backend ' + fb.name + ' (fallback) unreachable:', e && e.name);
+        cooldown.set(fb.name, Date.now() + 15000);
+      } finally { clearTimeout(timerF); }
+    }
   }
   if (!up) {
     if (rateLimited) return fail(res, 429, 'busy', { 'Retry-After': '600' });
@@ -1374,7 +1408,7 @@ module.exports = async function handler(req, res) {
         const ctl2 = new AbortController();
         const tm2 = setTimeout(function () { ctl2.abort(); }, Math.min(STUDY_ATTEMPT_MS, deadline - Date.now()));
         try {
-          const r2 = await callBackend(rb, rBody, ctl2.signal, STUDY_MODEL);   /* STUDY-MODEL */
+          const r2 = await callBackend(rb, rBody, ctl2.signal, modelFor(mode));   /* STUDY-MODEL */
           const t2 = await r2.text();
           let j2 = null; try { j2 = JSON.parse(t2); } catch (e) { /* غير JSON */ }
           const c2 = r2.ok && j2 && j2.candidates && j2.candidates[0];
@@ -1406,8 +1440,11 @@ module.exports = async function handler(req, res) {
     const st = sanitizeStudy(parsed);
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
+    console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after gemini');   /* TIMING: بيبيّن كل مرحلة أخدت كام في Vercel Logs */
     if (GROQ_KEY) await solveStudyProblems(st, t0);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
+    console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after groq');
     if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
+    console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after audit+arbiter');
     payload = { study: st };
   } else if (mode === 'study_quiz') {
     let parsed = null;
