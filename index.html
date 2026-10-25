@@ -18737,7 +18737,7 @@ document.addEventListener('click', e => {
           '<span class="aipw-pn">' + p.label + (/3$/.test(k) ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
           '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
           '<span class="aipw-pc"><i><b>' + p.chat + '</b>' + (p.study ? (p.chat <= 10 ? ' نقاط' : ' نقطة') + ' للمذاكرة' : ' للسؤال أو المذاكرة') /* POINT-WORDING: باقات «ذاكر» بس. القديم (للتراجع): ' للسؤال أو المذاكرة' */ + '</i>' + (p.study ? '' /* STUDY-SPLIT: «ذاكر» من غير تشخيص */ : '<i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i>') + '<i class="aipw-dly">يوميًا</i></span>' +
-          (p.study ? aiStudyRow(p) : '') + (opt && opt.qm ? aiQmRow() : '') +   /* QM-PAYWALL-ROW */   /* AI-IMGS. STUDY-SPLIT: صف الصور بقى في باقات «ذاكر» بس (مش في باقات Nabtex AI). القديم (للتراجع): aiStudyRow(p) + */
+          (p.study ? aiStudyRow(p) : '') + (opt && (opt.qm || (opt.limit && opt.fam === 'study')) && !/1$/.test(k) ? aiQmRow() : '') +   /* QM-PAYWALL-ROW: بيظهر على كروت Plus وPro (مش Basic) في شاشة «ذاكر» لما تتفتح من كارت «وضع الأسئلة الفائق» أو من شاشة «عايز نقاط أكتر؟». القديم (للتراجع): (opt && opt.qm ? aiQmRow() : '') + */   /* AI-IMGS. STUDY-SPLIT: صف الصور بقى في باقات «ذاكر» بس (مش في باقات Nabtex AI). القديم (للتراجع): aiStudyRow(p) + */
         '</button>';
       });
       return h + '</div>';
@@ -29481,7 +29481,7 @@ function buildScreen(){
   function qmLockUI(){
     var lk = qmLocked();
     qmB.classList.toggle('is-lock', lk);
-    if(lk){ if(qmS) qmS.textContent = 'متاح على باقة Plus أو Pro — دوس لعرض الباقات.'; qmB.setAttribute('aria-label', 'وضع الأسئلة الفائق — متاح على باقة Plus أو Pro'); }   /* QM-LOCK-UI. القديم (للتراجع): 'متاح على باقتي Plus وPro — دوس لعرض الباقات.' / 'وضع الأسئلة الفائق — متاح على باقتي Plus وPro' (الواو كانت بتلزق في Pro وتتقرأ Prog) */
+    if(lk){ if(qmS) qmS.innerHTML = '<span class="nbai-qm-l1">متاح على باقة <bdi dir="ltr">Plus</bdi> أو <bdi dir="ltr">Pro</bdi></span><span class="nbai-qm-l2">دوس لعرض الباقات</span>';   /* QM-LOCK-UI-2: سطرين منسّقين بدل جملة واحدة بتلف. القديم (للتراجع): qmS.textContent = 'متاح على باقة Plus أو Pro — دوس لعرض الباقات.'; */ qmB.setAttribute('aria-label', 'وضع الأسئلة الفائق — متاح على باقة Plus أو Pro'); }   /* QM-LOCK-UI. القديم (للتراجع): 'متاح على باقتي Plus وPro — دوس لعرض الباقات.' / 'وضع الأسئلة الفائق — متاح على باقتي Plus وPro' (الواو كانت بتلزق في Pro وتتقرأ Prog) */
     else qmB.removeAttribute('aria-label');
   }
   function qmUpsell(){
@@ -31415,9 +31415,16 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 .nbai-ov .nbai-qm-b.is-lock .nbai-qm-tx small{font-size:11.5px;line-height:1.65;text-wrap:balance}
 .nbai-ov .nbai-qm-b.is-lock::after{white-space:nowrap;padding:7px 13px 7px 31px;background-position:11px center,0 0;font-size:11.5px;letter-spacing:.03em;box-shadow:0 10px 20px -10px var(--ai-glow),inset 0 1px 0 rgba(255,255,255,.38)}
 .nbai-ov .nbai-qm-b.is-lock::before{opacity:.9;animation:nbqv-sheen 5.2s ease-in-out 1.2s infinite}
+/* QM-LOCK-UI-2: النص تحت العنوان سطرين مرتبين — الأول وصف التوفر، التاني دعوة للضغط بلون الوضع وسهم هادي */
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-s{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-wrap:initial}
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-l1{display:block;font-size:11.5px;font-weight:600;line-height:1.55;color:var(--muted)}
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-l1 bdi{font-weight:800;color:var(--ink)}
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-l2{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;line-height:1.5;color:var(--ai-tx)}
+.nbai-ov .nbai-qm-b.is-lock .nbai-qm-l2::after{content:"";flex:none;width:13px;height:13px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;animation:nbqlArrow 2.6s ease-in-out 1.4s infinite}
+@keyframes nbqlArrow{0%,60%,100%{transform:none}30%{transform:translateX(-3px)}}
 [data-dark] .nbai-ov .nbai-qm-b.is-lock{box-shadow:0 12px 26px -20px var(--ai-glow),inset 0 1px 0 rgba(255,255,255,.06)}
 @media (max-width:360px){.nbai-ov .nbai-qm-b.is-lock{gap:9px;padding:11px 11px}.nbai-ov .nbai-qm-b.is-lock::after{padding:6px 11px 6px 28px;background-position:9px center,0 0;font-size:11px}}
-@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-qm-b.is-lock::before{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-qm-b.is-lock::before,.nbai-ov .nbai-qm-b.is-lock .nbai-qm-l2::after{animation:none!important}}
 </style>
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
