@@ -18724,7 +18724,7 @@ document.addEventListener('click', e => {
     /* QM-PAYWALL-ROW: صف «يشمل وضع الأسئلة الفائق» في كروت Plus وPro (بيظهر بس لما الشاشة تتفتح من «وضع الأسئلة الفائق»). للتراجع: امسح الدالة دي وسطر aiQmRow() في aiPlansHTML وسطور .aipw-qmr في كتلة nb-ai-qm-pw. */
     function aiQmRow() {
       return '<span class="aipw-qmr"><span class="aipw-qmr-ic" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>' +
-        '<span class="aipw-qmr-tx"><b>وضع الأسئلة الفائق</b><small>حلّ كل سؤال في الصور بالإجابة الصحيحة</small></span>' +
+        '<span class="aipw-qmr-tx"><b>وضع الأسئلة الفائق</b></span>' +   /* QM-PAYWALL-ROW-2: سطر واحد مدمج. القديم (للتراجع): + '<small>حلّ كل سؤال في الصور بالإجابة الصحيحة</small>' جوه .aipw-qmr-tx */
         '<span class="aipw-qmr-ok"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>مشمول</span></span>';
     }
     function aiPlansHTML(d, opt) {   /* QM-PAYWALL. القديم (للتراجع): function aiPlansHTML(d) { */
@@ -31393,12 +31393,13 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @keyframes aipwQmGlow{0%,100%{box-shadow:0 8px 20px rgba(27,107,58,.3),inset 0 1px 0 rgba(255,255,255,.28)}50%{box-shadow:0 8px 30px rgba(27,107,58,.55),0 0 0 9px rgba(27,107,58,.1),inset 0 1px 0 rgba(255,255,255,.28)}}
 @keyframes aipwQmPro{0%,100%{box-shadow:0 0 0 0 rgba(240,180,41,0)}50%{box-shadow:0 6px 26px rgba(240,180,41,.32),0 0 0 4px rgba(240,180,41,.12)}}
 /* QM-PAYWALL-ROW: صف «وضع الأسئلة الفائق» جوه الكارت — بباليت الوضع (نيلي ← أزرق) */
-.aipw-qmr{grid-column:2/-1;grid-row:auto;display:flex;align-items:center;gap:9px;margin-top:2px;padding:7px 10px;border-radius:13px;text-align:right;background:linear-gradient(135deg,rgba(67,56,202,.10),rgba(37,99,235,.05));border:1px solid rgba(67,56,202,.22)}
-.aipw-qmr-ic{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:9px;color:#fff;background:linear-gradient(145deg,#4338ca,#2563eb);box-shadow:0 5px 10px -5px rgba(67,56,202,.8),inset 0 1px 0 rgba(255,255,255,.35)}
+.aipw-qmr{grid-column:2/-1;grid-row:auto;display:flex;align-items:center;gap:8px;margin-top:0;padding:5px 8px 5px 9px;border-radius:11px;text-align:right;background:linear-gradient(135deg,rgba(67,56,202,.07),rgba(37,99,235,.03));border:1px solid rgba(67,56,202,.16)}   /* QM-PAYWALL-ROW-2: مدمج (كان padding:7px 10px · أيقونة 26px · سطرين) */
+.aipw-qmr-ic svg{width:12px;height:12px}
+.aipw-qmr-ic{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:8px;color:#fff;background:linear-gradient(145deg,#4338ca,#2563eb);box-shadow:0 5px 10px -5px rgba(67,56,202,.8),inset 0 1px 0 rgba(255,255,255,.35)}
 .aipw-qmr-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.35}
-.aipw-qmr-tx b{font-size:12.5px;font-weight:900;color:#4338ca}
-.aipw-qmr-tx small{font-size:10.5px;font-weight:700;color:var(--muted)}
-.aipw-qmr-ok{flex:none;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;color:#4338ca;background:rgba(67,56,202,.12)}
+.aipw-qmr-tx b{font-size:12px;font-weight:800;line-height:1.4;color:#4338ca}
+.aipw-qmr-ok{flex:none;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;line-height:1.5;color:#4338ca;background:rgba(67,56,202,.10)}
+.aipw-qmr-ok svg{width:10px;height:10px}
 [data-dark] .aipw-qmr{background:linear-gradient(135deg,rgba(129,140,248,.16),rgba(96,165,250,.06));border-color:rgba(129,140,248,.35)}
 [data-dark] .aipw-qmr-tx b,[data-dark] .aipw-qmr-ok{color:#a5b4fc}
 [data-dark] .aipw-qmr-ok{background:rgba(129,140,248,.18)}
