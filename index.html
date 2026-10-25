@@ -28743,15 +28743,15 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-ov-in::after{content:'';position:absolute;z-index:-1;left:-30px;right:-30px;bottom:0;height:58%;pointer-events:none;background:radial-gradient(64% 72% at 10% 100%,rgba(8,145,178,.2),transparent 70%),radial-gradient(60% 66% at 96% 96%,rgba(67,56,202,.17),transparent 72%);opacity:0;transform:translateY(26px) scale(1.04);transition:opacity 900ms var(--ai-ease),transform 900ms var(--ai-ease)}
 [data-dark] .nbai-ov .nbai-ov-in::after{background:radial-gradient(64% 72% at 10% 100%,rgba(6,182,212,.26),transparent 70%),radial-gradient(60% 66% at 96% 96%,rgba(99,102,241,.3),transparent 72%)}
 .nbai-ov.nbai-qmode .nbai-ov-in::after{opacity:1;transform:none;animation:nbqv-aurora 9s ease-in-out 900ms infinite alternate}
-/* هيدر: شارة صاعقة صغيرة على أيقونة Nabtex AI */
+/* هيدر: أيقونة Nabtex AI (الورقة) بتتبدّل لصاعقة في نفس مكانها — الورقة بتتلاشى والصاعقة بتدخل بسبرينج */
 .nbai-ov .nbai-bar-ic{position:relative}
-.nbai-ov .nbai-bar-ic::after{content:'';position:absolute;top:-5px;inset-inline-start:-5px;width:16px;height:16px;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' stroke='white' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z'/%3E%3C/svg%3E") center/9px 9px no-repeat,linear-gradient(135deg,#22d3ee,#2563eb);box-shadow:0 0 0 2px var(--bg),0 4px 10px -3px rgba(37,99,235,.7);opacity:0;transform:scale(.3) rotate(-40deg);transition:opacity 300ms,transform 620ms var(--ai-spring);pointer-events:none}
+.nbai-ov .nbai-bar-ic svg{transition:opacity 260ms var(--ai-ease),transform 560ms var(--ai-ease)}
+.nbai-ov.nbai-qmode .nbai-bar-ic svg{opacity:0;transform:scale(.5) rotate(40deg)}
+.nbai-ov .nbai-bar-ic::after{content:'';position:absolute;inset:0;border-radius:inherit;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='white' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/68% 68% no-repeat;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25));opacity:0;transform:scale(.4) rotate(-40deg);transition:opacity 300ms var(--ai-ease),transform 620ms var(--ai-spring);pointer-events:none}
 .nbai-ov.nbai-qmode .nbai-bar-ic::after{opacity:1;transform:none}
-/* أيقونة البطل في شاشة الترحيب: الورقة ← صاعقة (تتبدّل بتلاشي + سبرينج) مع نبضة هالة */
-.nbai-ov .nbai-th>.nbai-greet:only-child{position:relative}
-.nbai-ov .nbai-th>.nbai-greet:only-child::after{content:"";display:block;position:absolute;top:6px;left:50%;width:52px;height:52px;margin-left:-26px;border-radius:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='white' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/30px 30px no-repeat,var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.3);opacity:0;transform:scale(.6) rotate(-24deg);transition:opacity 420ms var(--ai-ease),transform 680ms var(--ai-spring);pointer-events:none}
-.nbai-ov.nbai-qmode .nbai-th>.nbai-greet:only-child::after{opacity:1;transform:none;animation:nbqv-halo 2.9s ease-out 800ms infinite}
-@media (max-height:600px){.nbai-ov .nbai-th>.nbai-greet:only-child::after{display:none}}
+/* أيقونة البطل في شاشة الترحيب: نفس العنصر (::before) بتتبدّل فيه الورقة لصاعقة + نبضة هالة — من غير أي تموضع مطلق فمكانها ثابت */
+.nbai-ov.nbai-qmode .nbai-th>.nbai-greet:only-child::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='white' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/32px 32px no-repeat,var(--ai-g);animation:nbqv-halo2 2.9s ease-out 800ms infinite}
+.nbai-ov.nbai-qfx .nbai-th>.nbai-greet:only-child::before{animation:nbqv-pop 760ms var(--ai-spring)}
 /* نص الترحيب: دخول ناعم لما يتبدّل بين الوضعين */
 .nbai-ov .nbai-greet [data-qv],.nbai-ov .nbai-greet.nbai-qv-r :is(.nbai-gt,.nbai-gs){animation:nbqv-gin 640ms var(--ai-ease) backwards}
 .nbai-ov .nbai-greet [data-qv].nbai-gs{animation-delay:70ms}
@@ -28774,6 +28774,7 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 [data-dark] .nbai-ov .nbai-qwash.is-off::before{background:radial-gradient(circle,rgba(168,85,247,.4) 0%,rgba(147,51,234,.16) 30%,transparent 62%)}
 @keyframes nbqv-wash{0%{transform:scale(0);opacity:0}14%{opacity:1}100%{transform:scale(1);opacity:0}}
 @keyframes nbqv-halo{0%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 0 var(--ai-ring)}70%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 16px transparent}}
+@keyframes nbqv-halo2{0%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 6px var(--ai-soft),0 12px 24px -12px var(--ai-glow)}70%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 18px transparent,0 12px 24px -12px var(--ai-glow)}}
 @keyframes nbqv-pop{0%{transform:scale(.55) rotate(-28deg)}60%{transform:scale(1.14) rotate(6deg)}100%{transform:none}}
 @keyframes nbqv-flow{from{background-position:0 0,0% 0}to{background-position:0 0,100% 0}}
 @keyframes nbqv-sheen{0%{background-position:130% 0}60%,100%{background-position:-30% 0}}
@@ -28781,7 +28782,8 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 @keyframes nbqv-gin{from{opacity:0;transform:translateY(8px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 @media (prefers-reduced-motion:reduce){
   .nbai-ov{transition:none}
-  .nbai-ov .nbai-ov-in::after,.nbai-ov .nbai-bar-ic::after,.nbai-ov .nbai-th>.nbai-greet:only-child::after,.nbai-ov .nbai-qm-b::before{transition:none;animation:none!important}
+  .nbai-ov .nbai-ov-in::after,.nbai-ov .nbai-bar-ic::after,.nbai-ov .nbai-bar-ic svg,.nbai-ov .nbai-qm-b::before{transition:none;animation:none!important}
+  .nbai-ov.nbai-qmode .nbai-th>.nbai-greet:only-child::before,.nbai-ov.nbai-qfx .nbai-th>.nbai-greet:only-child::before{animation:none!important}
   .nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-cm,.nbai-ov .nbai-qm-b .nbai-qm-ic,.nbai-ov .nbai-greet [data-qv],.nbai-ov .nbai-greet.nbai-qv-r :is(.nbai-gt,.nbai-gs){animation:none!important}
   .nbai-ov .nbai-qwash{display:none}
 }
