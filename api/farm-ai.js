@@ -126,32 +126,6 @@ function pickOrder(backends, start) {
   return cooling.slice(0, 1).map(function (x) { return x.b; });
 }
 
-/* STUDY-ORDER (إضافة): «ذاكر مع نبتكس» فقط — الرد طويل (20-45ث) فأي backend بيعلّق أو بيفشل بيستهلك الميزانية (50ث) ومفيش وقت للتحويل للتالي → «حصلت مشكلة مؤقتة» بعد انتظار طويل، والضغطة التانية بتنجح لأن التناوب بيودّيك backend تاني.
-   الحل: الـ backend اللي علّق/رجّع 5xx في وضع الدراسة بيتأخر لآخر الدور 10 دقايق (studyCool لوحده، ما بيأثرش على باقي الأوضاع)، وrelay نتليفاي دايمًا في الآخر لأن مهلة Functions عندهم 10-26ث أقل من وقت الرد. من غير أي relay أو لو الكل سليم الترتيب زي ما هو بالظبط. للتراجع: امسح الكتلة دي + سطر studyReorder + سطري studyCool.set + سطر لوج study timing. */
-const studyCool = new Map();
-const STUDY_SKIP_URL = /netlify/i;       /* مهلة Functions عندهم 10-26ث: في لوج Vercel رجّع 502 بعد 31ث — مستحيل يكمّل رد «ذاكر» فبيتشال من الدور (لو هو الوحيد بيفضل) */
-const STUDY_SLOW_URL = /workers\.dev/i;  /* relay Cloudflare علّق 45ث كاملة في لوج Vercel (AbortError) → آخر الدور */
-const STUDY_FB_MODELS = (function () {   /* STUDY-CHAIN: بدائل «ذاكر» بالترتيب: GEMINI_STUDY_FALLBACK_MODEL (ممكن أكتر من موديل مفصولين بفاصلة) ثم gemini-3.1-flash-lite (أخف، حسب جدول موديلات جوجل متاح ومستقر لحد مايو 2027). كل موديل ليه زحمته المستقلة عند جوجل. */
-  const out = [], seen = {};
-  String(process.env.GEMINI_STUDY_FALLBACK_MODEL || '').split(',').concat(['gemini-3.1-flash-lite']).forEach(function (x) { x = x.trim(); if (/^[A-Za-z0-9._:\/-]{3,100}$/.test(x) && !seen[x]) { seen[x] = 1; out.push(x); } });
-  return out;
-})();
-const studyMBad = new Map();   /* موديل → وقت انتهاء التجنّب (503: 45ث · 404: 10 دقايق) · «backend|موديل» → 429 (حصة المفتاح): 60ث */
-function studyPickModel(bn) {   /* أول موديل في السلسلة مش متجنَّب؛ لو الكل متجنَّب نرجع للأساسي */
-  const now = Date.now(), chain = [STUDY_MODEL || MODEL].concat(STUDY_FB_MODELS);
-  for (let k = 0; k < chain.length; k++) if ((studyMBad.get(chain[k]) || 0) <= now && (studyMBad.get(bn + '|' + chain[k]) || 0) <= now) return chain[k];
-  return chain[0];
-}
-function studyReorder(order) {
-  const now = Date.now(), good = [], bad = [];
-  order.forEach(function (b) {
-    if (b.url && STUDY_SKIP_URL.test(b.url) && order.length > 1) return;
-    if ((studyCool.get(b.name) || 0) > now || (b.url && STUDY_SLOW_URL.test(b.url))) bad.push(b); else good.push(b);
-  });
-  /* 503 (الموديل مزحوم) عابر غالبًا: الـ backends السليمة بتتعاد مرة تانية (علامة again) قبل الـ backends البطيئة، والتكرار بيتخطّى لو الباقي أقل من 28ث أو الـ backend اتعلّق/فشل بـ 502/504 */
-  return good.concat(good.map(function (b) { return Object.assign({}, b, { again: true }); }), bad);
-}
-
 function callBackend(b, bodyObj, signal, model) {
   const mdl = model || MODEL;   /* STUDY-MODEL */
   if (b.url) {   /* relay: بيحمل مفتاحه محليًا وبيرجّع نفس status ونص جيميناي */
@@ -1341,8 +1315,7 @@ module.exports = async function handler(req, res) {
   if (useGround) reqBody.tools = [{ google_search: {} }];
 
   /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
-  let order = pickOrder(backends, await nextStart(backends.length));
-  if (mode === 'study') order = studyReorder(order);   /* STUDY-ORDER */
+  const order = pickOrder(backends, await nextStart(backends.length));
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
   const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
@@ -1350,12 +1323,10 @@ module.exports = async function handler(req, res) {
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
-    if (b.again && (remain < 28000 || (studyCool.get(b.name) || 0) > Date.now())) continue;   /* STUDY-ORDER */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
-      const mdl = mode === 'study' ? studyPickModel(b.name) : '';   /* STUDY-CHAIN */
-      let r = await callBackend(b, reqBody, ctl.signal, mdl);   /* STUDY-MODEL + STUDY-ORDER */
+      let r = await callBackend(b, reqBody, ctl.signal, mode === 'study' ? STUDY_MODEL : '');   /* STUDY-MODEL */
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
         console.error('[farm-ai] grounding rejected, retrying without it');
         delete reqBody.tools;
@@ -1364,22 +1335,15 @@ module.exports = async function handler(req, res) {
       const t = await r.text();
       const v = judgeUpstream(r.status, t);
       up = r; text = t; lastErr = null;
-      if (!v) { if (mode === 'study') console.log('[farm-ai] study timing: gemini ' + b.name + ' ' + (Date.now() - (deadline - UPSTREAM_TIMEOUT_MS)) + 'ms'); break; }   /* نجاح */
-      console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status + (mode === 'study' ? ' [' + (mdl || MODEL) + ']' : ''));
+      if (!v) break;   /* نجاح */
+      console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status);
       if (r.status === 429) rateLimited = true;
-      if (mode === 'study') {   /* STUDY-CHAIN */
-        if (r.status === 503) studyMBad.set(mdl, Date.now() + 45000);
-        else if (r.status === 429) studyMBad.set(b.name + '|' + mdl, Date.now() + 60000);
-        else if (r.status === 404) studyMBad.set(mdl, Date.now() + 600000);
-      }
-      if (v.cool && !(mode === 'study' && r.status === 503)) cooldown.set(b.name, Date.now() + v.cool);   /* STUDY-OVERLOAD: 503 عابر — مفيش تبريد 15ث عشان ما يتقلّصش الدور لـ backend واحد */
-      if (mode === 'study' && (r.status === 502 || r.status === 504)) studyCool.set(b.name, Date.now() + 600000);   /* STUDY-ORDER: 503 = موديل مزحوم (عابر) فمش بنأخّر الـ backend بسببه */
-      if (!v.next && !(mode === 'study' && r.status === 404)) break;   /* STUDY-CHAIN: موديل مش متاح (404) → كمّل بالموديل اللي بعده */
+      if (v.cool) cooldown.set(b.name, Date.now() + v.cool);
+      if (!v.next) break;
     } catch (e) {
       lastErr = e; up = null;
       console.error('[farm-ai] backend ' + b.name + ' unreachable:', e && e.name);
       cooldown.set(b.name, Date.now() + 15000);
-      if (mode === 'study' && bi < order.length - 1) studyCool.set(b.name, Date.now() + 600000);   /* STUDY-ORDER: علّق/فشل وفيه backend بعده (مش آخر محاولة اتقطعت بانتهاء الميزانية) */
     } finally { clearTimeout(timer); }
   }
   if (!up) {
