@@ -18721,9 +18721,10 @@ document.addEventListener('click', e => {
         '<span class="aipw-st-mt" aria-hidden="true">' + dots + '</span></span>';
     }
 
-    function aiPlansHTML(d) {
+    function aiPlansHTML(d, opt) {   /* QM-PAYWALL. القديم (للتراجع): function aiPlansHTML(d) { */
       var cur = d && d.plan, h = '<div class="aipw-pls" role="radiogroup" aria-label="الباقات">';
       aiKeys(aiUI.fam).forEach(function(k) {   /* STUDY-SPLIT. القديم (للتراجع): ['plan1', 'plan2', 'plan3'].forEach(function(k) { */
+        if (opt && opt.qm && /1$/.test(k)) return;   /* QM-PAYWALL: من «وضع الأسئلة الفائق» تظهر Plus وPro بس (من غير Basic). للتراجع: امسح السطر ده */
         var p = AI_PLANS[k], on = aiUI.plan === k;
         h += '<button type="button" class="aipw-pl' + (/3$/.test(k) ? ' aipw-pro' : '') + (on ? ' on' : '') + '" data-plan="' + k + '" role="radio" aria-checked="' + on + '" onclick="AiSub.pick(\'' + k + '\')">' +
           '<span class="aipw-rd" aria-hidden="true"></span>' +
@@ -18756,7 +18757,7 @@ document.addEventListener('click', e => {
         else { title = 'اشترك في <bdi dir="ltr">Nabtex AI</bdi>' /* القديم (للتراجع): 'اشترك في المساعد الذكي' */; sub = 'استشارة زراعية وتشخيص أمراض بالصور — بنقاط يومية.'; }
         if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="aipw-note aipw-bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         if (d && d.pending) body += aiPendingHTML(d.pending);
-        body += aiPlansHTML(d);
+        body += aiPlansHTML(d, opt);   /* QM-PAYWALL. القديم (للتراجع): body += aiPlansHTML(d); */
         var pr = AI_PLANS[aiUI.plan] ? AI_PLANS[aiUI.plan].price : 99;   /* AI-PRICE — القديم (للتراجع): : 149 */
         body += '<button type="button" class="aipw-cta" id="ai-cta" onclick="AiSub.openPay()"><span>متابعة إلى الدفع — <b id="ai-cta-price">' + pr + '</b> جنيه</span>' +
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>';
@@ -18795,6 +18796,7 @@ document.addEventListener('click', e => {
       }
       if (opt) o._opt = opt;
       o.innerHTML = '<div class="aipw-box" data-p="' + aiPKey(aiUI.plan) + '">' + aiPaywallHTML(d, o._opt) + '</div>';
+      o.classList.toggle('aipw-qm', !!(o._opt && o._opt.qm));   /* QM-PAYWALL: أنيميشن بريميوم لشاشة الباقات من «وضع الأسئلة الفائق» (CSS: nb-ai-qm-pw) */
       o.classList.toggle('aipw-lim', !!(o._opt && o._opt.limit));   /* LIMIT-PAYWALL: أنيميشن ناعم لشاشة «النقاط خلصت» (CSS: nb-ai-limit-pw) */
     }
     function aiRefreshPaywall() {
@@ -19031,6 +19033,7 @@ document.addEventListener('click', e => {
           if (d && d.plan && d.plan.indexOf(pre) === 0) aiUI.plan = pre + (cn === '1' ? '2' : '3');
           else if (d && d.plan) aiUI.plan = pre + cn;
           else if (aiUI.plan.indexOf(pre) !== 0) aiUI.plan = pre + '1';
+          if (opt && opt.qm && !/[23]$/.test(aiUI.plan)) aiUI.plan = pre + '2';   /* QM-PAYWALL: Plus مختارة من البداية لأن Basic مش معروضة. للتراجع: امسح السطر ده */
           aiShowPaywall(d, opt || {});
         });
       },
@@ -29478,7 +29481,7 @@ function buildScreen(){
   function qmUpsell(){
     qmB.classList.remove('nbai-qm-nudge'); void qmB.offsetWidth; qmB.classList.add('nbai-qm-nudge');
     setTimeout(function(){ qmB.classList.remove('nbai-qm-nudge'); }, 520);
-    try{ window.AiSub.paywall({ fam: 'study' }); }catch(e){ return; }
+    try{ window.AiSub.paywall({ fam: 'study', qm: true }); }catch(e){ return; }   /* QM-PAYWALL. القديم (للتراجع): window.AiSub.paywall({ fam: 'study' }) */
     var n = 0, iv = setInterval(function(){   /* لما شاشة الباقات تظهر: اختار Plus مسبقًا (الافتراضي كان Basic) */
       n++;
       if(document.getElementById('ai-pw')){
@@ -31363,6 +31366,27 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @keyframes aipwLimIc{from{transform:scale(.6) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes aipwLimGlow{0%,100%{box-shadow:0 8px 20px rgba(27,107,58,.3),inset 0 1px 0 rgba(255,255,255,.28)}50%{box-shadow:0 8px 28px rgba(27,107,58,.55),0 0 0 8px rgba(27,107,58,.1),inset 0 1px 0 rgba(255,255,255,.28)}}
 @media(prefers-reduced-motion:reduce){.aipw.aipw-lim,.aipw.aipw-lim :is(.aipw-box,.aipw-ic,.aipw-t,.aipw-s,.aipw-pl,.aipw-cta){animation:none!important}}
+</style>
+<style id="nb-ai-qm-pw">
+/* QM-PAYWALL: دخول بريميوم ناعم لشاشة الباقات لما تتفتح من «وضع الأسئلة الفائق» (.aipw-qm بس — باقي شاشات الباقات زي ما هي). الخلفية تظهر بهدوء، الصندوق يطلع بحركة طويلة بتهدّى في آخرها، الأيقونة بتنزل بهالة، وبعدين العنوان والباقتين والزر بالتتابع، وكارت Pro بيلمع لمعة خفيفة. transform/opacity بس. للتراجع: امسح الكتلة دي. */
+.aipw.aipw-qm{animation:aipwQmFade .55s ease both}
+.aipw.aipw-qm .aipw-box{animation:aipwQmRise .9s cubic-bezier(.16,1,.3,1) .04s both;will-change:transform,opacity}
+.aipw.aipw-qm .aipw-ic{animation:aipwQmIc 1s cubic-bezier(.34,1.4,.64,1) .3s backwards,aipwQmGlow 2.6s ease-in-out 1.3s 2}
+.aipw.aipw-qm .aipw-t,.aipw.aipw-qm .aipw-s,.aipw.aipw-qm .aipw-pl,.aipw.aipw-qm .aipw-cta,.aipw.aipw-qm .aipw-sec{animation:aipwQmIn .75s cubic-bezier(.22,1,.36,1) backwards}
+.aipw.aipw-qm .aipw-t{animation-delay:.42s}
+.aipw.aipw-qm .aipw-s{animation-delay:.52s}
+.aipw.aipw-qm .aipw-pl:nth-child(1){animation-delay:.64s}
+.aipw.aipw-qm .aipw-pl:nth-child(2){animation-delay:.78s}
+.aipw.aipw-qm .aipw-pro{animation:aipwQmIn .75s cubic-bezier(.22,1,.36,1) .78s backwards,aipwQmPro 2.2s ease-in-out 1.7s 1}
+.aipw.aipw-qm .aipw-cta{animation-delay:.95s}
+.aipw.aipw-qm .aipw-sec{animation-delay:1.05s}
+@keyframes aipwQmFade{from{opacity:0}to{opacity:1}}
+@keyframes aipwQmRise{0%{transform:translateY(70px) scale(.97);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+@keyframes aipwQmIn{from{transform:translateY(18px) scale(.985);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwQmIc{from{transform:translateY(-10px) scale(.55) rotate(-10deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes aipwQmGlow{0%,100%{box-shadow:0 8px 20px rgba(27,107,58,.3),inset 0 1px 0 rgba(255,255,255,.28)}50%{box-shadow:0 8px 30px rgba(27,107,58,.55),0 0 0 9px rgba(27,107,58,.1),inset 0 1px 0 rgba(255,255,255,.28)}}
+@keyframes aipwQmPro{0%,100%{box-shadow:0 0 0 0 rgba(240,180,41,0)}50%{box-shadow:0 6px 26px rgba(240,180,41,.32),0 0 0 4px rgba(240,180,41,.12)}}
+@media(prefers-reduced-motion:reduce){.aipw.aipw-qm,.aipw.aipw-qm :is(.aipw-box,.aipw-ic,.aipw-t,.aipw-s,.aipw-pl,.aipw-pro,.aipw-cta,.aipw-sec){animation:none!important}}
 </style>
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
