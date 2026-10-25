@@ -36,6 +36,8 @@
 const crypto = require('crypto');
 
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+/* STUDY-MODEL (اختياري): GEMINI_STUDY_MODEL = موديل أقوى لقراءة صور «ذاكر مع نبتيكس» بس (أخطاء قراءة الصور/الأسئلة). من غيره كل حاجة بتستخدم MODEL زي ما هي. للتراجع: امسح السطر ده + باراميتر model في callBackend + شرط studyModel في فرع الـ study */
+const STUDY_MODEL = /^[A-Za-z0-9._:\/-]{3,100}$/.test(process.env.GEMINI_STUDY_MODEL || '') ? process.env.GEMINI_STUDY_MODEL : '';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 /* مفتاح Firebase Web (عام أصلًا في index.html) — بنستخدمه بس للتحقق من توكن المستخدم */
 const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNtftfT1a2oENYgUyxkM';
@@ -124,15 +126,16 @@ function pickOrder(backends, start) {
   return cooling.slice(0, 1).map(function (x) { return x.b; });
 }
 
-function callBackend(b, bodyObj, signal) {
+function callBackend(b, bodyObj, signal, model) {
+  const mdl = model || MODEL;   /* STUDY-MODEL */
   if (b.url) {   /* relay: بيحمل مفتاحه محليًا وبيرجّع نفس status ونص جيميناي */
     return fetch(b.url, {
       method: 'POST', signal: signal,
       headers: { 'Content-Type': 'application/json', 'x-relay-secret': RELAY_SECRET },
-      body: JSON.stringify({ model: MODEL, body: bodyObj })
+      body: JSON.stringify({ model: mdl, body: bodyObj })
     });
   }
-  return fetch(GEMINI_URL + encodeURIComponent(MODEL) + ':generateContent', {
+  return fetch(GEMINI_URL + encodeURIComponent(mdl) + ':generateContent', {
     method: 'POST', signal: signal,
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': b.key },
     body: JSON.stringify(bodyObj)
@@ -895,6 +898,7 @@ async function auditStudyAnswers(st, t0) {
     if (!orOrder(oStart).length) return;   /* كل الـ backends في تبريد */
     const budget = Math.min(OR_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < OR_MIN_BUDGET_MS) return;
+    const pend = [];   /* ARBITER: الأجزاء اللي المراجعة اختلفت معاها — بتتحكّم تاني بعد المراجعة */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
     try {
@@ -944,12 +948,94 @@ async function auditStudyAnswers(st, t0) {
           else note = ar
             ? 'تنبيه مراجعة: مراجعة مستقلة طلّعت ناتج مختلف' + (v.final ? ' (' + v.final + ')' : '') + (v.where ? '. الخطأ المحتمل: ' + v.where : '') + '. راجع الحل بنفسك أو مع مدرّسك قبل ما تعتمد عليه.'
             : 'Review warning: an independent review got a different result' + (v.final ? ' (' + v.final + ')' : '') + (v.where ? '. Possible error: ' + v.where : '') + '. Please double-check the solution yourself or with your instructor before relying on it.';
-          p.explain = p.explain + '\n\n' + note;
+          if (!v.agree && GROQ_KEYS.length) pend.push({ p: p, au: au, v: v, ar: ar, note: note });   /* ARBITER: التنبيه بيتضاف بعد التحكيم لو ما اتحسمش */
+          else p.explain = p.explain + '\n\n' + note;
           console.log('[farm-ai] audit: ' + (v.agree ? 'agree' : 'DISAGREE') + ' ' + (ob ? ob.name + ' ' : '') + (Date.now() - ts) + 'ms');   /* بيظهر في Vercel Logs */
         } catch (e) { console.error('[farm-ai] audit failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
+    if (pend.length) await arbitrateConflicts(pend, t0);   /* ARBITER */
   } catch (e) { console.error('[farm-ai] audit stage error:', e && e.name); }
+}
+
+/* ═══ ARBITER — «متأكد؟» تلقائي (إضافة): لما المراجعة المستقلة تختلف مع حل جزء، Groq بيعيد حله من الصفر بتفكير أعلى وهو شايف الحل السابق وناتج المراجع، وبيحكم:
+   «الحل السابق صح» → الحل يفضل + سطر إن التحكيم أكّده · «الحل السابق غلط» → الحل الجديد بيستبدل (والإجابة المعلّمة القديمة بتتشال) · غير محسوم/فشل/مفيش وقت → تنبيه المراجعة زي ما كان.
+   بيشتغل بس على الأجزاء المختلف عليها (حتى ARB_MAX) وفي الوقت اللي فاضل من ميزانية الدالة؛ أي فشل = سلوك المراجعة القديم. للتراجع: امسح الكتلة دي + سطر pend.push + سطر arbitrateConflicts في auditStudyAnswers. ═══ */
+const ARB_MAX = 4;
+const ARB_CAP_MS = 25000;
+const ARB_MIN_BUDGET_MS = 10000;
+async function arbitrateConflicts(pend, t0) {
+  const todo = pend.slice(0, ARB_MAX);
+  pend.slice(ARB_MAX).forEach(function (c) { c.p.explain = c.p.explain + '\n\n' + c.note; });
+  try {
+    const budget = Math.min(ARB_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
+    if (budget < ARB_MIN_BUDGET_MS || !GROQ_KEYS.length) return;
+    const start = await groqNextStart(GROQ_KEYS.length);
+    if (!groqOrder(start).length) return;
+    const effort = budget >= 20000 ? 'high' : GROQ_EFFORT;
+    const ctl = new AbortController();
+    const timer = setTimeout(function () { ctl.abort(); }, budget);
+    try {
+      await Promise.all(todo.map(async function (c, ci) {
+        try {
+          const keys = groqOrder(start + ci);
+          const msg = 'عنوان الجزء: ' + c.p.title + '\n\nنص المسألة/السؤال:\n' + c.au.prob + '\n\nحل سابق (ممكن يكون فيه خطأ):\n' + c.au.sol.slice(0, 2500)
+            + '\n\nمراجع مستقل طلّع ناتج مختلف' + (c.v.final ? ': ' + c.v.final : '') + (c.v.where ? '\nالخطأ المحتمل حسب المراجع: ' + c.v.where : '')
+            + '\n\nأنت دلوقتي المحكّم: أعد حل المسألة/السؤال من الصفر بحذر شديد من غير ما تتأثر بالحل السابق ولا بالمراجع، وراجع ناتجك بطريقة مستقلة قبل ما تقرر. '
+            + 'السطر الأول من ردك لازم يكون بالظبط واحد من التلاتة دول وبس: «الحكم: الحل السابق صح» أو «الحكم: الحل السابق غلط» أو «الحكم: غير محسوم». بعد كده اكتب الحل الكامل بالترتيب المعتاد (لو الحل السابق صح اكتبه مصحّح الصياغة لو لزم).';
+          for (let ki = 0; ki < keys.length; ki++) {
+            const gk = keys[ki];
+            const r = await fetch(GROQ_URL, {
+              method: 'POST', signal: ctl.signal,
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gk.key },
+              body: JSON.stringify({
+                model: GROQ_MODEL, temperature: 0.2, max_completion_tokens: GROQ_MAX_OUT - 500, reasoning_effort: effort, include_reasoning: false,
+                messages: [{ role: 'system', content: SYSTEMS.solve }, { role: 'user', content: msg }]
+              })
+            });
+            const raw = await r.text();
+            if (!r.ok) {
+              console.error('[farm-ai] arbiter ' + gk.name + ' http ' + r.status);
+              let ms = 0;
+              if (r.status === 429) { ms = /per day|TPD/i.test(raw) ? 30 * 60000 : 60000; }
+              else if (r.status === 413) ms = 30000;
+              else if (r.status === 401 || r.status === 403 || r.status === 404) ms = 30 * 60000;
+              else if (r.status >= 500) ms = 15000;
+              if (ms) solverCool.set(gk.name, Date.now() + ms);
+              if (ms) continue;
+              return;
+            }
+            let j = null;
+            try { j = JSON.parse(raw); } catch (e) { return; }
+            const ch = j && j.choices && j.choices[0];
+            if (!ch || ch.finish_reason === 'length') return;
+            const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
+            const m = out.match(/^[\s«»\"'*_#>\-–—]*الحكم\s*[:：]\s*([^\n]*)\n?/);   /* بيتسامح مع «» و** حوالين السطر */
+            if (!m) return;
+            const body2 = out.slice(m[0].length).trim();
+            const wrong = /غلط|خطأ|خطا|مش صح|غير صح|ليس صح/.test(m[1]);
+            const right = !wrong && /صح/.test(m[1]);
+            if (right) {
+              c.p.explain = c.p.explain + '\n\n' + (c.ar
+                ? 'مراجعة: مراجعة أولى طلّعت ناتج مختلف' + (c.v.final ? ' (' + c.v.final + ')' : '') + '، وتحكيم تاني بإعادة الحل من الصفر أكّد إن الحل ده هو الصح.'
+                : 'Check: a first review got a different result' + (c.v.final ? ' (' + c.v.final + ')' : '') + ', but a second careful re-solve confirmed this solution.');
+              c.done = true;
+              console.log('[farm-ai] arbiter: keep ' + gk.name);
+            } else if (wrong && body2.length >= 60) {
+              c.p.explain = body2 + '\n\n' + (c.ar
+                ? 'تم تصحيح الحل بعد ما مراجعة مستقلة اختلفت معاه وتحكيم تاني أعاد الحل من الصفر.'
+                : 'This solution was corrected after an independent review disagreed and a second careful re-solve.');
+              delete c.p.ans; delete c.p.ai;   /* الإجابة المعلّمة القديمة ممكن تكون هي الغلط */
+              c.done = true;
+              console.log('[farm-ai] arbiter: fixed ' + gk.name);
+            }
+            return;
+          }
+        } catch (e) { console.error('[farm-ai] arbiter failed:', e && e.name); }
+      }));
+    } finally { clearTimeout(timer); }
+  } catch (e) { console.error('[farm-ai] arbiter stage error:', e && e.name); }
+  finally { todo.forEach(function (c) { if (!c.done) c.p.explain = c.p.explain + '\n\n' + c.note; }); }
 }
 
 /* تنظيف رد الامتحان: كل سؤال 4 اختيارات بالظبط ومختلفة، والإجابة رقم 0..3؛ وبنخلط ترتيب الاختيارات هنا عشان ما يتحكمش ميل الموديل لموقع معين */
@@ -1240,7 +1326,7 @@ module.exports = async function handler(req, res) {
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
-      let r = await callBackend(b, reqBody, ctl.signal);
+      let r = await callBackend(b, reqBody, ctl.signal, mode === 'study' ? STUDY_MODEL : '');   /* STUDY-MODEL */
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
         console.error('[farm-ai] grounding rejected, retrying without it');
         delete reqBody.tools;
@@ -1288,7 +1374,7 @@ module.exports = async function handler(req, res) {
         const ctl2 = new AbortController();
         const tm2 = setTimeout(function () { ctl2.abort(); }, Math.min(STUDY_ATTEMPT_MS, deadline - Date.now()));
         try {
-          const r2 = await callBackend(rb, rBody, ctl2.signal);
+          const r2 = await callBackend(rb, rBody, ctl2.signal, STUDY_MODEL);   /* STUDY-MODEL */
           const t2 = await r2.text();
           let j2 = null; try { j2 = JSON.parse(t2); } catch (e) { /* غير JSON */ }
           const c2 = r2.ok && j2 && j2.candidates && j2.candidates[0];
