@@ -415,6 +415,58 @@ const STUDY_QS_SYS_BASE = [
 ].join('\n');
 const STUDY_QS_SYS = GROQ_KEY ? STUDY_QS_SYS_BASE.replace(INJECTION, SOLVER_FLAG + '\n' + INJECTION) : STUDY_QS_SYS_BASE;
 
+/* STUDY-QMODE-MARK: تعليم الإجابة الصحيحة دايمًا في «وضع الأسئلة الفائق» (qmode بس — الشرح العادي ما بيعدّيش هنا خالص).
+   المشكلة: ANS-SYNC في solveStudyProblems بيمسح الإجابة المعلّمة (ai/ans) لو الجزء اتعلّم كمسألة (problem) أو لو الخط العريض في حل Groq ما طابقش نص الاختيار حرفيًا — فالاختيارات كانت بتظهر من غير علامة «صحيحة».
+   الحل (بعد مرحلة الحل والمراجعة): لو الجزء سؤال باختيارات وفقد علامته → نحدد الاختيار من الخط العريض في الشرح النهائي (نص الاختيار أو رقمه/حرفه)، ولو ما اتحددش وما كانش المحكّم صحّح الحل نرجّع علامة جيميناي الأصلية. أي فشل = السلوك القديم.
+   للتراجع: امسح الكتلة دي + سطري qmSnap/qmMark في فرع study + qm في solveStudyProblems + _fx في المحكّم. */
+function qmSnap(st) {
+  try {
+    (st && Array.isArray(st.parts) ? st.parts : []).forEach(function (p) {
+      if (p && p.kind === 'q' && Array.isArray(p.opts) && p.opts.length) {
+        Object.defineProperty(p, '_g', { value: { ai: Array.isArray(p.ai) ? p.ai.slice() : null, ans: p.ans || '' }, enumerable: false, writable: true });   /* non-enumerable: ما بيتسلسلش في الرد */
+      }
+    });
+  } catch (e) { /* بدون لقطة = بدون استرجاع */ }
+}
+function qmPick(p, text) {   /* بيرجّع قايمة تحديدات (مصفوفة أرقام اختيارات) — واحدة لكل مقطع بالخط العريض اتحدد منه اختيار */
+  const opts = p.opts, norm = function (t) { return normAns(t).replace(/^\.+|\.+$/g, ''); }, res = [];   /* normAns بتسيب النقط (للأرقام العشرية): بنشيل نقطة آخر الاختيار/المقطع بس */
+  const segs = (String(text || '').match(/\*\*([^*\n]{1,300})\*\*/g) || []).slice(0, 6).map(function (x) { return x.replace(/\*/g, '').trim(); }).filter(Boolean);
+  const L = { 'أ': 0, 'ا': 0, 'ب': 1, 'ج': 2, 'د': 3, 'هـ': 4, 'و': 5 };
+  segs.forEach(function (sg) {
+    const n = norm(sg);
+    /* 1) نص الاختيار كامل جوه الخط العريض (بنشيل الاختيار اللي نصه جزء من اختيار تاني طالع) */
+    let hits = [];
+    opts.forEach(function (o, k) { const c = norm(o); if (c.length >= 2 && n.indexOf(c) !== -1) hits.push(k); });
+    hits = hits.filter(function (k) { return !hits.some(function (j) { return j !== k && norm(opts[j]).length > norm(opts[k]).length && norm(opts[j]).indexOf(norm(opts[k])) !== -1; }); });
+    if (hits.length) { res.push(hits); return; }
+    /* 2) رقم الاختيار أو حرفه (أ/ب/ج/د) في أول الخط العريض: «2» · «الاختيار 2» · «ب) ...» */
+    const s0 = sg.replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).replace(/^[^\p{L}\p{N}]+/u, '');
+    const km = /^(?:(?:الإجابة|الاجابة|الإجابه|الاجابه|الصحيحة|الصحيحه|الصحيح|الاختيار|الخيار|اختيار|خيار|رقم|هي|هو|option|answer|choice|correct)\s*[:：\-–]?\s*)+/i.exec(s0);
+    const lead = (km ? s0.slice(km[0].length) : s0).replace(/^[^\p{L}\p{N}]+/u, '');
+    const dm = new RegExp('^(\\d)' + (km ? '(?![\\d.]*\\d)' : '\\s*(?:[)\\-–:،]|\\.(?!\\d)|$)')).exec(lead);   /* من غير كلمة «الاختيار/الإجابة» لازم الرقم أو الحرف يكون لوحده أو متبوع بـ ) - : . */
+    if (dm && +dm[1] >= 1 && +dm[1] <= opts.length) { res.push([+dm[1] - 1]); return; }
+    const lm = new RegExp('^(أ|ا|ب|ج|د|هـ)' + (km ? '(?![\\u0621-\\u064A])' : '\\s*(?:[)\\-–:،]|\\.(?!\\d)|$)')).exec(lead);
+    if (lm && L[lm[1]] != null && L[lm[1]] < opts.length) res.push([L[lm[1]]]);
+  });
+  return res;
+}
+function qmMark(st) {
+  try {
+    (st && Array.isArray(st.parts) ? st.parts : []).forEach(function (p) {
+      if (!p || p.kind !== 'q' || !Array.isArray(p.opts) || !p.opts.length) return;
+      if (Array.isArray(p.ai) && p.ai.length) return;   /* معلّمة ومتأكدة (ANS-SYNC أو جيميناي من غير حلّال) */
+      const g = p._g, gai = g && Array.isArray(g.ai) && g.ai.length ? g.ai.slice().sort() : null;
+      let sets = [];
+      try { sets = qmPick(p, p.explain); } catch (e) { sets = []; }
+      let d = null;
+      if (gai) d = sets.some(function (x) { return x.slice().sort().join() === gai.join(); }) ? g.ai : null;   /* الشرح النهائي بيأكد علامة جيميناي */
+      if (!d && sets.length) d = sets[0];   /* الشرح النهائي (حلّال/محكّم) بيحدد اختيار تاني: الشرح هو المرجع */
+      if (d) { p.ai = d; p.ans = d.map(function (k) { return p.opts[k]; }).join(' / '); return; }
+      if (!p._fx && gai) { p.ai = g.ai; if (g.ans) p.ans = g.ans; }   /* الشرح ما حددش اختيار: علامة جيميناي الأصلية (إلا لو المحكّم قال إنها غلط) */
+    });
+  } catch (e) { /* أي فشل = السلوك القديم */ }
+}
+
 const NUM_KEYS = ['irr_times', 'irr_amount', 'irr_hours', 'fert_n', 'fert_p', 'fert_k', 'fert_organic', 'fert_micro', 'fert_amount',
   'spray_conc', 'spray_water', 'spray_area', 'spray_times', 'labor', 'machines', 'temp', 'humidity', 'rain'];
 const TXT_KEYS = ['fert_name', 'fert_company', 'spray_name', 'spray_company', 'spray_pest', 'notes'];
@@ -749,7 +801,7 @@ function cleanSolve(t) {
 }
 
 /* SOLVER: بيحل الأجزاء اللي جيميناي علّمها كمسائل (حتى GROQ_MAX_PROBLEMS) من نصها بس ويستبدل explain بالحل. ما بيرميش أي خطأ: أي فشل/تأخير/حصة خالصة = شرح جيميناي يفضل زي ما هو. */
-async function solveStudyProblems(st, t0) {
+async function solveStudyProblems(st, t0, qm) {   /* STUDY-QMODE-MARK: qm = وضع الأسئلة الفائق (الاختيارات بتتبعت للحلّال عشان يحدد رقم الاختيار الصحيح) */
   try {
     if (!GROQ_KEY || !st || !Array.isArray(st.parts)) return;
     /* GROQ-ALLQ: كل المسائل المعلّمة (_pb) + أي جزء «سؤال» (kind:'q': اختيار من متعدد / صح وغلط / نظري / عام) بترتيبهم في الورقة؛ نص السؤال للحلّال = _pb أو السؤال + الاختيارات. للتراجع: ارجع الشرط لـ p && p._pb && p._pb.length >= 15 وامسح qText/isPb تحت */
@@ -785,7 +837,7 @@ async function solveStudyProblems(st, t0) {
                 model: GROQ_MODEL, temperature: 0.3, max_completion_tokens: GROQ_MAX_OUT, reasoning_effort: effort, include_reasoning: false,
                 messages: [
                   { role: 'system', content: SYSTEMS.solve },
-                  { role: 'user', content: isPb ? 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' : 'عنوان الجزء: ' + p.title + '\n\nالسؤال:\n' + qText + '\n\nده سؤال (اختيار من متعدد أو صح/خطأ أو نظري أو عام أو حسابي) مش لازم يكون مسألة طويلة: أجب عنه بدقة. اكتب الإجابة الصحيحة بوضوح في سطر مستقل بالخط العريض (**هكذا**) ثم برّرها باختصار وبالقانون أو المعلومة اللي اعتمدت عليها، ولو حسابي حله بالخطوات. لو اختيار من متعدد اذكر رقم الاختيار ونصه، ولو في الاختيارات أكتر من إجابة صحيحة اذكرها كلها.' }
+                  { role: 'user', content: isPb ? 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + ((qm && Array.isArray(p.opts) && p.opts.length) ? '\n\nالاختيارات:\n' + p.opts.map(function (o, i) { return (i + 1) + ') ' + o; }).join('\n') + '\n\nاكتب الاختيار الصحيح في سطر مستقل بالخط العريض (**هكذا**) برقمه ونصه، ولو أكتر من اختيار صحيح اذكرهم كلهم.' : '') + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' : 'عنوان الجزء: ' + p.title + '\n\nالسؤال:\n' + qText + '\n\nده سؤال (اختيار من متعدد أو صح/خطأ أو نظري أو عام أو حسابي) مش لازم يكون مسألة طويلة: أجب عنه بدقة. اكتب الإجابة الصحيحة بوضوح في سطر مستقل بالخط العريض (**هكذا**) ثم برّرها باختصار وبالقانون أو المعلومة اللي اعتمدت عليها، ولو حسابي حله بالخطوات. لو اختيار من متعدد اذكر رقم الاختيار ونصه، ولو في الاختيارات أكتر من إجابة صحيحة اذكرها كلها.' }
                 ]
               })
             });
@@ -1082,6 +1134,7 @@ async function arbitrateConflicts(pend, t0) {
                 ? 'تم تصحيح الحل بعد ما مراجعة مستقلة اختلفت معاه وتحكيم تاني أعاد الحل من الصفر.'
                 : 'This solution was corrected after an independent review disagreed and a second careful re-solve.');
               delete c.p.ans; delete c.p.ai;   /* الإجابة المعلّمة القديمة ممكن تكون هي الغلط */
+              try { Object.defineProperty(c.p, '_fx', { value: true, enumerable: false, writable: true }); } catch (e) { /* STUDY-QMODE-MARK: المحكّم صحّح الحل ← مانرجّعش علامة جيميناي القديمة */ }
               c.done = true;
               console.log('[farm-ai] arbiter: fixed ' + gk.name);
             }
@@ -1492,10 +1545,12 @@ module.exports = async function handler(req, res) {
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after gemini');   /* TIMING: بيبيّن كل مرحلة أخدت كام في Vercel Logs */
-    if (GROQ_KEY) await solveStudyProblems(st, t0);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
+    if (qmode) qmSnap(st);   /* STUDY-QMODE-MARK: لقطة من علامات جيميناي قبل ما الحلّال/المراجعة يمسحوها */
+    if (GROQ_KEY) await solveStudyProblems(st, t0, qmode);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after groq');
     if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after audit+arbiter');
+    if (qmode) qmMark(st);   /* STUDY-QMODE-MARK: كل سؤال باختيارات لازم ينعلّم عليه الاختيار الصحيح */
     payload = { study: st };
   } else if (mode === 'study_quiz') {
     let parsed = null;
