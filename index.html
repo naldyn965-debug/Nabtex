@@ -28696,6 +28696,24 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-pane.nbai-study .nbai-st-th[hidden]+.nbai-cm:not(:focus-within) .nbai-st-add:not([disabled]){animation:nbf-ring-soft 4.2s var(--ai-ease) 1.2s infinite}
 @keyframes nbf-ring-soft{0%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 0 var(--ai-soft2)}60%,100%{box-shadow:inset 0 0 0 1px var(--ai-ring),0 0 0 6px transparent}}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbai-pane.nbai-study .nbai-st-th[hidden]+.nbai-cm:not(:focus-within) .nbai-st-add:not([disabled]){animation:none}}
+/* STUDY-QMODE: خيار «وضع الأسئلة الفائق» داخل «ذاكر مع نبتيكس» — كله مقيّد بـ .nbai-ov (مفيش تأثير على باقي الموقع). للتراجع: امسح الأسطر دي لحد نهاية الكتلة. */
+.nbai-ov .nbai-qm{margin-top:8px}
+.nbai-ov .nbai-qm[hidden]{display:none}
+.nbai-ov.nbst-kb .nbai-qm{display:none}
+.nbai-ov .nbai-qm-b{display:flex;align-items:center;gap:10px;width:100%;margin:0;padding:9px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:inherit;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color 200ms var(--ai-ease),background 200ms var(--ai-ease),box-shadow 240ms var(--ai-ease),opacity 180ms}
+.nbai-ov .nbai-qm-b[disabled]{opacity:.55;cursor:default}
+.nbai-ov .nbai-qm-ic{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);transition:background 200ms var(--ai-ease),color 200ms var(--ai-ease)}
+.nbai-ov .nbai-qm-tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nbai-ov .nbai-qm-tx b{font-size:13px;font-weight:800;line-height:1.5}
+.nbai-ov .nbai-qm-tx small{font-size:11.5px;font-weight:500;line-height:1.6;color:var(--muted)}
+.nbai-ov .nbai-qm-sw{flex:none;position:relative;width:38px;height:22px;border-radius:999px;background:var(--line2);transition:background 220ms var(--ai-ease)}
+.nbai-ov .nbai-qm-sw i{position:absolute;top:3px;inset-inline-start:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.28);transition:inset-inline-start 220ms var(--ai-spring)}
+.nbai-ov .nbai-qm-b.is-on{border-color:var(--ai-ring);background:linear-gradient(180deg,var(--ai-soft),transparent 80%),var(--card);box-shadow:0 10px 24px -18px var(--ai-glow)}
+.nbai-ov .nbai-qm-b.is-on .nbai-qm-ic{background:var(--ai-g);color:#fff}
+.nbai-ov .nbai-qm-b.is-on .nbai-qm-sw{background:var(--ai-tx)}
+.nbai-ov .nbai-qm-b.is-on .nbai-qm-sw i{inset-inline-start:19px}
+.nbai-ov .nbai-qm-b:focus-visible{outline:2px solid var(--ai-ring);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbai-qm-b,.nbai-ov .nbai-qm-ic,.nbai-ov .nbai-qm-sw,.nbai-ov .nbai-qm-sw i{transition:none}}
 </style>
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
@@ -28972,6 +28990,8 @@ function buildScreen(){
         '<button type="button" class="nbai-chip" data-q="ليه أوراق النبات بتصفرّ؟">' + ci('<path d="M5 19C5 10.5 11 4 20 4c0 8.5-6 15-15 15z"/><path d="M5 19 13 11"/>') + 'ليه أوراق النبات بتصفرّ؟</button>' +
         '<button type="button" class="nbai-chip" data-q="إزاي أكافح الحشرات بأمان؟">' + ci('<rect x="8" y="8" width="8" height="11" rx="4"/><path d="M12 8V5M9.5 5.5 12 4l2.5 1.5M4 12l4 1M20 12l-4 1M4 18l4-2M20 18l-4-2"/>') + 'إزاي أكافح الحشرات بأمان؟</button>' +
       '</div>' +
+      /* STUDY-QMODE: خيار «وضع الأسئلة الفائق» (ظاهر في «ذاكر» بس) — للتراجع: امسح العنصر ده + بلوك STUDY-QMODE في css و js */
+      '<div class="nbai-qm" hidden><button type="button" class="nbai-qm-b" role="switch" aria-checked="false"><span class="nbai-qm-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span class="nbai-qm-tx"><b>وضع الأسئلة الفائق</b><small class="nbai-qm-s"></small></span><span class="nbai-qm-sw" aria-hidden="true"><i></i></span></button></div>' +
       '<div class="nbai-st-th" hidden></div>' +   /* ذاكر مع نبتكس: شريط الصور المختارة (حتى 4) */
       '<div class="nbai-cm"><input type="file" accept="image/*" multiple class="nbai-st-file" hidden>' +
       '<textarea class="nbai-q nbai-qi" rows="1" maxlength="300" placeholder="اكتب سؤالك هنا…" aria-label="سؤال للمساعد الذكي" enterkeyhint="send"></textarea>' +
@@ -29306,6 +29326,18 @@ function buildScreen(){
   var STUDY = { sessions: [] }, stImgs = [], stLoad = 0, stView = 'ask', stSolo = null, stStash = { ask: null, study: null };
   var stAdd = card.querySelector('.nbai-st-add'), stFile = card.querySelector('.nbai-st-file'), stStrip = card.querySelector('.nbai-st-th'), stCm = card.querySelector('.nbai-cm'), stQi = card.querySelector('.nbai-qi');
   var ST_PH = stQi.getAttribute('placeholder') || '';
+  /* STUDY-QMODE: «وضع الأسئلة الفائق» — خيار منفصل عن الشرح داخل «ذاكر»: لما يكون شغّال الطلب بيتبعت mode:'study' + qmode:true فيتحل كل سؤال في الصور لوحده (الإجابة الصحيحة + سبب كل اختيار) من غير شرح محاضرة ولا ملخص ولا امتحان تلقائي. وهو مقفول افتراضيًا فالشرح العادي زي ما هو. الاختيار بيتحفظ على الجهاز (nbai:qm).
+     للتراجع: امسح الكتلة دي + عنصر .nbai-qm من القالب + سطور STUDY-QMODE في paintStudy / stBusy / runStudy + css. */
+  var qm = lsGet('nbai:qm') === 1, qmEl = card.querySelector('.nbai-qm'), qmB = card.querySelector('.nbai-qm-b'), qmS = card.querySelector('.nbai-qm-s');
+  function paintQm(){
+    if(!qmEl || !qmB) return;
+    var on = src === 'study';
+    qmEl.hidden = !on;
+    qmB.classList.toggle('is-on', qm); qmB.setAttribute('aria-checked', qm ? 'true' : 'false'); qmB.disabled = !!busy;
+    if(qmS) qmS.textContent = qm ? 'شغّال — هحل كل سؤال بالإجابة الصحيحة وسبب كل اختيار.' : 'لو صورك أسئلة شغّله وهحلها من غير شرح للمحاضرة.';
+    if(on && qm) stQi.setAttribute('placeholder', 'أضف اسم المادة (اختياري)');
+  }
+  if(qmB) qmB.addEventListener('click', function(){ if(busy) return; qm = !qm; lsSet('nbai:qm', qm ? 1 : 0); paintStudy(); });
   var IC_X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
   var LTR4 = ['أ', 'ب', 'ج', 'د'];
@@ -29356,6 +29388,7 @@ function buildScreen(){
     stAdd.hidden = !on;
     stQi.setAttribute('placeholder', on ? 'أضف ملاحظة أو اسم المادة' : ST_PH);   /* STUDY-BAR-POLISH: نص أقصر وسطر واحد — القديم (للتراجع): 'اكتب ملاحظة أو اسم المادة (اختياري)…' */
     paintStrip();
+    try{ paintQm(); }catch(e){}   /* STUDY-QMODE */
   }
   /* تبديل محتوى الشات بين مجموعة الاستشارة (مزرعتي / أي حاجة) ومجموعة «ذاكر» */
   function swapView(){
@@ -29373,7 +29406,7 @@ function buildScreen(){
     stView = want;
     toEnd('ask');
   }
-  function stBusy(on){ busy = on; card.querySelector('.nbai-go-ask').disabled = on; paintStrip(); }
+  function stBusy(on){ busy = on; card.querySelector('.nbai-go-ask').disabled = on; paintStrip(); try{ paintQm(); }catch(e){} /* STUDY-QMODE */ }
   function stScrollTo(el){ var sc = TH.ask; if(el && sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
   function stPlaceEnd(){   /* زر «كروت المراجعة» في آخر المحادثة (بيختفي لما الكروت تتولّد) — زر تحميل PDF اتشال */
     var o = TH.ask.querySelector('.nbst-end'); if(o && o.parentNode) o.parentNode.removeChild(o);
@@ -29705,22 +29738,23 @@ function buildScreen(){
     if(stLoad){ show('استنى لحظة لحد ما الصور تتجهّز.', true); return; }
     if(!stImgs.length){ show('أضف صورة واحدة على الأقل من أيقونة الصور عشان نبدأ.', true); return; }
     try{ dcPre(); }catch(e){}   /* STUDY-DOC: لو الصور من دفعة ملف PDF بنكتب ملاحظة بالصفحات (لو الطالب ماكتبش حاجة). للتراجع: امسح السطر ده */
+    var qmOn = !!qm;   /* STUDY-QMODE: لقطة من الاختيار وقت الإرسال */
     var note = stQi.value.trim().slice(0, 300), imgs = stImgs.map(function(x){ return x.d; });
     var list = imgs.map(function(d, i){ return { slot: i, mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; });
     show('', false);
     var shots = '<div class="nbai-shots">' + imgs.map(function(d, i){ return '<figure class="nbai-shot"><img src="' + d + '" alt="صورة ' + (i + 1) + '"><figcaption>صورة ' + (i + 1) + '</figcaption></figure>'; }).join('') + '</div>';
     stBegin();   /* STUDY-SAVE: الجلسة الجديدة تتعرض لوحدها والقديمة تفضل في «الجلسات الأخيرة» */
     var oldEnd = TH.ask.querySelector('.nbst-end'); if(oldEnd && oldEnd.parentNode) oldEnd.parentNode.removeChild(oldEnd);
-    TH.ask.appendChild(mkMsg('user', shots + (note ? esc(note) : 'اشرحلي الصور دي'), false));
+    TH.ask.appendChild(mkMsg('user', shots + (note ? esc(note) : (qmOn ? 'حلّ الأسئلة دي' : 'اشرحلي الصور دي')), false));   /* STUDY-QMODE */
     stImgs = []; stQi.value = ''; fit();
     var ty = typing('study');
     stBusy(true); paintFoot();
-    call('study', { images: list, note: note }, imgs.length + '|' + note, function(r){
+    call('study', qmOn ? { images: list, note: note, qmode: true } : { images: list, note: note }, imgs.length + '|' + note + (qmOn ? '|qm' : ''), function(r){   /* STUDY-QMODE: وضع الأسئلة الفائق = qmode:true (من غيره الطلب والمفتاح زي ما كانوا بالظبط) */
       var st = r.ok && r.j.study && r.j.study.parts && r.j.study.parts.length ? r.j.study : null;
       if(!st){
         stBusy(false);
         if(!card.isConnected) return;
-        ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(aiErr(r.err));
+        ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(qmOn && r.err === 'unreadable' ? 'مش لاقي أسئلة واضحة في الصور دي. ارفع صور فيها أسئلة للحل، أو اقفل «وضع الأسئلة الفائق» لو عايز شرح محتوى.' : aiErr(r.err));   /* STUDY-QMODE: رسالة مناسبة لوضع الأسئلة */
         stImgs = imgs.map(function(d){ return { d: d, qc: null }; }); if(!stQi.value){ stQi.value = note; fit(); }   /* فشل → الصور والملاحظة ترجع عشان تتبعت تاني */
         paintStrip(); stPlaceEnd(); paintFoot(); return;
       }
@@ -29740,7 +29774,11 @@ function buildScreen(){
           }
           stFollow(sm);
         }
-        setTimeout(function(){ if(card.isConnected) stLoadQuiz(S); }, wait);
+        setTimeout(function(){
+          if(!card.isConnected) return;
+          if(qmOn){ stBusy(false); stPlaceEnd(); paintFoot(); return; }   /* STUDY-QMODE: وضع الأسئلة من غير امتحان تلقائي (الامتحان خاص بوضع الشرح) — نفس ختام stLoadQuiz */
+          stLoadQuiz(S);
+        }, wait);
       });
     });
   }
