@@ -65,7 +65,7 @@ const GROQ_KEY = GROQ_KEYS.length ? GROQ_KEYS[0].key : '';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';   /* deepseek-r1-distill-llama-70b اتقفل عند Groq في 2025-10-02؛ البديل الرسمي gpt-oss-120b */
 const GROQ_EFFORT = /^(low|medium|high)$/.test(process.env.GROQ_EFFORT || '') ? process.env.GROQ_EFFORT : 'medium';
-const GROQ_MAX_PROBLEMS = Math.min(4, Math.max(1, parseInt(process.env.GROQ_MAX_PROBLEMS, 10) || 3));   /* كان 1 (الباقة المجانية: 8000 توكن/دقيقة للمفتاح): دلوقتي 3 لأن المفاتيح بتتوزّع دائريًا؛ لو 429 بتتكرر قلّله بمتغير GROQ_MAX_PROBLEMS. أي مسألة مش هتلحق بتفضل بشرح جيميناي */
+const GROQ_MAX_PROBLEMS = Math.min(12, Math.max(1, parseInt(process.env.GROQ_MAX_PROBLEMS, 10) || 3));   /* كان 1 (الباقة المجانية: 8000 توكن/دقيقة للمفتاح): دلوقتي 3 لأن المفاتيح بتتوزّع دائريًا؛ لو 429 بتتكرر قلّله بمتغير GROQ_MAX_PROBLEMS. أي مسألة مش هتلحق بتفضل بشرح جيميناي */
 const GROQ_MAX_OUT = 5000;          /* max_completion_tokens (التفكير + الحل) — مع المدخلات تفضل تحت حد الدقيقة المجاني */
 const GROQ_SOLVE_CAP_MS = 30000;    /* أقصى وقت لمرحلة الحل */
 const GROQ_MIN_BUDGET_MS = 6000;    /* لو الباقي أقل من كده نسيب شرح جيميناي زي ما هو */
@@ -693,7 +693,8 @@ function cleanSolve(t) {
 async function solveStudyProblems(st, t0) {
   try {
     if (!GROQ_KEY || !st || !Array.isArray(st.parts)) return;
-    const targets = st.parts.filter(function (p) { return p && p._pb && p._pb.length >= 15; }).slice(0, GROQ_MAX_PROBLEMS);
+    /* GROQ-ALLQ: كل المسائل المعلّمة (_pb) + أي جزء «سؤال» (kind:'q': اختيار من متعدد / صح وغلط / نظري / عام) بترتيبهم في الورقة؛ نص السؤال للحلّال = _pb أو السؤال + الاختيارات. للتراجع: ارجع الشرط لـ p && p._pb && p._pb.length >= 15 وامسح qText/isPb تحت */
+    const targets = st.parts.filter(function (p) { return p && ((p._pb && p._pb.length >= 15) || (p.kind === 'q' && typeof p.q === 'string' && p.q.length >= 8)); }).slice(0, GROQ_MAX_PROBLEMS);
     if (!targets.length) return;
     const gStart = await groqNextStart(GROQ_KEYS.length);   /* GROQ-MULTIKEY */
     if (!groqOrder(gStart).length) return;   /* كل المفاتيح في تبريد */
@@ -703,9 +704,18 @@ async function solveStudyProblems(st, t0) {
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
     try {
-      await Promise.all(targets.map(async function (p, ti) {
+      /* GROQ-LANES: كل مفتاح "حارة": الحارة l بتحل المسائل l, l+W, l+2W... واحدة ورا التانية، والحارات بالتوازي (W = عدد المفاتيح الجاهزة).
+         يعني مسائل 1-4 على المفاتيح 1-4 مرة واحدة، وبعدها 5-8 على نفس المفاتيح، وبعدها 9-10 على المفتاح 1 و2 — من غير ما مفتاح ياخد أكتر من مسألة في نفس اللحظة (حد التوكن/دقيقة المجاني). للتراجع: ارجع السطرين دول لـ targets.map(async function (p, ti) { */
+      const W = Math.max(1, groqOrder(gStart).length), laneTail = [];
+      await Promise.all(targets.map(function (p, ti) {
+        const lane = ti % W;
+        const run = (laneTail[lane] || Promise.resolve()).then(async function () {
+        if (ctl.signal.aborted) return;   /* المهلة خلصت: اللي لسه ما بدأش يفضل على شرح جيميناي */
         try {
           const ts = Date.now();
+          const isPb = !!(p._pb && p._pb.length >= 15);   /* GROQ-ALLQ */
+          let qText = p._pb;
+          if (!isPb) { const op = Array.isArray(p.opts) ? p.opts : []; qText = p.q + (op.length ? '\nالاختيارات:\n' + op.map(function (o, i) { return (i + 1) + ') ' + o; }).join('\n') : ''); }
           const keys = groqOrder(gStart + ti);   /* GROQ-MULTIKEY: كل مسألة تبدأ من مفتاح مختلف، ولو المفتاح فشل (429/413/401/5xx) بتجرّب اللي بعده */
           for (let ki = 0; ki < keys.length; ki++) {
             const gk = keys[ki];
@@ -716,7 +726,7 @@ async function solveStudyProblems(st, t0) {
                 model: GROQ_MODEL, temperature: 0.3, max_completion_tokens: GROQ_MAX_OUT, reasoning_effort: effort, include_reasoning: false,
                 messages: [
                   { role: 'system', content: SYSTEMS.solve },
-                  { role: 'user', content: 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' }
+                  { role: 'user', content: isPb ? 'عنوان الجزء: ' + p.title + '\n\nنص المسألة:\n' + p._pb + '\n\nحل المسألة دي بالكامل بالترتيب المطلوب.' : 'عنوان الجزء: ' + p.title + '\n\nالسؤال:\n' + qText + '\n\nده سؤال (اختيار من متعدد أو صح/خطأ أو نظري أو عام أو حسابي) مش لازم يكون مسألة طويلة: أجب عنه بدقة. اكتب الإجابة الصحيحة بوضوح في سطر مستقل بالخط العريض (**هكذا**) ثم برّرها باختصار وبالقانون أو المعلومة اللي اعتمدت عليها، ولو حسابي حله بالخطوات. لو اختيار من متعدد اذكر رقم الاختيار ونصه، ولو في الاختيارات أكتر من إجابة صحيحة اذكرها كلها.' }
                 ]
               })
             });
@@ -740,10 +750,14 @@ async function solveStudyProblems(st, t0) {
             const ch = j && j.choices && j.choices[0];
             if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] groq finish:', ch && ch.finish_reason); return; }   /* رد مقطوع = مش حل كامل */
             const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
-            if (out.length >= 60) { p.explain = out; delete p.ans; delete p.ai; console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + gk.name + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل (ومعاه اسم المفتاح groq1..groq4 مش قيمته) */
+            if (out.length >= 60) { p.explain = out; if (isPb) { delete p.ans; delete p.ai; }   /* GROQ-ALLQ: الأسئلة العادية بتفضل بإجابتها المعلّمة من جيميناي، والمراجعة بتقارن */
+                console.log('[farm-ai] groq solved: ' + GROQ_MODEL + ' ' + gk.name + ' ' + (Date.now() - ts) + 'ms'); }   /* أقصر من كده = رد مش سليم → نسيب شرح جيميناي. السطر ده بيظهر في Vercel Logs لما Groq هو اللي حل (ومعاه اسم المفتاح groq1..groq4 مش قيمته) */
             return;
           }
         } catch (e) { console.error('[farm-ai] groq solve failed:', e && e.name); }
+        });
+        laneTail[lane] = run;
+        return run;
       }));
     } finally { clearTimeout(timer); }
   } catch (e) { console.error('[farm-ai] solver stage error:', e && e.name); }
@@ -789,7 +803,7 @@ if (OR_KEY) OR_BACKENDS.push({ name: 'or1', key: OR_KEY });
 if (RELAY_SECRET) OR_RELAY_URLS.forEach(function (u, i) { OR_BACKENDS.push({ name: 'orrelay' + (i + 1), url: u }); });
 const OR_MODELS = String(process.env.OPENROUTER_MODEL || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9._:\/-]{3,100}$/.test(x); }).slice(0, 3);
 const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OR_MAX_PROBLEMS = Math.min(4, Math.max(1, parseInt(process.env.OPENROUTER_MAX_PROBLEMS, 10) || 4));   /* AUDIT-THEORY: كان 2؛ دلوقتي المسائل + الأسئلة النظرية معًا (الأولوية للحسابية). لو الحد اليومي المجاني في OpenRouter بيخلص بسرعة قلّله بمتغير OPENROUTER_MAX_PROBLEMS */
+const OR_MAX_PROBLEMS = Math.min(12, Math.max(1, parseInt(process.env.OPENROUTER_MAX_PROBLEMS, 10) || 4));   /* AUDIT-THEORY: كان 2؛ دلوقتي المسائل + الأسئلة النظرية معًا (الأولوية للحسابية). لو الحد اليومي المجاني في OpenRouter بيخلص بسرعة قلّله بمتغير OPENROUTER_MAX_PROBLEMS */
 const OR_MAX_OUT = 6000;           /* max_tokens (التفكير + الرد) */
 const OR_CAP_MS = 25000;           /* أقصى وقت لمرحلة المراجعة */
 const OR_MIN_BUDGET_MS = 8000;     /* لو الباقي أقل من كده نسيب الحل من غير مراجعة */
