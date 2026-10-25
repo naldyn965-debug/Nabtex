@@ -28715,6 +28715,77 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-qm-b:focus-visible{outline:2px solid var(--ai-ring);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbai-qm-b,.nbai-ov .nbai-qm-ic,.nbai-ov .nbai-qm-sw,.nbai-ov .nbai-qm-sw i{transition:none}}
 </style>
+<style id="nb-ai-qmode-visual">
+/* STUDY-QMODE-VISUAL: فصل بصري كامل بين «وضع الشرح» و«وضع الأسئلة الفائق» داخل «ذاكر مع نبتيكس» فقط — بصري بحت (مفيش تغيير في الـ IDs أو الـ handlers أو منطق الحصص/الطلبات).
+   • الفكرة: كلاس .nbai-qmode بيتحط على .nbai-ov (الواجهة بتاعة Nabtex AI بس) لما src='study' و«وضع الأسئلة الفائق» شغّال. كل ألوان الواجهة أصلًا شغّالة بمتغيرات --ai-* فتتبدّل لباليت «إلكتريك» (نيلي ← أزرق ← تركواز) بدل البنفسجي.
+   • الانتقال: المتغيرات متسجّلة بـ @property فبتتحرّك بنعومة (حتى التدرّج نفسه)، ومعاها موجة لون بتتوسّع من مكان اللمس، وأيقونة البطل بتتبدّل بحركة سبرينج، وهالة «أورورا» هادية ورا المحتوى، وحدود شريط الكتابة بتدّرج متحرك.
+   • المتصفحات اللي مش بتدعم @property (iOS < 16.4) بتبدّل اللون فورًا وفوقه الموجة — الوظيفة واحدة.
+   • متوقّف بالكامل مع prefers-reduced-motion.
+   للتراجع: امسح الـ style ده + كتلة STUDY-QMODE-VISUAL في الـ JS (qvSync وما بعدها) + سطر qvSync في paintQm. */
+@property --aq1{syntax:'<color>';inherits:true;initial-value:#6d28d9}
+@property --aq2{syntax:'<color>';inherits:true;initial-value:#7e35e0}
+@property --aq3{syntax:'<color>';inherits:true;initial-value:#8b3fe6}
+@property --ai-tx{syntax:'<color>';inherits:true;initial-value:#6d28d9}
+@property --ai-soft{syntax:'<color>';inherits:true;initial-value:rgba(124,58,237,.08)}
+@property --ai-soft2{syntax:'<color>';inherits:true;initial-value:rgba(124,58,237,.14)}
+@property --ai-ring{syntax:'<color>';inherits:true;initial-value:rgba(124,58,237,.28)}
+@property --ai-glow{syntax:'<color>';inherits:true;initial-value:rgba(109,40,217,.5)}
+/* نفس التدرّج البنفسجي الأصلي بالظبط (الوسط = متوسط اللونين) لكن مبني على 3 ألوان قابلة للحركة */
+.nbai-ov{
+  --aq1:#6d28d9;--aq2:#7e35e0;--aq3:#8b3fe6;
+  --ai-g:linear-gradient(135deg,var(--aq1) 0%,var(--aq2) 55%,var(--aq3) 100%);
+  transition:--aq1 820ms var(--ai-ease),--aq2 820ms var(--ai-ease),--aq3 820ms var(--ai-ease),--ai-tx 820ms var(--ai-ease),--ai-soft 820ms var(--ai-ease),--ai-soft2 820ms var(--ai-ease),--ai-ring 820ms var(--ai-ease),--ai-glow 820ms var(--ai-ease)
+}
+/* ═════ باليت «الأسئلة الفائق»: نيلي ← أزرق ملكي ← تركواز ═════ */
+.nbai-ov.nbai-qmode{--aq1:#4338ca;--aq2:#2563eb;--aq3:#0891b2;--ai-tx:#4338ca;--ai-soft:rgba(67,56,202,.08);--ai-soft2:rgba(37,99,235,.14);--ai-ring:rgba(67,97,238,.3);--ai-glow:rgba(37,99,235,.55)}
+[data-dark] .nbai-ov.nbai-qmode{--ai-tx:#a5b4fc;--ai-soft:rgba(99,102,241,.16);--ai-soft2:rgba(59,130,246,.24);--ai-ring:rgba(96,140,255,.42);--ai-glow:rgba(56,130,246,.55)}
+/* هالة «أورورا» هادية ورا المحتوى (تحت) — بتظهر بس في الوضع الفائق */
+.nbai-ov .nbai-ov-in::after{content:'';position:absolute;z-index:-1;left:-30px;right:-30px;bottom:0;height:58%;pointer-events:none;background:radial-gradient(64% 72% at 10% 100%,rgba(8,145,178,.2),transparent 70%),radial-gradient(60% 66% at 96% 96%,rgba(67,56,202,.17),transparent 72%);opacity:0;transform:translateY(26px) scale(1.04);transition:opacity 900ms var(--ai-ease),transform 900ms var(--ai-ease)}
+[data-dark] .nbai-ov .nbai-ov-in::after{background:radial-gradient(64% 72% at 10% 100%,rgba(6,182,212,.26),transparent 70%),radial-gradient(60% 66% at 96% 96%,rgba(99,102,241,.3),transparent 72%)}
+.nbai-ov.nbai-qmode .nbai-ov-in::after{opacity:1;transform:none;animation:nbqv-aurora 9s ease-in-out 900ms infinite alternate}
+/* هيدر: شارة صاعقة صغيرة على أيقونة Nabtex AI */
+.nbai-ov .nbai-bar-ic{position:relative}
+.nbai-ov .nbai-bar-ic::after{content:'';position:absolute;top:-5px;inset-inline-start:-5px;width:16px;height:16px;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' stroke='white' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z'/%3E%3C/svg%3E") center/9px 9px no-repeat,linear-gradient(135deg,#22d3ee,#2563eb);box-shadow:0 0 0 2px var(--bg),0 4px 10px -3px rgba(37,99,235,.7);opacity:0;transform:scale(.3) rotate(-40deg);transition:opacity 300ms,transform 620ms var(--ai-spring);pointer-events:none}
+.nbai-ov.nbai-qmode .nbai-bar-ic::after{opacity:1;transform:none}
+/* أيقونة البطل في شاشة الترحيب: الورقة ← صاعقة (تتبدّل بتلاشي + سبرينج) مع نبضة هالة */
+.nbai-ov .nbai-th>.nbai-greet:only-child{position:relative}
+.nbai-ov .nbai-th>.nbai-greet:only-child::after{content:"";display:block;position:absolute;top:6px;left:50%;width:52px;height:52px;margin-left:-26px;border-radius:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='white' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='white' stroke='none'/%3E%3C/svg%3E") center/30px 30px no-repeat,var(--ai-g);box-shadow:inset 0 1px 0 rgba(255,255,255,.3);opacity:0;transform:scale(.6) rotate(-24deg);transition:opacity 420ms var(--ai-ease),transform 680ms var(--ai-spring);pointer-events:none}
+.nbai-ov.nbai-qmode .nbai-th>.nbai-greet:only-child::after{opacity:1;transform:none;animation:nbqv-halo 2.9s ease-out 800ms infinite}
+@media (max-height:600px){.nbai-ov .nbai-th>.nbai-greet:only-child::after{display:none}}
+/* نص الترحيب: دخول ناعم لما يتبدّل بين الوضعين */
+.nbai-ov .nbai-greet [data-qv],.nbai-ov .nbai-greet.nbai-qv-r :is(.nbai-gt,.nbai-gs){animation:nbqv-gin 640ms var(--ai-ease) backwards}
+.nbai-ov .nbai-greet [data-qv].nbai-gs{animation-delay:70ms}
+/* كارت «وضع الأسئلة الفائق»: لمعة بتعدّي + هالة + أيقونة بتنبض */
+.nbai-ov .nbai-qm-b{position:relative;overflow:hidden;isolation:isolate}
+.nbai-ov .nbai-qm-b::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 32%,var(--ai-soft2) 50%,transparent 68%);background-size:260% 100%;background-position:130% 0;opacity:0;transition:opacity 500ms var(--ai-ease)}
+.nbai-ov .nbai-qm-b.is-on::before{opacity:1;animation:nbqv-sheen 4.6s ease-in-out infinite}
+.nbai-ov .nbai-qm-b.is-on{box-shadow:0 0 0 1px var(--ai-ring),0 14px 30px -16px var(--ai-glow)}
+.nbai-ov .nbai-qm-b.is-on .nbai-qm-ic{animation:nbqv-halo 2.9s ease-out infinite}
+.nbai-ov .nbai-qm-b.is-on .nbai-qm-sw{box-shadow:0 0 14px -2px var(--ai-glow)}
+.nbai-ov.nbai-qfx .nbai-qm-b .nbai-qm-ic{animation:nbqv-pop 760ms var(--ai-spring)}
+/* شريط الكتابة: حد متدرّج بيتحرك ببطء + توهّج */
+.nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-cm{border-color:transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(115deg,var(--aq1),var(--aq2),var(--aq3),var(--aq2),var(--aq1)) border-box;background-origin:border-box;background-clip:padding-box,border-box;background-size:100% 100%,300% 100%;box-shadow:0 14px 30px -20px var(--ai-glow);animation:nbqv-flow 6.5s ease-in-out infinite alternate}
+.nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-cm:focus-within{box-shadow:0 0 0 4px var(--ai-soft),0 16px 32px -18px var(--ai-glow)}
+/* موجة اللون: بتتوسّع من مكان لمس الزرار وتتلاشى (بتتضاف بالـ JS وقت التبديل بس وبتتشال) */
+.nbai-ov .nbai-qwash{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+.nbai-ov .nbai-qwash::before{content:'';position:absolute;left:var(--wx,50%);top:var(--wy,60%);width:240vmax;height:240vmax;margin:-120vmax 0 0 -120vmax;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.36) 0%,rgba(8,145,178,.16) 30%,transparent 62%);transform:scale(0);opacity:0;animation:nbqv-wash 1050ms cubic-bezier(.22,1,.36,1) forwards}
+.nbai-ov .nbai-qwash.is-off::before{background:radial-gradient(circle,rgba(124,58,237,.32) 0%,rgba(139,63,230,.14) 30%,transparent 62%)}
+[data-dark] .nbai-ov .nbai-qwash::before{background:radial-gradient(circle,rgba(59,130,246,.42) 0%,rgba(6,182,212,.18) 30%,transparent 62%)}
+[data-dark] .nbai-ov .nbai-qwash.is-off::before{background:radial-gradient(circle,rgba(168,85,247,.4) 0%,rgba(147,51,234,.16) 30%,transparent 62%)}
+@keyframes nbqv-wash{0%{transform:scale(0);opacity:0}14%{opacity:1}100%{transform:scale(1);opacity:0}}
+@keyframes nbqv-halo{0%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 0 var(--ai-ring)}70%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 16px transparent}}
+@keyframes nbqv-pop{0%{transform:scale(.55) rotate(-28deg)}60%{transform:scale(1.14) rotate(6deg)}100%{transform:none}}
+@keyframes nbqv-flow{from{background-position:0 0,0% 0}to{background-position:0 0,100% 0}}
+@keyframes nbqv-sheen{0%{background-position:130% 0}60%,100%{background-position:-30% 0}}
+@keyframes nbqv-aurora{from{transform:translate3d(-10px,0,0) scale(1)}to{transform:translate3d(12px,-8px,0) scale(1.06)}}
+@keyframes nbqv-gin{from{opacity:0;transform:translateY(8px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){
+  .nbai-ov{transition:none}
+  .nbai-ov .nbai-ov-in::after,.nbai-ov .nbai-bar-ic::after,.nbai-ov .nbai-th>.nbai-greet:only-child::after,.nbai-ov .nbai-qm-b::before{transition:none;animation:none!important}
+  .nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-cm,.nbai-ov .nbai-qm-b .nbai-qm-ic,.nbai-ov .nbai-greet [data-qv],.nbai-ov .nbai-greet.nbai-qv-r :is(.nbai-gt,.nbai-gs){animation:none!important}
+  .nbai-ov .nbai-qwash{display:none}
+}
+</style>
 <script id="nb-farm-ai-js">
 /* ═══════════════════════════════════════════════════════════════
    مساعد المزرعة الذكي — Gemini عبر proxy الخادم /api/farm-ai (api/farm-ai.js) — المفتاح GEMINI_API_KEY سري على الخادم فقط
@@ -29336,8 +29407,47 @@ function buildScreen(){
     qmB.classList.toggle('is-on', qm); qmB.setAttribute('aria-checked', qm ? 'true' : 'false'); qmB.disabled = !!busy;
     if(qmS) qmS.textContent = qm ? 'شغّال — هحل كل سؤال بالإجابة الصحيحة وسبب كل اختيار.' : 'لو صورك أسئلة شغّله وهحلها من غير شرح للمحاضرة.';
     if(on && qm) stQi.setAttribute('placeholder', 'أضف اسم المادة (اختياري)');
+    try{ qvSync(); }catch(e){}   /* STUDY-QMODE-VISUAL */
   }
   if(qmB) qmB.addEventListener('click', function(){ if(busy) return; qm = !qm; lsSet('nbai:qm', qm ? 1 : 0); paintStudy(); });
+  /* STUDY-QMODE-VISUAL: الفصل البصري بين وضع الشرح ووضع الأسئلة الفائق (بصري بحت — بيقرا qm/src بس ومابيغيّرهم). بيحط .nbai-qmode على الواجهة، ويبدّل سطر الهيدر ونص الترحيب، وبيشغّل موجة اللون من مكان اللمس لما المستخدم هو اللي بدّل (مش عند الفتح). للتراجع: امسح الكتلة دي + سطر qvSync في paintQm + css اسمه nb-ai-qmode-visual. */
+  var qvAt = null, qvTm = 0, qvGt = 0;
+  function qvMark(e){ var t = e.target; if(t && t.closest && t.closest('.nbai-qm-b,.nbai-src-b,.nbai-back')) qvAt = { t: Date.now(), x: e.clientX, y: e.clientY }; }
+  card.addEventListener('pointerdown', qvMark, true);
+  card.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') qvMark(e); }, true);
+  function qvWash(on, pt){
+    try{ if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+    var x = pt && isFinite(pt.x) ? pt.x : window.innerWidth / 2, y = pt && isFinite(pt.y) ? pt.y : window.innerHeight * 0.72;
+    var w = document.createElement('div'); w.className = 'nbai-qwash' + (on ? '' : ' is-off'); w.setAttribute('aria-hidden', 'true');
+    w.style.setProperty('--wx', x + 'px'); w.style.setProperty('--wy', y + 'px');
+    card.appendChild(w); setTimeout(function(){ if(w.parentNode) w.parentNode.removeChild(w); }, 1150);
+  }
+  function qvSync(){
+    var on = src === 'study' && qm, was = card.classList.contains('nbai-qmode');
+    if(on !== was){
+      var fresh = qvAt && (Date.now() - qvAt.t) < 1500 && card.isConnected, pt = qvAt; qvAt = null;
+      card.classList.toggle('nbai-qmode', on);
+      if(fresh){
+        card.classList.add('nbai-qfx'); clearTimeout(qvTm); qvTm = setTimeout(function(){ card.classList.remove('nbai-qfx'); }, 1100);
+        qvWash(on, pt);
+      }
+    }
+    if(stSub && src === 'study'){   /* سطر الهيدر: بيتبدّل بين وضعين بنفس حركة المود الأصلية */
+      var tx = qm ? 'وضع الأسئلة الفائق' : 'وضع المذاكرة والتركيز';
+      if(stSub.textContent !== tx){ stSub.textContent = tx; stSub.classList.remove('nbf-sw'); void stSub.offsetWidth; stSub.classList.add('nbf-sw'); }
+    }
+    var g = TH.ask && TH.ask.firstChild;   /* نص الترحيب (وهو لوحده بس): بيطابق الوضع الشغّال */
+    if(g && g.classList && g.classList.contains('nbai-greet') && TH.ask.childNodes.length === 1){
+      var mk = !!g.querySelector('[data-qv]');
+      if(on && !mk){
+        g._qv0 = g.innerHTML;
+        g.innerHTML = '<span class="nbai-gt" data-qv="1">وضع الأسئلة الفائق</span><span class="nbai-gs" data-qv="1">ارفع صور الأسئلة (اختيار من متعدد أو مقالي) وأنا أحلّ كل سؤال لوحده: <b>الإجابة الصحيحة</b> وسبب كل اختيار، من غير شرح للمحاضرة ولا ملخص. <b>ولو عايز أدق إجابة:</b> ارفع سؤال واحد بس في كل مرة، وابعت اللي بعده بعد ما تاخد إجابته.</span>';
+      }else if(!on && mk && g._qv0 != null){
+        g.innerHTML = g._qv0; g.classList.add('nbai-qv-r'); clearTimeout(qvGt); qvGt = setTimeout(function(){ g.classList.remove('nbai-qv-r'); }, 720);
+      }
+    }
+  }
+  try{ new MutationObserver(function(){ try{ qvSync(); }catch(e){} }).observe(TH.ask, { childList: true }); }catch(e){}   /* لو الترحيب اتبنى من جديد (جلسة جديدة / تبديل) يفضل مطابق للوضع */
   var IC_X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var IC_DL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
   var LTR4 = ['أ', 'ب', 'ج', 'د'];
