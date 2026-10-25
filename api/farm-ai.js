@@ -1406,6 +1406,12 @@ module.exports = async function handler(req, res) {
     if (!stLim || studyImgN > (stLim.imgs || 4)) return fail(res, 403, 'img_limit');
   }
 
+  /* STUDY-QMODE-PLUS: «وضع الأسئلة الفائق» لباقتي Plus وPro بس (عائلتي plan/study): imgs ≥ 8 = Plus أو Pro — الواجهة بتمنعه أصلًا، وده الحكم النهائي. للتراجع: امسح البلوك ده. */
+  if (qmode) {
+    const qLim = (aiPts && aiPts.lim) || null;
+    if (!qLim || (qLim.imgs || 4) < 8) return fail(res, 403, 'plan_required');
+  }
+
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
   const uk = uid + '|' + mode;
   let u = usage.get(uk);
