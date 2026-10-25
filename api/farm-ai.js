@@ -131,8 +131,17 @@ function pickOrder(backends, start) {
 const studyCool = new Map();
 const STUDY_SKIP_URL = /netlify/i;       /* مهلة Functions عندهم 10-26ث: في لوج Vercel رجّع 502 بعد 31ث — مستحيل يكمّل رد «ذاكر» فبيتشال من الدور (لو هو الوحيد بيفضل) */
 const STUDY_SLOW_URL = /workers\.dev/i;  /* relay Cloudflare علّق 45ث كاملة في لوج Vercel (AbortError) → آخر الدور */
-const STUDY_FALLBACK_MODEL = /^[A-Za-z0-9._:\/-]{3,100}$/.test(process.env.GEMINI_STUDY_FALLBACK_MODEL || '') ? process.env.GEMINI_STUDY_FALLBACK_MODEL : '';   /* اختياري: موديل بديل للمحاولة التانية لما 503 (الموديل نفسه مزحوم عند جوجل — تبديل المفتاح ما بيفيدش) */
-let studyOvlUntil = 0, studyFbOffUntil = 0;   /* STUDY-OVERLOAD: أول 503 (موديل مزحوم) → باقي المحاولات في نفس الطلب + الطلبات اللي بعده 60ث بتروح للموديل البديل (GEMINI_STUDY_FALLBACK_MODEL) بدل ما نجرّب نفس الموديل المزحوم على backend تاني (كل 503 كان بياخد 3-17ث). 429 على البديل → نرجع للأساسي. 400/403/404 على البديل → نوقفه 10 دقايق. من غير المتغير مفيش أي تغيير. */
+const STUDY_FB_MODELS = (function () {   /* STUDY-CHAIN: بدائل «ذاكر» بالترتيب: GEMINI_STUDY_FALLBACK_MODEL (ممكن أكتر من موديل مفصولين بفاصلة) ثم gemini-3.1-flash-lite (أخف، حسب جدول موديلات جوجل متاح ومستقر لحد مايو 2027). كل موديل ليه زحمته المستقلة عند جوجل. */
+  const out = [], seen = {};
+  String(process.env.GEMINI_STUDY_FALLBACK_MODEL || '').split(',').concat(['gemini-3.1-flash-lite']).forEach(function (x) { x = x.trim(); if (/^[A-Za-z0-9._:\/-]{3,100}$/.test(x) && !seen[x]) { seen[x] = 1; out.push(x); } });
+  return out;
+})();
+const studyMBad = new Map();   /* موديل → وقت انتهاء التجنّب (503: 45ث · 404: 10 دقايق) · «backend|موديل» → 429 (حصة المفتاح): 60ث */
+function studyPickModel(bn) {   /* أول موديل في السلسلة مش متجنَّب؛ لو الكل متجنَّب نرجع للأساسي */
+  const now = Date.now(), chain = [STUDY_MODEL || MODEL].concat(STUDY_FB_MODELS);
+  for (let k = 0; k < chain.length; k++) if ((studyMBad.get(chain[k]) || 0) <= now && (studyMBad.get(bn + '|' + chain[k]) || 0) <= now) return chain[k];
+  return chain[0];
+}
 function studyReorder(order) {
   const now = Date.now(), good = [], bad = [];
   order.forEach(function (b) {
@@ -1345,8 +1354,7 @@ module.exports = async function handler(req, res) {
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, bi < order.length - 1 ? Math.min(attemptCap, remain) : remain);
     try {
-      const useFb = mode === 'study' && !!STUDY_FALLBACK_MODEL && Date.now() > studyFbOffUntil && (!!b.again || Date.now() < studyOvlUntil);   /* STUDY-OVERLOAD */
-      const mdl = mode === 'study' ? (useFb ? STUDY_FALLBACK_MODEL : STUDY_MODEL) : '';
+      const mdl = mode === 'study' ? studyPickModel(b.name) : '';   /* STUDY-CHAIN */
       let r = await callBackend(b, reqBody, ctl.signal, mdl);   /* STUDY-MODEL + STUDY-ORDER */
       if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
         console.error('[farm-ai] grounding rejected, retrying without it');
@@ -1359,15 +1367,14 @@ module.exports = async function handler(req, res) {
       if (!v) { if (mode === 'study') console.log('[farm-ai] study timing: gemini ' + b.name + ' ' + (Date.now() - (deadline - UPSTREAM_TIMEOUT_MS)) + 'ms'); break; }   /* نجاح */
       console.error('[farm-ai] backend ' + b.name + ' → http ' + r.status + (mode === 'study' ? ' [' + (mdl || MODEL) + ']' : ''));
       if (r.status === 429) rateLimited = true;
-      if (mode === 'study' && STUDY_FALLBACK_MODEL) {   /* STUDY-OVERLOAD */
-        if (r.status === 503 && !useFb) studyOvlUntil = Date.now() + 60000;
-        else if (useFb && r.status === 429) studyOvlUntil = 0;
-        else if (useFb && (r.status === 400 || r.status === 403 || r.status === 404)) studyFbOffUntil = Date.now() + 600000;
+      if (mode === 'study') {   /* STUDY-CHAIN */
+        if (r.status === 503) studyMBad.set(mdl, Date.now() + 45000);
+        else if (r.status === 429) studyMBad.set(b.name + '|' + mdl, Date.now() + 60000);
+        else if (r.status === 404) studyMBad.set(mdl, Date.now() + 600000);
       }
       if (v.cool && !(mode === 'study' && r.status === 503)) cooldown.set(b.name, Date.now() + v.cool);   /* STUDY-OVERLOAD: 503 عابر — مفيش تبريد 15ث عشان ما يتقلّصش الدور لـ backend واحد */
       if (mode === 'study' && (r.status === 502 || r.status === 504)) studyCool.set(b.name, Date.now() + 600000);   /* STUDY-ORDER: 503 = موديل مزحوم (عابر) فمش بنأخّر الـ backend بسببه */
-      if (mode === 'study' && r.status === 503 && !STUDY_FALLBACK_MODEL && bi < order.length - 1) await new Promise(function (rs) { setTimeout(rs, 1500); });   /* STUDY-ORDER: نفس خفيف قبل المحاولة اللي بعدها */
-      if (!v.next && !(useFb && (r.status === 400 || r.status === 403 || r.status === 404))) break;   /* STUDY-OVERLOAD: البديل مش متاح → كمّل بالأساسي */
+      if (!v.next && !(mode === 'study' && r.status === 404)) break;   /* STUDY-CHAIN: موديل مش متاح (404) → كمّل بالموديل اللي بعده */
     } catch (e) {
       lastErr = e; up = null;
       console.error('[farm-ai] backend ' + b.name + ' unreachable:', e && e.name);
