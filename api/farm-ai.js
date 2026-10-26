@@ -415,6 +415,40 @@ const STUDY_QS_SYS_BASE = [
 ].join('\n');
 const STUDY_QS_SYS = GROQ_KEY ? STUDY_QS_SYS_BASE.replace(INJECTION, SOLVER_FLAG + '\n' + INJECTION) : STUDY_QS_SYS_BASE;
 
+/* ═══ STUDY-QSEQ (إضافة): «وضع الأسئلة الفائق» سؤال بسؤال — الواجهة بتبعت طلب فهرسة واحد (qplan:true: جيميناي بيحدد الأسئلة وصورها من غير ما يحلها) وبعده طلب لكل سؤال لوحده (qone + الصور بتاعته بس)، وكل سؤال بيتحل ويتراجع بالكامل (جيميناي ← Groq ← مراجعة OpenRouter ← تحكيم لو اختلفوا) بميزانية وقت كاملة له.
+   التناوب: qRot = qs (إزاحة عشوائية للجلسة) + ترتيب السؤال ← مفتاح/backend جيميناي ومفتاح Groq وحساب OpenRouter بيتغيّروا بالتتابع من سؤال للتاني (التحكيم بياخد مفتاح Groq اللي بعده). النقطة: طلب الفهرسة بيفحص الرصيد بس، والنقاط 3 لكل 5 أسئلة محلولة (qk) والباقي من غير نقطة (زي الامتحان) وحدها اليومي QONE_DAILY.
+   من غير qplan/qone الطلب بيمشي زي ما كان بالظبط (طلب واحد لكل الصور). للتراجع: امسح الكتلة دي + كل سطر معلّم STUDY-QSEQ + متغيرات qStage/qRot/qPay + باراميتر rot في solveStudyProblems/auditStudyAnswers/arbitrateConflicts. ═══ */
+const QONE_DAILY = 80;
+const STUDY_QS_PLAN_SYS = [
+  'أنت «فهرس أسئلة نبتكس» (وضع الأسئلة الفائق — مرحلة الفهرسة): مهمتك الوحيدة تحديد كل سؤال فعلي ظاهر في صور ورق أسئلة أو امتحان سابق أو بنك أسئلة أو ملزمة أو كتاب لطالب مصري (عربي أو إنجليزي أو خليط، مطبوع أو بخط اليد) وترتيبهم، من غير ما تحل أي سؤال ومن غير أي شرح.',
+  'القراءة: هتستلم من 1 إلى 12 صورة (قبل كل صورة سطر برقمها) وأحيانًا ملاحظة من الطالب. اقرأ كل صورة بعناية من أولها لآخرها. ما تفوّتش أي سؤال ظاهر وما تدمجش سؤالين مستقلين في عنصر واحد. السؤال اللي ليه فروع (أ، ب، ج…) على معطيات واحدة بيتعد عنصر واحد. أي عنوان أو فقرة شرح في الصورة مش سؤال تجاهلها.',
+  'الصور: لكل سؤال اكتب في src أرقام الصور اللي السؤال ظاهر فيها كلها (ولو السؤال بيكمل في صورة تانية اكتب الصورتين)، ولو فيه نص أو معطيات أو شكل أو جدول مشترك بين كذا سؤال (قطعة قراءة، معطيات مسألة، رسم) اكتب كمان رقم الصورة اللي فيها المعلومة المشتركة.',
+  'العدد والترتيب: من 1 إلى 20 عنصر بترتيب ظهورهم. لو الأسئلة الظاهرة أكتر من 20 اكتب أول 20 بس واكتب في آخر title الجملة «(أول 20 سؤال)».',
+  'لكل عنصر: n = رقم السؤال كما هو مكتوب في الورقة (مثل «3» أو «5 أ») وإلا ترتيبه — title = موضوع السؤال في كلمات قليلة (حد أقصى 10 كلمات) — src = أرقام الصور — hint = أول حوالي 100 حرف من نص السؤال كما هو في الصورة بالظبط (من غير الاختيارات) عشان نحدده بدقة.',
+  'لو الصور مفيهاش أي سؤال ظاهر للحل (محتوى شرح بس) أو مش واضحة خالص ارجع {\"readable\":false} بس.',
+  'رجّع JSON فقط بالشكل: {\"readable\":true,\"title\":\"عنوان قصير لمجموعة الأسئلة (المادة أو الموضوع، حد أقصى 10 كلمات)\",\"items\":[{\"n\":\"1\",\"title\":\"...\",\"src\":[1],\"hint\":\"...\"}]}',
+  'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9).',
+  INJECTION
+].join('\n');
+const QONE_FLAG = 'سؤال واحد بس (إلزامي — وضع سؤال بسؤال): الطلب ده فيه سؤال واحد محدد فقط (رقمه وبداية نصه في رسالة المستخدم) والصور المرفقة هي صوره بس. اقرأه من الصورة نفسها بدقة متناهية وحلّه، وارجع في parts عنصر واحد بالظبط لهذا السؤال، وتجاهل أي سؤال تاني ظاهر في الصور (حد الـ 20 جزء فوق ما بيتطبقش هنا). اكتب في title رقم السؤال زي ما هو في الورقة. لو السؤال فيه نص أو معطيات أو شكل مشترك ظاهر في الصور استعمله في الحل. لو السؤال نفسه مش ظاهر أو مقطوع ارجع {\"readable\":false} بس.';
+const STUDY_QS_ONE_SYS = STUDY_QS_SYS.replace(INJECTION, QONE_FLAG + '\n' + INJECTION);
+function sanitizeQPlan(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (raw.readable === false) return { unreadable: true };
+  const cl = function (x, n) { return (typeof x === 'string' || typeof x === 'number') ? String(x).replace(/\s+/g, ' ').trim().slice(0, n) : ''; };
+  const plan = [];
+  (Array.isArray(raw.items) ? raw.items : []).slice(0, 20).forEach(function (it) {
+    if (!it || typeof it !== 'object') return;
+    const hint = cl(it.hint, 200), title = cl(it.title, 110);
+    if (!hint && !title) return;
+    const src = (Array.isArray(it.src) ? it.src : []).map(function (v) { return parseInt(v, 10); })
+      .filter(function (v, k, a) { return Number.isInteger(v) && v >= 1 && v <= MAX_STUDY_IMAGES && a.indexOf(v) === k; }).slice(0, MAX_STUDY_IMAGES);
+    plan.push({ n: cl(it.n, 20), title: title, src: src, hint: hint });
+  });
+  if (!plan.length) return null;
+  return { title: cl(raw.title, 90), plan: plan, parts: [], summary: [] };
+}
+
 /* STUDY-QMODE-MARK: تعليم الإجابة الصحيحة دايمًا في «وضع الأسئلة الفائق» (qmode بس — الشرح العادي ما بيعدّيش هنا خالص).
    المشكلة: ANS-SYNC في solveStudyProblems بيمسح الإجابة المعلّمة (ai/ans) لو الجزء اتعلّم كمسألة (problem) أو لو الخط العريض في حل Groq ما طابقش نص الاختيار حرفيًا — فالاختيارات كانت بتظهر من غير علامة «صحيحة».
    الحل (بعد مرحلة الحل والمراجعة): لو الجزء سؤال باختيارات وفقد علامته → نحدد الاختيار من الخط العريض في الشرح النهائي (نص الاختيار أو رقمه/حرفه)، ولو ما اتحددش وما كانش المحكّم صحّح الحل نرجّع علامة جيميناي الأصلية. أي فشل = السلوك القديم.
@@ -801,13 +835,13 @@ function cleanSolve(t) {
 }
 
 /* SOLVER: بيحل الأجزاء اللي جيميناي علّمها كمسائل (حتى GROQ_MAX_PROBLEMS) من نصها بس ويستبدل explain بالحل. ما بيرميش أي خطأ: أي فشل/تأخير/حصة خالصة = شرح جيميناي يفضل زي ما هو. */
-async function solveStudyProblems(st, t0, qm) {   /* STUDY-QMODE-MARK: qm = وضع الأسئلة الفائق (الاختيارات بتتبعت للحلّال عشان يحدد رقم الاختيار الصحيح) */
+async function solveStudyProblems(st, t0, qm, rot) {   /* STUDY-QSEQ: rot >= 0 = مفتاح Groq بالتناوب المحدد بدل العدّاد العام */   /* STUDY-QMODE-MARK: qm = وضع الأسئلة الفائق (الاختيارات بتتبعت للحلّال عشان يحدد رقم الاختيار الصحيح) */
   try {
     if (!GROQ_KEY || !st || !Array.isArray(st.parts)) return;
     /* GROQ-ALLQ: كل المسائل المعلّمة (_pb) + أي جزء «سؤال» (kind:'q': اختيار من متعدد / صح وغلط / نظري / عام) بترتيبهم في الورقة؛ نص السؤال للحلّال = _pb أو السؤال + الاختيارات. للتراجع: ارجع الشرط لـ p && p._pb && p._pb.length >= 15 وامسح qText/isPb تحت */
     const targets = st.parts.filter(function (p) { return p && ((p._pb && p._pb.length >= 15) || (p.kind === 'q' && typeof p.q === 'string' && p.q.length >= 8)); }).slice(0, GROQ_MAX_PROBLEMS);
     if (!targets.length) return;
-    const gStart = await groqNextStart(GROQ_KEYS.length);   /* GROQ-MULTIKEY */
+    const gStart = rot >= 0 ? rot % GROQ_KEYS.length : await groqNextStart(GROQ_KEYS.length);   /* GROQ-MULTIKEY. STUDY-QSEQ */
     if (!groqOrder(gStart).length) return;   /* كل المفاتيح في تبريد */
     const budget = Math.min(GROQ_SOLVE_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < GROQ_MIN_BUDGET_MS) return;
@@ -994,7 +1028,7 @@ function auditInput(p) {
   const ans = picked || p.ans || '';
   return { prob: prob, sol: (ans ? 'الإجابة المقترحة: ' + ans + '\n\n' : '') + p.explain.slice(0, 4500) };
 }
-async function auditStudyAnswers(st, t0) {
+async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حساب OpenRouter بالتناوب المحدد */
   try {
     if (!OR_BACKENDS.length || !OR_MODELS.length || !st || !Array.isArray(st.parts)) return;
     /* AUDIT-THEORY: الحسابية المعلّمة الأول، وبعدها أجزاء الأسئلة النظرية (kind:'q' من غير problem) — الإجمالي حتى OR_MAX_PROBLEMS */
@@ -1002,7 +1036,7 @@ async function auditStudyAnswers(st, t0) {
     const thrT = st.parts.filter(function (p) { return p && !p._pb && p.kind === 'q' && p.q && p.explain; });
     const targets = cmpT.concat(thrT).slice(0, OR_MAX_PROBLEMS);
     if (!targets.length) return;
-    const oStart = await orNextStart(OR_BACKENDS.length);   /* OR-MULTIKEY */
+    const oStart = rot >= 0 ? rot % OR_BACKENDS.length : await orNextStart(OR_BACKENDS.length);   /* OR-MULTIKEY. STUDY-QSEQ */
     if (!orOrder(oStart).length) return;   /* كل الـ backends في تبريد */
     const budget = Math.min(OR_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < OR_MIN_BUDGET_MS) return;
@@ -1062,7 +1096,7 @@ async function auditStudyAnswers(st, t0) {
         } catch (e) { console.error('[farm-ai] audit failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
-    if (pend.length) await arbitrateConflicts(pend, t0);   /* ARBITER */
+    if (pend.length) await arbitrateConflicts(pend, t0, rot >= 0 ? rot + 1 : -1);   /* ARBITER */
   } catch (e) { console.error('[farm-ai] audit stage error:', e && e.name); }
 }
 
@@ -1072,13 +1106,13 @@ async function auditStudyAnswers(st, t0) {
 const ARB_MAX = 4;
 const ARB_CAP_MS = 25000;
 const ARB_MIN_BUDGET_MS = 10000;
-async function arbitrateConflicts(pend, t0) {
+async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفتاح Groq التالي لمفتاح الحل (محكّم مختلف) */
   const todo = pend.slice(0, ARB_MAX);
   pend.slice(ARB_MAX).forEach(function (c) { c.p.explain = c.p.explain + '\n\n' + c.note; });
   try {
     const budget = Math.min(ARB_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < ARB_MIN_BUDGET_MS || !GROQ_KEYS.length) return;
-    const start = await groqNextStart(GROQ_KEYS.length);
+    const start = rot >= 0 ? rot % GROQ_KEYS.length : await groqNextStart(GROQ_KEYS.length);   /* STUDY-QSEQ */
     if (!groqOrder(start).length) return;
     const effort = budget >= 20000 ? 'high' : GROQ_EFFORT;
     const ctl = new AbortController();
@@ -1225,6 +1259,7 @@ module.exports = async function handler(req, res) {
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
   let studyN = 0;   /* عدد أجزاء الشرح في طلب study_quiz */
   let qmode = false;   /* STUDY-QMODE: «وضع الأسئلة الفائق» (mode:'study' + qmode:true) */
+  let qStage = '', qRot = -1, qPay = false;   /* STUDY-QSEQ: '' = الطلب الواحد القديم · 'plan' = فهرسة الأسئلة · 'one' = حل سؤال واحد (qRot = رقم التناوب) */
   let studyImgN = 0, stQa = null;   /* «ذاكر مع نبتكس»: عدد الصور المبعوتة + نتيجة فحص الاشتراك لطلبات الامتحان/السؤال (لحد الصور حسب الباقة) */
   if (mode === 'ask' && body.general === true) {
     if (!question) return fail(res, 400, 'bad_request');
@@ -1309,6 +1344,21 @@ module.exports = async function handler(req, res) {
     if (mode === 'study') {
       qmode = body.qmode === true;   /* STUDY-QMODE */
       p = qmode ? 'حل كل الأسئلة الظاهرة في الصور دي للطالب (وضع الأسئلة الفائق).' : 'اشرح المحتوى العلمي في الصور دي للطالب وجهّز له الملخص.';
+      /* STUDY-QSEQ: qplan:true = فهرسة الأسئلة بس · qone = حل سؤال واحد (qi ترتيبه، qs إزاحة الجلسة للتناوب، qk = عدد الأسئلة المحلولة قبله ← بيحدد لو السؤال ده بيصرف نقطة). من غيرهم الطلب زي ما كان بالظبط. */
+      if (qmode && body.qplan === true) {
+        qStage = 'plan'; askKey = 'qplan';
+        p = 'حدّد كل الأسئلة الظاهرة في الصور دي بترتيبها من غير ما تحلها (وضع الأسئلة الفائق — مرحلة الفهرسة).';
+      } else if (qmode && body.qone && typeof body.qone === 'object' && !Array.isArray(body.qone)) {
+        const qc = function (x, n) { return (typeof x === 'string' || typeof x === 'number') ? String(x).replace(/[\r\n]+/g, ' ').replace(/[«»]/g, '').trim().slice(0, n) : ''; };
+        const qh = qc(body.qone.hint, 200), qtl = qc(body.qone.title, 110), qn = qc(body.qone.n, 20);
+        if (!qh && !qtl) return fail(res, 400, 'bad_request');
+        const qi = parseInt(body.qi, 10), qs0 = parseInt(body.qs, 10);
+        const qk = parseInt(body.qk, 10), cq = function (j) { return Math.floor((3 * j + 4) / 5); };   /* STUDY-QSEQ-COST: تسعيرة الجلسة = ceil(0.6 × عدد الأسئلة المحلولة) (5 أسئلة = 3 نقط · 10 = 6) — كل سؤال بينجح بيصرف 0 أو 1 نقطة حسب ترتيبه (qk = عدد اللي اتحلّ قبله) فكل صرف +1 بالظبط زي ما firestore.rules بتسمح، ولو الرصيد خلص في النص الأسئلة بتقف والمحلول يفضل. للتراجع: ارجع السطر لـ qPay = body.qpay === true */
+        qStage = 'one'; qPay = Number.isInteger(qk) && qk >= 0 && qk < 20 && cq(qk + 1) > cq(qk);
+        qRot = (Number.isInteger(qs0) && qs0 >= 0 ? qs0 % 100000 : 0) + (Number.isInteger(qi) && qi >= 0 && qi < 20 ? qi : 0);
+        askKey = 'qone|' + qn + '|' + qtl + '|' + qh;
+        p = 'حلّ سؤال واحد بس من الصور المرفقة (وضع الأسئلة الفائق — سؤال بسؤال): السؤال رقم «' + (qn || '؟') + '»' + (qtl ? ' — ' + qtl : '') + (qh ? '، وبداية نصه في الورقة: «' + qh + '»' : '') + '. اقرأه من الصورة نفسها بدقة متناهية (نصه واختياراته وأي شكل أو جدول أو معطيات مشتركة محتاجها)، وارجع جزء واحد فقط لهذا السؤال، وتجاهل أي سؤال تاني ظاهر في الصور.';
+      }
     } else if (mode === 'study_ask') {
       /* سؤال متابعة: الجزء (عنوان/شرح/مثال) + سؤال الطالب (حد أقصى MAX_QUESTION_CHARS) + آخر ≤ 2 تبادل على نفس الجزء */
       const cl = function (x, n) { return typeof x === 'string' ? x.replace(/[\r\n]+/g, ' ').trim().slice(0, n) : ''; };
@@ -1389,13 +1439,13 @@ module.exports = async function handler(req, res) {
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return send(res, 200, Object.assign({ cached: true }, hit.payload));
 
   /* اشتراك المساعد الذكي + النقاط اليومية (شات / تشخيص): لازم اشتراك أو تجربة أو اشتراك إدارة المزرعة، وفيه رصيد اليوم */
-  const aiPtsKind = AI_POINT[mode] || '';
+  const aiPtsKind = (qStage === 'one' && !qPay) ? '' : (AI_POINT[mode] || '');   /* STUDY-QSEQ: أسئلة وضع «سؤال بسؤال» من غير نقطة جديدة (النقط حسب تسعيرة qk: qPay) */
   const devHdr = devIdOf(req);   /* DEVICE-POOL */
   let aiPts = null;
   if (aiPtsKind) {
     aiPts = await aiPointsCheck(m[1], uid, aiPtsKind, devHdr);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
-  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') {   /* study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
+  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || (qStage === 'one' && !qPay)) {   /* STUDY-QSEQ. study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
     stQa = await aiPointsCheck(m[1], uid, 'chat', devHdr);
     if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
@@ -1408,23 +1458,23 @@ module.exports = async function handler(req, res) {
 
   /* STUDY-QMODE-PLUS: «وضع الأسئلة الفائق» لباقتي Plus وPro بس (عائلتي plan/study): imgs ≥ 8 = Plus أو Pro — الواجهة بتمنعه أصلًا، وده الحكم النهائي. للتراجع: امسح البلوك ده. */
   if (qmode) {
-    const qLim = (aiPts && aiPts.lim) || null;
+    const qLim = (aiPts && aiPts.lim) || (stQa && stQa.lim) || null;   /* STUDY-QSEQ: stQa لأسئلة سؤال بسؤال من غير نقطة */
     if (!qLim || (qLim.imgs || 4) < 8) return fail(res, 403, 'plan_required');
   }
 
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
-  const uk = uid + '|' + mode;
+  const uk = uid + '|' + mode + (qStage === 'one' ? '|q1' : '');   /* STUDY-QSEQ: عدّاد يومي مستقل لأسئلة سؤال بسؤال */
   let u = usage.get(uk);
   if (!u || u.day !== day) { u = { day: day, n: 0 }; usage.set(uk, u); }
   if (globalUse.day !== day) globalUse = { day: day, n: 0 };
-  if (!aiPtsKind && u.n >= LIMITS[mode]) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });   /* أوضاع النقاط (شات/تشخيص) حدودها من Firestore مش من الذاكرة */
+  if (!aiPtsKind && u.n >= (qStage === 'one' ? QONE_DAILY : LIMITS[mode])) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });   /* أوضاع النقاط (شات/تشخيص) حدودها من Firestore مش من الذاكرة */
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
   const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
   if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') gen.responseMimeType = 'application/json';
   const reqBody = {
-    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : (mode === 'study' ? (qmode ? STUDY_QS_SYS : STUDY_SYS) : SYSTEMS[generalAsk ? 'general' : mode]) }] },
+    systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : (mode === 'study' ? (qmode ? (qStage === 'plan' ? STUDY_QS_PLAN_SYS : (qStage === 'one' ? STUDY_QS_ONE_SYS : STUDY_QS_SYS)) : STUDY_SYS) : SYSTEMS[generalAsk ? 'general' : mode]) }] },
     contents: [{ role: 'user', parts: parts }],
     generationConfig: gen
   };
@@ -1432,7 +1482,7 @@ module.exports = async function handler(req, res) {
   if (useGround) reqBody.tools = [{ google_search: {} }];
 
   /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
-  const order = pickOrder(backends, await nextStart(backends.length));
+  const order = pickOrder(backends, qRot >= 0 ? qRot % Math.max(1, backends.length) : await nextStart(backends.length));   /* STUDY-QSEQ: سؤال بسؤال = تناوب بالتتابع بدل العدّاد العام */
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
   const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
@@ -1509,7 +1559,8 @@ module.exports = async function handler(req, res) {
   let out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
   /* STUDY-RETRY (إضافة): «ذاكر مع نبتكس» — لو رد جيميناي طلع فاضي (candidates فاضية / finishReason غير STOP) أو JSON مكسور ومش مقروء، بنعيد الطلب مرة واحدة تلقائيًا جوّه نفس الطلب بدل ما الطالب يشوف «ما قدرتش أحلّل الصورة». النقطة بتتصرف بعد النجاح بس فمفيش صرف زيادة، والحد اليومي ما بيتأثرش. أي فشل في المحاولة التانية = السلوك القديم زي ما هو. السطر في Logs بيوضّح السبب الحقيقي. للتراجع: امسح البلوك ده ورجّع cand/out لـ const. */
-  if (mode === 'study' && !(out && sanitizeStudy(parseStudyJson(out)))) {
+  const studyOk = function (o) { return qStage === 'plan' ? sanitizeQPlan(parseStudyJson(o)) : sanitizeStudy(parseStudyJson(o)); };   /* STUDY-QSEQ: الفهرسة ليها sanitizer تاني */
+  if (mode === 'study' && !(out && studyOk(out))) {
     console.error('[farm-ai] study: unusable reply — finish:', cand && cand.finishReason, '| block:', j && j.promptFeedback && j.promptFeedback.blockReason, '| chars:', out.length, '| http:', up.status);
     if (deadline - Date.now() > 20000) {
       try {
@@ -1523,7 +1574,7 @@ module.exports = async function handler(req, res) {
           let j2 = null; try { j2 = JSON.parse(t2); } catch (e) { /* غير JSON */ }
           const c2 = r2.ok && j2 && j2.candidates && j2.candidates[0];
           const o2 = c2 && c2.content && c2.content.parts ? c2.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
-          if (o2 && sanitizeStudy(parseStudyJson(o2))) { j = j2; cand = c2; out = o2; }
+          if (o2 && studyOk(o2)) { j = j2; cand = c2; out = o2; }
           else console.error('[farm-ai] study retry also unusable — http', r2.status, '| finish:', c2 && c2.finishReason);
         } finally { clearTimeout(tm2); }
       } catch (e) { console.error('[farm-ai] study retry failed:', e && e.name); }
@@ -1544,17 +1595,24 @@ module.exports = async function handler(req, res) {
     const q = sanitizeDiagQ(parsed);
     if (!q) return fail(res, 502, 'blocked');
     payload = { q: q };
+  } else if (mode === 'study' && qStage === 'plan') {   /* STUDY-QSEQ: فهرس الأسئلة بس — النقط بتتصرف مع الأسئلة الناجحة (qk) مش هنا */
+    const pl = sanitizeQPlan(parseStudyJson(out));
+    if (!pl) return fail(res, 502, 'blocked');
+    if (pl.unreadable) return fail(res, 422, 'unreadable');
+    console.log('[farm-ai] study plan: ' + pl.plan.length + ' questions, t=' + (Date.now() - t0) + 'ms');
+    payload = { study: pl };
   } else if (mode === 'study') {
     let parsed = null;
     parsed = parseStudyJson(out);   /* STUDY-JSON: كان JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')) */
     const st = sanitizeStudy(parsed);
     if (!st) return fail(res, 502, 'blocked');
-    if (st.unreadable) return fail(res, 422, 'unreadable');   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
+    if (st.unreadable) return fail(res, 422, 'unreadable');
+    if (qStage === 'one' && st.parts.length > 1) st.parts.length = 1;   /* STUDY-QSEQ: سؤال واحد بس لكل طلب */   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after gemini');   /* TIMING: بيبيّن كل مرحلة أخدت كام في Vercel Logs */
     if (qmode) qmSnap(st);   /* STUDY-QMODE-MARK: لقطة من علامات جيميناي قبل ما الحلّال/المراجعة يمسحوها */
-    if (GROQ_KEY) await solveStudyProblems(st, t0, qmode);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
+    if (GROQ_KEY) await solveStudyProblems(st, t0, qmode, qRot);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after groq');
-    if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
+    if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0, qRot);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after audit+arbiter');
     if (qmode) qmMark(st);   /* STUDY-QMODE-MARK: كل سؤال باختيارات لازم ينعلّم عليه الاختيار الصحيح */
     payload = { study: st };
@@ -1582,7 +1640,7 @@ module.exports = async function handler(req, res) {
 
   /* صرف النقطة (تشخيص غير نباتي isPlant=false مش بيتحسب) + رصيد اليوم بعدها للواجهة */
   let ptsOut = null;
-  if (aiPts) {
+  if (aiPts && qStage !== 'plan') {   /* STUDY-QSEQ: الفهرسة ما بتصرفش نقطة */
     if (!(mode === 'diag_q' && payload.q && payload.q.isPlant === false)) {
       const ch = await aiCharge(m[1], uid, aiPts.day, aiPtsKind);
       if (ch === 'denied') return fail(res, 429, 'user_limit');
