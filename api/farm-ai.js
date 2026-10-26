@@ -410,6 +410,7 @@ const STUDY_QS_SYS_BASE = [
   'summary: ارجّعها مصفوفة فاضية [] دايمًا (وضع الأسئلة من غير ملخص). title (على مستوى الطلب): عنوان قصير لمجموعة الأسئلة (المادة أو الموضوع، حد أقصى 10 كلمات).',
   'لو الصور مفيهاش أي سؤال ظاهر للحل (محتوى شرح بس) أو مش واضحة خالص ارجع {"readable":false} بس.',
   'رجّع JSON فقط بالشكل: {"readable":true,"title":"...","parts":[{"title":"سؤال 1 — ...","src":[1],"kind":"question","q":"...","options":["...","..."],"answerIndex":0,"answer":"...","explain":"..."}],"summary":[]}',
+  'ترميز النص (إلزامي — سلامة الحروف): اكتب كل الحروف العربية والإنجليزية مباشرة بشكلها الطبيعي (UTF-8)، وممنوع تمامًا استخدام تسلسلات الهروب \\uXXXX أو أي حرف صيني أو ياباني أو كوري أو رمز غريب أو حرف مقطوع في أي حقل (title وq وoptions وanswer وexplain). لو النص في الصورة مشكّل بالحركات (فتحة وضمة وكسرة وشدة وسكون وتنوين) انقله بدون الحركات، إلا لو السؤال نفسه عن التشكيل أو الإعراب. راجع q وoptions حرفًا بحرف قبل الإخراج وتأكد إنها عربية أو إنجليزية سليمة وكاملة.',
   'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9). ما تضيفش جرعات أو أرقام مبيدات وأسمدة من عندك.',
   INJECTION
 ].join('\n');
@@ -427,6 +428,7 @@ const STUDY_QS_PLAN_SYS = [
   'لكل عنصر: n = رقم السؤال كما هو مكتوب في الورقة (مثل «3» أو «5 أ») وإلا ترتيبه — title = موضوع السؤال في كلمات قليلة (حد أقصى 10 كلمات) — src = أرقام الصور — hint = أول حوالي 100 حرف من نص السؤال كما هو في الصورة بالظبط (من غير الاختيارات) عشان نحدده بدقة.',
   'لو الصور مفيهاش أي سؤال ظاهر للحل (محتوى شرح بس) أو مش واضحة خالص ارجع {\"readable\":false} بس.',
   'رجّع JSON فقط بالشكل: {\"readable\":true,\"title\":\"عنوان قصير لمجموعة الأسئلة (المادة أو الموضوع، حد أقصى 10 كلمات)\",\"items\":[{\"n\":\"1\",\"title\":\"...\",\"src\":[1],\"hint\":\"...\"}]}',
+  'ترميز النص (إلزامي — سلامة الحروف): اكتب كل الحروف العربية والإنجليزية مباشرة بشكلها الطبيعي (UTF-8)، وممنوع تمامًا استخدام تسلسلات الهروب \\uXXXX أو أي حرف صيني أو ياباني أو كوري أو رمز غريب أو حرف مقطوع في أي حقل (title وq وoptions وanswer وexplain). لو النص في الصورة مشكّل بالحركات (فتحة وضمة وكسرة وشدة وسكون وتنوين) انقله بدون الحركات، إلا لو السؤال نفسه عن التشكيل أو الإعراب. راجع q وoptions حرفًا بحرف قبل الإخراج وتأكد إنها عربية أو إنجليزية سليمة وكاملة.',
   'ممنوع الإيموجي. الأرقام بالإنجليزية (0-9).',
   INJECTION
 ].join('\n');
@@ -498,6 +500,65 @@ function qmMark(st) {
       if (d) { p.ai = d; p.ans = d.map(function (k) { return p.opts[k]; }).join(' / '); return; }
       if (!p._fx && gai) { p.ai = g.ai; if (g.ans) p.ans = g.ans; }   /* الشرح ما حددش اختيار: علامة جيميناي الأصلية (إلا لو المحكّم قال إنها غلط) */
     });
+    (st && Array.isArray(st.parts) ? st.parts : []).forEach(qmOne);   /* QM-ONE: سؤال بإجابة واحدة ما ينفعش يتعلّم عليه اختيارين */
+  } catch (e) { /* أي فشل = السلوك القديم */ }
+}
+
+/* QM-CLEAN (إضافة — «وضع الأسئلة الفائق» بس): جيميناي أحيانًا بيطلّع في q/options حروف صينية أو تسلسلات \\u06 مقطوعة بدل الحروف العربية (غالبًا مع الصور المشكّلة)، فالطالب بيشوف رموز غريبة والمطابقة مع الاختيارات بتبوظ.
+   الحل: (1) رد فيه الحروف دي بنعتبره «مش صالح» في studyOk فيتعاد الطلب تلقائيًا (STUDY-RETRY)، (2) لو فضل فيه بقايا بننضّفها هنا (فك التسلسلات الكاملة، شيل المقطوع والحروف الصينية/اليابانية/الكورية ورمز الاستبدال).
+   للتراجع: امسح الكتلة دي + سطر qmClean في فرع study + شرط qmBadPart في studyOk. */
+const QM_CJK_RE = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/g;
+function qmCjkJunk(s) {   /* حروف CJK وسط نص عربي/إنجليزي = تلف (لو الورقة كلها صينية مش بنعتبرها تلف) */
+  const c = (s.match(QM_CJK_RE) || []).length;
+  if (!c) return false;
+  return c / Math.max(1, (s.match(/\p{L}/gu) || []).length) < 0.2;
+}
+function qmBadText(s) {
+  if (typeof s !== 'string' || !s) return false;
+  return /\\u[0-9a-fA-F]{1,4}/.test(s) || s.indexOf('\uFFFD') !== -1 || qmCjkJunk(s);
+}
+function qmBadPart(st) {
+  if (!st || !Array.isArray(st.parts)) return false;
+  return qmBadText(st.title) || st.parts.some(function (p) {
+    return !!p && [p.title, p.q, p.ans, p.explain].concat(Array.isArray(p.opts) ? p.opts : []).some(qmBadText);
+  });
+}
+function qmFix(s) {
+  if (typeof s !== 'string' || !qmBadText(s)) return s;
+  let x = s.replace(/\\u([0-9a-fA-F]{4})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); }).replace(/\\u[0-9a-fA-F]{1,3}/g, '');
+  if (qmCjkJunk(x)) x = x.replace(QM_CJK_RE, '');
+  return x.replace(/\uFFFD/g, '').replace(/[ \t]{2,}/g, ' ').trim();
+}
+function qmClean(st) {
+  try {
+    if (!st) return;
+    if (typeof st.title === 'string') st.title = qmFix(st.title);
+    (Array.isArray(st.parts) ? st.parts : []).forEach(function (p) {
+      if (!p) return;
+      ['title', 'q', 'ans', 'explain', 'example'].forEach(function (k) { if (typeof p[k] === 'string') { const f = qmFix(p[k]); if (f) p[k] = f; } });
+      if (Array.isArray(p.opts)) p.opts = p.opts.map(function (o) { return qmFix(o) || o; });   /* نفس العدد والترتيب (أرقام ai ما بتتأثرش) */
+    });
+  } catch (e) { /* أي فشل = من غير تنضيف */ }
+}
+
+/* QM-ONE (إضافة — «وضع الأسئلة الفائق» بس): السؤال العادي (اختر الإجابة الصحيحة) له إجابة واحدة بس، فلو بقى فيه علامتين «صحيحة» بنرجّح الاختيار اللي الحل النهائي (الخط العريض في الشرح) بيحدده من اتنين؛ ولو الحل ما حسمش ولا اختيار منهم بنشيل العلامتين بدل ما نعلّم غلط. الأسئلة اللي بتطلب صراحةً أكتر من إجابة (إجابتين / أكثر من إجابة / select all…) ما بتتأثرش.
+   للتراجع: امسح الدالتين دول + سطر qmOne جوه qmMark. */
+function qmMulti(q) {
+  const t = String(q || '');
+  return /(?:الإجابتين|الاجابتين|إجابتين|اجابتين|الإجابات|الاجابات|إجابات|اجابات|أكثر من إجابة|اكثر من اجابة|أكثر من اختيار|اكثر من اختيار|اختيارين|الاختيارين|خيارين|الخيارين|كل الإجابات|جميع الإجابات)/.test(t)
+    || /\b(?:two (?:answers|options|choices|correct)|all that apply|select all|choose all|more than one|multiple (?:answers|correct))\b/i.test(t);
+}
+function qmOne(p) {
+  try {
+    if (!p || p.kind !== 'q' || !Array.isArray(p.opts) || !Array.isArray(p.ai) || p.ai.length < 2 || qmMulti(p.q)) return;
+    let sets = [], pick = -1;
+    try { sets = qmPick(p, p.explain); } catch (e) { sets = []; }
+    for (let i = 0; i < sets.length && pick < 0; i++) {
+      const x = sets[i].filter(function (k) { return p.ai.indexOf(k) !== -1; });
+      if (x.length === 1) pick = x[0];
+    }
+    if (pick < 0) { delete p.ai; delete p.ans; return; }
+    p.ai = [pick]; p.ans = p.opts[pick];
   } catch (e) { /* أي فشل = السلوك القديم */ }
 }
 
@@ -1259,6 +1320,7 @@ module.exports = async function handler(req, res) {
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
   let studyN = 0;   /* عدد أجزاء الشرح في طلب study_quiz */
   let qmode = false;   /* STUDY-QMODE: «وضع الأسئلة الفائق» (mode:'study' + qmode:true) */
+  let qAud = null;   /* STUDY-QAUDIT: الجزء المطلوب مراجعته (طلب qaudit نصي من غير صور) */
   let qStage = '', qRot = -1, qPay = false;   /* STUDY-QSEQ: '' = الطلب الواحد القديم · 'plan' = فهرسة الأسئلة · 'one' = حل سؤال واحد (qRot = رقم التناوب) */
   let studyImgN = 0, stQa = null;   /* «ذاكر مع نبتكس»: عدد الصور المبعوتة + نتيجة فحص الاشتراك لطلبات الامتحان/السؤال (لحد الصور حسب الباقة) */
   if (mode === 'ask' && body.general === true) {
@@ -1327,7 +1389,7 @@ module.exports = async function handler(req, res) {
   } else if (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask') {
     /* «ذاكر مع نبتكس»: من 1 لـ 4 صور (الواجهة بتصغّرهم قبل الإرسال) — نفس فحوصات صور التشخيص */
     const rawImgs = Array.isArray(body.images) ? body.images : [];
-    if ((!rawImgs.length && mode !== 'study_ask') || rawImgs.length > MAX_STUDY_IMAGES) return fail(res, 400, 'bad_request');   /* STUDY-SAVE: سؤال المتابعة ممكن من غير صور (جلسة مفتوحة على جهاز تاني: الشرح النصي كفاية). للتراجع: رجّع الشرط لـ !rawImgs.length */
+    if ((!rawImgs.length && mode !== 'study_ask' && !(body.qmode === true && body.qaudit && typeof body.qaudit === 'object')) || rawImgs.length > MAX_STUDY_IMAGES) return fail(res, 400, 'bad_request');   /* STUDY-QAUDIT: طلب المراجعة من غير صور */   /* STUDY-SAVE: سؤال المتابعة ممكن من غير صور (جلسة مفتوحة على جهاز تاني: الشرح النصي كفاية). للتراجع: رجّع الشرط لـ !rawImgs.length */
     studyImgN = rawImgs.length;
     const imgs = [];
     for (let i = 0; i < rawImgs.length; i++) {
@@ -1358,6 +1420,24 @@ module.exports = async function handler(req, res) {
         qRot = (Number.isInteger(qs0) && qs0 >= 0 ? qs0 % 100000 : 0) + (Number.isInteger(qi) && qi >= 0 && qi < 20 ? qi : 0);
         askKey = 'qone|' + qn + '|' + qtl + '|' + qh;
         p = 'حلّ سؤال واحد بس من الصور المرفقة (وضع الأسئلة الفائق — سؤال بسؤال): السؤال رقم «' + (qn || '؟') + '»' + (qtl ? ' — ' + qtl : '') + (qh ? '، وبداية نصه في الورقة: «' + qh + '»' : '') + '. اقرأه من الصورة نفسها بدقة متناهية (نصه واختياراته وأي شكل أو جدول أو معطيات مشتركة محتاجها)، وارجع جزء واحد فقط لهذا السؤال، وتجاهل أي سؤال تاني ظاهر في الصور.';
+      } else if (qmode && body.qaudit && typeof body.qaudit === 'object' && !Array.isArray(body.qaudit)) {
+        /* STUDY-QAUDIT (إضافة): مراجعة مستقلة لسؤال واحد اتحل — طلب نصي بس (من غير صور ومن غير جيميناي ومن غير نقطة): OpenRouter بيحل من الصفر ويقارن، والتحكيم (Groq) لو اختلفوا. بيرجّع audited:true لو طلع حكم؛ غير كده الواجهة بتعيد بحساب OpenRouter التاني (qrt). للتراجع: امسح البلوك ده + بلوك STUDY-QAUDIT تحت (قبل الحدود اليومية) + qAud + شرط qStage === 'audit' في aiPtsKind/stQa. */
+        const qa0 = body.qaudit, qat = function (x, n) { return typeof x === 'string' ? x.trim().slice(0, n) : ''; };
+        const aq = qat(qa0.q, 1500), ae = qat(qa0.explain, 6000);
+        if (!aq || ae.length < 30) return fail(res, 400, 'bad_request');
+        const ao = (Array.isArray(qa0.opts) ? qa0.opts : []).slice(0, 6).map(function (x) { return qat(typeof x === 'number' ? String(x) : x, 400); });
+        const aOpts = ao.length >= 2 && ao.every(function (x) { return x; }) ? ao : null;
+        const aAi = aOpts ? (Array.isArray(qa0.ai) ? qa0.ai : []).map(function (v) { return typeof v === 'number' ? v : parseInt(v, 10); })
+          .filter(function (v, k, a) { return Number.isInteger(v) && v >= 0 && v < aOpts.length && a.indexOf(v) === k; }) : [];
+        qAud = { title: qat(qa0.title, 110) || 'سؤال', explain: ae, example: '', src: [], kind: 'q', q: aq };
+        if (aOpts) { qAud.opts = aOpts; if (aAi.length) qAud.ai = aAi; }
+        const aAn = qat(typeof qa0.ans === 'number' ? String(qa0.ans) : qa0.ans, 700);
+        if (aAn) qAud.ans = aAn;
+        const aqi = parseInt(body.qi, 10), aqs = parseInt(body.qs, 10), aqr = parseInt(body.qrt, 10);
+        qStage = 'audit';
+        qRot = (Number.isInteger(aqs) && aqs >= 0 ? aqs % 100000 : 0) + (Number.isInteger(aqi) && aqi >= 0 && aqi < 20 ? aqi : 0) + (Number.isInteger(aqr) && aqr >= 0 && aqr < 3 ? aqr : 0);   /* كل إعادة = حساب OpenRouter / مفتاح Groq تاني */
+        askKey = 'qaudit|' + aqi + '|' + aqr + '|' + aq.slice(0, 80) + '|' + ae.length;
+        p = 'مراجعة مستقلة لحل سؤال واحد (وضع الأسئلة الفائق).';
       }
     } else if (mode === 'study_ask') {
       /* سؤال متابعة: الجزء (عنوان/شرح/مثال) + سؤال الطالب (حد أقصى MAX_QUESTION_CHARS) + آخر ≤ 2 تبادل على نفس الجزء */
@@ -1439,13 +1519,13 @@ module.exports = async function handler(req, res) {
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return send(res, 200, Object.assign({ cached: true }, hit.payload));
 
   /* اشتراك المساعد الذكي + النقاط اليومية (شات / تشخيص): لازم اشتراك أو تجربة أو اشتراك إدارة المزرعة، وفيه رصيد اليوم */
-  const aiPtsKind = (qStage === 'one' && !qPay) ? '' : (AI_POINT[mode] || '');   /* STUDY-QSEQ: أسئلة وضع «سؤال بسؤال» من غير نقطة جديدة (النقط حسب تسعيرة qk: qPay) */
+  const aiPtsKind = ((qStage === 'one' && !qPay) || qStage === 'audit') ? '' : (AI_POINT[mode] || '');   /* STUDY-QAUDIT: المراجعة من غير نقطة */   /* STUDY-QSEQ: أسئلة وضع «سؤال بسؤال» من غير نقطة جديدة (النقط حسب تسعيرة qk: qPay) */
   const devHdr = devIdOf(req);   /* DEVICE-POOL */
   let aiPts = null;
   if (aiPtsKind) {
     aiPts = await aiPointsCheck(m[1], uid, aiPtsKind, devHdr);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
-  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || (qStage === 'one' && !qPay)) {   /* STUDY-QSEQ. study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
+  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || (qStage === 'one' && !qPay) || qStage === 'audit') {   /* STUDY-QSEQ. study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
     stQa = await aiPointsCheck(m[1], uid, 'chat', devHdr);
     if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
@@ -1460,6 +1540,24 @@ module.exports = async function handler(req, res) {
   if (qmode) {
     const qLim = (aiPts && aiPts.lim) || (stQa && stQa.lim) || null;   /* STUDY-QSEQ: stQa لأسئلة سؤال بسؤال من غير نقطة */
     if (!qLim || (qLim.imgs || 4) < 8) return fail(res, 403, 'plan_required');
+  }
+
+  /* STUDY-QAUDIT: مراجعة مستقلة لسؤال واحد (بعد التحقق من الاشتراك والباقة): OpenRouter ← تحكيم Groq لو اختلفوا، من غير جيميناي ومن غير نقطة. الحد اليومي مستقل. للتراجع: امسح البلوك ده. */
+  if (qStage === 'audit' && qAud) {
+    const aKey = uid + '|study|qa';
+    let ua = usage.get(aKey);
+    if (!ua || ua.day !== day) { ua = { day: day, n: 0 }; usage.set(aKey, ua); }
+    if (ua.n >= QONE_DAILY * 4) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });
+    ua.n++;
+    const orOn = !!(OR_BACKENDS.length && OR_MODELS.length), before = qAud.explain;
+    if (orOn) {
+      const stA = { parts: [qAud] };
+      qmSnap(stA);
+      await auditStudyAnswers(stA, t0, qRot);
+      qmMark(stA);
+    }
+    console.log('[farm-ai] study audit t=' + (Date.now() - t0) + 'ms ' + (qAud.explain !== before ? 'verdict' : 'no-verdict'));
+    return send(res, 200, { study: { parts: [qAud] }, audited: !orOn || qAud.explain !== before });   /* من غير OpenRouter مفيش مراجعة أصلًا: ما نعرضش تحذير كاذب (السلوك القديم) */
   }
 
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
@@ -1559,7 +1657,11 @@ module.exports = async function handler(req, res) {
   let out = cand && cand.content && cand.content.parts
     ? cand.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
   /* STUDY-RETRY (إضافة): «ذاكر مع نبتكس» — لو رد جيميناي طلع فاضي (candidates فاضية / finishReason غير STOP) أو JSON مكسور ومش مقروء، بنعيد الطلب مرة واحدة تلقائيًا جوّه نفس الطلب بدل ما الطالب يشوف «ما قدرتش أحلّل الصورة». النقطة بتتصرف بعد النجاح بس فمفيش صرف زيادة، والحد اليومي ما بيتأثرش. أي فشل في المحاولة التانية = السلوك القديم زي ما هو. السطر في Logs بيوضّح السبب الحقيقي. للتراجع: امسح البلوك ده ورجّع cand/out لـ const. */
-  const studyOk = function (o) { return qStage === 'plan' ? sanitizeQPlan(parseStudyJson(o)) : sanitizeStudy(parseStudyJson(o)); };   /* STUDY-QSEQ: الفهرسة ليها sanitizer تاني */
+  const studyOk = function (o) {
+    if (qStage === 'plan') return sanitizeQPlan(parseStudyJson(o));
+    const so = sanitizeStudy(parseStudyJson(o));
+    return so && !(qmode && qmBadPart(so));   /* QM-CLEAN: في وضع الأسئلة الفائق الرد اللي فيه حروف صينية/تسلسلات \\u مقطوعة بيتعاد زي الرد الفاضي */
+  };   /* STUDY-QSEQ: الفهرسة ليها sanitizer تاني */
   if (mode === 'study' && !(out && studyOk(out))) {
     console.error('[farm-ai] study: unusable reply — finish:', cand && cand.finishReason, '| block:', j && j.promptFeedback && j.promptFeedback.blockReason, '| chars:', out.length, '| http:', up.status);
     if (deadline - Date.now() > 20000) {
@@ -1608,11 +1710,12 @@ module.exports = async function handler(req, res) {
     if (!st) return fail(res, 502, 'blocked');
     if (st.unreadable) return fail(res, 422, 'unreadable');
     if (qStage === 'one' && st.parts.length > 1) st.parts.length = 1;   /* STUDY-QSEQ: سؤال واحد بس لكل طلب */   /* صور مش مقروءة / مش محتوى دراسي: قبل صرف النقطة */
+    if (qmode) qmClean(st);   /* QM-CLEAN: بقايا الحروف التالفة (لو الإعادة ما نفعتش) */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after gemini');   /* TIMING: بيبيّن كل مرحلة أخدت كام في Vercel Logs */
     if (qmode) qmSnap(st);   /* STUDY-QMODE-MARK: لقطة من علامات جيميناي قبل ما الحلّال/المراجعة يمسحوها */
     if (GROQ_KEY) await solveStudyProblems(st, t0, qmode, qRot);   /* SOLVER: حل المسائل (نص بس) بـ Groq — بيستبدل explain للأجزاء المعلّمة بس؛ أي فشل = شرح جيميناي زي ما هو */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after groq');
-    if (OR_BACKENDS.length && OR_MODELS.length) await auditStudyAnswers(st, t0, qRot);   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
+    if (OR_BACKENDS.length && OR_MODELS.length && qStage !== 'one') await auditStudyAnswers(st, t0, qRot);   /* STUDY-QAUDIT: طلب «سؤال واحد» بيحل بس، والمراجعة المستقلة بتتعمل في طلب qaudit منفصل بوقته الكامل (الواجهة بتبعته بعد كل سؤال) */   /* OR-AUDIT: مراجعة مستقلة للمسائل المعلّمة بعد الحل (أي فشل = الحل زي ما هو) */
     console.log('[farm-ai] study t=' + (Date.now() - t0) + 'ms after audit+arbiter');
     if (qmode) qmMark(st);   /* STUDY-QMODE-MARK: كل سؤال باختيارات لازم ينعلّم عليه الاختيار الصحيح */
     payload = { study: st };
