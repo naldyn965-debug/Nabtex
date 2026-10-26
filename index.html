@@ -29477,7 +29477,7 @@ function buildScreen(){
     try{ qvSync(); }catch(e){}   /* STUDY-QMODE-VISUAL */
     try{ qmLockUI(); }catch(e){}   /* STUDY-QMODE-PLAN */
   }
-  if(qmB) qmB.addEventListener('click', function(){ if(busy) return; qm = !qm; lsSet('nbai:qm', qm ? 1 : 0); paintStudy(); });
+  if(qmB) qmB.addEventListener('click', function(){ if(busy) return; qm = !qm; lsSet('nbai:qm', qm ? 1 : 0); try{ stNew(); }catch(e){} /* QM-SPLIT-SESSION: تبديل الوضع = جلسة جديدة فاضية (الجلسة القديمة تفضل في «جلسات المذاكرة») بدل ما شاشة الوضع التاني تتعرض فوق نفس الجلسة. للتراجع: امسح try{ stNew() } ده بس (والسطر في go تحت) */ paintStudy(); });
   /* STUDY-QMODE-VISUAL: الفصل البصري بين وضع الشرح ووضع الأسئلة الفائق (بصري بحت — بيقرا qm/src بس ومابيغيّرهم). بيحط .nbai-qmode على الواجهة، ويبدّل سطر الهيدر ونص الترحيب، وبيشغّل موجة اللون من مكان اللمس لما المستخدم هو اللي بدّل (مش عند الفتح). للتراجع: امسح الكتلة دي + سطر qvSync في paintQm + css اسمه nb-ai-qmode-visual. */
   var qvAt = null, qvTm = 0, qvGt = 0;
   function qvMark(e){ var t = e.target; if(t && t.closest && t.closest('.nbai-qm-b,.nbai-src-b,.nbai-back')) qvAt = { t: Date.now(), x: e.clientX, y: e.clientY }; }
@@ -29547,7 +29547,7 @@ function buildScreen(){
     var d = qmPeek();
     if(d && qmPlanOk(d.plan)) return;   /* مسموح: المعالج الأصلي يكمّل زي ما هو */
     e.stopImmediatePropagation(); e.preventDefault();
-    var go = function(p){ if(qmPlanOk(p)){ qm = true; lsSet('nbai:qm', 1); paintStudy(); } else qmUpsell(); };
+    var go = function(p){ if(qmPlanOk(p)){ qm = true; lsSet('nbai:qm', 1); try{ stNew(); }catch(x){} /* QM-SPLIT-SESSION */ paintStudy(); } else qmUpsell(); };
     if(d) go(d.plan);
     else if(window.AiSub && window.AiSub.get) window.AiSub.get(function(x){ go(x && x.plan); });
     else qmUpsell();
@@ -30009,11 +30009,11 @@ function buildScreen(){
     var qs = Math.floor(Math.random() * 90000), plan = [], N = 0, title = '', S = null, rb = null, stl = null, metaEl = null, shown = 0;
     var lastPt = false, bad = [], stopErr = '', lastErr = '';
     function ordTxt(i){ return i < ORD.length ? ORD[i] : 'رقم ' + (i + 1); }
-    function prog(i){
+    function prog(i, sub){
       if(!card.isConnected) return;
       var pct = Math.min(0.96, 0.06 + 0.9 * (i / Math.max(1, N)));
       ty.className = 'nbai-m nbai-m-ai nbw-on';
-      ty.innerHTML = '<span class="nbai-dots" role="img" aria-label="جاري تحضير السؤال"><i></i><i></i><i></i><span class="nbw-s">جاري تحضير السؤال ' + ordTxt(i) + ' (' + (i + 1) + ' من ' + N + ')…</span></span><span class="nbw"><span class="nbw-bar" aria-hidden="true"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></span></span>';
+      ty.innerHTML = '<span class="nbai-dots" role="img" aria-label="جاري تحضير السؤال"><i></i><i></i><i></i><span class="nbw-s">جاري تحضير السؤال ' + ordTxt(i) + ' (' + (i + 1) + ' من ' + N + ')' + (sub ? ' — ' + sub : '…') + '</span></span><span class="nbw"><span class="nbw-bar" aria-hidden="true"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></span></span>';
       if(TH.ask.lastChild !== ty) TH.ask.appendChild(ty);
       if(stl) stl.textContent = 'تم حل ' + S.parts.length + ' من ' + N + ' — جاري تحضير السؤال ' + ordTxt(i) + '…';
     }
@@ -30060,6 +30060,27 @@ function buildScreen(){
       paintStrip(); stPlaceEnd(); paintFoot();
       if(lastPt){ try{ aiLimitPw(2600); }catch(x){} }   /* LAST-POINT-PAYWALL: بعد ما الأسئلة كلها تخلص مش في نصها */
     }
+    /* STUDY-QSEQ-FIX: مراجعة مستقلة لكل سؤال قبل ما يظهر (طلب مستقل بوقته الكامل): لو المراجعة ما طلّعتش حكم بنعيدها بحساب OpenRouter التاني (لحد 3 محاولات)، ولو فشلت كلها بتظهر علامة صريحة بدل ما السؤال يعدّي من غير ما حد يعرف إنه ما اتراجعش. */
+    function verify(i, part, tries, best){
+      if(!card.isConnected) return;
+      if(!(part.kind === 'q' && part.q && part.explain)){ render(part); return next(i + 1); }
+      prog(i, 'براجع الإجابة بمراجع مستقل…');
+      function fin2(a){
+        if(a){ part.explain = a.explain || part.explain; if(a.ai) part.ai = a.ai; else delete part.ai; if(a.ans) part.ans = a.ans; else delete part.ans; }
+        render(part); next(i + 1);
+      }
+      call('study_q', { mode: 'study', qmode: true, qaudit: { title: part.title, q: part.q, opts: part.opts, explain: part.explain, ai: part.ai, ans: part.ans }, qi: i, qs: qs, qrt: tries }, 'a' + i + '|' + tries, function(r){
+        if(!card.isConnected) return;
+        var a = r.ok && r.j.study && r.j.study.parts && r.j.study.parts[0] ? r.j.study.parts[0] : null;
+        if(a && r.j.audited) return fin2(a);
+        if(a) best = a;
+        if(r.err && FATAL[r.err]) tries = 2;
+        if(tries < 2){ setTimeout(function(){ verify(i, part, tries + 1, best); }, 1500 + tries * 2500); return; }
+        if(best){ part.explain = best.explain || part.explain; if(best.ai) part.ai = best.ai; else delete part.ai; if(best.ans) part.ans = best.ans; else delete part.ans; }
+        part.explain += /[\u0600-\u06FF]/.test(part.explain) ? '\n\nتنبيه: المراجعة المستقلة ما قدرتش تتم لهذا السؤال دلوقتي — راجع إجابته بنفسك أو مع مدرّسك.' : '\n\nNote: the independent review could not be completed for this question — please double-check the answer.';
+        fin2(null);
+      });
+    }
     function attempt(i, it, nos, sub, tries){
       if(!card.isConnected) return;
       call('study_q', { mode: 'study', images: sub, note: note, qmode: true, qone: { n: it.n, title: it.title, hint: it.hint }, qi: i, qs: qs, qk: S ? S.parts.length : 0 }, i + '|' + it.hint, function(r){
@@ -30068,8 +30089,7 @@ function buildScreen(){
         if(part){
           if(r.j.points && window.AiSub){ try{ window.AiSub.applyPoints(r.j.points); var pp = window.AiSub.pts('chat'); if(pp && pp.left <= 0) lastPt = true; }catch(x){} }
           part.src = nos.slice();   /* أرقام الصور الأصلية (الخادم شاف الصور المختارة بس) */
-          render(part);
-          return next(i + 1);
+          return verify(i, part, 0, null);   /* STUDY-QSEQ-FIX: السؤال بيتراجع الأول وبعدين يظهر */
         }
         var e = r.err || 'generic';
         if(FATAL[e]){ stopErr = aiErr(e); return fin(); }
