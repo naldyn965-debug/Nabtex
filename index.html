@@ -32392,5 +32392,30 @@ window.NbFarmLoc = { row: row, get: get, open: open };
 })();
 </script>
 
+<!-- SEO-DEEPLINK: روابط الصفحات التعريفية (nabtex-ai.html / nabtex-study.html) بتفتح الموقع بـ ?app=ai أو ?app=study، والكتلة دي بس بتفتح Nabtex AI أو «ذاكر مع نبتيكس» بنفس دالتي الفتح الأصليتين (NbFarmAI.open / openStudy) بعد ما حالة الدخول تتحدد. إضافة فقط — لو الزائر مش مسجّل دخول الدالة الأصلية نفسها هي اللي بتفتح شاشة الدخول. للتراجع: امسح الكتلة دي بس. -->
+<script>
+(function(){
+  try{
+    var app = new URLSearchParams(location.search).get('app');
+    if(app !== 'ai' && app !== 'study') return;
+    var tries = 0, MAX = 80, tm = setInterval(function(){
+      tries++;
+      var ready = false;
+      try{ ready = !!(window.NbFarmAI && typeof window.NbFarmAI.open === 'function' && typeof _nbAuthReady !== 'undefined' && _nbAuthReady); }catch(e){}
+      if(!ready && tries < MAX) return;
+      clearInterval(tm);
+      if(!ready) return;
+      setTimeout(function(){
+        try{ history.replaceState(history.state, '', location.pathname + location.hash); }catch(e){}
+        try{
+          if(app === 'study' && typeof window.NbFarmAI.openStudy === 'function') window.NbFarmAI.openStudy();
+          else window.NbFarmAI.open();
+        }catch(e){}
+      }, 600);
+    }, 250);
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>

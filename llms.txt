@@ -19,6 +19,9 @@
 
 ## منتجات المنصة
 
+- صفحة Nabtex AI: https://nabtex.vercel.app/nabtex-ai.html
+- صفحة ذاكر مع نبتيكس: https://nabtex.vercel.app/nabtex-study.html
+
 - Nabtex AI (نبتيكس AI): المساعد الذكي للمزارع من نبتيكس.
 - ذاكر مع نبتيكس (Nabtex Study): شرح المحاضرات والصور وملخصات وامتحانات تفاعلية بالعامية المصرية.
 - الأكاديمية: كورسات احترافية بأسلوب تفاعلي.
