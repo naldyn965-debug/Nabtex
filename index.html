@@ -28961,14 +28961,14 @@ function call(mode, payload, ckExtra, done){
   if(!u) return done({ err: 'login' });
   if(!navigator.onLine) return done({ err: 'offline' });
   var ck = hash(mode + '|' + ckExtra), key = 'nbai:r:' + mode + ':' + u.uid;
-  var nc = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
+  var nc = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || mode === 'study_q');   /* «ذاكر مع نبتكس»: ردود كبيرة (شرح/امتحان) — من غير كاش في localStorage (الكاش عند الخادم 6 ساعات لنفس الصور) */
   var saved = nc ? null : lsGet(key);
   if(saved && saved.k === ck && Date.now() - saved.at < TTL) return done({ ok: true, j: saved.j, cached: true });
   var qt = quotaGet(u.uid, mode);
   var aiPt = !!(window.AiSub && PTS[mode]);   /* AI-SUB: نقاط الشات/التشخيص من اشتراك المساعد (الحكم النهائي: الخادم + firestore.rules) */
   if(aiPt){ var ge = window.AiSub.gate(mode); if(ge) return done({ err: ge }); }
   else if(qt.n >= LIM[mode]) return done({ err: 'user_limit' });
-  if(Date.now() - qt.last < (mode === 'study_ask' ? 4000 : COOLDOWN)) return done({ err: 'wait' });   /* سؤال المتابعة في «ذاكر»: فاصل 4 ثواني بدل 20 */
+  if(Date.now() - qt.last < (mode === 'study_ask' ? 4000 : (mode === 'study_q' ? 0 : COOLDOWN))) return done({ err: 'wait' });   /* STUDY-QSEQ: أسئلة «سؤال بسؤال» ورا بعض من غير فاصل */   /* سؤال المتابعة في «ذاكر»: فاصل 4 ثواني بدل 20 */
   var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
   var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, TMO);
   u.getIdToken().then(function(tok){
@@ -29966,6 +29966,7 @@ function buildScreen(){
     var ty = typing('study');
     try{ stWait(ty, qmOn, imgs.length); }catch(e){}   /* NBW-WAIT: تجربة انتظار بريميوم. للتراجع: امسح السطر ده */
     stBusy(true); paintFoot();
+    if(qmOn){ try{ runStudyQ(ty, imgs, list, note); return; }catch(e){} }   /* STUDY-QSEQ: وضع الأسئلة الفائق سؤال بسؤال — لو الدالة وقعت قبل ما تبدأ بنكمّل بالطلب الواحد القديم تحت */
     call('study', qmOn ? { images: list, note: note, qmode: true } : { images: list, note: note }, imgs.length + '|' + note + (qmOn ? '|qm' : ''), function(r){   /* STUDY-QMODE: وضع الأسئلة الفائق = qmode:true (من غيره الطلب والمفتاح زي ما كانوا بالظبط) */
       var st = r.ok && r.j.study && r.j.study.parts && r.j.study.parts.length ? r.j.study : null;
       if(!st){
@@ -29997,6 +29998,101 @@ function buildScreen(){
           stLoadQuiz(S);
         }, wait);
       });
+    });
+  }
+
+  /* STUDY-QSEQ: «وضع الأسئلة الفائق» سؤال بسؤال (إضافة): الطلب الأول بيفهرس الأسئلة بس (من غير حل)، وبعده كل سؤال بيتبعت لوحده (بصوره بس) ويتحل ويتراجع بالكامل على الخادم بمفتاح جيميناي وجروك وحساب OpenRouter مختلفين بالتتابع (qs + ترتيب السؤال)، وأول ما يخلص بيظهر وبيبدأ اللي بعده («جاري تحضير السؤال الثاني…»). النقط: 3 لكل 5 أسئلة محلولة (ceil(0.6 × عدد المحلول)) — كل سؤال بينجح بيصرف 0 أو 1 نقطة حسب qk (عدد اللي اتحلّ قبله). للتراجع: امسح الدالة دي وسطر runStudyQ في runStudy وتعديلين study_q في call. */
+  function runStudyQ(ty, imgs, list, note){
+    var ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
+    var FATAL = { login: 1, offline: 1, sub_required: 1, user_limit: 1, plan_required: 1, img_limit: 1 };
+    var NOQ = 'مش لاقي أسئلة واضحة في الصور دي. ارفع صور فيها أسئلة للحل، أو اقفل «وضع الأسئلة الفائق» لو عايز شرح محتوى.';
+    var qs = Math.floor(Math.random() * 90000), plan = [], N = 0, title = '', S = null, rb = null, stl = null, metaEl = null, shown = 0;
+    var lastPt = false, bad = [], stopErr = '', lastErr = '';
+    function ordTxt(i){ return i < ORD.length ? ORD[i] : 'رقم ' + (i + 1); }
+    function prog(i){
+      if(!card.isConnected) return;
+      var pct = Math.min(0.96, 0.06 + 0.9 * (i / Math.max(1, N)));
+      ty.className = 'nbai-m nbai-m-ai nbw-on';
+      ty.innerHTML = '<span class="nbai-dots" role="img" aria-label="جاري تحضير السؤال"><i></i><i></i><i></i><span class="nbw-s">جاري تحضير السؤال ' + ordTxt(i) + ' (' + (i + 1) + ' من ' + N + ')…</span></span><span class="nbw"><span class="nbw-bar" aria-hidden="true"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></span></span>';
+      if(TH.ask.lastChild !== ty) TH.ask.appendChild(ty);
+      if(stl) stl.textContent = 'تم حل ' + S.parts.length + ' من ' + N + ' — جاري تحضير السؤال ' + ordTxt(i) + '…';
+    }
+    function failFirst(msg){   /* مفيش ولا سؤال اتحل: نفس معالجة الفشل في الطلب الواحد (الصور والملاحظة ترجع عشان تتبعت تاني) */
+      stBusy(false);
+      if(!card.isConnected) return;
+      ty.className = 'nbai-m nbai-m-ai err'; ty.innerHTML = esc(msg);
+      stImgs = imgs.map(function(d){ return { d: d, qc: null }; }); if(!stQi.value){ stQi.value = note; fit(); }
+      paintStrip(); stPlaceEnd(); paintFoot();
+    }
+    function render(part){
+      if(!S){
+        S = { imgs: imgs, list: list, note: note, title: title, parts: [part], summary: [], quiz: null, ans: [], step: 0, revealed: false, el: null, qm: true };
+        STUDY.sessions.push(S);
+        try{ dcDone(S); }catch(e){}   /* STUDY-DOC: دفعة الملف اتشرحت */
+      } else S.parts.push(part);
+      var tmp = document.createElement('div'); tmp.innerHTML = stExplainHtml(S); stDir(tmp);
+      var kids = [].slice.call(tmp.children), k, el;
+      if(!rb){
+        rb = mkMsg('ai', '', false); rb.classList.add('nbst-msg');
+        stl = document.createElement('div'); stl.className = 'nbst-meta';
+        TH.ask.insertBefore(rb, ty);
+        rb.appendChild(stl); rb.appendChild(kids[0]); metaEl = kids[1]; rb.appendChild(metaEl);
+        stScrollTo(rb);
+      } else metaEl.innerHTML = kids[1].innerHTML;
+      for(k = 2 + shown; k < kids.length; k++){
+        el = kids[k];
+        if(!NOANIM){ el.classList.add('nbst-in'); (function(e){ setTimeout(function(){ e.classList.remove('nbst-in'); }, 1700); })(el); }
+        rb.appendChild(el);
+      }
+      shown = S.parts.length;
+      stSave(S);
+    }
+    function fin(){
+      if(!card.isConnected) return;
+      if(!S) return failFirst(stopErr || (lastErr === 'unreadable' ? NOQ : aiErr(lastErr || 'generic')));
+      stBusy(false);
+      if(ty.parentNode) ty.parentNode.removeChild(ty);
+      if(stl && stl.parentNode) stl.parentNode.removeChild(stl);
+      var m = [];
+      if(stopErr) m.push('اتحلّ ' + S.parts.length + ' من ' + N + ' سؤال. ' + stopErr);
+      if(bad.length) m.push('ما قدرتش أحلّ ' + bad.join('، ') + ' — ارفع صورة ' + (bad.length > 1 ? 'كل واحد منهم' : 'السؤال ده') + ' لوحده وجرّب تاني.');
+      if(m.length) TH.ask.appendChild(mkMsg('ai', esc(m.join(' ')), true));
+      paintStrip(); stPlaceEnd(); paintFoot();
+      if(lastPt){ try{ aiLimitPw(2600); }catch(x){} }   /* LAST-POINT-PAYWALL: بعد ما الأسئلة كلها تخلص مش في نصها */
+    }
+    function attempt(i, it, nos, sub, tries){
+      if(!card.isConnected) return;
+      call('study_q', { mode: 'study', images: sub, note: note, qmode: true, qone: { n: it.n, title: it.title, hint: it.hint }, qi: i, qs: qs, qk: S ? S.parts.length : 0 }, i + '|' + it.hint, function(r){
+        if(!card.isConnected) return;
+        var part = r.ok && r.j.study && r.j.study.parts && r.j.study.parts[0] ? r.j.study.parts[0] : null;
+        if(part){
+          if(r.j.points && window.AiSub){ try{ window.AiSub.applyPoints(r.j.points); var pp = window.AiSub.pts('chat'); if(pp && pp.left <= 0) lastPt = true; }catch(x){} }
+          part.src = nos.slice();   /* أرقام الصور الأصلية (الخادم شاف الصور المختارة بس) */
+          render(part);
+          return next(i + 1);
+        }
+        var e = r.err || 'generic';
+        if(FATAL[e]){ stopErr = aiErr(e); return fin(); }
+        if(e !== 'unreadable' && tries < 2){ setTimeout(function(){ attempt(i, it, nos, sub, tries + 1); }, 5000 + tries * 4000); return; }
+        lastErr = e; bad.push(it.n ? 'سؤال ' + it.n : 'السؤال ' + (i + 1));
+        next(i + 1);
+      });
+    }
+    function next(i){
+      if(!card.isConnected) return;
+      if(i >= N) return fin();
+      var it = plan[i], nos = [];
+      (it.src || []).forEach(function(v){ v = parseInt(v, 10); if(v >= 1 && v <= list.length && nos.indexOf(v) === -1) nos.push(v); });
+      if(!nos.length) list.forEach(function(_, k){ nos.push(k + 1); });   /* الفهرسة ما حددتش صور السؤال: نبعت كل الصور */
+      nos.sort(function(a, b){ return a - b; });
+      prog(i);
+      attempt(i, it, nos, nos.map(function(v, k){ return { slot: k, mime: 'image/jpeg', data: list[v - 1].data }; }), 0);
+    }
+    call('study', { images: list, note: note, qmode: true, qplan: true }, imgs.length + '|' + note + '|qplan', function(r){
+      var pl = r.ok && r.j.study && r.j.study.plan && r.j.study.plan.length ? r.j.study : null;
+      if(!pl) return failFirst(r.err === 'unreadable' ? NOQ : aiErr(r.err));
+      plan = pl.plan; N = plan.length; title = pl.title || '';
+      next(0);
     });
   }
 
