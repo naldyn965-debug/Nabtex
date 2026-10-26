@@ -1308,6 +1308,100 @@ async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حس
 const ARB_MAX = 4;
 const ARB_CAP_MS = 25000;
 const ARB_MIN_BUDGET_MS = 10000;
+/* ═══ ARB-THEORY + ARB-GEMINI (إضافة): تحسين المحكّم بس.
+   1) الأسئلة النظرية (اختيار من متعدد / صح وخطأ / علّل): المحكّم كان بياخد برومبت حلّال المسائل الحسابية (المعطيات ← القانون ← التعويض) فكان بيفشل غالبًا في سطر «الحكم:» ويخرج بصمت؛ دلوقتي ليها برومبت خاص: يستخرج شروط السؤال (زي «يمكن الكشف عن شقيه» = الكاتيون والأنيون معًا) ويفحص كل اختيار قدام كل الشروط ويكتب الإجابة النهائية بالخط العريض برقم الاختيار ونصه (ده اللي بيستخدمه qmMark في تعليم الإجابة).
+   2) لو محكّم Groq ما حسمش (غير محسوم / رد من غير سطر الحكم / 429 / وقت) بيتحكّم جيميناي (أعلى موديل في السلّم) مرة واحدة على الأجزاء دي بس — عيلة موديلات مختلفة عن الحلّال (Groq) والمراجع (OpenRouter). نفس منطق الحكم: صح ← الحل يفضل + سطر تأكيد · غلط ← الحل الجديد يستبدل · غير محسوم/فشل ← تنبيه المراجعة زي ما كان.
+   3) أسباب الخروج الصامت بقت بتتسجل في Vercel Logs (arbiter … no verdict line / undecided / length).
+   الإعداد: GEMINI_ARB_MODEL = موديل المحكّم الاحتياطي (الافتراضي: أعلى موديل في GEMINI_QM_LADDER) · GEMINI_ARB_MODEL=off يوقف خطوة جيميناي.
+   للتراجع: امسح الكتلة دي + استبدل سطر arbMsg(c) بالنص الأصلي + سطري ARB-GEMINI في arbitrateConflicts. ═══ */
+const ARB_GEM_MODEL = (function () {
+  const e = String(process.env.GEMINI_ARB_MODEL || '').trim();
+  if (/^(off|0|false|none)$/i.test(e)) return '';
+  if (/^[A-Za-z0-9._:\/-]{3,100}$/.test(e)) return e;
+  return (typeof QM_LADDER !== 'undefined' && QM_LADDER.length) ? QM_LADDER[QM_LADDER.length - 1] : '';
+})();
+const arbCool = new Map();   /* "model|backend" → وقت انتهاء التبريد (ms) */
+const ARB_VERDICT_RE = /^[\s«»\"'*_#>\-–—]*الحكم\s*[:：]\s*([^\n]*)\n?/;
+const ARB_THEORY_SYS = [
+  'أنت «محكّم نبتيكس» لأسئلة نظرية (اختيار من متعدد / صح وخطأ / أكمل / علّل) لطالب مصري (ثانوية عامة أو جامعي) في العلوم والزراعة.',
+  'مهمتك الحكم بين إجابة مقترحة ومراجعة مستقلة اختلفت معاها، بإنك تحل السؤال بنفسك من الصفر وإنت مش متأثر بالاتنين.',
+  'قواعد إلزامية: (1) اقرأ نص السؤال واستخرج كل شروطه بدقة قبل ما تبص على أي اختيار، وافهم الكلمات المفتاحية حرفيًا (مثال: «يمكن الكشف عن شقيه» = الكاتيون والأنيون معًا مش واحد بس · «فقط» · «ما عدا» · «أيّ مما يلي لا»). (2) لو فيه اختيارات: افحص كل اختيار لوحده قدام كل شرط في السؤال واكتب في سطر قصير ليه ينفع أو ما ينفعش، من غير ما تقفز ولا تكتفي بشرط واحد. (3) الاختيار الصح هو اللي بيحقق كل الشروط مع بعض. (4) اعتمد على المعلومات العلمية المعتمدة في منهج الوزارة المصري والكتب الجامعية، ومتخترعش معلومة. لو السؤال مبني على نص كتاب أو شكل مش ظاهر وما تقدرش تحسم بثقة قول «الحكم: غير محسوم».',
+  'الشكل: السطر الأول بالظبط واحد من التلاتة: «الحكم: الحل السابق صح» أو «الحكم: الحل السابق غلط» أو «الحكم: غير محسوم». بعده الإجابة النهائية في سطر مستقل بالخط العريض (**هكذا**) فيها رقم الاختيار ونصه كامل زي ما هو في السؤال (مثال: **الاختيار (4): نص الاختيار**) أو **صح** / **خطأ** أو الإجابة المختصرة، وبعدها شرح الاختيارات في سطور قصيرة.',
+  'التنسيق: نص عادي بس، ممنوع LaTeX وأي علامات $ وممنوع عناوين markdown (#) والجداول والإيموجي؛ الكيمياء برموز يونيكود (H₂O، SO₄²⁻، →). اللغة: عامية مصرية مبسطة والمصطلحات العلمية زي ما هي. الطول: حوالي 250 كلمة بالكتير، والرد نص الحكم بس من غير مقدمة.',
+  INJECTION
+].join('\n');
+const ARB_THEORY_TAIL = '\n\nملحوظة: ده سؤال نظري مش مسألة حسابية، فالتزم بتعليمات المحكّم للأسئلة النظرية: استخرج شروط السؤال، وافحص كل اختيار لوحده قدام كل الشروط، واكتب الإجابة النهائية في سطر مستقل بالخط العريض فيه رقم الاختيار ونصه كامل.';
+function arbMsg(c) {
+  const base = 'عنوان الجزء: ' + c.p.title + '\n\nنص المسألة/السؤال:\n' + c.au.prob + '\n\nحل سابق (ممكن يكون فيه خطأ):\n' + c.au.sol.slice(0, 2500)
+            + '\n\nمراجع مستقل طلّع ناتج مختلف' + (c.v.final ? ': ' + c.v.final : '') + (c.v.where ? '\nالخطأ المحتمل حسب المراجع: ' + c.v.where : '')
+            + '\n\nأنت دلوقتي المحكّم: أعد حل المسألة/السؤال من الصفر بحذر شديد من غير ما تتأثر بالحل السابق ولا بالمراجع، وراجع ناتجك بطريقة مستقلة قبل ما تقرر. '
+            + 'السطر الأول من ردك لازم يكون بالظبط واحد من التلاتة دول وبس: «الحكم: الحل السابق صح» أو «الحكم: الحل السابق غلط» أو «الحكم: غير محسوم». بعد كده اكتب الحل الكامل بالترتيب المعتاد (لو الحل السابق صح اكتبه مصحّح الصياغة لو لزم).';
+  return c.p._pb ? base : base + ARB_THEORY_TAIL;
+}
+async function arbGeminiOne(c, bks, ci, signal) {
+  try {
+    const order = pickOrder(bks, ci % bks.length);
+    let tries = 0;
+    for (let bi = 0; bi < order.length && tries < 2; bi++) {
+      const b = order[bi];
+      if ((arbCool.get(ARB_GEM_MODEL + '|' + b.name) || 0) > Date.now() && order.length > bi + 1) continue;
+      if (signal.aborted) return;
+      tries++;
+      const body = {
+        systemInstruction: { parts: [{ text: c.p._pb ? SYSTEMS.solve : ARB_THEORY_SYS }] },
+        contents: [{ role: 'user', parts: [{ text: arbMsg(c) }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 8000 }
+      };
+      const r = await callBackend(b, body, signal, ARB_GEM_MODEL);
+      const t = await r.text();
+      const v = judgeUpstream(r.status, t);
+      if (v) {
+        console.error('[farm-ai] arbiter-gem ' + ARB_GEM_MODEL + ' @' + b.name + ' http ' + r.status + errBrief(t));
+        if (r.status === 401 || r.status === 403) { if (v.cool) cooldown.set(b.name, Date.now() + v.cool); continue; }
+        if (!v.next) return;
+        arbCool.set(ARB_GEM_MODEL + '|' + b.name, Date.now() + (v.cool || 0));
+        continue;
+      }
+      let j = null;
+      try { j = JSON.parse(t); } catch (e) { return; }
+      const cd = j && j.candidates && j.candidates[0];
+      const txt = cd && cd.content && cd.content.parts ? cd.content.parts.map(function (p) { return (p && p.text) || ''; }).join('') : '';
+      const out = cleanSolve(txt);
+      const m = out.match(ARB_VERDICT_RE);
+      if (!m) { console.error('[farm-ai] arbiter-gem @' + b.name + ': no verdict line | ' + out.slice(0, 60).replace(/\s+/g, ' ')); return; }
+      const body2 = out.slice(m[0].length).trim();
+      const wrong = /غلط|خطأ|خطا|مش صح|غير صح|ليس صح/.test(m[1]);
+      const right = !wrong && /صح/.test(m[1]);
+      if (right) {
+        c.p.explain = c.p.explain + '\n\n' + (c.ar
+          ? 'مراجعة: مراجعة أولى طلّعت ناتج مختلف' + (c.v.final ? ' (' + c.v.final + ')' : '') + '، وتحكيم تاني بإعادة الحل من الصفر أكّد إن الحل ده هو الصح.'
+          : 'Check: a first review got a different result' + (c.v.final ? ' (' + c.v.final + ')' : '') + ', but a second careful re-solve confirmed this solution.');
+        c.done = true;
+        console.log('[farm-ai] arbiter-gem: keep ' + ARB_GEM_MODEL + ' @' + b.name);
+      } else if (wrong && body2.length >= 60) {
+        c.p.explain = body2 + '\n\n' + (c.ar
+          ? 'تم تصحيح الحل بعد ما مراجعة مستقلة اختلفت معاه وتحكيم تاني أعاد الحل من الصفر.'
+          : 'This solution was corrected after an independent review disagreed and a second careful re-solve.');
+        delete c.p.ans; delete c.p.ai;   /* الإجابة المعلّمة القديمة ممكن تكون هي الغلط */
+        try { Object.defineProperty(c.p, '_fx', { value: true, enumerable: false, writable: true }); } catch (e) { /* زي محكّم Groq */ }
+        c.done = true;
+        console.log('[farm-ai] arbiter-gem: fixed ' + ARB_GEM_MODEL + ' @' + b.name);
+      } else console.error('[farm-ai] arbiter-gem @' + b.name + ': undecided (' + String(m[1]).slice(0, 40) + ')');
+      return;
+    }
+  } catch (e) { console.error('[farm-ai] arbiter-gem failed:', e && e.name); }
+}
+async function arbGeminiPass(todo, ms) {   /* الأجزاء اللي محكّم Groq ما حسمهاش بس */
+  if (!ARB_GEM_MODEL || ms < 7000) return;
+  const pending = todo.filter(function (c) { return !c.done; });
+  if (!pending.length) return;
+  const bks = buildBackends();
+  if (!bks.length) return;
+  const ctl = new AbortController();
+  const timer = setTimeout(function () { ctl.abort(); }, ms);
+  try { await Promise.all(pending.map(function (c, ci) { return arbGeminiOne(c, bks, ci, ctl.signal); })); }
+  finally { clearTimeout(timer); }
+}
 async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفتاح Groq التالي لمفتاح الحل (محكّم مختلف) */
   const todo = pend.slice(0, ARB_MAX);
   pend.slice(ARB_MAX).forEach(function (c) { c.p.explain = c.p.explain + '\n\n' + c.note; });
@@ -1315,18 +1409,16 @@ async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفت
     const budget = Math.min(ARB_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
     if (budget < ARB_MIN_BUDGET_MS || !GROQ_KEYS.length) return;
     const start = rot >= 0 ? rot % GROQ_KEYS.length : await groqNextStart(GROQ_KEYS.length);   /* STUDY-QSEQ */
-    if (!groqOrder(start).length) return;
+    if (!groqOrder(start).length) { await arbGeminiPass(todo, budget); return; }   /* ARB-GEMINI: كل مفاتيح Groq في تبريد */
     const effort = budget >= 20000 ? 'high' : GROQ_EFFORT;
+    const arbEnd = Date.now() + budget;   /* ARB-GEMINI */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
     try {
       await Promise.all(todo.map(async function (c, ci) {
         try {
           const keys = groqOrder(start + ci);
-          const msg = 'عنوان الجزء: ' + c.p.title + '\n\nنص المسألة/السؤال:\n' + c.au.prob + '\n\nحل سابق (ممكن يكون فيه خطأ):\n' + c.au.sol.slice(0, 2500)
-            + '\n\nمراجع مستقل طلّع ناتج مختلف' + (c.v.final ? ': ' + c.v.final : '') + (c.v.where ? '\nالخطأ المحتمل حسب المراجع: ' + c.v.where : '')
-            + '\n\nأنت دلوقتي المحكّم: أعد حل المسألة/السؤال من الصفر بحذر شديد من غير ما تتأثر بالحل السابق ولا بالمراجع، وراجع ناتجك بطريقة مستقلة قبل ما تقرر. '
-            + 'السطر الأول من ردك لازم يكون بالظبط واحد من التلاتة دول وبس: «الحكم: الحل السابق صح» أو «الحكم: الحل السابق غلط» أو «الحكم: غير محسوم». بعد كده اكتب الحل الكامل بالترتيب المعتاد (لو الحل السابق صح اكتبه مصحّح الصياغة لو لزم).';
+          const msg = arbMsg(c);   /* ARB-THEORY: نفس النص بالحرف للمسائل؛ الأسئلة النظرية بتاخد تنبيه إضافي */
           for (let ki = 0; ki < keys.length; ki++) {
             const gk = keys[ki];
             const r = await fetch(GROQ_URL, {
@@ -1334,7 +1426,7 @@ async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفت
               headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gk.key },
               body: JSON.stringify({
                 model: GROQ_MODEL, temperature: 0.2, max_completion_tokens: GROQ_MAX_OUT - 500, reasoning_effort: effort, include_reasoning: false,
-                messages: [{ role: 'system', content: SYSTEMS.solve }, { role: 'user', content: msg }]
+                messages: [{ role: 'system', content: c.p._pb ? SYSTEMS.solve : ARB_THEORY_SYS }, { role: 'user', content: msg }]
               })
             });
             const raw = await r.text();
@@ -1352,10 +1444,10 @@ async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفت
             let j = null;
             try { j = JSON.parse(raw); } catch (e) { return; }
             const ch = j && j.choices && j.choices[0];
-            if (!ch || ch.finish_reason === 'length') return;
+            if (!ch || ch.finish_reason === 'length') { console.error('[farm-ai] arbiter ' + gk.name + ': ' + (!ch ? 'empty reply' : 'cut (length)')); return; }
             const out = cleanSolve(ch.message && typeof ch.message.content === 'string' ? ch.message.content : '');
             const m = out.match(/^[\s«»\"'*_#>\-–—]*الحكم\s*[:：]\s*([^\n]*)\n?/);   /* بيتسامح مع «» و** حوالين السطر */
-            if (!m) return;
+            if (!m) { console.error('[farm-ai] arbiter ' + gk.name + ': no verdict line | ' + out.slice(0, 60).replace(/\s+/g, ' ')); return; }
             const body2 = out.slice(m[0].length).trim();
             const wrong = /غلط|خطأ|خطا|مش صح|غير صح|ليس صح/.test(m[1]);
             const right = !wrong && /صح/.test(m[1]);
@@ -1373,11 +1465,12 @@ async function arbitrateConflicts(pend, t0, rot) {   /* STUDY-QSEQ: rot = مفت
               try { Object.defineProperty(c.p, '_fx', { value: true, enumerable: false, writable: true }); } catch (e) { /* STUDY-QMODE-MARK: المحكّم صحّح الحل ← مانرجّعش علامة جيميناي القديمة */ }
               c.done = true;
               console.log('[farm-ai] arbiter: fixed ' + gk.name);
-            }
+            } else console.error('[farm-ai] arbiter ' + gk.name + ': undecided (' + String(m[1]).slice(0, 40) + ')');
             return;
           }
         } catch (e) { console.error('[farm-ai] arbiter failed:', e && e.name); }
       }));
+      await arbGeminiPass(todo, arbEnd - Date.now());   /* ARB-GEMINI: اللي Groq ما حسمهوش */
     } finally { clearTimeout(timer); }
   } catch (e) { console.error('[farm-ai] arbiter stage error:', e && e.name); }
   finally { todo.forEach(function (c) { if (!c.done) c.p.explain = c.p.explain + '\n\n' + c.note; }); }
