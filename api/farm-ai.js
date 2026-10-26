@@ -562,6 +562,147 @@ function qmOne(p) {
   } catch (e) { /* أي فشل = السلوك القديم */ }
 }
 
+/* ═══ QM-LADDER (إضافة): «وضع الأسئلة الفائق» بس — سلّم موديلات جيميناي بالتصعيد (أقل استهلاك بأعلى نتيجة).
+   كل طلب (فهرسة / سؤال واحد) بيبدأ من أرخص موديل سليم، ولو الجزء فشل بيتنقل لموديل أعلى في نفس الطلب، وبعدها لو لزم لأعلى:
+   · فشل فعلي: حصة/ضغط (429 / 5xx / مهلة) على المفاتيح، أو اسم موديل مقفول (404) ← الموديل اللي بعده (حصته مستقلة)
+   · رد فاضي أو JSON مش مقروء أو حروف تالفة (صينية / تسلسلات مقطوعة) ← الموديل اللي بعده علطول (من غير إعادة بنفس الموديل)
+   · سؤال اتقرأ غلط على الأرجح (مش بيطابق بداية نصه في الفهرس / مش جزء سؤال / شرح فاضي) أو «صور مش مقروءة» من أرخص موديل ← تصعيد، ولو التصعيد ما جابش أحسن بنرجّع الرد الأصلي
+   · الرد المحجوب بسبب البرومبت نفسه (blockReason) ما بيتصعّدش (هيتحجب في كل الموديلات)
+   موديل فشل 3 مرات ورا بعض (أو حصته خلصت) بيتخطّاه الطلب اللي بعده فترة بدل ما كل سؤال يدفع محاولة فاشلة الأول، وبيتجرّب تاني بعد 10 دقايق (أو بعد مدة التبريد).
+   التبريد هنا لكل (موديل + backend) مش للـ backend كله، فحصة موديل خلصت ما بتأثرش على باقي الأوضاع. أي موديل في السلّم لازم يكون ليه حصة مجانية على مفاتيحك.
+   الإعداد (كله اختياري): GEMINI_QM_LADDER = موديلات من الأرخص للأقوى مفصولة بفاصلة (الافتراضي: GEMINI_MODEL ← gemini-3.6-flash ← gemini-3.8-flash) · GEMINI_QM_LADDER=off يرجّع السلوك القديم بالظبط · GEMINI_QM_SOFT=0 يوقف فحص «السؤال اتقرأ صح».
+   للتراجع: امسح الكتلة دي + بلوك QM-LADDER في handler + شرط qmL في حلقة الـ backends وSTUDY-FALLBACK وSTUDY-RETRY. ═══ */
+const QM_LADDER = (function () {
+  const raw = String(process.env.GEMINI_QM_LADDER || '').trim();
+  if (/^(off|0|false|none)$/i.test(raw)) return [];
+  const list = (raw ? raw.split(',') : [MODEL, 'gemini-3.6-flash', 'gemini-3.8-flash']).map(function (x) { return x.trim(); })
+    .filter(function (x, i, a) { return /^[A-Za-z0-9._:\/-]{3,100}$/.test(x) && a.indexOf(x) === i; }).slice(0, 4);
+  return list.length > 1 ? list : [];
+})();
+const QM_SOFT_OFF = process.env.GEMINI_QM_SOFT === '0';
+const QM_ESC_MIN_MS = 14000;   /* أقل وقت لازم يفضل في الميزانية عشان نجرّب موديل أعلى */
+const qmCool = new Map();      /* "model|backend" → وقت انتهاء التبريد (ms) — best-effort على مستوى الـ instance */
+const qmRung = new Map();      /* model → { miss, skipUntil } */
+
+function qmStart() {   /* أرخص موديل مش موقوف حاليًا (الأعلى دايمًا متاح كآخر حل) */
+  const now = Date.now();
+  for (let i = 0; i < QM_LADDER.length - 1; i++) {
+    const r = qmRung.get(QM_LADDER[i]);
+    if (!r || r.skipUntil <= now) return i;
+  }
+  return QM_LADDER.length - 1;
+}
+function qmNote(model, ok, skipMs) {
+  let r = qmRung.get(model);
+  if (!r) { r = { miss: 0, skipUntil: 0 }; qmRung.set(model, r); }
+  if (ok) { r.miss = 0; r.skipUntil = 0; return; }
+  if (skipMs) { r.skipUntil = Date.now() + skipMs; r.miss = 0; return; }
+  if (++r.miss >= 3) { r.skipUntil = Date.now() + 10 * 60000; r.miss = 0; }
+}
+
+function qmTok(s) {
+  return String(s || '').replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+    .split(/[^\p{L}\p{N}]+/u).filter(function (w) { return w.length >= 2 || /\d/.test(w); });
+}
+/* true = السؤال متقري سليم (أو مش قادرين نحكم)؛ false = على الأرجح اتقرأ غلط: مش جزء سؤال / نص السؤال أو الشرح فاضي تقريبًا / أقل من 45% من كلمات بداية السؤال في الفهرس موجودة في نصه */
+function qmSoftOk(st, hint) {
+  try {
+    if (QM_SOFT_OFF || !st || !Array.isArray(st.parts) || !st.parts.length) return true;
+    const p = st.parts[0];
+    if (!p || p.kind !== 'q' || String(p.q || '').trim().length < 6 || String(p.explain || '').trim().length < 25) return false;
+    const h = qmTok(hint);
+    if (h.length < 4) return true;
+    const seen = Object.create(null);
+    let hit = 0;
+    qmTok(String(p.q) + ' ' + String(p.title || '')).forEach(function (w) { seen[w] = 1; });
+    h.forEach(function (w) { if (seen[w] === 1) hit++; });
+    return hit / h.length >= 0.45;
+  } catch (e) { return true; }
+}
+/* kind: good = سليم · poor = سليم هيكليًا بس مشكوك فيه (بنصعّد ونحتفظ بيه احتياطي) · bad = مش صالح · final = نهائي (ما نصعّدش) */
+function qmJudge(t, stage, hint, escUnread) {
+  let j = null;
+  try { j = JSON.parse(t); } catch (e) { return { kind: 'bad', why: 'not-json' }; }
+  if (j && j.promptFeedback && j.promptFeedback.blockReason) return { kind: 'final', why: 'prompt-blocked' };
+  const c = j && j.candidates && j.candidates[0];
+  const out = c && c.content && c.content.parts ? c.content.parts.map(function (p) { return (p && p.text) || ''; }).join('').trim() : '';
+  if (!out) return { kind: 'bad', why: 'empty/' + (c && c.finishReason) };
+  const raw = parseStudyJson(out);
+  const st = stage === 'plan' ? sanitizeQPlan(raw) : sanitizeStudy(raw);
+  if (!st) return { kind: 'bad', why: 'unparsable' };
+  if (st.unreadable) return (escUnread && (stage === 'plan' || stage === 'one')) ? { kind: 'poor', why: 'unreadable' } : { kind: 'good' };
+  if (stage !== 'plan' && qmBadPart(st)) return { kind: 'bad', why: 'bad-chars' };
+  if (stage === 'one' && !qmSoftOk(st, hint)) return { kind: 'poor', why: 'misread' };
+  return { kind: 'good' };
+}
+/* o = { order, reqBody, deadline, t0, attemptCap, stage, hint } → { up, text, rateLimited, lastErr } بنفس معنى متغيرات الحلقة العادية في handler */
+async function qmLadderRun(o) {
+  const last = QM_LADDER.length - 1, first = qmStart();
+  const R = { up: null, text: '', rateLimited: false, lastErr: null };
+  let soft = null, startAt = 0, tries = 0;
+  for (let mi = first; mi <= last; mi++) {
+    const model = QM_LADDER[mi];
+    const rr = qmRung.get(model);
+    if (mi > first && mi < last && rr && rr.skipUntil > Date.now()) continue;   /* موديل موقوف مؤقتًا: نعدّي اللي بعده */
+    if (mi > first) {
+      const lim = soft ? Math.min(o.deadline, o.t0 + FN_BUDGET_MS - GROQ_MIN_BUDGET_MS) : o.deadline;   /* لو معانا رد احتياطي منسيبش وقت للحلّال (Groq) */
+      if (lim - Date.now() < QM_ESC_MIN_MS) break;
+    }
+    const seq = o.order.map(function (x, k) { return o.order[(startAt + k) % o.order.length]; });   /* البداية من الـ backend اللي رده كان سليم */
+    let cands = seq.filter(function (b) { return (qmCool.get(model + '|' + b.name) || 0) <= Date.now(); });
+    if (!cands.length) { if (mi < last) { qmNote(model, false, 60000); continue; } cands = seq.slice(0, 1); }
+    let hard = 0, skipMs = 0, esc = false;
+    for (let ci = 0; ci < cands.length && !esc; ci++) {
+      const b = cands[ci], remain = o.deadline - Date.now();
+      if (tries > 0 && remain < 3000) break;
+      tries++;
+      const cap = (mi === last && ci === cands.length - 1) ? remain : Math.max(12000, Math.min(o.attemptCap, remain - QM_ESC_MIN_MS));
+      const ctl = new AbortController();
+      const timer = setTimeout(function () { ctl.abort(); }, Math.min(cap, remain));
+      try {
+        const r = await callBackend(b, o.reqBody, ctl.signal, model);
+        const t = await r.text();
+        const v = judgeUpstream(r.status, t);
+        R.up = r; R.text = t; R.lastErr = null;
+        if (!v) {
+          const q = qmJudge(t, o.stage, o.hint, mi === first && mi < last);
+          if (q.kind === 'good' || q.kind === 'final') {
+            R.rateLimited = false;
+            if (q.kind === 'good') qmNote(model, true);
+            console.log('[farm-ai] qm-ladder ' + (o.stage || 'all') + ': ' + model + ' @' + b.name + ' ok (rung ' + (mi + 1) + '/' + QM_LADDER.length + ', calls ' + tries + ')' + (q.kind === 'final' ? ' ' + q.why : ''));
+            return R;
+          }
+          qmNote(model, false);
+          console.error('[farm-ai] qm-ladder ' + (o.stage || 'all') + ': ' + model + ' @' + b.name + ' ' + q.kind + ' (' + q.why + ') → ' + (mi < last ? 'escalate' : 'top of ladder'));
+          if (q.kind === 'poor') soft = { r: r, t: t };   /* آخر رد «مشكوك» (الأعلى موديلًا) هو الاحتياطي */
+          startAt = Math.max(0, o.order.indexOf(b));
+          esc = true; break;
+        }
+        console.error('[farm-ai] qm-ladder ' + model + ' @' + b.name + ' → http ' + r.status + errBrief(t));
+        if (r.status === 429) R.rateLimited = true;
+        if (r.status === 401 || r.status === 403 || (r.status === 400 && /api key/i.test(t || ''))) { if (v.cool) cooldown.set(b.name, Date.now() + v.cool); continue; }   /* مفتاح الـ backend نفسه عطلان: بيأثر على كل الموديلات */
+        if (r.status === 404 || (r.status === 400 && /model/i.test(t || ''))) { qmNote(model, false, 10 * 60000); esc = true; break; }   /* اسم موديل غلط/اتقفل */
+        if (!v.next) return R;   /* 400 عادي = الطلب نفسه غلط، تغيير الموديل مش هيفيد */
+        qmCool.set(model + '|' + b.name, Date.now() + (v.cool || 0));
+        skipMs = Math.max(skipMs, v.cool || 0);
+        if (r.status !== 429 && ++hard >= 2) esc = true;   /* ضغط/5xx على مفتاحين ورا بعض: الموديل ده مش هيفيد، نصعّد */
+      } catch (e) {
+        R.lastErr = e; R.up = null;
+        console.error('[farm-ai] qm-ladder ' + model + ' @' + b.name + ' unreachable:', e && e.name);
+        qmCool.set(model + '|' + b.name, Date.now() + 15000);
+        if (++hard >= 2) { esc = true; skipMs = Math.max(skipMs, 60000); }
+      } finally { clearTimeout(timer); }
+    }
+    if (skipMs) qmNote(model, false, Math.max(60000, skipMs));   /* الموديل ده رفض بحصة/ضغط: الطلبات اللي بعده تبدأ من اللي فوقه فترة */
+  }
+  if (soft) {
+    console.error('[farm-ai] qm-ladder ' + (o.stage || 'all') + ': no better reply up the ladder → keeping the unconfirmed one');
+    R.up = soft.r; R.text = soft.t; R.lastErr = null; R.rateLimited = false;
+  }
+  return R;
+}
+
 const NUM_KEYS = ['irr_times', 'irr_amount', 'irr_hours', 'fert_n', 'fert_p', 'fert_k', 'fert_organic', 'fert_micro', 'fert_amount',
   'spray_conc', 'spray_water', 'spray_area', 'spray_times', 'labor', 'machines', 'temp', 'humidity', 'rain'];
 const TXT_KEYS = ['fert_name', 'fert_company', 'spray_name', 'spray_company', 'spray_pest', 'notes'];
@@ -1584,7 +1725,13 @@ module.exports = async function handler(req, res) {
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
   const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
-  for (let bi = 0; bi < order.length; bi++) {
+  /* QM-LADDER: «وضع الأسئلة الفائق» بس (فهرسة / سؤال / الطلب الواحد القديم) — بدل الحلقة العادية وSTUDY-FALLBACK وSTUDY-RETRY بنستخدم سلّم موديلات بالتصعيد (qmLadderRun فوق). من غير سلّم (GEMINI_QM_LADDER=off) أو في أي وضع تاني الأسطر دي ما بتعملش حاجة. */
+  let qmL = false;
+  if (mode === 'study' && qmode && QM_LADDER.length > 1) {
+    const lr = await qmLadderRun({ order: order, reqBody: reqBody, deadline: deadline, t0: t0, attemptCap: attemptCap, stage: qStage, hint: (qStage === 'one' && body.qone && typeof body.qone.hint === 'string') ? body.qone.hint.slice(0, 200) : '' });
+    up = lr.up; text = lr.text; rateLimited = lr.rateLimited; lastErr = lr.lastErr; qmL = true;
+  }
+  for (let bi = 0; bi < (qmL ? 0 : order.length); bi++) {   /* QM-LADDER */
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
@@ -1612,7 +1759,7 @@ module.exports = async function handler(req, res) {
     } finally { clearTimeout(timer); }
   }
   /* STUDY-FALLBACK: لو الموديل الأقوى (GEMINI_STUDY_MODEL) وكل الـ backends رجّعت 429/5xx (حصته المجانية أقل بكتير)، نعيد المرة دي بالموديل الأساسي (MODEL) في نفس الطلب بدل ما الطالب يشوف خطأ. من غير GEMINI_STUDY_MODEL مفيش أي تأثير. للتراجع: امسح الكتلة دي. */
-  if (modelFor(mode) && (!up || !up.ok) && (rateLimited || (up && (up.status === 429 || up.status >= 500 || up.status === 404 || (up.status === 400 && /model/i.test(text || '')))))) {
+  if (!qmL && modelFor(mode) && (!up || !up.ok) && (rateLimited || (up && (up.status === 429 || up.status >= 500 || up.status === 404 || (up.status === 400 && /model/i.test(text || '')))))) {
     console.error('[farm-ai] ' + mode + ': ' + modelFor(mode) + ' unavailable, falling back to ' + MODEL);
     strongOffUntil = Date.now() + ((rateLimited || (up && up.status === 429)) ? (/PerDay/i.test(text || '') ? 30 * 60000 : 60000) : 10 * 60000);   /* حصة يومية: نص ساعة · دقيقة: 60ث · اسم موديل غلط/5xx: 10 دقايق */
     for (let fi = 0; fi < order.length; fi++) {
@@ -1662,7 +1809,7 @@ module.exports = async function handler(req, res) {
     const so = sanitizeStudy(parseStudyJson(o));
     return so && !(qmode && qmBadPart(so));   /* QM-CLEAN: في وضع الأسئلة الفائق الرد اللي فيه حروف صينية/تسلسلات \\u مقطوعة بيتعاد زي الرد الفاضي */
   };   /* STUDY-QSEQ: الفهرسة ليها sanitizer تاني */
-  if (mode === 'study' && !(out && studyOk(out))) {
+  if (mode === 'study' && !qmL && !(out && studyOk(out))) {   /* QM-LADDER: السلّم جرّب موديلات أعلى بالفعل */
     console.error('[farm-ai] study: unusable reply — finish:', cand && cand.finishReason, '| block:', j && j.promptFeedback && j.promptFeedback.blockReason, '| chars:', out.length, '| http:', up.status);
     if (deadline - Date.now() > 20000) {
       try {
