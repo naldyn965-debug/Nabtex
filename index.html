@@ -18631,7 +18631,8 @@ document.addEventListener('click', e => {
       plan3: { price: 299, chat: 20, diag: 15, imgs: 12, label: 'Pro' }   /* AI-PRICE — القديم (للتراجع): price: 300 */ /* AI-PLAN-NAMES — القديم (للتراجع): label: 'باقة البرو' */
     };
     var aiMem = { uid: null, d: null, at: 0, day: '' };
-    var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false, fam: 'ai' };   /* STUDY-SPLIT: fam = 'ai' (Nabtex AI) | 'study' (ذاكر مع نبتيكس) */
+    var aiUI = { plan: 'plan1', method: 'vodafone_cash', busy: false, fam: 'ai' };
+    var aiCp = null;   /* STUDY-COUPON: كود الخصم المطبَّق على باقات «ذاكر» بس ({code,pct}) أو null. للتراجع: انظر «STUDY COUPON SETUP.md» */   /* STUDY-SPLIT: fam = 'ai' (Nabtex AI) | 'study' (ذاكر مع نبتيكس) */
     /* STUDY-SPLIT: مساعدات الفصل بين باقات Nabtex AI وباقات «ذاكر» */
     function aiKeys(f) { return f === 'study' ? ['study1', 'study2', 'study3'] : ['plan1', 'plan2', 'plan3']; }
     function aiPKey(k) { return String(k).replace(/^study/, 'plan'); }   /* لتنسيق الـ CSS (data-p) — study3 بنفس لمسة البرو */
@@ -18763,6 +18764,76 @@ document.addEventListener('click', e => {
         '<span class="aipw-qmr-tx"><b>وضع الأسئلة الفائق</b></span>' +   /* QM-PAYWALL-ROW-2: سطر واحد مدمج. القديم (للتراجع): + '<small>حلّ كل سؤال في الصور بالإجابة الصحيحة</small>' جوه .aipw-qmr-tx */
         '<span class="aipw-qmr-ok"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>مشمول</span></span>';
     }
+    /* ══ STUDY-COUPON — كود خصم لباقات «ذاكر مع نبتيكس» (study1/2/3) فقط ══
+       الكود بيتخزّن في Firestore: study_coupons/{CODE} = { active: true, pct: 50, expiresAt: Timestamp } (الأدمن بس يكتب).
+       الواجهة هنا بتعرض السعر المخفّض وبتبعت coupon في طلب الدفع، والحماية الحقيقية في firestore.rules (cpOk): الكود لازم يكون فعّال ولسه ما انتهاش والمبلغ = السعر بعد الخصم (مقرَّب لأعلى جنيه).
+       للتراجع: امسح الكتلة دي + سطور STUDY-COUPON في (aiPlansHTML / aiPaywallHTML / pick / openPay / refresh / send / الكلاس aiCp) + بلوك STUDY-COUPON في firestore.rules. */
+    function aiCpOn(k) { return !!(aiCp && AI_PLANS[k] && AI_PLANS[k].study); }
+    function aiEff(k) { var p = AI_PLANS[k]; if (!p) return 0; return aiCpOn(k) ? Math.ceil(p.price * (100 - aiCp.pct) / 100) : p.price; }
+    (function() {
+      try {
+        if (document.getElementById('nb-study-coupon-css')) return;
+        var s = document.createElement('style'); s.id = 'nb-study-coupon-css';
+        s.textContent = '.aipw-cp{margin:12px 0 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}' +
+          '.aipw-cp input{flex:1;min-width:0;height:44px;border-radius:14px;border:1.5px solid rgba(120,140,128,.4);padding:0 14px;font:inherit;font-size:14px;background:transparent;color:inherit;text-transform:uppercase;letter-spacing:.05em;direction:ltr;text-align:center}' +
+          '.aipw-cp input::placeholder{text-transform:none;letter-spacing:0;direction:rtl}' +
+          '.aipw-cp button{height:44px;padding:0 18px;border-radius:14px;border:0;font:inherit;font-weight:800;font-size:14px;background:#1B6B3A;color:#fff;cursor:pointer}' +
+          '.aipw-cp button:disabled{opacity:.5;cursor:default}' +
+          '.aipw-cp-m{flex-basis:100%;font-size:12px;color:#c0392b}.aipw-cp-m:empty{display:none}' +
+          '.aipw-cp.ok{justify-content:space-between;padding:10px 14px;border-radius:14px;background:rgba(27,107,58,.12);color:#1B6B3A;font-weight:800;font-size:13.5px}' +
+          '[data-dark] .aipw-cp.ok{color:#6fd68f}' +
+          '.aipw-cp.ok button{background:transparent;color:inherit;height:auto;padding:0;text-decoration:underline;font-size:12.5px}' +
+          '.aipw-old{font-size:13px;font-weight:700;color:#8a9a90;margin-inline-end:2px}';
+        document.head.appendChild(s);
+      } catch (e) {}
+    })();
+    function aiCpHTML() {
+      if (aiUI.fam !== 'study') return '';
+      if (aiCp) return '<div class="aipw-cp ok"><span>🏷️ كود <bdi dir="ltr">' + fsubEsc(aiCp.code) + '</bdi> — خصم <bdi dir="ltr">' + aiCp.pct + '%</bdi> لأول شهر</span><button type="button" onclick="AiSub.cpClear()">إزالة</button></div>';
+      return '<div class="aipw-cp"><input id="ai-cp-in" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="عندك كود خصم؟" aria-label="كود الخصم"><button type="button" id="ai-cp-b" onclick="AiSub.cpApply()">تطبيق</button><div class="aipw-cp-m" id="ai-cp-m" role="status"></div></div>';
+    }
+    function aiCpFetch(code) {
+      /* يرجّع: null = كود غير صالح · {used:true} = اتستخدم قبل كده على الحساب ده · {code,pct} = صالح. expiresAt اختياري (نهاية الحملة). */
+      var u = uid();
+      return db.collection('study_coupons').doc(code).get().then(function(s) {
+        if (!s.exists) return null;
+        var d = s.data() || {}, ex = fsubTs(d.expiresAt), pct = d.pct;
+        if (d.active !== true || (d.expiresAt != null && (!ex || ex <= Date.now())) || !(typeof pct === 'number' && isFinite(pct) && Math.floor(pct) === pct && pct >= 1 && pct <= 90)) return null;
+        return db.collection('coupon_uses').doc(u + '_' + code).get().then(function(us) { return us.exists ? { used: true } : { code: code, pct: pct }; });
+      });
+    }
+    function aiCpRerender() { var o = document.getElementById('ai-pw'); if (o) aiShowPaywall(aiMem.d || null, o._opt); }
+    function aiCpApply() {
+      var inp = document.getElementById('ai-cp-in'), m = document.getElementById('ai-cp-m'), b = document.getElementById('ai-cp-b');
+      if (!inp) return;
+      var code = String(inp.value || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 24);
+      function say(x) { if (m) m.textContent = x; }
+      if (code.length < 3) { say('اكتب كود الخصم'); return; }
+      if (!uid()) { farmToast('سجّل دخولك أولاً', 'warning'); return; }
+      if (b) b.disabled = true; say('');
+      aiCpFetch(code).then(function(c) {
+        if (!c) { say('الكود غير صحيح أو انتهت صلاحيته'); if (b) b.disabled = false; return; }
+        if (c.used) { say('استخدمت كود الخصم ده قبل كده على حسابك'); if (b) b.disabled = false; return; }
+        aiCp = c; aiCpRerender(); farmToast('تم تطبيق الكود — خصم ' + c.pct + '% على اشتراك شهر واحد', 'success');
+      }).catch(function() { say('تعذّر التحقق من الكود — حاول مرة أخرى'); if (b) b.disabled = false; });
+    }
+    function aiCpClear() { aiCp = null; aiCpRerender(); }
+    /* قبل فتح شيت الدفع وقبل الإرسال: نتأكد إن الكود لسه سليم عشان العميل ما يحوّل نص المبلغ وبعدين الطلب يترفض */
+    function aiCpRevalidate(go) {
+      if (!aiCp) { go(); return; }
+      aiCpFetch(aiCp.code).then(function(c) {
+        if (c && !c.used) { aiCp = c; } else { aiCp = null; farmToast('كود الخصم مش متاح (انتهى أو اتستخدم قبل كده) — رجع السعر العادي', 'warning'); aiCpRerender(); return; }
+        go();
+      }).catch(function() { go(); });
+    }
+    function aiCpCheckForSend(plan) {
+      if (!aiCpOn(plan)) return Promise.resolve();
+      return aiCpFetch(aiCp.code).then(function(c) {
+        if (!c || c.used) { aiCp = null; var e = new Error('coupon'); e.code = 'nb-coupon'; throw e; }
+        aiCp = c;
+      });
+    }
+
     function aiPlansHTML(d, opt) {   /* QM-PAYWALL. القديم (للتراجع): function aiPlansHTML(d) { */
       var cur = d && d.plan, h = '<div class="aipw-pls" role="radiogroup" aria-label="الباقات">';
       aiKeys(aiUI.fam).forEach(function(k) {   /* STUDY-SPLIT. القديم (للتراجع): ['plan1', 'plan2', 'plan3'].forEach(function(k) { */
@@ -18771,7 +18842,7 @@ document.addEventListener('click', e => {
         h += '<button type="button" class="aipw-pl' + (/3$/.test(k) ? ' aipw-pro' : '') + (on ? ' on' : '') + '" data-plan="' + k + '" role="radio" aria-checked="' + on + '" onclick="AiSub.pick(\'' + k + '\')">' +
           '<span class="aipw-rd" aria-hidden="true"></span>' +
           '<span class="aipw-pn">' + p.label + (/3$/.test(k) ? '<em class="aipw-tag">PRO</em>' : '') + (cur === k ? '<em class="aipw-cur">باقتك</em>' : '') + '</span>' +
-          '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' +
+          (aiCpOn(k) ? '<span class="aipw-pp"><s class="aipw-old">' + p.price + '</s><b>' + aiEff(k) + '</b><small>ج.م / شهر</small></span>' : '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>') +   /* STUDY-COUPON. القديم: '<span class="aipw-pp"><b>' + p.price + '</b><small>ج.م / شهر</small></span>' + */
           '<span class="aipw-pc"><i><b>' + p.chat + '</b>' + (p.study ? (p.chat <= 10 ? ' نقاط' : ' نقطة') + ' للمذاكرة' : ' للسؤال أو المذاكرة') /* POINT-WORDING: باقات «ذاكر» بس. القديم (للتراجع): ' للسؤال أو المذاكرة' */ + '</i>' + (p.study ? '' /* STUDY-SPLIT: «ذاكر» من غير تشخيص */ : '<i><b>' + p.diag + '</b> تشخيص أمراض النبات' /* القديم (للتراجع): ' تشخيص بالصور' */ + '</i>') + '<i class="aipw-dly">يوميًا</i></span>' +
           (p.study ? aiStudyRow(p) : '') + (opt && (opt.qm || (opt.limit && opt.fam === 'study')) && !/1$/.test(k) ? aiQmRow() : '') +   /* QM-PAYWALL-ROW: بيظهر على كروت Plus وPro (مش Basic) في شاشة «ذاكر» لما تتفتح من كارت «وضع الأسئلة الفائق» أو من شاشة «عايز نقاط أكتر؟». القديم (للتراجع): (opt && opt.qm ? aiQmRow() : '') + */   /* AI-IMGS. STUDY-SPLIT: صف الصور بقى في باقات «ذاكر» بس (مش في باقات Nabtex AI). القديم (للتراجع): aiStudyRow(p) + */
         '</button>';
@@ -18800,7 +18871,9 @@ document.addEventListener('click', e => {
         if (d && d.state === 'rejected' && d.rejected && d.rejected.rejectionNote) body += '<div class="aipw-note aipw-bad"><b>سبب الرفض:</b> ' + fsubEsc(d.rejected.rejectionNote) + '</div>';
         if (d && d.pending) body += aiPendingHTML(d.pending);
         body += aiPlansHTML(d, opt);   /* QM-PAYWALL. القديم (للتراجع): body += aiPlansHTML(d); */
-        var pr = AI_PLANS[aiUI.plan] ? AI_PLANS[aiUI.plan].price : 99;   /* AI-PRICE — القديم (للتراجع): : 149 */
+        var pr = AI_PLANS[aiUI.plan] ? aiEff(aiUI.plan) : 99;   /* STUDY-COUPON (القديم: .price) */
+        body += aiCpHTML();   /* STUDY-COUPON */
+          /* AI-PRICE — القديم (للتراجع): : 149 */
         body += '<button type="button" class="aipw-cta" id="ai-cta" onclick="AiSub.openPay()"><span>متابعة إلى الدفع — <b id="ai-cta-price">' + pr + '</b> جنيه</span>' +
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>';
         if (d && d.canStartTrial) {
@@ -18918,8 +18991,10 @@ document.addEventListener('click', e => {
         var pl = aiUI.plan, p = AI_PLANS[pl];
         Q('title').textContent = (aiUI.fam === 'study' ? 'ذاكر مع نبتيكس — ' : 'Nabtex AI — ') + p.label;   /* STUDY-SPLIT */ /* AI-PLAN-NAMES — القديم (للتراجع): 'المساعد الذكي — ' + p.label */
         Q('sub').textContent = p.study ? p.chat + (p.chat <= 10 ? ' نقاط' : ' نقطة') + ' للمذاكرة يوميًا — اشتراك شهري' : p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';   /* STUDY-SPLIT */
-        Q('amt').textContent = p.price; Q('amt2').textContent = p.price; Q('amt3').textContent = p.price;
-        Q('off').hidden = true;
+        var ef = aiEff(pl), cpOn = aiCpOn(pl);   /* STUDY-COUPON. القديم: Q('amt').textContent = p.price; ... Q('off').hidden = true; */
+        Q('amt').textContent = ef; Q('amt2').textContent = ef; Q('amt3').textContent = ef;
+        Q('old').textContent = cpOn ? p.price + ' جنيه' : ''; Q('off').innerHTML = cpOn ? 'خصم <bdi dir="ltr">' + aiCp.pct + '%</bdi>' : '';
+        Q('oldw').hidden = !cpOn; Q('old').hidden = !cpOn; Q('off').hidden = !cpOn;
         KS.forEach(function(k, ki) { var b = Q(ki === 0 ? 'plm' : (ki === 1 ? 'pla' : 'pl3'));   /* STUDY-SPLIT */ b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
         Q('numvf').textContent = FSUB_PAY.vcash; ipRows();
       }
@@ -18971,19 +19046,27 @@ document.addEventListener('click', e => {
         var plan = aiUI.plan, method = aiUI.method;
         if (!AI_PLANS[plan]) return;
         busy(true); st.snd = Date.now(); fcoSndUnlock();
-        Promise.resolve().then(function() {
+        aiCpCheckForSend(plan).then(function() {   /* STUDY-COUPON (القديم: Promise.resolve().then(function() {) */
           var data = {
             uid: u, email: (currentUser && currentUser.email) || '',
-            plan: plan, amount: AI_PLANS[plan].price, currency: 'EGP',   /* القواعد بتتحقق من السعر — ده للعرض فقط */
+            plan: plan, amount: aiEff(plan), currency: 'EGP',   /* القواعد بتتحقق من السعر — ده للعرض فقط */
             phone: phone, transactionRef: ref, refKey: ref.toLowerCase(),
             paymentMethod: method, status: 'pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           };
-          return db.collection('ai_subscription_payments').doc(u + '_' + data.refKey).set(data).then(function() { return data; });
+          if (aiCpOn(plan)) data.coupon = aiCp.code;   /* STUDY-COUPON: القواعد بتتحقق من الكود والمبلغ */
+          var payRef = db.collection('ai_subscription_payments').doc(u + '_' + data.refKey);
+          if (!data.coupon) return payRef.set(data).then(function() { return data; });
+          /* STUDY-COUPON: الكود لمرة واحدة لكل حساب — مستند الاستخدام بيتكتب مع الطلب في نفس الـ batch والقواعد بتتحقق منه */
+          var bt = db.batch();
+          bt.set(payRef, data);
+          bt.set(db.collection('coupon_uses').doc(u + '_' + data.coupon), { uid: u, code: data.coupon, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          return bt.commit().then(function() { return data; });
         }).then(function(data) {
+          if (data && data.coupon) aiCp = null;   /* STUDY-COUPON: الكود لمرة واحدة */
           try {
             fetch(FSUB_PUSH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ courseLabel: (AI_PLANS[plan].study ? 'اشتراك ذاكر مع نبتيكس — ' : 'اشتراك المساعد الذكي — ') + AI_PLANS[plan].label, amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
+              body: JSON.stringify({ courseLabel: (AI_PLANS[plan].study ? 'اشتراك ذاكر مع نبتيكس — ' : 'اشتراك المساعد الذكي — ') + AI_PLANS[plan].label + (data.coupon ? ' (كود ' + data.coupon + ')' : ''), amount: data.amount, docId: u + '_' + data.refKey }) }).catch(function() {});
           } catch (e) {}
           busy(false);
           if (!document.getElementById('ai-co')) return;
@@ -18992,7 +19075,8 @@ document.addEventListener('click', e => {
         }).catch(function(e) {
           busy(false); st.snd = 0;
           var msg = 'تعذّر إرسال الطلب — حاول مرة أخرى';
-          if (e && e.code === 'permission-denied') msg = 'رقم العملية ده اتبعت قبل كده، أو البيانات غير صحيحة';
+          if (e && e.code === 'nb-coupon') { msg = 'كود الخصم مش متاح (انتهى أو اتستخدم قبل كده) والسعر رجع للعادي — لو حوّلت المبلغ بالفعل تواصل مع الدعم'; try { refresh(); } catch (x) {} }   /* STUDY-COUPON */
+          else if (e && e.code === 'permission-denied') msg = 'رقم العملية ده اتبعت قبل كده، أو البيانات غير صحيحة';
           else if (e && (e.code === 'unavailable' || e.code === 'network-request-failed')) msg = 'خطأ في الاتصال — تحقق من الإنترنت وأعد المحاولة';
           bad(fRef, msg);
         });
@@ -19087,9 +19171,11 @@ document.addEventListener('click', e => {
         aiUI.plan = plan;
         var box = document.querySelector('#ai-pw .aipw-box'); if (box) box.setAttribute('data-p', aiPKey(plan));
         Array.prototype.forEach.call(document.querySelectorAll('#ai-pw .aipw-pl'), function(el) { var on = el.getAttribute('data-plan') === plan; el.classList.toggle('on', on); el.setAttribute('aria-checked', on); });
-        var c = document.getElementById('ai-cta-price'); if (c) c.textContent = AI_PLANS[plan].price;
+        var c = document.getElementById('ai-cta-price'); if (c) c.textContent = aiEff(plan);   /* STUDY-COUPON (القديم: AI_PLANS[plan].price) */
       },
-      openPay: function() { aiCoOpen(); },
+      openPay: function() { aiCpRevalidate(aiCoOpen); },   /* STUDY-COUPON (القديم: aiCoOpen()) */
+      cpApply: aiCpApply,
+      cpClear: aiCpClear,
       startTrial: function() {
         var u = uid();
         if (!u) { farmToast('سجّل دخولك أولاً', 'warning'); return; }

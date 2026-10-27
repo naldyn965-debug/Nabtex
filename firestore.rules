@@ -39,6 +39,24 @@ service cloud.firestore {
     // (older: plan1 149, plan3 300)
     function aiPrice(plan) { return plan == 'plan1' ? 149 : (plan == 'plan2' ? 199 : (plan == 'plan3' ? 299 : (plan == 'study1' ? 99 : (plan == 'study2' ? 199 : (plan == 'study3' ? 299 : -1))))); }
     // STUDY-SPLIT: «ذاكر مع نبتيكس» plans (study1/2/3) = same chat points + prices as plan1/2/3 but NO diagnosis points (diag stays at the free-plan allowance). Old aiPrice (to roll back): plan1 ? 99 : (plan2 ? 199 : (plan3 ? 299 : -1))
+    // STUDY-COUPON: كود خصم لباقات «ذاكر» (study1/2/3) بس. study_coupons/{CODE} = { active: true, pct: 50 (رقم صحيح 1..90), expiresAt: timestamp (اختياري) } — الأدمن بس يكتب. الكود لمرة واحدة لكل حساب (coupon_uses).
+    // السعر بعد الخصم = aiPrice × (100 − pct) / 100 مقرَّبًا لأعلى جنيه (99→50 · 199→100 · 299→150 عند 50%). للتراجع: امسح الدوال الأربع دي + سطر coupon في ai_subscription_payments + match study_coupons.
+    function cpDoc(code) { return /databases/$(database)/documents/study_coupons/$(code); }
+    function cpValid(c) {
+      return c.get('active', false) == true
+        && c.get('expiresAt', timestamp.date(2100, 1, 1)) > request.time
+        && c.get('pct', 0) is int && c.get('pct', 0) >= 1 && c.get('pct', 0) <= 90;
+    }
+    function cpUse(code) { return /databases/$(database)/documents/coupon_uses/$(request.auth.uid + '_' + code); }
+    function cpAmount(c, plan) { return math.ceil(aiPrice(plan) * (100 - c.pct) / 100.0); }
+    function cpOk(code, plan, amount) {
+      return code is string && code.matches('[A-Z0-9_-]{3,24}')
+        && plan in ['study1', 'study2', 'study3']
+        && exists(cpDoc(code))
+        && cpValid(get(cpDoc(code)).data)
+        && !exists(cpUse(code)) && existsAfter(cpUse(code))   // لمرة واحدة لكل حساب: مستند الاستخدام لازم يتكتب في نفس الـ batch ومكانش موجود قبلها
+        && amount == cpAmount(get(cpDoc(code)).data, plan);
+    }
     function aiPlanIs(uid, p) {
       return exists(aiDoc(uid)) && get(aiDoc(uid)).data.get('paidUntil', timestamp.value(0)) > request.time
         && get(aiDoc(uid)).data.get('plan', '') == p;
@@ -514,11 +532,13 @@ service cloud.firestore {
     match /ai_subscription_payments/{pid} {
       allow read:   if (isAuth() && resource.data.uid == request.auth.uid) || isAdmin();
       allow create: if isAuth()
-                    && request.resource.data.keys().hasOnly(['uid','email','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
+                    && request.resource.data.keys().hasOnly(['uid','email','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt','coupon'])   // STUDY-COUPON (old: without 'coupon')
                     && request.resource.data.keys().hasAll(['uid','plan','amount','currency','phone','transactionRef','refKey','paymentMethod','status','createdAt'])
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.plan in ['plan1', 'plan2', 'plan3', 'study1', 'study2', 'study3']   // STUDY-SPLIT (old: ['plan1', 'plan2', 'plan3'])
-                    && request.resource.data.amount == aiPrice(request.resource.data.plan)
+                    && (request.resource.data.keys().hasAny(['coupon'])
+                          ? cpOk(request.resource.data.coupon, request.resource.data.plan, request.resource.data.amount)
+                          : request.resource.data.amount == aiPrice(request.resource.data.plan))   // STUDY-COUPON (old: request.resource.data.amount == aiPrice(request.resource.data.plan))
                     && request.resource.data.currency == 'EGP'
                     && request.resource.data.phone is string
                     && (
@@ -536,6 +556,28 @@ service cloud.firestore {
                     && request.resource.data.get('email', '').size() <= 160;
       allow update: if isAdmin();
       allow delete: if false;
+    }
+
+    // STUDY-COUPON: أكواد خصم «ذاكر». أي مستخدم مسجّل يقدر يقرأ كود لو عارف اسمه (get بس — مفيش list)، والكتابة للأدمن فقط.
+    match /study_coupons/{code} {
+      allow get: if isAuth();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // STUDY-COUPON: مستند استخدام الكود (لمرة واحدة لكل حساب). create-only للمستخدم، وبيتكتب مع طلب الدفع في نفس الـ batch (راجع cpOk). الأدمن يقدر يمسحه لو الطلب اترفض ويحب يرجّع الخصم للعميل.
+    match /coupon_uses/{useId} {
+      allow get: if isAuth() && useId.matches(request.auth.uid + '_.*');
+      allow list: if isAdmin();
+      allow create: if isAuth()
+                    && request.resource.data.keys().hasOnly(['uid', 'code', 'createdAt'])
+                    && request.resource.data.keys().hasAll(['uid', 'code', 'createdAt'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.code is string
+                    && request.resource.data.code.matches('[A-Z0-9_-]{3,24}')
+                    && useId == request.auth.uid + '_' + request.resource.data.code
+                    && request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
     }
 
     // Audit trail for AI subscription approvals (admin only)
