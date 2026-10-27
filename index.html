@@ -18993,8 +18993,7 @@ document.addEventListener('click', e => {
         Q('sub').textContent = p.study ? p.chat + (p.chat <= 10 ? ' نقاط' : ' نقطة') + ' للمذاكرة يوميًا — اشتراك شهري' : p.chat + ' نقاط استشارة + ' + p.diag + ' نقاط تشخيص بالصور يوميًا — اشتراك شهري';   /* STUDY-SPLIT */
         var ef = aiEff(pl), cpOn = aiCpOn(pl);   /* STUDY-COUPON. القديم: Q('amt').textContent = p.price; ... Q('off').hidden = true; */
         Q('amt').textContent = ef; Q('amt2').textContent = ef; Q('amt3').textContent = ef;
-        Q('old').textContent = cpOn ? p.price + ' جنيه' : ''; Q('off').innerHTML = cpOn ? 'خصم <bdi dir="ltr">' + aiCp.pct + '%</bdi>' : '';
-        Q('oldw').hidden = !cpOn; Q('old').hidden = !cpOn; Q('off').hidden = !cpOn;
+        Q('off').innerHTML = cpOn ? 'خصم <bdi dir="ltr">' + aiCp.pct + '%</bdi> · بدل <s>' + p.price + '</s>' : ''; Q('off').hidden = !cpOn;   /* data-f=off موجود في شيت الدفع (data-f=old/oldw لأ) */
         KS.forEach(function(k, ki) { var b = Q(ki === 0 ? 'plm' : (ki === 1 ? 'pla' : 'pl3'));   /* STUDY-SPLIT */ b.classList.toggle('on', k === pl); b.setAttribute('aria-checked', k === pl); });
         Q('numvf').textContent = FSUB_PAY.vcash; ipRows();
       }
