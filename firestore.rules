@@ -407,6 +407,25 @@ service cloud.firestore {
         && a.xp == resource.data.xp + e.amt && a.xp >= 0
         && a.diff(resource.data).affectedKeys().hasOnly(['xp', 'last']);
     }
+    // REDEEM-LEAN: استبدال 1000 XP بدورة — مسار خفيف مخصوص. المحفظة بتتغيّر في spent (+1000) و last (و nm) فقط، والـ xp والعدّادات ما بتتغيّرش.
+    // الاستبدال كان بيمرّ على xpWalletOk الكبيرة (عشرات المقارنات + قوائم الدورات) وده بيقرّب/بيعدّي حد 1000 تعبير للطلب -> permission-denied.
+    // الترتيب مقصود: الفحص الرخيص (diff) الأول عشان باقي أنواع الأحداث تخرج من المسار ده بسرعة وتكمل على xpWalletOk زي ما هي.
+    // للتراجع: امسح الدالة دي وشيل (isSelf(uid) && xpRedeemOk(uid)) || من match /xp_wallet/{uid}، ورجّع redeem() في academy-data.js (انظر REDEEM-LEAN هناك).
+    function xpRedeemOk(uid) {
+      let a = request.resource.data;
+      return resource != null
+        && a.diff(resource.data).affectedKeys().hasOnly(['spent', 'last', 'nm'])
+        && a.spent == xpB('spent') + 1000
+        && a.xp - a.spent >= 0
+        && a.get('nm', '') is string && a.get('nm', '').size() <= 20
+        && a.last == uid + '_rd_' + getAfter(xpEv(a.last)).data.cid
+        && !exists(xpEv(a.last))
+        && getAfter(xpEv(a.last)).data.type == 'reward_redemption'
+        && getAfter(xpEv(a.last)).data.uid == uid
+        && getAfter(xpEv(a.last)).data.amt == 0
+        && getAfter(xpEv(a.last)).data.key == 'rd_' + getAfter(xpEv(a.last)).data.cid
+        && getAfter(xpEv(a.last)).data.cid in ['mol-bio','food-safety','glp','tissue-culture','pesticide-tech','feed-mgmt','food-microbiology','plant-diseases','bioinformatics','landscape-design','hydroponics-professional','biofertilizers-professional'];
+    }
     // display-name sync: the owner may change only nm (leaderboard name) on an existing wallet doc
     function xpNameOk() {
       let a = request.resource.data;
@@ -447,7 +466,7 @@ service cloud.firestore {
 
     match /xp_wallet/{uid} {
       allow read: if isAuth();
-      allow create, update: if (isSelf(uid) && xpWalletOk(uid)) || (isAdmin() && xpAdminOk(uid)) || (isSelf(uid) && xpNameOk());
+      allow create, update: if (isSelf(uid) && xpRedeemOk(uid)) || (isSelf(uid) && xpWalletOk(uid)) || (isAdmin() && xpAdminOk(uid)) || (isSelf(uid) && xpNameOk());   // REDEEM-LEAN (old: without the xpRedeemOk branch)
       allow delete: if false;
     }
 

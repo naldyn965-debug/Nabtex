@@ -976,8 +976,9 @@ var w=Object.assign(W0(u),ws.exists?ws.data():{});
 if(us.exists&&(us.data().paidCourses||[]).indexOf(c)>-1)throw new Error('owned');
 if(es.exists)return 'grant';
 if(w.xp-w.spent<CRED)throw new Error('nocredit');
-var m=mut(w,'reward_redemption',f);
-tx.set(eR,m.e);tx.set(wR,m.t);return 'spent'})})})
+/* REDEEM-LEAN: الاستبدال بيعدّل في المحفظة spent/last/nm بس (tx.update) بدل mut() اللي بيكتب المحفظة كلها — عشان قاعدة firestore.rules (xpRedeemOk) تبقى خفيفة وما تعدّيش حد التعبيرات. للتراجع: var m=mut(w,'reward_redemption',f);tx.set(eR,m.e);tx.set(wR,m.t); */
+var ev={uid:u,type:'reward_redemption',key:f.key,amt:0,cid:c,ts:firebase.firestore.FieldValue.serverTimestamp()};
+tx.set(eR,ev);tx.update(wR,{spent:w.spent+CRED,last:u+'_'+f.key,nm:nm()});return 'spent'})})})
 }).then(function(){paid=true;return uR.set({paidCourses:firebase.firestore.FieldValue.arrayUnion(c)},{merge:true})})
 .then(function(){T('تم الاستبدال — الدورة متاحة الآن','ok');NBXP.render('nbxp-card')})
 .catch(function(x){if(btn)btn.disabled=false;if(!(x&&(x.message==='owned'||x.message==='nocredit')))console.warn('[XP] redeem',(x&&x.code)||x);var cd=String((x&&x.code)||(x&&x.message)||'error').replace(/[<>&"]/g,'').slice(0,60);T(x&&x.message==='owned'?'أنت تملك هذه الدورة بالفعل':x&&x.message==='nocredit'?'رصيد الكريدت غير كافٍ':paid?'تم خصم الكريدت لكن تعذر تفعيل الدورة ('+cd+') — اضغط استبدال مرة أخرى بدون خصم جديد':'تعذر الاستبدال ('+cd+') — حاول مجدداً','err')})}
