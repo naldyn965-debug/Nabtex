@@ -47,7 +47,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 8, study_ask: 15, study_cards: 8 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 20, study_ask: 15, study_cards: 8 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */   /* POINTS-FIX: study_quiz = 20 زي LIM.study_quiz في index.html (STUDY-QUIZ-CAP) — القديم (للتراجع): study_quiz: 8 */
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 4400 * 1024;   /* كان 600KB لصورة واحدة ثم 2400KB لحد 4 صور — دلوقتي «ذاكر مع نبتكس» لحد 12 صورة (≈300KB لكل واحدة) وده تحت حد Vercel */
@@ -1988,8 +1988,8 @@ module.exports = async function handler(req, res) {
       const ch = await aiCharge(m[1], uid, aiPts.day, aiPtsKind);
       if (ch === 'denied') return fail(res, 429, 'user_limit');
       if (ch === 'ok') { if (aiPtsKind === 'fin') aiPts.used.fin++; else aiPts.used[aiPtsKind]++; }
+      else console.error('[farm-ai] point charge failed (non-denied)');   /* POINTS-FIX: الـ else كان متعلّق بسطر devAdd فبيطبع «فشل صرف النقطة» غلط مع كل تشخيص نهائي (fin) ناجح — رجّعته لـ if (ch === 'ok') بتاع تسجيل النقطة */
       if (ch === 'ok' && aiPtsKind !== 'fin') await devAdd(devHdr, aiPts.day, aiPtsKind);   /* DEVICE-POOL: النقطة اتحسبت على الجهاز كمان */
-      else console.error('[farm-ai] point charge failed (non-denied)');
     }
     ptsOut = { chat: { left: Math.max(0, aiPts.lim.chat - aiPts.used.chat), max: aiPts.lim.chat }, diag: { left: Math.max(0, aiPts.lim.diag - aiPts.used.diag), max: aiPts.lim.diag } };
   }
