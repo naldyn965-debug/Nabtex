@@ -781,6 +781,12 @@ body[data-light] .fsa-card{background:#f3faf4}
         <div id="xp-student" style="margin-top:10px"></div>
         <div class="courses-heading" style="margin-top:16px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:6px"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>سجل استبدال الكريدت</div>
         <div id="xp-rd"><div style="text-align:center;opacity:.35;font-size:12px;padding:6px 0">جاري التحميل...</div></div>
+        <div class="courses-heading" style="margin-top:16px">مكافأة النشطين (آخر 3 أيام)</div>
+        <div style="opacity:.65;font-size:11.5px;margin-bottom:8px">الطلاب اللي أتمّوا محاضرة واحدة على الأقل في آخر 3 أيام (اليوم + اليومين اللي قبله بتوقيت القاهرة) فقط.</div>
+        <input class="broadcast-select" id="xpb-amt" type="number" step="1" min="1" placeholder="XP لكل طالب (مثلاً 50)" style="margin-bottom:6px">
+        <input class="broadcast-select" id="xpb-note" maxlength="200" placeholder="سبب المكافأة (إلزامي)" style="margin-bottom:8px">
+        <button class="broadcast-send-btn" onclick="xpBonusPreview()">معاينة الطلاب المستحقين</button>
+        <div id="xpb-out" style="margin-top:10px"></div>
       </div>
       <div class="sidebar-footer">
         <div class="sidebar-user-badge">
@@ -2670,6 +2676,85 @@ async function xpAdjust(uid) {
     console.warn(e);
     showToast(e.message === 'neg' ? 'التعديل يجعل الرصيد سالباً' : e.message === 'nowallet' ? 'لا يوجد حساب XP لهذا الطالب' : 'تعذر التعديل', 'err');
   }
+}
+
+/* ── مكافأة النشطين: كل طالب أتمّ محاضرة (lecture_completed) في آخر 3 أيام (بتوقيت القاهرة، نفس يوم NBXP) ──
+   بتكتب نفس admin_adjustment المُسجَّل اللي بيكتبه xpAdjust (نفس الـ rules)، ومفتاح الحدث بيمنع المنح مرتين في نفس اليوم لنفس الطالب. */
+let xpbPlan = null;
+function xpbDay() { return Math.floor((Date.now() + 7200000) / 86400000); }
+async function xpbActiveUids(sinceMs) {
+  const since = firebase.firestore.Timestamp.fromMillis(sinceMs), uids = new Set();
+  let truncated = false;
+  try {
+    const s = await db.collection('xp_events').where('type', '==', 'lecture_completed').where('ts', '>=', since).get();
+    s.forEach(function(d) { const u = d.data().uid; if (u) uids.add(u); });
+  } catch (e) { /* مفيش composite index: نقرأ بالـ ts بس ونفلتر هنا */
+    console.warn(e);
+    let last = null;
+    for (let page = 0; page < 20; page++) {
+      let q = db.collection('xp_events').where('ts', '>=', since).orderBy('ts').limit(1000);
+      if (last) q = q.startAfter(last);
+      const s = await q.get();
+      s.forEach(function(d) { const x = d.data(); if (x.type === 'lecture_completed' && x.uid) uids.add(x.uid); });
+      if (s.size < 1000) break;
+      last = s.docs[s.docs.length - 1];
+      if (page === 19) truncated = true;
+    }
+  }
+  return { uids: Array.from(uids), truncated: truncated };
+}
+async function xpBonusPreview() {
+  const amt = parseInt(document.getElementById('xpb-amt').value, 10), note = document.getElementById('xpb-note').value.trim();
+  if (!Number.isInteger(amt) || amt <= 0) { showToast('أدخل عدد XP صحيح أكبر من صفر', 'err'); return; }
+  if (note.length < 3) { showToast('اكتب سبب المكافأة (3 أحرف على الأقل)', 'err'); return; }
+  xpbPlan = null;
+  xpBox('xpb-out', xpEmpty('جاري البحث عن النشطين...'));
+  try {
+    const day = xpbDay(), sinceMs = (day - 2) * 86400000 - 7200000;
+    const r = await xpbActiveUids(sinceMs), list = [];
+    for (let i = 0; i < r.uids.length; i += 25) {
+      const part = r.uids.slice(i, i + 25);
+      const snaps = await Promise.all(part.map(function(u) { return db.collection('xp_wallet').doc(u).get(); }));
+      snaps.forEach(function(w, k) { if (w.exists) list.push({ uid: part[k], nm: w.data().nm || 'طالب' }); });
+    }
+    if (!list.length) { xpBox('xpb-out', xpEmpty('لا يوجد طلاب أتمّوا محاضرات في آخر 3 أيام')); return; }
+    xpbPlan = { amt: amt, note: note, day: day, list: list };
+    xpBox('xpb-out',
+      '<div class="broadcast-log-item"><b>' + list.length + ' طالب مستحق</b> × ' + amt + ' XP = ' + (list.length * amt) + ' XP' +
+      (r.uids.length > list.length ? '<div style="opacity:.7;font-size:11.5px">' + (r.uids.length - list.length) + ' طالب بدون حساب XP (متجاهلين)</div>' : '') +
+      (r.truncated ? '<div style="color:#c0392b;font-size:11.5px">تنبيه: القائمة ممكن تكون ناقصة (عدد الأحداث كبير)</div>' : '') +
+      '<div style="opacity:.7;font-size:11.5px;margin-top:4px">' + list.slice(0, 30).map(function(x) { return xpEsc(x.nm); }).join(' • ') + (list.length > 30 ? ' …' : '') + '</div></div>' +
+      '<button class="broadcast-send-btn" style="margin-top:8px" onclick="xpBonusGrant()">منح ' + amt + ' XP لـ ' + list.length + ' طالب (مُسجَّل)</button>');
+  } catch (e) { console.warn(e); xpBox('xpb-out', xpEmpty('تعذر البحث')); }
+}
+async function xpBonusGrant() {
+  const p = xpbPlan;
+  if (!p || !p.list.length) return;
+  if (!window.confirm('منح ' + p.amt + ' XP لـ ' + p.list.length + ' طالب؟\nالسبب: ' + p.note + '\nسيُسجَّل في سجل المعاملات ولا يمكن حذفه.')) return;
+  xpbPlan = null;
+  const key = 'adj_act3_' + p.day;
+  let ok = 0, dup = 0, fail = 0;
+  for (let i = 0; i < p.list.length; i++) {
+    xpBox('xpb-out', xpEmpty('جاري المنح... ' + i + ' / ' + p.list.length));
+    const uid = p.list[i].uid, eid = uid + '_' + key;
+    const wR = db.collection('xp_wallet').doc(uid), eR = db.collection('xp_events').doc(eid);
+    try {
+      const res = await db.runTransaction(async function(tx) {
+        const es = await tx.get(eR), ws = await tx.get(wR);
+        if (es.exists) return 'dup';
+        if (!ws.exists) throw new Error('nowallet');
+        tx.set(eR, { uid: uid, type: 'admin_adjustment', key: key, amt: p.amt, note: p.note, by: auth.currentUser.uid, ts: firebase.firestore.FieldValue.serverTimestamp() });
+        tx.update(wR, { xp: ws.data().xp + p.amt, last: eid });
+        return 'ok';
+      });
+      if (res === 'dup') dup++; else ok++;
+    } catch (e) { console.warn(uid, e); fail++; }
+  }
+  xpBox('xpb-out', '<div class="broadcast-log-item"><b>تم المنح لـ ' + ok + ' طالب</b>' +
+    (dup ? '<div style="opacity:.7;font-size:11.5px">' + dup + ' طالب أخدوها قبل كده النهارده (اتخطّوا)</div>' : '') +
+    (fail ? '<div style="color:#c0392b;font-size:11.5px">' + fail + ' فشلوا (راجع الـ Console)</div>' : '') + '</div>');
+  showToast('تم منح ' + ok + ' طالب', fail ? 'err' : 'ok');
+  xpAdminLoad();
 }
 
 /* ══════════════════════════════════════════════════════════════
