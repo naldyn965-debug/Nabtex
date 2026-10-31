@@ -355,34 +355,35 @@ service cloud.firestore {
       let a = request.resource.data;
       let e = getAfter(xpEv(a.last)).data;
       let d = xpDay();
-      let same = xpB('dn') == d;
-      let bx = same ? xpB('dx') : 0;
+      // XPCOST: the previous wallet is read once here (instead of ~25 helper calls) to stay well under the 1000-expression limit. Same values as before: missing doc/field => 0.
+      let o = resource == null ? {'_': 0} : resource.data;
+      let same = o.get('dn', 0) == d;
+      let bx = same ? o.get('dx', 0) : 0;
       let nom = xpNom(e);
-      let cap = e.type == 'mission_completed';
-      let amt = cap ? (bx + nom <= 50 ? nom : 50 - bx) : nom;
-      let cr = cap && bx < 10 && bx + amt >= 10;
+      let amt = e.type == 'mission_completed' ? (bx + nom <= 50 ? nom : 50 - bx) : nom;
+      let cr = e.type == 'mission_completed' && bx < 10 && bx + amt >= 10;
       return a.keys().hasOnly(['uid','nm','xp','spent','dn','dx','dl','dq','dz','lc','qc','zc','zs','cc','pc','st','sd','bs','ld','wk','wx','mo','mx','ac','sb','ml','last','vs','vb','vd','vg','rm','ru','lb'])
         && a.uid == uid && a.nm is string && a.nm.size() <= 20
         && !exists(xpEv(a.last)) && e.uid == uid && nom >= 0 && e.amt == amt && xpKeyOk(e) && xpCondOk(e, a)
-        && a.xp == xpB('xp') + e.amt
-        && a.dn == d && a.dx == bx + (cap ? amt : 0)
-        && a.dl == (same ? xpB('dl') : 0) + (e.type == 'lecture_completed' ? 1 : 0)
-        && a.dq == (same ? xpB('dq') : 0) + (e.type == 'question_correct' ? 1 : 0)
-        && a.dz == (same ? xpB('dz') : 0) + (e.type == 'quiz_completed' ? 1 : 0)
-        && a.lc == xpB('lc') + (e.type == 'lecture_completed' ? 1 : 0)
-        && a.qc == xpB('qc') + (e.type == 'question_correct' ? 1 : 0)
-        && a.zc == xpB('zc') + (e.type == 'quiz_completed' ? 1 : 0)
-        && a.zs == xpB('zs') + (e.type == 'quiz_completed' ? e.sc : 0)
-        && a.cc == xpB('cc') + (e.type == 'course_completed' ? 1 : 0)
-        && a.pc == xpB('pc') + (e.type == 'path_completed' ? 1 : 0)
-        && a.wk == math.floor((d + 3) / 7) && a.wx == (xpB('wk') == a.wk ? xpB('wx') : 0) + e.amt
-        && a.mo == xpMn() && a.mx == (xpB('mo') == a.mo ? xpB('mx') : 0) + e.amt
-        && a.sd == (cr ? d : xpB('sd'))
-        && a.st == (cr ? (xpB('sd') == d - 1 ? xpB('st') + 1 : 1) : xpB('st'))
-        && a.bs == (a.st > xpB('bs') ? a.st : xpB('bs'))
-        && a.ld == xpB('ld') + (cr ? 1 : 0)
-        && a.spent == xpB('spent') + (e.type == 'reward_redemption' ? 1000 : 0)
-        && a.get('lb', 0) == (e.type == 'level_bonus' ? e.n : xpB('lb'));
+        && a.xp == o.get('xp', 0) + e.amt
+        && a.dn == d && a.dx == bx + (e.type == 'mission_completed' ? amt : 0)
+        && a.dl == (same ? o.get('dl', 0) : 0) + (e.type == 'lecture_completed' ? 1 : 0)
+        && a.dq == (same ? o.get('dq', 0) : 0) + (e.type == 'question_correct' ? 1 : 0)
+        && a.dz == (same ? o.get('dz', 0) : 0) + (e.type == 'quiz_completed' ? 1 : 0)
+        && a.lc == o.get('lc', 0) + (e.type == 'lecture_completed' ? 1 : 0)
+        && a.qc == o.get('qc', 0) + (e.type == 'question_correct' ? 1 : 0)
+        && a.zc == o.get('zc', 0) + (e.type == 'quiz_completed' ? 1 : 0)
+        && a.zs == o.get('zs', 0) + (e.type == 'quiz_completed' ? e.sc : 0)
+        && a.cc == o.get('cc', 0) + (e.type == 'course_completed' ? 1 : 0)
+        && a.pc == o.get('pc', 0) + (e.type == 'path_completed' ? 1 : 0)
+        && a.wk == math.floor((d + 3) / 7) && a.wx == (o.get('wk', 0) == a.wk ? o.get('wx', 0) : 0) + e.amt
+        && a.mo == xpMn() && a.mx == (o.get('mo', 0) == a.mo ? o.get('mx', 0) : 0) + e.amt
+        && a.sd == (cr ? d : o.get('sd', 0))
+        && a.st == (cr ? (o.get('sd', 0) == d - 1 ? o.get('st', 0) + 1 : 1) : o.get('st', 0))
+        && a.bs == (a.st > o.get('bs', 0) ? a.st : o.get('bs', 0))
+        && a.ld == o.get('ld', 0) + (cr ? 1 : 0)
+        && a.spent == o.get('spent', 0) + (e.type == 'reward_redemption' ? 1000 : 0)
+        && a.get('lb', 0) == (e.type == 'level_bonus' ? e.n : o.get('lb', 0));
     }
     // Enthusiasm streak (separate doc so the wallet rule stays small): one daily_visit event + one xp_streak write per day.
     function xpStreakOk(uid) {
