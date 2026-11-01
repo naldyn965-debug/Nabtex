@@ -426,10 +426,55 @@
     document.head.appendChild(st);
   }
 
+  /* ───────── تحديث تصميم الساحة والغرفة v3 (إضافة فقط — يتفعّل بكلاس nba-lb على اللوبي) ───────── */
+  function cssLobby() {
+    if (document.getElementById('nba-css-lb')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-lb';
+    st.textContent = [
+      ".nba-root.nba-lb{--card:#131A16;--line:#24312A;--line2:#2F4137;--brand:#2BD98A;--brand-l:#2BD98A;--slate:#A9BCB0;--muted:#8DA196;--gold:#F2B84B;--gold-l:#F2B84B;--r3:8px;--r4:12px;--sglow:0 0 0 2px rgba(43,217,138,.35);background:#0B0F0D}",
+      ".nba-lb .nba-fx{display:none}",
+      ".nba-lb .nba-ttl{font-size:15px;font-weight:700}.nba-lb .nba-ttl>span::after{content:\"\";display:inline-block;width:6px;height:6px;margin-inline-start:7px;background:#2BD98A;border-radius:1px}",
+      ".nba-lb .nba-logo{width:34px;height:34px;border-radius:8px;background:#2BD98A url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M12 30V10L28 25V10' fill='none' stroke='%2304140A' stroke-width='4.5'/%3E%3Ccircle cx='28' cy='31.5' r='2.6' fill='%2304140A'/%3E%3C/svg%3E\") center/100% no-repeat;box-shadow:none}.nba-lb .nba-logo .nba-ico{display:none}",
+      ".nba-lb .nba-x{border-radius:8px;background:none;border-color:#2F4137}",
+      ".nba-lb .nba-card{background:#131A16;box-shadow:none;border-radius:12px}",
+      ".nba-lb .nba-btn{background:#2BD98A;color:#04140A;box-shadow:none;border-radius:8px;min-height:52px;font-weight:800}",
+      ".nba-lb .nba-btn.sec{background:#1B251F;color:#EAF2ED;border:1px solid #2F4137}",
+      ".nba-lb .nba-btn.gold,.nba-lb .nba-btn.gold:not([disabled]){background:#2BD98A;color:#04140A;box-shadow:none;animation:none;min-height:58px;font-size:16.5px}",
+      ".nba-lb .nba-btn.gold:not([disabled])::after{display:none}",
+      ".nba-lb .nba-btn.sm{min-height:48px;font-size:14px}",
+      ".nba-lb .nba-btn[disabled]{background:#1B251F;color:#A9BCB0;border:1px dashed #3A4D42;opacity:1;filter:none}.nba-lb .nba-btn.nbx-ch[disabled]{border:0;background:#1B251F}",
+      ".nba-lb .nba-err{background:none;border:0;color:#FF8A7E;padding:0;margin:8px 0 0;font-size:13px}.nba-lb .nba-note{color:#A9BCB0}",
+      ".nba-wrap.nba-hubw,.nba-wrap.nba-lobw{display:flex;flex-direction:column;min-height:100%;box-sizing:border-box}.nba-sp{flex:1;min-height:12px}",
+      ".nba-lb .nba-av{box-shadow:0 0 0 2px #0B0F0D,0 0 0 3px var(--c,#2BD98A)}.nba-lb .nba-dot{border-color:#0B0F0D}.nba-lb .nba-hc{background:#F2B84B;box-shadow:none;width:20px;height:20px}",
+      ".nba-lb .nba-row .nm small{color:#A9BCB0}.nba-lb .nba-ib.tx{width:auto;height:34px;padding:0 10px;border-radius:6px;border:1px solid #2F4137;background:none;color:#A9BCB0;font:700 12px var(--f-ui,Cairo,sans-serif);cursor:pointer}",
+      ".nbx-eb{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#2BD98A}.nbx-eb::before{content:\"\";width:6px;height:6px;background:#2BD98A;border-radius:1px}",
+      ".nbx-hero{padding:18px 0 4px}.nbx-h{margin:14px 0 12px;font-size:36px;line-height:1.2;font-weight:800}.nbx-h em{font-style:normal;color:#2BD98A}.nbx-p{margin:0;color:#A9BCB0;font-size:15px;line-height:1.8;max-width:30ch}",
+      ".nbx-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #24312A;border-bottom:1px solid #24312A;margin:26px 0 16px}.nbx-stats>div{padding:14px 0 12px}.nbx-stats>div+div{border-inline-start:1px solid #24312A;padding-inline-start:16px}",
+      ".nbx-stats b{display:block;direction:ltr;text-align:right;font-size:26px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}.nbx-stats span{font-size:12.5px;color:#A9BCB0;font-weight:600}",
+      ".nbx-ch{border-radius:0!important;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}",
+      ".nbx-jl{font-size:13px;font-weight:700;color:#A9BCB0;margin:16px 0 8px}",
+      ".nbx-jg{display:flex;height:56px;border:1px solid #2F4137;border-radius:8px;background:#0F1512;overflow:hidden}.nbx-jg:focus-within{border-color:#2BD98A}.nbx-jg.bad{border-color:#FF6B5E}",
+      ".nbx-jg input{flex:1;min-width:0;border:0;outline:0;background:none;color:#EAF2ED;font:700 20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.24em;text-align:center;text-transform:uppercase;direction:ltr;padding:0 12px}.nbx-jg input::placeholder{color:#6F8579;opacity:1}",
+      ".nbx-jg button{border:0;border-inline-start:1px solid #2F4137;background:none;color:#A9BCB0;font:700 15px var(--f-ui,Cairo,sans-serif);padding:0 24px;cursor:pointer}.nbx-jg button:not([disabled]){background:#2BD98A;color:#04140A;border-color:#2BD98A}.nbx-jg button[disabled]{cursor:not-allowed}",
+      ".nbx-fh{font-size:12.5px;color:#8DA196;margin-top:8px}.nbx-er{font-size:13px;color:#FF8A7E;margin-top:8px;font-weight:600}",
+      ".nbx-tk{position:relative;background:#131A16;border:1px solid #24312A;border-radius:14px;margin-bottom:18px}.nbx-tk .a{padding:14px 18px 4px;text-align:center}.nbx-tk .l{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#A9BCB0}",
+      ".nbx-code{display:block;width:100%;background:none;border:0;padding:0;cursor:pointer;font-family:inherit}.nbx-cv{display:block;direction:ltr;font:800 46px/1.15 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.16em;text-indent:.16em;color:#2BD98A;padding:10px 0 14px}.nbx-code.cp .nbx-cv{color:#F2B84B}",
+      ".nbx-tk .p{position:relative;height:0;border-top:1.5px dashed #2F4137;margin:0 14px}.nbx-tk .p::before,.nbx-tk .p::after{content:\"\";position:absolute;top:-10px;width:18px;height:18px;border-radius:50%;background:#0B0F0D}.nbx-tk .p::before{right:-24px}.nbx-tk .p::after{left:-24px}",
+      ".nbx-tk .b{padding:14px}.nbx-meta{display:flex;justify-content:center;gap:8px;font-size:13px;font-weight:600;color:#A9BCB0;margin-bottom:12px}.nbx-meta i{font-style:normal;color:#6F8579}",
+      ".nbx-sh{display:flex;align-items:center;gap:12px;margin:2px 2px 10px}.nbx-sh b{font-size:15px;font-weight:800}.nbx-mt{display:flex;gap:4px;flex:1}.nbx-mt i{flex:1;max-width:26px;height:4px;border-radius:2px;background:#2F4137}.nbx-mt i.on{background:#2BD98A}.nbx-sh span{font:700 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#A9BCB0}",
+      ".nbx-seats{counter-reset:s;border-top:1px solid #24312A}.nbx-seats .nba-row{counter-increment:s;display:flex;align-items:center;gap:12px;border:0;border-bottom:1px solid #24312A;border-radius:0;background:none;margin:0;padding:10px 2px;min-height:64px}",
+      ".nbx-seats .nba-row::before{content:counter(s,decimal-leading-zero);font:700 12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#6F8579;width:20px}.nbx-seats .nba-row.me{background:none}.nbx-seats .nba-row.me .nm small{color:#2BD98A}.nbx-seats .nba-row.host .nm small{color:#F2B84B}",
+      ".nbx-seats .nba-row.em{justify-content:flex-start;color:#8DA196;font-weight:600;font-size:13.5px}",
+      ".nbx-why{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px;color:#A9BCB0;font-weight:600;margin-top:10px;text-align:center}"
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
   /* ───────── فتح / قفل ───────── */
   function open(o) {
     o = o || {};
     css();
+    cssLobby();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -759,10 +804,11 @@
     V.key = key; V.live = null; V.base = base;
     var y = root.scrollTop;
     w.className = 'nba-wrap' + (enter ? ' nba-enter' : '');
+    root.classList.toggle('nba-lb', !S || !S.room || S.room.st === 'lobby');
     w.innerHTML = '';
-    if (!S) { (V.view === 'create' ? vCreate : V.view === 'join' ? vJoin : vHub)(w); }
+    if (!S) { (V.view === 'create' ? vCreate : V.view === 'join' ? vJoin : vHub2)(w); }
     else if (!S.room) w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:60px auto 12px' }), 'جاري تحميل الغرفة…']));
-    else if (S.room.st === 'lobby') vLobby(w);
+    else if (S.room.st === 'lobby') vLobby2(w);
     else vGame(w);
     if (always) root.scrollTop = y;
   }
@@ -850,6 +896,87 @@
     if (isHost) {
       w.appendChild(h('button', { class: 'nba-btn gold', disabled: !canStart, onclick: startGame }, [V.busy ? h('div', { class: 'nba-spin' }) : ico(I.bolt), V.busy ? (r.qr ? 'جاري البدء…' : 'جاري تجهيز الأسئلة بالذكاء الاصطناعي… (ممكن ياخد لحد 30 ثانية)') : (r.qr ? 'ابدأ اللعبة' : 'ابدأ وجهّز الأسئلة')]));
       if (r.pc < 2) w.appendChild(h('div', { class: 'nba-note', text: 'محتاج لاعب واحد على الأقل. ابعت الكود لصاحبك.' }));
+    } else {
+      w.appendChild(h('div', { class: 'nba-note' }, [r.qr ? 'الأسئلة جاهزة — في انتظار المضيف يبدأ اللعبة…' : 'في انتظار المضيف يبدأ اللعبة…']));
+      if (hostStale) w.appendChild(h('button', { class: 'nba-btn sec', onclick: function () { takeHost(S.uid); } }, [ico(I.crown), 'المضيف مش متصل — تولّى الإدارة']));
+    }
+  }
+
+  /* ───────── شاشة الساحة (v3) ───────── */
+  function vHub2(w) {
+    var saved = ls('nbArenaRoom');
+    w.classList.add('nba-hubw');
+    w.appendChild(top());
+    function stat(a, b) { return h('div', {}, [h('b', { text: a }), h('span', { text: b })]); }
+    w.appendChild(h('div', { class: 'nbx-hero' }, [h('div', { class: 'nbx-eb', text: 'تحدّي زراعي متعدد اللاعبين' }),
+      h('h2', { class: 'nbx-h' }, ['تحدّى أصحابك', h('br'), 'في ', h('em', { text: 'الزراعة' })]),
+      h('p', { class: 'nbx-p', text: 'أسئلة بالذكاء الاصطناعي في تخصصك ونقاط لحظية. اللي بيجاوب أسرع بياخد أكتر.' })]));
+    w.appendChild(h('div', { class: 'nbx-stats' }, [stat('2–6', 'لاعبين'), stat('10', 'أسئلة'), stat('AI', 'بتخصصك')]));
+    if (saved) w.appendChild(h('div', { class: 'nba-card' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'عندك غرفة شغّالة: ' + saved }), h('div', { class: 'nba-seg' }, [
+      h('button', { class: 'nba-btn', onclick: function () { joinRoom(saved); } }, ['ارجع للغرفة']),
+      h('button', { class: 'nba-btn sec', onclick: function () { ls('nbArenaRoom', null); V.key = ''; render(); } }, ['تجاهل'])])]));
+    w.appendChild(h('div', { class: 'nba-sp' }));
+    w.appendChild(h('button', { class: 'nba-btn nbx-ch', style: 'min-height:58px;font-size:16.5px', onclick: function () { V = { view: 'create', md: 's', mx: 4, sp: 'pp' }; render(); } }, [ico(I.users), 'إنشاء غرفة جديدة']));
+    w.appendChild(h('div', { class: 'nbx-jl', text: 'عندك كود من صاحبك؟' }));
+    var jb = h('button', { disabled: String(V.code || '').trim().length < 6, onclick: function () { joinRoom($('#nba-code').value); } }, ['انضمام']);
+    var inp = h('input', { id: 'nba-code', maxlength: '6', placeholder: 'ABC234', 'aria-label': 'كود الغرفة', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', value: V.code || '',
+      oninput: function (e) { jb.disabled = e.target.value.trim().length < 6; },
+      onkeydown: function (e) { if (e.key === 'Enter') joinRoom(e.target.value); } });
+    w.appendChild(h('div', { class: 'nbx-jg' + (V.err ? ' bad' : '') }, [inp, jb]));
+    w.appendChild(V.err ? h('div', { class: 'nbx-er', role: 'alert', text: V.err }) : h('div', { class: 'nbx-fh', text: 'الكود 6 خانات (حروف وأرقام). الزر يتفعّل لما تكمله.' }));
+  }
+
+  /* ───────── شاشة الغرفة (v3) ───────── */
+  function vLobby2(w) {
+    var r = S.room, uids = Object.keys(S.players).sort(function (a, b) { return S.players[a].j - S.players[b].j; }), isHost = r.host === S.uid, teams = r.md === 't';
+    var hostP = S.players[r.host], hostStale = !hostP || !hostP.ls || (srvNow() - hostP.ls) > STALE;
+    var balanced = !teams || (r.pc % 2 === 0 && r.na === r.nb), canStart = isHost && r.pc >= 2 && balanced && !V.busy;
+    S.ln = 0;
+    w.classList.add('nba-lobw');
+    w.appendChild(top('الغرفة', leaveLobby));
+    function flash(b, label) { var tn = b.lastChild, old = tn.nodeValue; tn.nodeValue = label; setTimeout(function () { tn.nodeValue = old; }, 1600); }
+    var code = h('button', { class: 'nbx-code', 'data-nosnd': '1', 'aria-label': 'نسخ كود الغرفة ' + S.rid, onclick: function (e) { copy(S.rid, 'اتنسخ الكود'); var b = e.currentTarget; b.classList.remove('cp'); void b.offsetWidth; b.classList.add('cp'); SFX.play('pop'); } },
+      [h('span', { class: 'nbx-cv', text: S.rid })]);
+    S.codeAnim = true;
+    w.appendChild(h('div', { class: 'nbx-tk' }, [
+      h('div', { class: 'a' }, [h('div', { class: 'l' }, [h('span', { text: 'كود الغرفة' }), h('span', { text: 'اضغط للنسخ' })]), code]),
+      h('div', { class: 'p' }),
+      h('div', { class: 'b' }, [
+        h('div', { class: 'nbx-meta' }, [h('span', { text: r.sp }), h('i', { text: '·' }), h('span', { text: teams ? 'فريقين' : 'فردي' }), h('i', { text: '·' }), h('span', { text: '10 أسئلة' })]),
+        h('div', { class: 'nba-seg' }, [
+          h('button', { class: 'nba-btn sec sm', onclick: function (e) { copy(S.rid, 'اتنسخ الكود'); flash(e.currentTarget, 'تم النسخ ✓'); } }, [ico(I.copy), 'نسخ الكود']),
+          h('button', { class: 'nba-btn sm', onclick: share }, [ico(I.share), 'دعوة صديق'])])])]));
+    if (V.err) w.appendChild(errBox());
+    var meP = S.players[S.uid];
+    function pr(u, extra, sz) {
+      var el = playerRow(u, S.players[u], extra, sz);
+      if (r.host === u) { el.classList.add('host'); var sm = el.querySelector('.nm small'); if (sm) sm.textContent = (u === S.uid ? 'أنت · ' : '') + 'مضيف الغرفة'; }
+      return el;
+    }
+    if (teams) {
+      var per = Math.max(1, Math.round(r.mx / 2));
+      var col = function (t) {
+        var mem = uids.filter(function (u) { return (S.players[u].tm ? 1 : 0) === t; }), kids = mem.map(function (u) { return pr(u, null, 36); });
+        for (var k = mem.length; k < per; k++) kids.push(emptySlot());
+        return h('div', { class: 'nba-team ' + (t ? 'b' : 'a') }, [h('h4', {}, [h('span', { text: t ? 'الفريق ب' : 'الفريق أ' }), h('span', { class: 'nba-tag' + (t ? ' g' : ''), text: (t ? r.nb : r.na) + ' / ' + per })])].concat(kids));
+      };
+      w.appendChild(h('div', { class: 'nba-card tight' }, [h('div', { class: 'nba-teams' }, [col(0), col(1), h('div', { class: 'nba-vs', text: 'VS' })])]));
+      if (meP) w.appendChild(h('button', { class: 'nba-btn sec', style: 'margin-bottom:12px', onclick: switchTeam }, [ico(I.swap), 'انتقل للفريق ' + (meP.tm ? 'أ' : 'ب')]));
+      if (!balanced) w.appendChild(h('div', { class: 'nba-note', text: 'لازم الفريقين يبقوا متساويين (2 أو 4 أو 6 لاعبين). حد يبدّل فريقه أو انتظر لاعب جديد.' }));
+    } else {
+      var meter = []; for (var m = 0; m < r.mx; m++) meter.push(h('i', { class: m < r.pc ? 'on' : '' }));
+      w.appendChild(h('div', { class: 'nbx-sh' }, [h('b', { text: 'اللاعبون' }), h('div', { class: 'nbx-mt' }, meter), h('span', { text: r.pc + ' / ' + r.mx })]));
+      var rows = uids.map(function (u) {
+        return pr(u, isHost && u !== S.uid ? h('button', { class: 'nba-ib tx', 'aria-label': 'نقل الإدارة', onclick: function () { takeHost(u); } }, ['اجعله مضيفًا']) : null);
+      });
+      for (var e = uids.length; e < r.mx; e++) rows.push(h('div', { class: 'nba-row em' }, [h('span', { class: 'nba-wt' }), 'مقعد فاضي — شارك الكود']));
+      w.appendChild(h('div', { class: 'nbx-seats' }, rows));
+    }
+    if (meP) S.seenInit = true;
+    w.appendChild(h('div', { class: 'nba-sp' }));
+    if (isHost) {
+      w.appendChild(h('button', { class: 'nba-btn gold nbx-ch', style: 'margin-top:16px', disabled: !canStart, onclick: startGame }, [V.busy ? h('div', { class: 'nba-spin' }) : null, V.busy ? (r.qr ? 'جاري البدء…' : 'جاري تجهيز الأسئلة بالذكاء الاصطناعي… (ممكن ياخد لحد 30 ثانية)') : (r.qr ? 'ابدأ اللعبة' : 'ابدأ وجهّز الأسئلة')]));
+      if (r.pc < 2) w.appendChild(h('div', { class: 'nbx-why', text: 'لازم لاعب واحد على الأقل (' + r.pc + ' / 2) عشان تبدأ المباراة. ابعت الكود لصاحبك.' }));
     } else {
       w.appendChild(h('div', { class: 'nba-note' }, [r.qr ? 'الأسئلة جاهزة — في انتظار المضيف يبدأ اللعبة…' : 'في انتظار المضيف يبدأ اللعبة…']));
       if (hostStale) w.appendChild(h('button', { class: 'nba-btn sec', onclick: function () { takeHost(S.uid); } }, [ico(I.crown), 'المضيف مش متصل — تولّى الإدارة']));
