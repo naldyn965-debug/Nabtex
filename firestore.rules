@@ -641,6 +641,169 @@ service cloud.firestore {
       allow delete: if isSelf(uid);
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    // NABTEX ARENA (مسابقات متعددة اللاعبين) — كل المنطق الموثوق هنا. الجدول الزمني ثابت (يقرّره t0 بتاع السيرفر):
+    //   السؤال i بيفتح عند t0 + 5ث + i×26ث، وإجاباته بتتقبل 20ث بس، ومفتاحه (الإجابة الصحيحة + الشرح) مقفول لحد ما النافذة تتقفل.
+    //   مفيش مضيف بيتحكم في التقدّم: الكل بيمشي على نفس الجدول بتوقيت السيرفر. النقاط بتتحسب من إجابات اتسجّلت بتوقيت السيرفر
+    //   (مرة واحدة لكل سؤال) + المفاتيح، فمفيش رقم نقاط في أي مكان يقدر العميل يزوّره. للتراجع: امسح الكتلة دي كلها (arena_rooms).
+    // ══════════════════════════════════════════════════════════════════════
+    function arRoom(rid)    { return /databases/$(database)/documents/arena_rooms/$(rid); }
+    function arPl(rid, u)   { return /databases/$(database)/documents/arena_rooms/$(rid)/pl/$(u); }
+    function arQ(rid, i)    { return /databases/$(database)/documents/arena_rooms/$(rid)/q/$(i); }
+    function arK(rid, i)    { return /databases/$(database)/documents/arena_rooms/$(rid)/k/$(i); }
+    function arMember(rid)  { return isAuth() && exists(arPl(rid, request.auth.uid)); }
+    function arOpen(rid, i)  { return get(arRoom(rid)).data.t0 + duration.value(5 + i * 26, 's'); }
+    function arClose(rid, i) { return get(arRoom(rid)).data.t0 + duration.value(25 + i * 26, 's'); }
+    function arCanClean(rid) {
+      let r = get(arRoom(rid)).data;
+      return isAuth() && (request.time > r.exp || (r.host == request.auth.uid && (r.st == 'lobby' || request.time > r.t0 + duration.value(270, 's'))));
+    }
+    // إنشاء الغرفة (المضيف + لاعبه الأول في نفس الـ batch)
+    function arRoomCreate(rid) {
+      let n = request.resource.data;
+      return isAuth() && rid.matches('^[A-HJKMNP-Z2-9]{6}$')
+        && n.keys().hasOnly(['host', 'st', 'md', 'sp', 'mx', 'pc', 'na', 'nb', 'qr', 'exp', 'cr'])
+        && n.host == request.auth.uid && n.st == 'lobby' && n.md in ['s', 't']
+        && n.sp is string && n.sp.size() >= 2 && n.sp.size() <= 40
+        && n.mx is int && n.mx >= 2 && n.mx <= 6 && (n.md == 's' || n.mx % 2 == 0)
+        && n.pc == 1 && n.na == (n.md == 't' ? 1 : 0) && n.nb == 0 && n.qr == false
+        && n.cr == request.time && n.exp is timestamp && n.exp > request.time && n.exp <= request.time + duration.value(4, 'h')
+        && existsAfter(arPl(rid, request.auth.uid));
+    }
+    // بداية اللعبة: المضيف بس، الأسئلة جاهزة، 2+ لاعبين، وفي وضع الفرق: عدد زوجي وفريقين متساويين بالظبط
+    function arRoomStart() {
+      let o = resource.data; let n = request.resource.data;
+      return isAuth() && o.host == request.auth.uid && o.st == 'lobby' && request.time < o.exp
+        && n.diff(resource.data).affectedKeys().hasOnly(['st', 't0'])
+        && n.st == 'play' && n.t0 == request.time && o.qr == true && o.pc >= 2
+        && (o.md == 's' || (o.pc % 2 == 0 && o.na == o.nb));
+    }
+    // علامة «الأسئلة جاهزة» (بتتكتب في نفس commit إنشاء الأسئلة)
+    function arRoomReady(rid) {
+      let o = resource.data;
+      return isAuth() && o.host == request.auth.uid && o.st == 'lobby' && o.qr == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['qr']) && request.resource.data.qr == true
+        && existsAfter(arQ(rid, '0')) && existsAfter(arQ(rid, '9')) && existsAfter(arK(rid, '0')) && existsAfter(arK(rid, '9'));
+    }
+    // انضمام: الحد الأقصى للغرفة + توزيع الفريق الأصغر تلقائيًا (التوازن بيتفرض هنا)
+    function arRoomJoin(rid) {
+      let o = resource.data; let n = request.resource.data;
+      return isAuth() && o.st == 'lobby' && request.time < o.exp
+        && n.diff(resource.data).affectedKeys().hasOnly(['pc', 'na', 'nb'])
+        && n.pc == o.pc + 1 && n.pc <= o.mx
+        && !exists(arPl(rid, request.auth.uid)) && existsAfter(arPl(rid, request.auth.uid))
+        && (o.md == 's' ? (n.na == o.na && n.nb == o.nb)
+            : (o.na <= o.nb ? (n.na == o.na + 1 && n.nb == o.nb) : (n.nb == o.nb + 1 && n.na == o.na)));
+    }
+    // خروج من اللوبي
+    function arRoomLeave(rid) {
+      let o = resource.data; let n = request.resource.data;
+      let tm = get(arPl(rid, request.auth.uid)).data.tm;
+      return isAuth() && o.st == 'lobby' && exists(arPl(rid, request.auth.uid)) && !existsAfter(arPl(rid, request.auth.uid))
+        && n.diff(resource.data).affectedKeys().hasOnly(['pc', 'na', 'nb'])
+        && n.pc == o.pc - 1
+        && (o.md == 's' ? (n.na == o.na && n.nb == o.nb)
+            : (tm == 0 ? (n.na == o.na - 1 && n.nb == o.nb) : (n.nb == o.nb - 1 && n.na == o.na)));
+    }
+    // تبديل فريق (لاعب لنفسه، في اللوبي)
+    function arRoomSwitch(rid) {
+      let o = resource.data; let n = request.resource.data;
+      let tm = get(arPl(rid, request.auth.uid)).data.tm;
+      return isAuth() && o.st == 'lobby' && o.md == 't' && exists(arPl(rid, request.auth.uid))
+        && n.diff(resource.data).affectedKeys().hasOnly(['na', 'nb'])
+        && getAfter(arPl(rid, request.auth.uid)).data.tm == 1 - tm
+        && (tm == 0 ? (n.na == o.na - 1 && n.nb == o.nb + 1) : (n.na == o.na + 1 && n.nb == o.nb - 1));
+    }
+    // المضيف مش موجود: لاعب موجود ياخد الإدارة (المضيف خرج أو مختفي +75ث) أو المضيف بيسلّم للاعب
+    function arRoomHost(rid) {
+      let o = resource.data; let n = request.resource.data;
+      return isAuth() && o.st == 'lobby'
+        && n.diff(resource.data).affectedKeys().hasOnly(['host'])
+        && exists(arPl(rid, n.host))
+        && ((o.host == request.auth.uid)
+            || (n.host == request.auth.uid
+                && (!exists(arPl(rid, o.host)) || get(arPl(rid, o.host)).data.ls < request.time - duration.value(75, 's'))));
+    }
+    // لاعب: إنشاء (المضيف مع الغرفة، أو انضمام عادي)
+    function arPlCreate(rid, u) {
+      let n = request.resource.data;
+      return isSelf(u)
+        && n.keys().hasOnly(['n', 'ph', 'tm', 'ls', 'j'])
+        && n.n is string && n.n.size() >= 1 && n.n.size() <= 24
+        && n.ph is string && n.ph.size() <= 300
+        && n.tm in [0, 1] && n.ls == request.time && n.j == request.time
+        && ((!exists(arRoom(rid)) && existsAfter(arRoom(rid)) && getAfter(arRoom(rid)).data.host == u && n.tm == 0)
+            || (exists(arRoom(rid)) && get(arRoom(rid)).data.st == 'lobby' && !exists(arPl(rid, u))
+                && getAfter(arRoom(rid)).data.pc == get(arRoom(rid)).data.pc + 1
+                && n.tm == (get(arRoom(rid)).data.md == 's' ? 0 : (get(arRoom(rid)).data.na <= get(arRoom(rid)).data.nb ? 0 : 1))));
+    }
+    function arPlUpdate(rid, u) {
+      let n = request.resource.data;
+      return isSelf(u) && (
+        (n.diff(resource.data).affectedKeys().hasOnly(['ls']) && n.ls == request.time)
+        || (n.diff(resource.data).affectedKeys().hasOnly(['tm']) && get(arRoom(rid)).data.st == 'lobby' && get(arRoom(rid)).data.md == 't'
+            && n.tm == 1 - resource.data.tm
+            && getAfter(arRoom(rid)).data.na == get(arRoom(rid)).data.na + (n.tm == 0 ? 1 : -1)
+            && getAfter(arRoom(rid)).data.nb == get(arRoom(rid)).data.nb - (n.tm == 0 ? 1 : -1)));
+    }
+    function arPlDelete(rid, u) {
+      return isAuth() && (arCanClean(rid)   // الأول: عند حذف الغرفة نفسها في نفس الـ batch بيبقى getAfter(room) خطأ، فمش عايزينه يتقيّم قبل ده
+                          || (isSelf(u) && get(arRoom(rid)).data.st == 'lobby' && getAfter(arRoom(rid)).data.pc == get(arRoom(rid)).data.pc - 1));
+    }
+    // سؤال/مفتاح: بيتكتبوا مرة واحدة والغرفة لسه لوبي وقبل علامة qr (الخادم بيكتبهم بتوكن المضيف في commit واحد)
+    function arQkCreate(rid, i, k) {
+      let n = request.resource.data; let r = get(arRoom(rid)).data;
+      return isAuth() && i.matches('^[0-9]$') && r.host == request.auth.uid && r.st == 'lobby' && r.qr == false && request.time < r.exp
+        && (k == 'q'
+            ? (n.keys().hasOnly(['q', 'o', 'd']) && n.q is string && n.q.size() >= 6 && n.q.size() <= 320
+               && n.o is list && n.o.size() == 4 && n.o[0] is string && n.o[1] is string && n.o[2] is string && n.o[3] is string
+               && n.o[0].size() <= 160 && n.o[1].size() <= 160 && n.o[2].size() <= 160 && n.o[3].size() <= 160
+               && n.d in ['e', 'm', 'h'])
+            : (n.keys().hasOnly(['c', 'e']) && n.c is int && n.c >= 0 && n.c <= 3 && n.e is string && n.e.size() <= 420));
+    }
+    // إجابة: عضو، اللعبة شغالة، النافذة (20ث) مفتوحة بتوقيت السيرفر، مرة واحدة لكل سؤال (create-only)
+    function arAnsCreate(rid, aid) {
+      let n = request.resource.data;
+      return arMember(rid)
+        && n.keys().hasOnly(['u', 'i', 'c', 't'])
+        && n.u == request.auth.uid && n.i is int && n.i >= 0 && n.i <= 9
+        && aid == request.auth.uid + '_' + string(n.i)
+        && n.c is int && n.c >= 0 && n.c <= 3 && n.t == request.time
+        && get(arRoom(rid)).data.st == 'play'
+        && request.time >= arOpen(rid, n.i) && request.time < arClose(rid, n.i);
+    }
+
+    match /arena_rooms/{rid} {
+      allow get: if isAuth();
+      allow list: if isAuth() && resource.data.host == request.auth.uid;   // تنضيف غرف المضيف نفسه بس
+      allow create: if arRoomCreate(rid);
+      allow update: if arRoomStart() || arRoomReady(rid) || arRoomJoin(rid) || arRoomLeave(rid) || arRoomSwitch(rid) || arRoomHost(rid);
+      allow delete: if isAuth() && (resource.data.host == request.auth.uid || request.time > resource.data.exp);
+
+      match /pl/{u} {
+        allow get: if isAuth() && (request.auth.uid == u || arMember(rid));
+        allow list: if arMember(rid);
+        allow create: if arPlCreate(rid, u);
+        allow update: if arPlUpdate(rid, u);
+        allow delete: if arPlDelete(rid, u);
+      }
+      match /q/{i} {
+        allow get: if arMember(rid) && request.time >= arOpen(rid, int(i));
+        allow create: if arQkCreate(rid, i, 'q');
+        allow delete: if arCanClean(rid);
+      }
+      match /k/{i} {
+        allow get: if arMember(rid) && request.time >= arClose(rid, int(i));
+        allow create: if arQkCreate(rid, i, 'k');
+        allow delete: if arCanClean(rid);
+      }
+      match /ans/{aid} {
+        allow get: if arMember(rid) && (resource == null || resource.data.u == request.auth.uid || request.time >= arClose(rid, resource.data.i));   // resource == null: لاعب ما جاوبش → «مش موجود» بدل permission-denied
+        allow create: if arAnsCreate(rid, aid);
+        allow delete: if arCanClean(rid);
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
