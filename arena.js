@@ -485,11 +485,42 @@
     document.head.appendChild(st);
   }
 
+  /* ───────── توافق الأجهزة (إضافة فقط — بتتحمّل آخر ورقة ستايل فبتكسب أي تعادل في الأولوية، ومفيش كلاس ولا منطق اتغيّر) ───────── */
+  function cssResp() {
+    if (document.getElementById('nba-css-rs')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-rs';
+    st.textContent = [
+      /* كل الأجهزة: ألوان نظام داكنة للسكرول والعناصر الأصلية، منع تضخيم الخط في الأيفون بالعرض، سكرول رفيع للكمبيوتر */
+      '.nba-root{color-scheme:dark;-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollbar-width:thin;scrollbar-color:#35594A transparent}',
+      '.nba-root::-webkit-scrollbar{width:8px}.nba-root::-webkit-scrollbar-track{background:transparent}.nba-root::-webkit-scrollbar-thumb{background:#35594A;border-radius:8px}',
+      /* احتياطي للمتصفحات القديمة اللي مش بتدعم inset (أيفون قبل 14.5 / أندرويد ويب-فيو قديم) */
+      '.nba-root,.nba-fx,.nba-conf,.nba-flash{top:0;right:0;bottom:0;left:0}',
+      /* كيبورد/ماوس: حلقة تركيز واضحة */
+      '.nba-root button:focus-visible,.nba-root summary:focus-visible{outline:2px solid #2BD98A;outline-offset:2px}',
+      /* تابلت + لابتوب + كمبيوتر: عمود أعرض وخطوط أكبر شوية (شريط الصوت لازم يطابق عرض العمود عشان زرّه يفضل جنب زر الإغلاق) */
+      '@media (min-width:768px){.nba-wrap,.nba-sndbar{max-width:600px}.nba-q{font-size:20px}.nba-opt{font-size:16.5px}.nbx-h{font-size:42px}.nbx-p{font-size:16px;max-width:44ch}}',
+      '@media (min-width:1200px){.nba-wrap,.nba-sndbar{max-width:680px}}',
+      /* بطاقات التخصصات: الشريط الأفقي مخفي السكرول مش بيتحرّك بعجلة الماوس → شبكة على التابلت والكمبيوتر */
+      '@media (min-width:768px),(hover:hover) and (pointer:fine){.nbx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));overflow:visible;margin:0;padding:0 0 4px;scroll-snap-type:none}.nbx-t{width:auto}}',
+      /* شاشة السؤال على الموبايل الطويل (أيفون/أندرويد بالطول): كارت السؤال والاختيارات بيكبروا حسب ارتفاع الشاشة بدل فراغ كبير تحت. القيم ثابتة ومش بتتأثر بظهور الإجابة فمفيش قفزة وقت الكشف */
+      '.nba-qcard{min-height:clamp(116px,24vh,230px);min-height:clamp(116px,24dvh,230px)}',
+      '.nba-opt{min-height:clamp(58px,10vh,92px);min-height:clamp(58px,10dvh,92px)}',
+      /* كلمة الصعوبة (سهل/متوسط/صعب) فوق السؤال: نص عادي من غير إطار بيضاوي ولا خلفية — اللون زي ما هو (أخضر، وذهبي للصعب). مقصورة على هيدر السؤال بس فباقي التاجات في الساحة زي ما هي */
+      '.nba-qn .nba-tag{background:none;border:0;border-radius:0;padding:0}',
+      /* موبايل بالعرض (ارتفاع قليل) */
+      '@media (max-height:480px){.nba-cd{height:150px}.nba-cd::before{width:140px;height:140px}.nba-cd i{width:96px;height:96px}.nba-big{font-size:72px}.nba-qcard{min-height:76px;padding:12px}.nba-opt{min-height:50px;margin-bottom:8px}.nba-win{padding:16px 12px}.nba-win .tr{width:64px;height:64px;margin-bottom:8px}}',
+      /* شاشات ضيقة جدًا (320px) */
+      '@media (max-width:340px){.nbx-cv{font-size:38px;letter-spacing:.1em;text-indent:.1em}.nbx-stats b{font-size:22px}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
   /* ───────── فتح / قفل ───────── */
   function open(o) {
     o = o || {};
     css();
     cssLobby();
+    cssResp();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
