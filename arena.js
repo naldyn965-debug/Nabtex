@@ -108,6 +108,73 @@
       setVol: function (v) { vol = Math.max(0, Math.min(1, v)); ls('nbArenaVol', String(vol)); apply(); }
     };
   })();
+  /* ───────── موسيقى اللوبي (ملف MP3 واحد · WebAudio · لوب بدون فجوة) ─────────
+     بتبدأ بعد أول لمسة/ضغطة جوّه الساحة، وبتشتغل في شاشات اللوبي بس (الرئيسية / إنشاء / انضمام / غرفة الانتظار) وبتتوقف أثناء اللعب وبتكمّل من نفس المكان لما نرجع للوبي.
+     مصدر واحد بس بيتعمل مرة واحدة (loop=true) فمفيش تشغيل مكرّر ولا تداخل. التفضيل محفوظ (nbArenaMus). أي فشل صامت ومش بيأثّر على الساحة. */
+  var MUS = (function () {
+    var FILE = 'Nabtex_arina_lobby.mp3', KEY = 'nbArenaMus', LEVEL = 0.22, FADE = 0.35;
+    var on = ls(KEY) !== '0', gesture = false, dead = false, ctx = null, gain = null, src = null, buf = null, raw = null, deco = false, lvl = 0, tm = 0, fail = 0, hooked = null, vis = false;
+    function noop() { /* ignore */ }
+    function inLobby() { return !S || !S.room || S.room.st === 'lobby'; }
+    function wanted() { return !!(root && on && gesture && !document.hidden && inLobby()); }
+    function pre() {   /* تحميل الملف مبكرًا (بدون AudioContext) علشان يبقى جاهز أول ما المستخدم يلمس */
+      if (raw || !on || Date.now() - fail < 30000) return;
+      raw = fetch(FILE).then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).catch(function () { raw = null; fail = Date.now(); return null; });
+    }
+    function mk() {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) { dead = true; return false; }
+        ctx = new AC(); gain = ctx.createGain(); gain.gain.value = 0; gain.connect(ctx.destination); lvl = 0; return true;
+      } catch (e) { ctx = null; dead = true; return false; }
+    }
+    function dec() {
+      if (buf || deco || !ctx) return;
+      pre(); if (!raw) return;
+      deco = true;
+      raw.then(function (ab) {
+        if (!ab) throw new Error('fetch');
+        return new Promise(function (ok, no) { var p = ctx.decodeAudioData(ab, ok, no); if (p && p.catch) p.catch(no); });
+      }).then(function (b) { buf = b; raw = null; deco = false; update(); }, function () { deco = false; raw = null; fail = Date.now(); });
+    }
+    function setLvl(v, d) {
+      if (lvl === v && d) return;
+      lvl = v;
+      var p = gain.gain, t = ctx.currentTime;
+      try { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); if (d) p.linearRampToValueAtTime(v, t + d); else p.setValueAtTime(v, t); } catch (e) { p.value = v; }
+    }
+    function sus() { try { var p = ctx.suspend(); if (p && p.catch) p.catch(noop); } catch (e) { /* ignore */ } }
+    function update() {
+      try {
+        if (wanted()) {
+          if (tm) { clearTimeout(tm); tm = 0; }
+          if (dead) return;
+          if (!ctx && !mk()) return;
+          if (ctx.state !== 'running') { var rp = ctx.resume(); if (rp && rp.catch) rp.catch(noop); }
+          dec();
+          if (!buf) return;
+          if (!src) { src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(gain); src.start(0); }
+          setLvl(LEVEL, FADE);
+        } else if (ctx && src && ctx.state === 'running') {
+          if (document.hidden) { if (tm) { clearTimeout(tm); tm = 0; } setLvl(0, 0); sus(); return; }
+          setLvl(0, FADE);
+          if (!tm) tm = setTimeout(function () { tm = 0; if (!wanted() && ctx.state === 'running') sus(); }, FADE * 1000 + 80);
+        }
+      } catch (e) { /* الصوت مش لازم يكسر الساحة */ }
+    }
+    function kick() { gesture = true; update(); }
+    function hook() {
+      if (!vis) { vis = true; document.addEventListener('visibilitychange', update); }
+      if (!root || hooked === root) return;
+      hooked = root;
+      ['pointerup', 'touchend', 'click', 'keydown'].forEach(function (ev) { root.addEventListener(ev, kick, { capture: true, passive: true }); });
+    }
+    return {
+      sync: function () { try { if (S && !S.room) return; if (root && on) pre(); hook(); update(); } catch (e) { /* ignore */ } },
+      on: function () { return on; },
+      setOn: function (v) { on = !!v; ls(KEY, on ? '1' : '0'); gesture = true; if (on) pre(); update(); }
+    };
+  })();
   /* زر الصوت (بيتبني مرة واحدة برا الشاشات علشان السلايدر ما يتقطعش مع إعادة الرسم) */
   function sndUI() {
     var pop = h('div', { class: 'nba-pop', hidden: true }), btn = h('button', { class: 'nba-x', 'aria-label': 'إعدادات الصوت', 'aria-haspopup': 'true' }), sw, rng;
@@ -118,6 +185,8 @@
     pop.appendChild(h('div', { class: 'rw' }, [h('span', { text: 'المؤثرات الصوتية' }), sw]));
     pop.appendChild(h('div', { class: 'nba-cl', style: 'margin-bottom:2px', text: 'مستوى الصوت' }));
     pop.appendChild(rng);
+    var ms = h('button', { class: 'nba-sw', role: 'switch', 'aria-label': 'تشغيل موسيقى اللوبي', 'aria-checked': MUS.on() ? 'true' : 'false', onclick: function () { MUS.setOn(!MUS.on()); ms.setAttribute('aria-checked', MUS.on() ? 'true' : 'false'); } });
+    pop.appendChild(h('div', { class: 'rw', style: 'margin:12px 0 0' }, [h('span', { text: 'موسيقى اللوبي' }), ms]));
     btn.addEventListener('click', function () { pop.hidden = !pop.hidden; });
     paint();
     return h('div', { class: 'nba-sndbar' }, [h('div', { class: 'nba-snb' }, [btn, pop])]);
@@ -385,6 +454,7 @@
   function close() {
     detach();
     if (root) { root.remove(); root = null; document.documentElement.style.overflow = ''; }
+    MUS.sync();
     V = { view: 'hub' };
   }
   function detach() {
@@ -680,6 +750,7 @@
   }
   function render() {
     if (!root) return;
+    MUS.sync();
     var key = viewKey(), w = root.firstChild;
     if (key === V.key && V.live) { V.live(); return; }
     var always = key === 'lobby';
