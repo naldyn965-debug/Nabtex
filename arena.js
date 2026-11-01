@@ -498,19 +498,108 @@
       /* كيبورد/ماوس: حلقة تركيز واضحة */
       '.nba-root button:focus-visible,.nba-root summary:focus-visible{outline:2px solid #2BD98A;outline-offset:2px}',
       /* تابلت + لابتوب + كمبيوتر: عمود أعرض وخطوط أكبر شوية (شريط الصوت لازم يطابق عرض العمود عشان زرّه يفضل جنب زر الإغلاق) */
-      '@media (min-width:768px){.nba-wrap,.nba-sndbar{max-width:600px}.nba-q{font-size:20px}.nba-opt{font-size:16.5px}.nbx-h{font-size:42px}.nbx-p{font-size:16px;max-width:44ch}}',
+      '@media (min-width:768px){.nba-wrap,.nba-sndbar{max-width:600px}.nba-q{font-size:20px}.nba-opt{font-size:16.5px}}',
       '@media (min-width:1200px){.nba-wrap,.nba-sndbar{max-width:680px}}',
-      /* بطاقات التخصصات: الشريط الأفقي مخفي السكرول مش بيتحرّك بعجلة الماوس → شبكة على التابلت والكمبيوتر */
-      '@media (min-width:768px),(hover:hover) and (pointer:fine){.nbx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));overflow:visible;margin:0;padding:0 0 4px;scroll-snap-type:none}.nbx-t{width:auto}}',
       /* شاشة السؤال على الموبايل الطويل (أيفون/أندرويد بالطول): كارت السؤال والاختيارات بيكبروا حسب ارتفاع الشاشة بدل فراغ كبير تحت. القيم ثابتة ومش بتتأثر بظهور الإجابة فمفيش قفزة وقت الكشف */
       '.nba-qcard{min-height:clamp(116px,24vh,230px);min-height:clamp(116px,24dvh,230px)}',
       '.nba-opt{min-height:clamp(58px,10vh,92px);min-height:clamp(58px,10dvh,92px)}',
       /* كلمة الصعوبة (سهل/متوسط/صعب) فوق السؤال: نص عادي من غير إطار بيضاوي ولا خلفية — اللون زي ما هو (أخضر، وذهبي للصعب). مقصورة على هيدر السؤال بس فباقي التاجات في الساحة زي ما هي */
       '.nba-qn .nba-tag{background:none;border:0;border-radius:0;padding:0}',
+      /* جملة النتيجة (مبروك — أنت من الأبطال / انتهت المواجهة): نص عادي من غير إطار بيضاوي ولا خلفية، واللون الذهبي زي ما هو */
+      '.nba-badge{background:none;border:0;border-radius:0;padding:0}',
       /* موبايل بالعرض (ارتفاع قليل) */
       '@media (max-height:480px){.nba-cd{height:150px}.nba-cd::before{width:140px;height:140px}.nba-cd i{width:96px;height:96px}.nba-big{font-size:72px}.nba-qcard{min-height:76px;padding:12px}.nba-opt{min-height:50px;margin-bottom:8px}.nba-win{padding:16px 12px}.nba-win .tr{width:64px;height:64px;margin-bottom:8px}}',
       /* شاشات ضيقة جدًا (320px) */
       '@media (max-width:340px){.nbx-cv{font-size:38px;letter-spacing:.1em;text-indent:.1em}.nbx-stats b{font-size:22px}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  /* أيقونات التخصصات (SVG مضمّنة، نفس أسلوب باقي أيقونات الساحة — بدون مكتبات) */
+  var SPI = {
+    pp: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    path: '<path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15z"/><path d="M5 19c2-5 5-8 9-10"/>',
+    ent: '<rect x="8" y="8" width="8" height="11" rx="4"/><path d="M12 8V5M9.5 4l2.5 1 2.5-1M4 11h4M16 11h4M5 18l3-2M19 18l-3-2M5.5 6.5L8 9M18.5 6.5L16 9"/>',
+    hort: '<path d="M12 8c-2-2-7-1-7 5 0 5 3 8 7 8s7-3 7-8c0-6-5-7-7-5z"/><path d="M12 8c0-2 1-4 3-5"/>',
+    bio: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 001.8 3h10.4A2 2 0 0019 18l-5-9V3"/><path d="M7.5 15h9"/>',
+    soil: '<path d="M12 2l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
+    food: '<path d="M7 3v8M5 3v5a2 2 0 002 2 2 2 0 002-2V3M7 11v10"/><path d="M17 21V3c-2.5 1.5-3.5 4.5-3.5 8H17"/>',
+    gen: '<path d="M7 3c0 5 10 5 10 9s-10 4-10 9"/><path d="M17 3c0 5-10 5-10 9s10 4 10 9"/><path d="M9 5.5h6M9 18.5h6"/>',
+    crop: '<path d="M12 22V8"/><path d="M12 8c-3 0-4-2-4-4 3 0 4 2 4 4zM12 8c3 0 4-2 4-4-3 0-4 2-4 4z"/><path d="M12 14c-3 0-4-2-4-4 3 0 4 2 4 4zM12 14c3 0 4-2 4-4-3 0-4 2-4 4z"/><path d="M12 20c-3 0-4-2-4-4 3 0 4 2 4 4zM12 20c3 0 4-2 4-4-3 0-4 2-4 4z"/>',
+    irr: '<path d="M12 2.5C8 8 5 11 5 15a7 7 0 0014 0c0-4-3-7-7-12.5z"/>',
+    anim: '<circle cx="7" cy="10" r="1.8"/><circle cx="12" cy="7" r="1.8"/><circle cx="17" cy="10" r="1.8"/><path d="M12 12c-3 0-5 3-5 5.5 0 1.5 1.5 2.5 3 2 1-.3 1.5-.5 2-.5s1 .2 2 .5c1.5.5 3-.5 3-2C17 15 15 12 12 12z"/>',
+    eco: '<path d="M3 21h18"/><path d="M6 21v-7M12 21V4M18 21V10"/>',
+    mix: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'
+  };
+
+  /* ───────── تحسين شاشة ساحة نبتيكس الرئيسية (إضافة فقط — نفس الكلاسات ونفس المنطق، وبتتحمّل بعد باقي الستايلات) ───────── */
+  function cssHub() {
+    if (document.getElementById('nba-css-hb')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-hb';
+    st.textContent = [
+      /* ── الهيرو: تسلسل بصري أوضح وفراغات أقل ── */
+      '.nbx-hero{padding:2px 0 0}',
+      '.nbx-hero::before{opacity:.06;top:-4px;left:-52px;width:180px;height:220px}',
+      '.nbx-pl{font-size:15px}.nbx-pl small{color:#B9CCBF;font-size:12.5px}',
+      '.nbx-h{font-size:clamp(27px,8vw,34px);line-height:1.25;margin:10px 0 8px}',
+      '.nbx-p{color:#C3D4C9;font-size:14px;line-height:1.7;max-width:34ch}',
+      /* ── الإحصائيات: كارت واحد متماسك ── */
+      '.nbx-stats{margin:14px 0 14px;border:1px solid #28463A;border-radius:14px;background:linear-gradient(180deg,rgba(43,217,138,.08),rgba(43,217,138,.02))}',
+      '.nbx-stats>div{padding:10px 14px}.nbx-stats>div+div{padding-inline-start:14px}',
+      '.nbx-stats b{font-size:21px}.nbx-stats span{color:#B9CCBF;font-size:12px}',
+      '.nbx-stats>div:last-child b{color:#2BD98A}',
+      '.nbx-stats>div:last-child b::before{content:"";display:inline-block;width:6px;height:6px;margin-inline-end:6px;border-radius:50%;background:#2BD98A;vertical-align:middle;animation:nbxLive 1.6s ease-in-out infinite}',
+      /* ── عنوان القسم + تلميح السحب ── */
+      '.nbx-sec{color:#C3D4C9;font-size:13.5px;margin:0 0 10px}',
+      '.nbx-sec::after{content:"اسحب للمزيد ‹";margin-inline-start:auto;font-size:12px;font-weight:600;color:#8FA99A}',
+      /* ── كروت التخصصات: صفين أفقيين بسنابّ ونهايات متلاشية (من غير قص مفاجئ)، وRTL صحيح ── */
+      '.nbx-tiles{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:min(176px,46%);gap:10px;overflow-x:auto;overflow-y:hidden;margin:0 -16px;padding:10px 16px 8px;scroll-padding-inline:16px;overscroll-behavior-x:contain;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)}',
+      '.nbx-t{position:relative;width:auto;height:auto;min-height:64px;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(180deg,#183225,#132A1E);color:#EAF2ED;font:700 13.5px/1.4 var(--f-ui,Cairo,sans-serif);transition:transform .18s,border-color .18s,background .18s,box-shadow .18s;animation:nbxTileIn .45s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--n,0)*35ms + 80ms)}',
+      '.nbx-t i{position:absolute;top:5px;left:9px;font-size:10px;opacity:.7}',
+      '.nbx-ti{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:11px;color:#2BD98A;background:rgba(43,217,138,.12);border:1px solid rgba(43,217,138,.22);transition:transform .2s,background .2s,color .2s}',
+      '.nbx-ti .nba-ico{width:20px;height:20px}',
+      '.nbx-tl{flex:1;min-width:0;overflow-wrap:anywhere}',
+      '.nbx-t:active{transform:scale(.96)}',
+      '@media (hover:hover){.nbx-t:hover{transform:translateY(-2px);border-color:rgba(43,217,138,.6);background:linear-gradient(180deg,#1B3A2A,#153023);box-shadow:0 8px 18px rgba(0,0,0,.28)}.nbx-t:hover .nbx-ti{transform:scale(1.08) rotate(-4deg)}}',
+      '.nbx-t.sel,.nbx-t.sel:hover{transform:scale(1.02);border-color:#2BD98A;background:linear-gradient(180deg,rgba(43,217,138,.28),rgba(43,217,138,.1));box-shadow:0 0 0 3px rgba(43,217,138,.18),0 8px 22px rgba(43,217,138,.22)}',
+      '.nbx-t.sel .nbx-ti{color:#04140A;background:#2BD98A;border-color:#2BD98A;animation:nbxPop .35s ease-out}',
+      '.nbx-t.sel::after{content:"";position:absolute;top:-6px;right:-5px;width:20px;height:20px;border-radius:50%;background:#2BD98A url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M5 12.5l4.5 4.5L19 7.5%27 fill=%27none%27 stroke=%27%2304140A%27 stroke-width=%273.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E") center/13px no-repeat;box-shadow:0 0 0 2px #0F2018;animation:nbxPop .3s ease-out}',
+      /* تابلت/كمبيوتر/ماوس: شبكة كاملة بدل الشريط (عجلة الماوس مبتحرّكش الأفقي) */
+      '@media (min-width:768px),(hover:hover) and (pointer:fine){.nbx-tiles{grid-auto-flow:row;grid-template-rows:none;grid-auto-columns:auto;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));overflow:visible;margin:0;padding:6px 0 8px;-webkit-mask-image:none;mask-image:none;scroll-snap-type:none}.nbx-sec::after{content:none}}',
+      /* ── زر إنشاء الغرفة: نفس لغة الأزرار (حواف مستديرة 14px، تدرّج، ضغطة ناعمة) ── */
+      '.nba-lb .nba-hubw .nba-btn.nbx-ch{border-radius:14px!important;clip-path:none;padding-bottom:13px;background:linear-gradient(180deg,#43EBA3 0,#2BD98A 55%,#22C47D 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(8,80,45,.32),0 10px 24px rgba(43,217,138,.24);transition:transform .15s,box-shadow .2s,filter .2s}',
+      '.nba-lb .nba-hubw .nba-btn.nbx-ch:active{transform:translateY(1px) scale(.985);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(8,80,45,.32),0 4px 12px rgba(43,217,138,.2)}',
+      '.nba-lb .nba-hubw .nba-btn.nbx-ch::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);transform:skewX(-20deg);pointer-events:none;animation:nbxShine 1.1s ease-out .9s 1 backwards}',
+      '@media (hover:hover){.nba-lb .nba-hubw .nba-btn.nbx-ch:hover{filter:brightness(1.06)}.nba-lb .nba-hubw .nba-btn.nbx-ch:hover .nba-ico{transform:scale(1.12)}}',
+      '.nba-lb .nba-hubw .nba-btn.nbx-ch .nba-ico{transition:transform .2s}',
+      /* ── حقل الانضمام: افتراضي / تركيز / نجاح / خطأ ── */
+      '.nbx-jl{color:#C3D4C9;font-size:13.5px;margin:14px 0 8px}',
+      '.nbx-jg{height:54px;border:1.5px solid #35594A;border-radius:14px;transition:border-color .2s,box-shadow .2s}',
+      '.nbx-jg:focus-within{border-color:#2BD98A;box-shadow:0 0 0 3px rgba(43,217,138,.16)}',
+      '.nbx-jg:has(button:not([disabled])){border-color:#2BD98A;box-shadow:0 0 0 3px rgba(43,217,138,.14)}',
+      '.nba-lb .nbx-jg.bad{border-color:#FF6B5E;box-shadow:0 0 0 3px rgba(255,107,94,.16);animation:nbxShake .4s}',
+      '.nbx-jg button{min-width:92px;padding:0 20px;font-weight:800;transition:background .2s,color .2s}',
+      '.nbx-jg button:not([disabled]){animation:nbxPop .3s ease-out;box-shadow:none}',
+      '.nbx-jg button:not([disabled]):active{filter:brightness(.94)}',
+      '.nbx-fh{color:#AFC4B8;font-size:12.5px;margin-top:8px}',
+      '.nbx-er{display:flex;align-items:center;gap:7px;color:#FF9A8F;font-size:13px;font-weight:700}',
+      '.nbx-er::before{content:"!";flex:none;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#FF6B5E;color:#2A0A07;font-size:11px;font-weight:900}',
+      /* ── الخلفية والزخرفة: توهّج خفيف + شبكة باهتة خلف المحتوى فقط ── */
+      '.nba-root.nba-lb:has(.nba-hubw){background:radial-gradient(80% 34% at 88% -4%,rgba(43,217,138,.18),transparent 70%),radial-gradient(60% 30% at 0% 96%,rgba(242,184,75,.07),transparent 70%),linear-gradient(180deg,#112419 0,#0A1510 100%)}',
+      '.nba-hubw::before{content:"";position:absolute;top:0;right:0;left:0;height:360px;background-image:linear-gradient(rgba(43,217,138,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(43,217,138,.05) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:linear-gradient(180deg,#000,transparent);mask-image:linear-gradient(180deg,#000,transparent);pointer-events:none;z-index:-1}',
+      '.nba-wrap.nba-hubw{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}.nba-hubw .nba-sp{min-height:8px}',
+      /* ── شاشات طويلة / ضيقة ── */
+      '@media (min-height:780px){.nbx-hero{padding-top:10px}.nbx-stats{margin:20px 0 18px}.nbx-t{min-height:76px}.nbx-tiles{gap:12px}}',
+      '@media (min-height:860px) and (max-width:767px){.nbx-tiles{grid-template-rows:repeat(3,auto)}}',
+      '@media (min-width:768px){.nbx-h{font-size:38px}.nbx-p{font-size:16px;max-width:44ch}}',
+      '@media (max-width:360px){.nbx-tiles{grid-auto-columns:min(160px,48%)}.nbx-t{padding:9px 10px;font-size:13px}.nbx-ti{width:32px;height:32px}}',
+      /* ── احترام تقليل الحركة ── */
+      '@media (prefers-reduced-motion:reduce){.nbx-t,.nbx-t *,.nba-lb .nba-hubw .nbx-ch,.nbx-jg,.nbx-jg button{transition:none!important;animation:none!important}.nbx-t:hover,.nbx-t:active,.nbx-t.sel,.nba-lb .nba-hubw .nbx-ch:active{transform:none!important}.nba-lb .nba-hubw .nbx-ch::after{display:none}.nbx-stats>div:last-child b::before{animation:none}}',
+      '@keyframes nbxTileIn{from{opacity:0;transform:translate3d(18px,0,0)}to{opacity:1;transform:none}}',
+      '@keyframes nbxPop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}',
+      '@keyframes nbxShake{0%,100%{transform:translate3d(0,0,0)}20%{transform:translate3d(-6px,0,0)}40%{transform:translate3d(6px,0,0)}60%{transform:translate3d(-4px,0,0)}80%{transform:translate3d(3px,0,0)}}',
+      '@keyframes nbxLive{0%,100%{opacity:.35}50%{opacity:1}}',
+      '@keyframes nbxShine{from{left:-60%}to{left:130%}}'
     ].join('\n');
     document.head.appendChild(st);
   }
@@ -521,6 +610,7 @@
     css();
     cssLobby();
     cssResp();
+    cssHub();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -964,7 +1054,12 @@
       h('button', { class: 'nba-btn sec', onclick: function () { ls('nbArenaRoom', null); V.key = ''; render(); } }, ['تجاهل'])])]));
     w.appendChild(h('div', { class: 'nbx-sec', text: 'اختار تخصص التحدي' }));
     w.appendChild(h('div', { class: 'nbx-tiles' }, SPECS.map(function (s, n) {
-      return h('button', { class: 'nbx-t', onclick: function () { V = { view: 'create', md: 's', mx: 4, sp: s[0] }; render(); } }, [h('i', { text: (n < 9 ? '0' : '') + (n + 1) }), s[1]]);
+      return h('button', { class: 'nbx-t', style: '--n:' + n, 'aria-pressed': 'false', onclick: function (e) {
+        var b = e.currentTarget; if (b.parentNode.querySelector('.sel')) return;
+        var go = function () { if (!root || S || V.view !== 'hub') return; V = { view: 'create', md: 's', mx: 4, sp: s[0] }; render(); };
+        b.classList.add('sel'); b.setAttribute('aria-pressed', 'true');
+        if (RM()) go(); else setTimeout(go, 160);
+      } }, [h('i', { text: (n < 9 ? '0' : '') + (n + 1) }), h('span', { class: 'nbx-ti' }, [ico(SPI[s[0]] || SPI.mix)]), h('span', { class: 'nbx-tl', text: s[1] })]);
     })));
     w.appendChild(h('div', { class: 'nba-sp' }));
     w.appendChild(h('button', { class: 'nba-btn nbx-ch', style: 'min-height:58px;font-size:16.5px;margin-top:16px', onclick: function () { V = { view: 'create', md: 's', mx: 4, sp: 'pp' }; render(); } }, [ico(I.users), 'إنشاء غرفة جديدة']));
