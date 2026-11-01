@@ -611,6 +611,7 @@
     cssLobby();
     cssResp();
     cssHub();
+    cssProf();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -634,6 +635,7 @@
   }
   function close() {
     detach();
+    PV = null;
     if (root) { root.remove(); root = null; document.documentElement.style.overflow = ''; }
     MUS.sync();
     V = { view: 'hub' };
@@ -644,6 +646,253 @@
     clearInterval(S.hbT); clearInterval(S.tk);
     S = null;
   }
+
+  /* ═════════ بروفايل اللاعب + الألقاب + الإنجازات (ARENA-PROFILE) ═════════
+     - المصدر الوحيد للـ XP والمستوى = xp_wallet/{uid} (نظام الأكاديمية NBXP) — بنقراه بس ومش بنكتب فيه ولا بنضيف XP هنا. العتبات وأسماء المستويات من NBXP.lv().
+     - إحصائيات الساحة + الإنجازات في arena_profiles/{uid} (قراءة بس من العميل). الكتابة الوحيدة المسموحة للاعب: eq = اللقب المُجهّز (بشرط يكون مفتوح — firestore.rules).
+     - الإنجازات بتتسجّل من /api/arena-profile بعد ما الخادم يتحقق من نتيجة المباراة (pl/ans/k) — العميل بيطلب التسجيل بس ومش بيحدد أي رقم.
+     - الـ ids لازم تطابق ACH في api/arena-profile.js وقائمة الألقاب في firestore.rules (arTitleOk).
+     للتراجع: امسح الكتلة دي (لحد «نهاية بروفايل») + سطور loadRoomProfs/titleChip/openProfile/startFinalize/paintFin/cssProf في باقي الملف. */
+  var PIc = {
+    user: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',
+    unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.5-1.5"/>',
+    seed: '<path d="M12 22v-9"/><path d="M12 13c0-4 3-7 8-7 0 5-3 8-8 7z"/><path d="M12 15c0-3-2-5-6-5 0 4 2 6 6 5z"/>',
+    flag: '<path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    crown: I.crown, fire: I.fire, bolt: I.bolt, users: I.users, trophy: I.trophy, x: I.x
+  };
+  /* id · اسم الشارة · شرط الفتح · اللقب اللي بتفتحه · أيقونة · [حقل التقدّم, الهدف] */
+  var ACH = [
+    { id: 'first_match', n: 'أول مواجهة', d: 'لعبت أول مباراة فعلية في الساحة', t: 'نبتة جديدة', i: 'seed' },
+    { id: 'first_win', n: 'أول انتصار', d: 'فزت بأول مباراة', t: 'حصاد أول', i: 'trophy' },
+    { id: 'matches10', n: 'مثابر', d: 'لعبت 10 مباريات', t: 'المثابر', i: 'flag', f: 'm', g: 10 },
+    { id: 'matches50', n: 'محارب قديم', d: 'لعبت 50 مباراة', t: 'من المخضرمين', i: 'shield', f: 'm', g: 50 },
+    { id: 'wins10', n: 'بطل الساحة', d: 'فزت بـ 10 مباريات', t: 'بطل الساحة', i: 'crown', f: 'w', g: 10 },
+    { id: 'wins25', n: 'سيّد الساحة', d: 'فزت بـ 25 مباراة', t: 'سيّد الساحة', i: 'crown', f: 'w', g: 25 },
+    { id: 'streak3', n: 'سلسلة خضراء', d: 'فزت 3 مرات ورا بعض', t: 'السلسلة الخضراء', i: 'fire', f: 'bs', g: 3 },
+    { id: 'streak5', n: 'بطل المواسم', d: 'فزت 5 مرات ورا بعض', t: 'بطل المواسم', i: 'fire', f: 'bs', g: 5 },
+    { id: 'perfect', n: 'العلامة الكاملة', d: 'جاوبت 10 من 10 صح في مباراة', t: 'العالِم', i: 'target' },
+    { id: 'speed', n: 'برق الحقل', d: '5 إجابات صحيحة كل واحدة في أقل من 3 ثواني في مباراة واحدة', t: 'سريع البديهة', i: 'bolt' },
+    { id: 'team_win', n: 'روح الفريق', d: 'فزت في مباراة فرق', t: 'قائد الفريق', i: 'users' }
+  ];
+  var PC = {}, PT = {}, PV = null;   /* PC: uid → { ok, p (arena_profiles), at, xp, wn, wat } · PT: آخر محاولة تحميل · PV: شاشة البروفايل المفتوحة */
+  function nbxp() { return window.NBXP && typeof window.NBXP.lv === 'function' ? window.NBXP : null; }
+  function achOf(id) { for (var i = 0; i < ACH.length; i++) if (ACH[i].id === id) return ACH[i]; return null; }
+  function titleLabel(id) {
+    if (!id || typeof id !== 'string') return '';
+    var a = achOf(id); if (a) return a.t;
+    var m = /^lv([0-6])$/.exec(id), x = nbxp();
+    return m && x ? (x.lv(0).nm[+m[1]] || '') : '';
+  }
+  function eqOf(uid) { var c = PC[uid]; return c && c.p && typeof c.p.eq === 'string' ? c.p.eq : ''; }
+  function titleChip(uid, cls) { var l = titleLabel(eqOf(uid)); return l ? h('span', { class: 'nba-ttc' + (cls ? ' ' + cls : ''), text: l }) : null; }
+  function num(v) { v = +v; return v > 0 ? Math.floor(v) : 0; }
+
+  /* قراءة بروفايل الساحة (+ محفظة الـ XP لو withXp). الفشل ما بيكسرش حاجة: من غير بيانات = من غير لقب/مستوى */
+  function loadProf(uid, withXp, force) {
+    var c = PC[uid], now = Date.now();
+    if (!force && c && c.ok && now - c.at < 90000 && (!withXp || (c.wat && now - c.wat < 90000))) return Promise.resolve(c);
+    var db = window.db;
+    var pj = db.collection('arena_profiles').doc(uid).get().then(function (d) { return { ok: true, p: d.exists ? d.data() : null }; }, function () { return { ok: false }; });
+    var wj = withXp ? db.collection('xp_wallet').doc(uid).get().then(function (d) { var x = d.exists ? d.data() : {}; return { xp: num(x.xp), nm: typeof x.nm === 'string' ? x.nm : '' }; }, function () { return null; }) : Promise.resolve(null);
+    return Promise.all([pj, wj]).then(function (r) {
+      var o = PC[uid] || {};
+      if (r[0].ok) { o.ok = true; o.p = r[0].p; o.at = Date.now(); }
+      if (r[1]) { o.xp = r[1].xp; o.wn = r[1].nm; o.wat = Date.now(); }
+      PC[uid] = o;
+      return o;
+    });
+  }
+  /* بروفايلات لاعبين الغرفة (للقب جنب الاسم) — قراءة واحدة لكل لاعب، وبتتعاد بس لو قديمة (5 دقايق) */
+  function loadRoomProfs() {
+    if (!S || !window.db) return;
+    var sess = S, now = Date.now(), need = Object.keys(S.players).filter(function (u) {
+      var c = PC[u]; return !(c && c.ok && now - c.at < 300000) && !(PT[u] && now - PT[u] < 20000);
+    });
+    if (!need.length) return;
+    need.forEach(function (u) { PT[u] = now; });
+    Promise.all(need.map(function (u) { return loadProf(u, false); })).then(function () { if (sess === S) repaintCards(); });
+  }
+  function repaintCards() {
+    if (!S || !S.room || !root) return;
+    if (S.room.st === 'lobby') { render(); return; }
+    var p = phase();
+    if (p && (p.k === 'lead' || p.k === 'done')) { V.key = ''; render(); }   /* مش بنعيد الرسم أثناء الأسئلة */
+  }
+
+  /* تجهيز لقب: كتابة eq بس — القواعد بتتأكد إنه مفتوح فعلًا (إنجاز مسجّل من الخادم أو مستوى XP كافي) */
+  async function equipTitle(id, btn) {
+    var u = me(); if (!u || !window.db) return;
+    if (btn) btn.disabled = true;
+    try {
+      await window.db.collection('arena_profiles').doc(u.uid).set({ eq: id }, { merge: true });
+      var c = PC[u.uid]; if (c && c.ok) c.p = Object.assign({}, c.p || {}, { eq: id });
+      toast(id ? 'تم تجهيز اللقب' : 'تم إلغاء اللقب', 'ok');
+      loadProf(u.uid, true, true).then(function () { if (PV) paintProfile(); paintFin(); repaintCards(); });
+    } catch (e) {
+      toast(e && e.code === 'permission-denied' ? 'اللقب ده لسه مقفول' : 'تعذّر تجهيز اللقب، جرّب تاني', 'err');
+    }
+    if (btn) btn.disabled = false;
+    if (PV) paintProfile(); paintFin(); repaintCards();
+  }
+
+  /* ───────── شاشة البروفايل (Bottom sheet فوق أي شاشة في الساحة) ───────── */
+  function openProfile(uid, info) {
+    if (!root || !uid) return;
+    closeProfile();
+    var ov = h('div', { class: 'nba-pf', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'الملف الشخصي' }), box = h('div', { class: 'nba-pfb' });
+    ov.appendChild(box);
+    ov.addEventListener('click', function (e) { if (e.target === ov) closeProfile(); });
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeProfile(); } });
+    root.appendChild(ov);
+    PV = { ov: ov, box: box, uid: uid, info: info || {}, tab: 'ach', back: document.activeElement };
+    paintProfile(true);
+    var mine = PV;
+    loadProf(uid, true).then(function () { if (PV === mine) paintProfile(); });
+  }
+  function closeProfile() {
+    if (!PV) return;
+    var b = PV.back; try { PV.ov.remove(); } catch (e) { /* ignore */ }
+    PV = null;
+    try { if (b && b.focus && document.contains(b)) b.focus(); } catch (e) { /* ignore */ }
+  }
+  function paintProfile(first) {
+    if (!PV || !PV.ov.isConnected) return;
+    var uid = PV.uid, u = me(), own = !!(u && u.uid === uid), c = PC[uid] || {}, p = c.p || {}, x = nbxp(), box = PV.box, st = box.scrollTop;
+    var name = (PV.info.n || c.wn || (own ? myName() : '') || 'لاعب'), photo = PV.info.ph || (own ? myPhoto() : '');
+    var eq = typeof p.eq === 'string' ? p.eq : '', ac = Array.isArray(p.ac) ? p.ac : [];
+    var m = num(p.m), w = num(p.w), ws = num(p.ws), bs = num(p.bs), xp = typeof c.xp === 'number' ? c.xp : null;
+    box.innerHTML = '';
+    box.appendChild(h('div', { class: 'nba-pfh' }, [h('span', { text: 'الملف الشخصي' }), h('button', { class: 'nba-x', 'aria-label': 'إغلاق', onclick: closeProfile }, [ico(PIc.x)])]));
+    var chip = titleLabel(eq);
+    box.appendChild(h('div', { class: 'nba-pfu' }, [avatar(uid, { n: name, ph: photo }, 84), h('h3', { text: name }), chip ? h('span', { class: 'nba-ttc big', text: chip }) : h('small', { style: 'color:var(--muted);font-weight:700', text: 'بدون لقب' })]));
+    if (!c.ok && !first) box.appendChild(h('div', { class: 'nba-fn dim', text: 'تعذّر تحميل بيانات الساحة دلوقتي.' }));
+    /* المستوى + الـ XP (من xp_wallet — نفس نظام الأكاديمية) */
+    if (x && xp !== null) {
+      var L = x.lv(xp), span = L.hi ? L.hi - L.lo : 1, pc = L.hi ? Math.max(0, Math.min(100, Math.round((xp - L.lo) / span * 100))) : 100;
+      box.appendChild(h('div', { class: 'nba-pfl' }, [h('div', { class: 't' }, [h('span', { text: 'المستوى ' + (L.i + 1) + ' — ' + L.n }), h('span', { text: L.hi ? xp + ' / ' + L.hi + ' XP' : xp + ' XP · أعلى مستوى' })]),
+        h('div', { class: 'nba-pbar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pc), 'aria-label': 'التقدّم نحو المستوى التالي' }, [h('i', { style: 'width:' + pc + '%' })])]));
+    }
+    var stat = function (v, l) { return h('div', {}, [h('b', { text: v }), h('span', { text: l })]); };
+    box.appendChild(h('div', { class: 'nba-pfs' }, [stat(String(w), 'انتصارات'), stat(String(m), 'مباريات'), stat(m ? Math.round(w / m * 100) + '%' : '—', 'نسبة الفوز')]));
+    if (ws > 0) box.appendChild(h('div', { class: 'nba-pfk' }, [h('span', { class: 'nba-streak' }, [ico(I.fire), 'سلسلة انتصارات ×' + ws]), bs > ws ? h('span', { style: 'color:var(--muted)', text: 'أفضل سلسلة: ' + bs }) : null]));
+    else if (!m && c.ok) box.appendChild(h('div', { class: 'nba-fn dim', text: own ? 'لسه ما لعبتش مباريات — أول مباراة بتبدأ بيها ملفك.' : 'لسه ما لعبش مباريات.' }));
+    var tabs = h('div', { class: 'nba-pftabs', role: 'group', 'aria-label': 'أقسام الملف' }, [['ach', 'الإنجازات'], ['ttl', 'الألقاب']].map(function (t) {
+      return h('button', { class: 'nba-pft', 'aria-pressed': PV.tab === t[0] ? 'true' : 'false', onclick: function () { PV.tab = t[0]; paintProfile(); } }, [t[1]]);
+    }));
+    box.appendChild(tabs);
+    var list = h('div', { class: 'nba-pfli' });
+    if (PV.tab === 'ach') {
+      ACH.forEach(function (a) {
+        var on = ac.indexOf(a.id) > -1, prog = !on && a.f && c.ok ? Math.min(num(p[a.f]), a.g) + ' / ' + a.g : '';
+        list.appendChild(h('div', { class: 'nba-ai' + (on ? ' on' : '') }, [h('span', { class: 'nba-aic' }, [ico(PIc[a.i])]),
+          h('div', { class: 'nba-aim' }, [h('b', { text: a.n }), h('small', { text: a.d + (prog ? ' · ' + prog : '') })]),
+          h('span', { class: 'nba-alk', role: 'img', 'aria-label': on ? 'مفتوح' : 'مقفول' }, [ico(on ? PIc.unlock : PIc.lock)])]));
+      });
+    } else {
+      var rows = [];
+      if (x) { var th = x.lv(0).th, nm = x.lv(0).nm; for (var n = 0; n < nm.length; n++) rows.push({ id: 'lv' + n, t: nm[n], need: 'المستوى ' + (n + 1) + ' (' + th[n] + ' XP)', on: xp !== null && xp >= th[n], ic: 'seed' }); }
+      ACH.forEach(function (a) { rows.push({ id: a.id, t: a.t, need: 'إنجاز «' + a.n + '»', on: ac.indexOf(a.id) > -1, ic: a.i }); });
+      if (own && eq) list.appendChild(h('button', { class: 'nba-btn sec sm', style: 'margin-bottom:10px', onclick: function (e) { equipTitle('', e.currentTarget); } }, ['إلغاء اللقب الحالي']));
+      rows.forEach(function (r) {
+        var isEq = eq === r.id;
+        list.appendChild(h('div', { class: 'nba-ai' + (r.on ? ' on' : '') + (isEq ? ' eq' : '') }, [h('span', { class: 'nba-aic' }, [ico(PIc[r.ic])]),
+          h('div', { class: 'nba-aim' }, [h('b', { text: r.t }), h('small', { text: r.on ? 'مفتوح' : 'يتفتح بـ ' + r.need })]),
+          isEq ? h('span', { class: 'nba-tag g', text: 'مُجهّز' }) : (own && r.on ? h('button', { class: 'nba-eqb', 'aria-label': 'تجهيز لقب ' + r.t, onclick: function (e) { equipTitle(r.id, e.currentTarget); } }, ['تجهيز']) : h('span', { class: 'nba-alk', role: 'img', 'aria-label': r.on ? 'مفتوح' : 'مقفول' }, [ico(r.on ? PIc.unlock : PIc.lock)]))]));
+      });
+    }
+    box.appendChild(list);
+    box.scrollTop = st;
+    if (first) { var cb = box.querySelector('.nba-x'); if (cb) cb.focus(); }
+  }
+
+  /* ───────── تسجيل نتيجة المباراة (الخادم هو اللي بيتحقق ويحسب) ───────── */
+  function startFinalize() {
+    var sess = S, rid = S.rid, uid = S.uid;
+    sess.fin = { st: 'busy' };
+    sess.finP = (async function () {
+      var wait = [0, 1500, 4000, 8000];
+      try {
+        for (var a = 0; a < wait.length; a++) {
+          if (wait[a]) await sleep(wait[a]);
+          try {
+            var tok = await me().getIdToken(), ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 15000), r;
+            try { r = await fetch('/api/arena-profile', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: JSON.stringify({ action: 'finalize', rid: rid }), signal: ctl.signal }); } finally { clearTimeout(tm); }
+            var j = await r.json().catch(function () { return {}; });
+            if (r.ok && j && j.ok) { sess.fin = { st: 'ok', d: j }; break; }
+            if (r.status === 503 && j && j.error === 'not_configured') { sess.fin = { st: 'off' }; break; }
+            if (r.status !== 503 && r.status !== 429 && r.status !== 409) { sess.fin = { st: 'err' }; break; }
+          } catch (e) { /* شبكة: نعيد المحاولة */ }
+        }
+      } catch (e) { /* ignore */ }
+      if (sess.fin.st === 'busy') sess.fin = { st: 'err' };
+      if (sess.fin.st === 'ok') { try { await loadProf(uid, true, true); } catch (e) { /* ignore */ } }
+      if (sess === S) { paintFin(); repaintCards(); }
+    })();
+  }
+  function paintFin() {
+    var el = S && S.finEl, f = S && S.fin;
+    if (!el || !el.isConnected || !f) return;
+    el.innerHTML = '';
+    if (f.st === 'busy') { el.appendChild(h('div', { class: 'nba-fn' }, [h('div', { class: 'nba-spin d', style: 'margin:0 auto 8px' }), 'جاري تسجيل تقدّمك في الساحة…'])); return; }
+    if (f.st === 'err') { el.appendChild(h('div', { class: 'nba-fn dim', text: 'تعذّر تسجيل تقدّمك في الملف الشخصي دلوقتي. نتيجة المباراة هنا سليمة.' })); return; }
+    if (f.st !== 'ok' || !f.d || !f.d.me) return;
+    var d = f.d, mi = d.me, uid = S.uid, c = PC[uid] || {}, p = c.p || {}, ws = num(p.ws), eq = typeof p.eq === 'string' ? p.eq : '';
+    if (!d.counted) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'المباراة دي ما اتحسبتش في الإحصائيات — لازم لاعبين اتنين على الأقل يجاوبوا 3 أسئلة أو أكتر.' })); return; }
+    if (!mi.k) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'مباراتك ما اتحسبتش في ملفك (ما جاوبتش بما يكفي، أو وصلت للحد اليومي).' })); return; }
+    var card = h('div', { class: 'nba-card nba-prg' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'تقدّمك في الساحة' }),
+      h('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px' }, [
+        h('span', { class: 'nba-tag' + (mi.w ? ' g' : ''), text: mi.w ? 'انتصار اتسجّل في ملفك' : 'مباراة اتسجّلت في ملفك' }),
+        ws >= 1 && mi.w ? h('span', { class: 'nba-streak' }, [ico(I.fire), 'سلسلة انتصارات ×' + ws]) : null])]);
+    (mi.n || []).forEach(function (id) {
+      var a = achOf(id); if (!a) return;
+      card.appendChild(h('div', { class: 'nba-ng' }, [h('span', { class: 'nba-aic', style: 'background:rgba(61,220,132,.16);color:var(--brand-l)' }, [ico(PIc[a.i])]),
+        h('div', { class: 'nba-aim' }, [h('b', { text: 'إنجاز جديد: ' + a.n }), h('small', { text: 'لقب جديد: ' + a.t })]),
+        eq === id ? h('span', { class: 'nba-tag g', text: 'مُجهّز' }) : h('button', { class: 'nba-eqb', onclick: function (e) { equipTitle(id, e.currentTarget); } }, ['جهّزه'])]));
+    });
+    card.appendChild(h('button', { class: 'nba-btn sec sm', style: 'margin-top:10px', onclick: function () { openProfile(uid, { n: myName(), ph: myPhoto() }); } }, [ico(PIc.user), 'ملفي الشخصي']));
+    el.appendChild(card);
+  }
+  function cssProf() {
+    if (document.getElementById('nba-css-pf')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-pf';
+    st.textContent = [
+      '.nba-ttc{display:inline-flex;align-items:center;max-width:100%;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.6;color:var(--gold-l);background:var(--gold-pale);border:1px solid rgba(245,184,61,.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
+      '.nba-ttc.sm{display:flex;margin:2px auto 0;width:fit-content;font-size:9.5px;padding:0 6px}',
+      '.nba-ttc.big{font-size:12.5px;padding:3px 12px}',
+      '.nba-nl{display:flex;align-items:center;gap:6px;min-width:0}',
+      '.nba-lead .nm .nba-ttc{margin-inline-start:6px;vertical-align:1px;font-size:9.5px;padding:0 6px}',
+      '.nba-row[role=button],.nba-lead[role=button]{cursor:pointer}.nba-row[role=button]:focus-visible,.nba-lead[role=button]:focus-visible{outline:2px solid var(--brand);outline-offset:2px}',
+      '.nba-pfbtn{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(61,220,132,.35);background:rgba(61,220,132,.1);color:var(--brand-l);border-radius:99px;padding:7px 13px;font:800 12.5px var(--f-ui,Cairo,sans-serif);cursor:pointer;min-height:36px;position:relative}',
+      '.nba-pf{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,8,5,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:nbaPfF .2s ease-out both}',
+      '.nba-pfb{position:relative;width:100%;max-width:520px;max-height:94vh;max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(24px + env(safe-area-inset-bottom,0px));border-radius:24px 24px 0 0;background:radial-gradient(120% 55% at 50% 0,rgba(61,220,132,.18),transparent 60%),linear-gradient(180deg,#0f2418,#08130d);border:1px solid rgba(61,220,132,.18);border-bottom:0;box-shadow:0 -20px 50px rgba(0,0,0,.5);animation:nbaPfU .28s cubic-bezier(.2,.8,.2,1) both}',
+      '@keyframes nbaPfF{from{opacity:0}to{opacity:1}}@keyframes nbaPfU{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}',
+      '@media (prefers-reduced-motion:reduce){.nba-pf,.nba-pfb{animation:none}.nba-pbar i{transition:none}}',
+      '.nba-pfh{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-weight:900;font-size:16px}',
+      '.nba-pfu{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:6px 0 14px}.nba-pfu h3{margin:0;font-size:20px;font-weight:900;overflow-wrap:anywhere}',
+      '.nba-pfl{border:1px solid rgba(61,220,132,.16);border-radius:16px;background:rgba(255,255,255,.035);padding:12px 14px;margin-bottom:12px}',
+      '.nba-pfl .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:800;color:var(--ink2);margin-bottom:8px}.nba-pfl .t span:last-child{color:var(--muted);font-weight:700;direction:ltr}',
+      '.nba-pbar{height:8px;border-radius:8px;background:rgba(255,255,255,.09);overflow:hidden}.nba-pbar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--brand-d),var(--brand-l));transition:width .6s cubic-bezier(.2,.8,.2,1)}',
+      '.nba-pfs{display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:12px;border:1px solid rgba(61,220,132,.16);border-radius:16px;background:rgba(255,255,255,.035);overflow:hidden}',
+      '.nba-pfs>div{padding:12px 6px;text-align:center}.nba-pfs>div+div{border-inline-start:1px solid var(--line)}',
+      '.nba-pfs b{display:block;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}.nba-pfs span{font-size:11.5px;color:var(--slate);font-weight:700}',
+      '.nba-pfk{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:-2px 0 12px;font-size:12.5px;font-weight:800}',
+      '.nba-pftabs{display:flex;gap:8px;margin:4px 0 12px;overflow-x:auto}',
+      '.nba-pft{flex:none;border:1px solid var(--line2);background:transparent;color:var(--ink2);padding:7px 14px;border-radius:99px;font:800 13px var(--f-ui,Cairo,sans-serif);cursor:pointer;min-height:36px}.nba-pft[aria-pressed=true]{background:var(--brand);color:#04140a;border-color:var(--brand)}',
+      '.nba-ai{display:flex;align-items:center;gap:12px;padding:11px 12px;margin-bottom:8px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03)}',
+      '.nba-ai.on{border-color:rgba(61,220,132,.3);background:linear-gradient(180deg,rgba(61,220,132,.1),rgba(61,220,132,.03))}.nba-ai.eq{border-color:rgba(245,184,61,.42);background:linear-gradient(180deg,var(--gold-pale),rgba(245,184,61,.03))}',
+      '.nba-aic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:var(--muted)}.nba-ai.on .nba-aic{background:rgba(61,220,132,.16);color:var(--brand-l)}.nba-aic .nba-ico{width:22px;height:22px}',
+      '.nba-aim{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.45}.nba-aim b{font-size:14px;font-weight:800}.nba-aim small{font-size:11.5px;color:var(--muted);font-weight:600}.nba-ai:not(.on) .nba-aim b{color:var(--ink2)}',
+      '.nba-alk{flex:none;display:inline-flex;color:var(--muted)}.nba-ai.on .nba-alk{color:var(--brand)}',
+      '.nba-eqb{flex:none;border:0;border-radius:99px;padding:6px 14px;font:800 12px var(--f-ui,Cairo,sans-serif);cursor:pointer;color:#04140a;background:var(--brand);min-height:34px}.nba-eqb[disabled]{opacity:.55}',
+      '.nba-fn{text-align:center;font-size:13px;font-weight:700;color:var(--ink2);padding:6px 4px 12px;line-height:1.7}.nba-fn.dim{color:var(--muted)}',
+      '.nba-prg{border-color:rgba(61,220,132,.3)}.nba-ng{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  /* ═════════ نهاية بروفايل ═════════ */
 
   /* ───────── إنشاء / انضمام ───────── */
   async function createRoom(o) {
@@ -707,6 +956,7 @@
         if (d.id === S.uid && !d.metadata.hasPendingWrites && x.ls) mySnap(x.ls.toMillis());
       });
       S.players = m;
+      loadRoomProfs();
       if (!m[S.uid] && S.room && !sn.metadata.fromCache) { gone('لم تعد ضمن هذه الغرفة.'); return; }
       render();
     }, function (e) { console.warn('[arena] players', e); gone('انقطع الاتصال بالغرفة.'); }));
@@ -989,9 +1239,11 @@
     S.seen[uid] = 1;
     if (fresh && S.seenInit && uid !== S.uid) SFX.play('pop');
     var role = uid === S.uid ? 'أنت' : (r.host === uid ? 'مضيف' : (onl ? 'متصل' : 'غير متصل'));
-    return h('div', { class: 'nba-row' + (uid === S.uid ? ' me' : '') + (fresh ? ' in' : ''), style: fresh ? '--dl:' + (n * 70) + 'ms' : '' }, [
+    return h('div', { class: 'nba-row' + (uid === S.uid ? ' me' : '') + (fresh ? ' in' : ''), style: fresh ? '--dl:' + (n * 70) + 'ms' : '', role: 'button', tabindex: '0', 'aria-label': 'الملف الشخصي: ' + p.n,
+      onclick: function (e) { if (!(e.target.closest && e.target.closest('button'))) openProfile(uid, p); },
+      onkeydown: function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); openProfile(uid, p); } } }, [
       h('div', { class: 'nba-avw' }, [avatar(uid, p, sz || 42), r.host === uid ? h('span', { class: 'nba-hc', title: 'المضيف' }, [ico(I.crown)]) : null, h('span', { class: 'nba-dot' + (onl ? ' on' : ''), title: onl ? 'متصل' : 'غير متصل' })]),
-      h('div', { class: 'nm' }, [h('b', { text: p.n }), h('small', { text: role })]), extra || null]);
+      h('div', { class: 'nm' }, [h('div', { class: 'nba-nl' }, [h('b', { text: p.n }), titleChip(uid)]), h('small', { text: role })]), extra || null]);
   }
   function emptySlot() { return h('div', { class: 'nba-row em' }, [h('span', { class: 'nba-wt' }), 'في انتظار لاعب…']); }
   function vLobby(w) {
@@ -1045,7 +1297,8 @@
     w.appendChild(top());
     function stat(a, b) { return h('div', {}, [h('b', { text: a }), h('span', { text: b })]); }
     w.appendChild(h('div', { class: 'nbx-hero' }, [
-      h('div', { class: 'nbx-pl' }, [avatar(u ? u.uid : 'x', { n: nm, ph: u && u.photoURL }, 36), h('div', {}, [h('div', { text: 'أهلاً ' + nm.split(' ')[0] }), h('small', { text: 'جاهز للتحدي؟' })])]),
+      h('div', { class: 'nbx-pl' }, [avatar(u ? u.uid : 'x', { n: nm, ph: u && u.photoURL }, 36), h('div', {}, [h('div', { text: 'أهلاً ' + nm.split(' ')[0] }), h('small', { text: 'جاهز للتحدي؟' })]),
+        u ? h('button', { class: 'nba-pfbtn', 'aria-label': 'ملفي الشخصي', onclick: function () { openProfile(u.uid, { n: myName(), ph: myPhoto() }); } }, [ico(PIc.user), 'ملفي']) : null]),
       h('h2', { class: 'nbx-h' }, ['تحدّى أصحابك', h('br'), 'في ', h('em', { text: 'الزراعة' })]),
       h('p', { class: 'nbx-p', text: '10 أسئلة في تخصصك، نقاط لحظية، واللي بيجاوب أسرع بياخد أكتر.' })]));
     w.appendChild(h('div', { class: 'nbx-stats' }, [stat('2–6', 'لاعبين'), stat('10', 'أسئلة'), stat('LIVE', 'نقاط لحظية')]));
@@ -1132,7 +1385,7 @@
   /* مواجهة اللاعبين (VS) — بتظهر في الكاونت داون */
   function matchup() {
     var teams = S.room.md === 't', uids = Object.keys(S.players).sort(function (a, b) { return S.players[a].j - S.players[b].j; }), n = 0;
-    var group = function (list, sz) { return h('div', { class: 'nba-mu' }, list.map(function (u) { return h('div', { class: 'nba-mp', style: '--dl:' + (n++ * 80) + 'ms' }, [avatar(u, S.players[u], sz), h('small', { text: S.players[u].n })]); })); };
+    var group = function (list, sz) { return h('div', { class: 'nba-mu' }, list.map(function (u) { return h('div', { class: 'nba-mp', style: '--dl:' + (n++ * 80) + 'ms' }, [avatar(u, S.players[u], sz), h('small', { text: S.players[u].n }), titleChip(u, 'sm')]); })); };
     if (!teams) return h('div', { class: 'nba-vsrow' }, [group(uids, 46)]);
     var side = function (t) { return h('div', { class: 'nba-side ' + (t ? 'b' : 'a') }, [h('b', { text: t ? 'الفريق ب' : 'الفريق أ' }), group(uids.filter(function (u) { return (S.players[u].tm ? 1 : 0) === t; }), 40)]); };
     return h('div', { class: 'nba-vsrow' }, [side(0), h('div', { class: 'nba-vsb', text: 'VS' }), side(1)]);
@@ -1156,9 +1409,10 @@
       if (prev && pr[u] !== i) { cls += ' mv'; st = '--dy:' + ((pr[u] - i) * 46) + 'px;--o:1'; }
       else if (fin) { cls += ' mv'; st = '--dy:16px;--o:0;animation-delay:' + (i * 90 + 150) + 'ms'; }
       countUp(sc, from, t[u], 800);
-      card.appendChild(h('div', { class: cls, style: st }, [
+      card.appendChild(h('div', { class: cls, style: st, role: fin ? 'button' : null, tabindex: fin ? '0' : null, onclick: fin ? function () { openProfile(u, p); } : null,
+        onkeydown: fin ? function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); openProfile(u, p); } } : null }, [
         h('span', { class: 'rk r' + (i + 1), text: String(i + 1) }), avatar(u, p, 32),
-        h('span', { class: 'nm', text: p.n + (teams ? (p.tm ? ' · ب' : ' · أ') : '') }),
+        h('span', { class: 'nm' }, [p.n + (teams ? (p.tm ? ' · ب' : ' · أ') : ''), titleChip(u)]),
         fin ? h('span', { class: 'nba-tag', text: correctCount(u) + '/' + NQ }) : null,
         upTo != null && S.rev[upTo] && pts(u, upTo) ? h('span', { class: 'nba-tag g', text: '+' + pts(u, upTo) }) : null, sc,
         fin ? h('i', { class: 'pb', style: 'width:' + Math.round(t[u] / max * 100) + '%;left:auto' }) : null]));
@@ -1236,6 +1490,8 @@
     else { var top1 = order.filter(function (u) { return t[u] === t[order[0]]; }); title = top1.length > 1 ? 'تعادل على المركز الأول!' : S.players[order[0]].n + ' هو البطل!'; sub = t[order[0]] + ' نقطة'; won = top1.indexOf(S.uid) > -1; }
     if (once('res')) { SFX.play(won ? 'win' : 'end'); confetti(won ? 80 : 28); }
     w.appendChild(h('div', { class: 'nba-card nba-win' }, [h('div', { class: 'nba-badge', text: won ? 'مبروك — أنت من الأبطال' : 'انتهت المواجهة' }), h('div', { class: 'tr' }, [ico(I.trophy)]), h('h2', { text: title }), h('p', { text: sub })]));
+    if (!S.fin && once('fin')) startFinalize();
+    S.finEl = h('div', { class: 'nba-finw' }); w.appendChild(S.finEl); paintFin();
     if (teams) {
       var tot = Math.max(1, tt[0] + tt[1]);
       w.appendChild(h('div', { class: 'nba-card' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'نتيجة الفرق' }), h('div', { class: 'nba-tvs' }, [
@@ -1265,9 +1521,9 @@
   }
   function isHostNow() { return !!(S && S.room && S.room.host === S.uid); }
   async function leaveGame() {
-    var rid = S && S.rid, host = S && S.room && S.room.host === S.uid;
+    var rid = S && S.rid, host = S && S.room && S.room.host === S.uid, fin = S && S.finP;
     ls('nbArenaRoom', null); detach(); V = { view: 'hub', key: '' };
-    if (rid && host) cleanup(rid);
+    if (rid && host) { if (fin) Promise.race([fin, sleep(6000)]).catch(function () { /* ignore */ }).then(function () { cleanup(rid); }); else cleanup(rid); }   /* ARENA-PROFILE: نستنى تسجيل النتيجة (حد أقصى 6ث) قبل ما نمسح بيانات الغرفة */
     render();
   }
 

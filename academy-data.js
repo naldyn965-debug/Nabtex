@@ -943,6 +943,8 @@ return lb.slice(0,15).map(function(r,i){return'<div class="nbxp-r'+(i<3?' top t'
 (function boot(n){if(uid()&&DB()){visit();return}if(n<45)setTimeout(function(){boot(n+1)},2000)})(0);
 return{
 syncName:syncName,
+/* ARENA-PROFILE: قراءة فقط لمستوى الـ XP الحالي (نفس LV/LVN) — بتستخدمها شاشة بروفايل الـ Arena بدل ما تنسخ العتبات. للتراجع: امسح السطر ده. */
+lv:function(xp){var i=lvl(Math.max(0,+xp||0));return{i:i,n:LVN[i],lo:LV[i],hi:i<LV.length-1?LV[i+1]:null,nm:LVN.slice(),th:LV.slice()}},
 correct:function(c,l,i){c=sx(c);l=sx(l);return award('question_correct',{key:'q_'+c+'_'+l+'_'+i,cid:c,lid:l,i:i})},
 quiz:function(c,l,score,passed){
 c=sx(c);l=sx(l);var sc=Math.max(0,Math.min(100,Math.round(score)));

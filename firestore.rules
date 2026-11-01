@@ -804,6 +804,31 @@ service cloud.firestore {
       }
     }
 
+    // ── ARENA PROFILE (بروفايل اللاعب + الألقاب + الإنجازات) — api/arena-profile.js ──────────────────────────
+    // arena_profiles/{uid}: الإحصائيات والإنجازات (m,w,ws,bs,c,pf,tw,dd,dc,ac,lt) بيكتبها الخادم بس (Admin SDK بيتخطّى القواعد)
+    // بعد ما يتحقق من نتيجة المباراة من pl/ans/k — مفيش أي مسار كتابة من العميل ليها. العميل يقدر يكتب حاجة واحدة بس: eq (اللقب المُجهّز)،
+    // وبشرط إن اللقب مفتوح فعلًا: إنجاز موجود في ac (اتكتب من الخادم) أو لقب مستوى lv0..lv6 مطابق لـ xp_wallet.xp (نفس عتبات NBXP.LV — XP الأكاديمية بتتقرا بس).
+    // arena_results/{rid_t0} (marker المباراة) متقفول بالكامل على العميل (بيتكتب من الخادم فقط، create-only) — بيمنع احتساب المباراة مرتين.
+    // الـ ids لازم تطابق ACH في api/arena-profile.js. للتراجع: امسح الكتلة دي.
+    function arLvXp(t) { return {'lv0': 0, 'lv1': 100, 'lv2': 300, 'lv3': 700, 'lv4': 1500, 'lv5': 3000, 'lv6': 5000}[t]; }
+    function arTitleOk(t, ac) {
+      return t is string && (t == ''
+        || (t in ['first_match','first_win','matches10','matches50','wins10','wins25','streak3','streak5','perfect','speed','team_win'] && t in ac)
+        || (t in ['lv0','lv1','lv2','lv3','lv4','lv5','lv6'] && (t == 'lv0'
+            || (exists(/databases/$(database)/documents/xp_wallet/$(request.auth.uid))
+                && get(/databases/$(database)/documents/xp_wallet/$(request.auth.uid)).data.get('xp', 0) >= arLvXp(t)))));
+    }
+    match /arena_profiles/{uid} {
+      allow get: if isAuth();
+      allow create: if isSelf(uid) && request.resource.data.keys().hasOnly(['eq']) && arTitleOk(request.resource.data.eq, []);
+      allow update: if isSelf(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['eq'])
+          && arTitleOk(request.resource.data.eq, resource.data.get('ac', []));
+      allow delete: if false;
+    }
+    match /arena_results/{mid} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
