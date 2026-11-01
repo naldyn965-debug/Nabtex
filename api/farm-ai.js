@@ -47,7 +47,7 @@ const FIREBASE_WEB_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDRR7TgaEvFdVwWNt
 const LOOKUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=';
 
 /* حد يومي لكل مستخدم لكل وضع — عدّلها من هنا فقط */
-const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 20, study_ask: 15, study_cards: 8 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */   /* POINTS-FIX: study_quiz = 20 زي LIM.study_quiz في index.html (STUDY-QUIZ-CAP) — القديم (للتراجع): study_quiz: 8 */
+const LIMITS = { analyze: 5, ask: 10, diag_q: 6, diagnose: 6, log: 20, decide: 12, study: 10, study_quiz: 20, study_ask: 15, study_cards: 8, arena_gen: 12 };   /* study/study_quiz = «ذاكر مع نبتكس» (study بيصرف نقطة شات، وstudy_quiz من غير نقطة جديدة) */   /* POINTS-FIX: study_quiz = 20 زي LIM.study_quiz في index.html (STUDY-QUIZ-CAP) — القديم (للتراجع): study_quiz: 8 */
 const DAILY_GLOBAL = 300;
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 const MAX_BODY_BYTES = 4400 * 1024;   /* كان 600KB لصورة واحدة ثم 2400KB لحد 4 صور — دلوقتي «ذاكر مع نبتكس» لحد 12 صورة (≈300KB لكل واحدة) وده تحت حد Vercel */
@@ -59,7 +59,7 @@ const MAX_IMAGES = 4;
 const MAX_STUDY_IMAGES = 12;   /* «ذاكر مع نبتكس»: السقف المطلق؛ الحد الفعلي حسب الباقة في aiAllowance (imgs): مجاني/Basic 4 · Plus 8 · Pro 12 */
 /* وصف كل زاوية تصوير (الواجهة بتبعت slot رقم بس، والنص ثابت هنا — مفيش نص حر من العميل بيدخل البرومبت) */
 const SHOT_LABELS = ['الجزء المصاب من الأمام (الوجه الأمامي — ورقة أو ثمرة أو غيرها)', 'الجزء المصاب من الخلف (الوجه الخلفي — زي ظهر الورقة)', 'الساق أو الثمرة (لقطة قريبة)', 'النبات كامل من بعيد'];
-const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 20000, study_quiz: 4500, study_ask: 1800, study_cards: 4500 };
+const OUT_TOKENS = { analyze: 1200, ask: 2400, diag_q: 900, diagnose: 2600, log: 700, decide: 900, study: 20000, study_quiz: 4500, study_ask: 1800, study_cards: 4500, arena_gen: 5000 };
 const STUDY_ATTEMPT_MS = 45000;   /* «ذاكر مع نبتكس»: الرد أطول فمحاولة الـ backend الواحدة بتاخد وقت أكبر من ATTEMPT_CAP_MS (الميزانية الكلية UPSTREAM_TIMEOUT_MS زي ما هي) */
 /* ═══ Groq — حلّال مسائل «ذاكر مع نبتيكس» (إضافة): المفتاح من متغير البيئة بس، ومن غيره الكود كله بيتجاهل الحلّال.
    للتراجع: امسح الكتلة دي (وGROQ_KEYS/groqNextStart/groqOrder) + SYSTEMS.solve + SOLVER_FLAG/STUDY_SYS + solveStudyProblems/cleanSolve/solverCool + سطر _pb في sanitizeStudy + سطر t0 + سطر solveStudyProblems في فرع study + (mode === 'study' ? STUDY_SYS : …) في systemInstruction. ═══ */
@@ -281,6 +281,76 @@ SYSTEMS.general = [
   INJECTION
 ].join('\n');
 /* قرار الري / الرش من الطقس الفعلي — JSON فقط. الأرقام بتيجي من الواجهة (WeatherAPI) والذكاء الاصطناعي بيفسّرها بس ومش بيخترع */
+/* ═══ NABTEX ARENA (إضافة): arena_gen = توليد 10 أسئلة MCQ لغرفة واحدة بطلب واحد. الخادم هو اللي بيكتب الأسئلة + مفاتيح الإجابة في Firestore (بتوكن المضيف، commit واحد)
+   فالإجابات الصحيحة ما بتوصلش لأي عميل قبل نهاية نافذة السؤال (القفل بالوقت في firestore.rules). للتراجع: امسح SYSTEMS.arena_gen و ARENA_* و sanitizeArena و arFsRoom و arenaWrite وفرع arena_gen في handler وسطور arena_gen في LIMITS / OUT_TOKENS. ═══ */
+const ARENA_SPECS = { pp: 'وقاية النبات', path: 'أمراض النبات', ent: 'علم الحشرات الاقتصادية', hort: 'البساتين والفاكهة', bio: 'التكنولوجيا الحيوية الزراعية', soil: 'علوم الأراضي والتسميد', food: 'علوم وتكنولوجيا الأغذية', gen: 'الوراثة وتربية النبات', crop: 'المحاصيل الحقلية', irr: 'الري والموارد المائية', anim: 'الإنتاج الحيواني والداجني', eco: 'الاقتصاد والإرشاد الزراعي', mix: 'منوّع (كل التخصصات الزراعية)' };
+const ARENA_RID_RE = /^[A-HJKMNP-Z2-9]{6}$/;
+SYSTEMS.arena_gen = [
+  'أنت أستاذ جامعي في كلية الزراعة بمصر بتعدّ مسابقة تنافسية بين طلبة في منصة «نبتيكس». اكتب 10 أسئلة اختيار من متعدد في التخصص المطلوب بالعربية الفصحى المبسطة، والمصطلحات العلمية بالإنجليزية بين قوسين عند الحاجة.',
+  'التوزيع: 4 أسئلة سهلة (d = "e") و4 متوسطة (d = "m") وسؤالان صعبان (d = "h"). لكل سؤال 4 اختيارات (o) مختلفة ومعقولة وإجابة صحيحة واحدة بس لا لبس فيها، و a = رقم الاختيار الصحيح من 0 إلى 3 (وزّع مواضع الإجابة الصحيحة).',
+  'تجنب: «كل ما سبق» و«لا شيء مما سبق»، والأسئلة المبنية على رقم أو تاريخ أو اسم لا يحفظه إلا متخصص، وأي معلومة مختلف عليها علميًا، وتكرار نفس الفكرة. الأسئلة قصيرة وواضحة تتقري على موبايل (حد أقصى 200 حرف) والاختيارات قصيرة (حد أقصى 80 حرف).',
+  'x = تفسير علمي مختصر جملة أو جملتين (حد أقصى 250 حرف) يوضح ليه الإجابة الصحيحة صحيحة. لا تذكر جرعات أو تركيزات مبيدات محددة.',
+  'رجّع JSON فقط بالشكل: {"qs":[{"q":"...","o":["...","...","...","..."],"a":0,"d":"e","x":"..."}]} من غير أي نص خارجه.',
+  INJECTION
+].join('\n');
+function arenaClean(v, max) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f<>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : ''; }
+function sanitizeArena(raw) {
+  const arr = raw && Array.isArray(raw.qs) ? raw.qs : (Array.isArray(raw) ? raw : null);
+  if (!arr) return null;
+  const seen = {}, out = [];
+  for (let i = 0; i < arr.length; i++) {
+    const x = arr[i];
+    if (!x || !Array.isArray(x.o) || x.o.length !== 4) continue;
+    const q = arenaClean(x.q, 320), o = x.o.map(function (t) { return arenaClean(t, 160); }), a = Number(x.a);
+    if (q.length < 6 || o.some(function (t) { return !t; }) || !Number.isInteger(a) || a < 0 || a > 3) continue;
+    if (/[\u4e00-\u9fff\u3040-\u30ff]/.test(q + o.join(''))) continue;   /* حروف صينية/يابانية = رد تالف */
+    if (new Set(o).size !== 4) continue;   /* اختيارات مكررة */
+    const sig = q.slice(0, 50);
+    if (seen[sig]) continue;
+    seen[sig] = 1;
+    const idx = [0, 1, 2, 3];
+    for (let k = 3; k > 0; k--) { const r = crypto.randomInt(k + 1), tmp = idx[k]; idx[k] = idx[r]; idx[r] = tmp; }   /* الخلط على الخادم: موضع الإجابة الصحيحة مش بيعتمد على الموديل */
+    out.push({ q: q, o: idx.map(function (n) { return o[n]; }), c: idx.indexOf(a), d: x.d === 'e' || x.d === 'h' ? x.d : 'm', e: arenaClean(x.x, 400) });
+  }
+  if (out.length < 10) return null;
+  const rank = { e: 0, m: 1, h: 2 };
+  out.length = 10;
+  return out.map(function (z, i) { return { z: z, i: i }; }).sort(function (a, b) { return (rank[a.z.d] - rank[b.z.d]) || (a.i - b.i); }).map(function (w) { return w.z; });   /* سهل → صعب */
+}
+/* قراءة مستند الغرفة بتوكن المضيف: null = فشل القراءة · {_missing:true} = مش موجودة */
+async function arFsRoom(rid, tok) {
+  const ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 6000);
+  try {
+    const r = await fetch(FS_DOCS + '/arena_rooms/' + rid, { headers: { Authorization: 'Bearer ' + tok }, signal: ctl.signal });
+    if (r.status === 404) return { _missing: true };
+    if (!r.ok) return null;
+    const j = await r.json(), f = j.fields || {}, o = {};
+    Object.keys(f).forEach(function (k) {
+      const v = f[k];
+      o[k] = v.stringValue !== undefined ? v.stringValue : (v.integerValue !== undefined ? parseInt(v.integerValue, 10) : (v.booleanValue !== undefined ? v.booleanValue : (v.timestampValue ? Date.parse(v.timestampValue) : null)));
+    });
+    return o;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+/* 10 أسئلة + 10 مفاتيح + علامة qr في commit واحد ذرّي (create-only: لو الأسئلة اتكتبت قبل كده الـ commit كله بيفشل) */
+async function arenaWrite(rid, qs, tok) {
+  const base = 'projects/' + FS_PROJECT + '/databases/(default)/documents/arena_rooms/' + rid, S = function (v) { return { stringValue: v }; };
+  const writes = [];
+  qs.forEach(function (z, i) {
+    writes.push({ update: { name: base + '/q/' + i, fields: { q: S(z.q), o: { arrayValue: { values: z.o.map(S) } }, d: S(z.d) } }, currentDocument: { exists: false } });
+    writes.push({ update: { name: base + '/k/' + i, fields: { c: { integerValue: String(z.c) }, e: S(z.e) } }, currentDocument: { exists: false } });
+  });
+  writes.push({ update: { name: base, fields: { qr: { booleanValue: true } } }, updateMask: { fieldPaths: ['qr'] }, currentDocument: { exists: true } });
+  const ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 9000);
+  try {
+    const r = await fetch(FS_DOCS + ':commit', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: JSON.stringify({ writes: writes }), signal: ctl.signal });
+    if (r.ok) return 'ok';
+    const tx = await r.text();
+    console.error('[farm-ai] arena write http ' + r.status + errBrief(tx));
+    return (r.status === 409 || r.status === 400 && /ALREADY_EXISTS|FAILED_PRECONDITION/.test(tx)) ? 'conflict' : '';
+  } catch (e) { console.error('[farm-ai] arena write failed:', e && e.name); return ''; } finally { clearTimeout(t); }
+}
+
 SYSTEMS.decide = [
   'أنت مهندس زراعي استشاري ومتخصص في الأرصاد الزراعية في مصر، في منصة «نبتيكس». المزارع بيسألك سؤال قرار مباشر («هل أروي الآن؟» أو «هل أرش الآن؟») وهيمشي على ردّك، فكن دقيقًا وحاسمًا وصريحًا.',
   'هتستلم JSON فيه: wx (طقس موقع المزرعة الفعلي: الحالة الآن + جدول الساعات الجاية + 3 أيام + التنبيهات + حكم النظام الحسابي rule)، و ctx (بيانات المزرعة: نظام الري، آخر ري، آخر رش، مرحلة النمو، المحصول، التربة لو اتذكرت).',
@@ -1153,6 +1223,9 @@ const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OR_MAX_PROBLEMS = Math.min(12, Math.max(1, parseInt(process.env.OPENROUTER_MAX_PROBLEMS, 10) || 4));   /* AUDIT-THEORY: كان 2؛ دلوقتي المسائل + الأسئلة النظرية معًا (الأولوية للحسابية). لو الحد اليومي المجاني في OpenRouter بيخلص بسرعة قلّله بمتغير OPENROUTER_MAX_PROBLEMS */
 const OR_MAX_OUT = 6000;           /* max_tokens (التفكير + الرد) */
 const OR_CAP_MS = 25000;           /* أقصى وقت لمرحلة المراجعة */
+const OR_AUDIT_CAP_MS = 32000;     /* AUDIT-TIME: طلب qaudit المستقل (سؤال واحد) بيقطع عند 25ث مع الموديلات البطيئة (لوج «study audit t=25661ms no-verdict») — ليه الميزانية كلها، فبنديه 32ث ويفضل ~13ث للتحكيم (ARB_MIN_BUDGET_MS=10000). للتراجع: ارجعه 25000 */
+/* AUDIT-TIME: OPENROUTER_EFFORT (اختياري: low|medium|high) بيقلّل تفكير موديلات الـ reasoning فيرد أسرع؛ مش متظبط = من غير تغيير */
+const OR_EFFORT = /^(low|medium|high)$/.test(String(process.env.OPENROUTER_EFFORT || '').trim()) ? String(process.env.OPENROUTER_EFFORT).trim() : '';
 const OR_MIN_BUDGET_MS = 8000;     /* لو الباقي أقل من كده نسيب الحل من غير مراجعة */
 const orCool = new Map();          /* تبريد مؤقت لو OpenRouter رجّع 429/401/402/5xx — best-effort على مستوى الـ instance (OR-MULTIKEY: لكل backend لوحده بالاسم or1 / orrelay1..) */
 /* OR-MULTIKEY: تناوب دائري بين backends المراجعة — نفس منطق groqNextStart/groqOrder: عدّاد مشترك على Upstash لو متظبط (مفتاح nbx:or:rr) وإلا عدّاد محلي */
@@ -1230,7 +1303,7 @@ function auditInput(p) {
   const ans = picked || p.ans || '';
   return { prob: prob, sol: (ans ? 'الإجابة المقترحة: ' + ans + '\n\n' : '') + p.explain.slice(0, 4500) };
 }
-async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حساب OpenRouter بالتناوب المحدد */
+async function auditStudyAnswers(st, t0, rot, capMs) {   /* STUDY-QSEQ: rot >= 0 = حساب OpenRouter بالتناوب المحدد. AUDIT-TIME: capMs اختياري (الافتراضي OR_CAP_MS) */
   try {
     if (!OR_BACKENDS.length || !OR_MODELS.length || !st || !Array.isArray(st.parts)) return;
     /* AUDIT-THEORY: الحسابية المعلّمة الأول، وبعدها أجزاء الأسئلة النظرية (kind:'q' من غير problem) — الإجمالي حتى OR_MAX_PROBLEMS */
@@ -1240,8 +1313,8 @@ async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حس
     if (!targets.length) return;
     const oStart = rot >= 0 ? rot % OR_BACKENDS.length : await orNextStart(OR_BACKENDS.length);   /* OR-MULTIKEY. STUDY-QSEQ */
     if (!orOrder(oStart).length) return;   /* كل الـ backends في تبريد */
-    const budget = Math.min(OR_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
-    if (budget < OR_MIN_BUDGET_MS) return;
+    const budget = Math.min(capMs || OR_CAP_MS, FN_BUDGET_MS - (Date.now() - t0));
+    if (budget < OR_MIN_BUDGET_MS) { console.error('[farm-ai] audit skipped: budget ' + budget + 'ms'); return; }   /* AUDIT-TIME: كان بيخرج بصمت */
     const pend = [];   /* ARBITER: الأجزاء اللي المراجعة اختلفت معاها — بتتحكّم تاني بعد المراجعة */
     const ctl = new AbortController();
     const timer = setTimeout(function () { ctl.abort(); }, budget);
@@ -1258,13 +1331,14 @@ async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حس
             ]
           };
           if (OR_MODELS.length > 1) body.models = OR_MODELS; else body.model = OR_MODELS[0];
+          if (OR_EFFORT) body.reasoning = { effort: OR_EFFORT };   /* AUDIT-TIME */
           let r = null, raw = '', ob = null;
           const obs = orOrder(oStart + ti);   /* OR-MULTIKEY: كل مراجعة تبدأ من backend مختلف، ولو فشل (429/401/402/5xx/اتصال) بتجرّب اللي بعده في نفس الطلب */
           for (let oi = 0; oi < obs.length; oi++) {
             ob = obs[oi];
             let rr = null, rt = '';
             try { rr = await orCall(ob, body, ctl.signal); rt = await rr.text(); }
-            catch (e) { if (ctl.signal.aborted) return; console.error('[farm-ai] audit ' + ob.name + ' network:', e && e.name); orCool.set(ob.name, Date.now() + 15000); continue; }
+            catch (e) { if (ctl.signal.aborted) { console.error('[farm-ai] audit TIMEOUT after ' + (Date.now() - ts) + 'ms (cap ' + budget + 'ms) model=' + OR_MODELS.join(',') + ' @' + ob.name); return; } console.error('[farm-ai] audit ' + ob.name + ' network:', e && e.name);   /* AUDIT-TIME: كان return صامت */ orCool.set(ob.name, Date.now() + 15000); continue; }
             if (!rr.ok) {
               console.error('[farm-ai] audit ' + ob.name + ' http ' + rr.status);
               let ms = 0;
@@ -1294,7 +1368,7 @@ async function auditStudyAnswers(st, t0, rot) {   /* STUDY-QSEQ: rot >= 0 = حس
             : 'Review warning: an independent review got a different result' + (v.final ? ' (' + v.final + ')' : '') + (v.where ? '. Possible error: ' + v.where : '') + '. Please double-check the solution yourself or with your instructor before relying on it.';
           if (!v.agree && GROQ_KEYS.length) pend.push({ p: p, au: au, v: v, ar: ar, note: note });   /* ARBITER: التنبيه بيتضاف بعد التحكيم لو ما اتحسمش */
           else p.explain = p.explain + '\n\n' + note;
-          console.log('[farm-ai] audit: ' + (v.agree ? 'agree' : 'DISAGREE') + ' ' + (ob ? ob.name + ' ' : '') + (Date.now() - ts) + 'ms');   /* بيظهر في Vercel Logs */
+          console.log('[farm-ai] audit: ' + (v.agree ? 'agree' : 'DISAGREE') + ' ' + (ob ? ob.name + ' ' : '') + (Date.now() - ts) + 'ms ' + (j && j.model ? j.model : ''));   /* بيظهر في Vercel Logs */
         } catch (e) { console.error('[farm-ai] audit failed:', e && e.name); }
       }));
     } finally { clearTimeout(timer); }
@@ -1553,6 +1627,7 @@ module.exports = async function handler(req, res) {
 
   let parts, keyMaterial, options = null, ruleTone = '', decKind = '';
   let studyN = 0;   /* عدد أجزاء الشرح في طلب study_quiz */
+  let arenaRid = '', arenaSpec = '';   /* ARENA */
   let qmode = false;   /* STUDY-QMODE: «وضع الأسئلة الفائق» (mode:'study' + qmode:true) */
   let qAud = null;   /* STUDY-QAUDIT: الجزء المطلوب مراجعته (طلب qaudit نصي من غير صور) */
   let qStage = '', qRot = -1, qPay = false;   /* STUDY-QSEQ: '' = الطلب الواحد القديم · 'plan' = فهرسة الأسئلة · 'one' = حل سؤال واحد (qRot = رقم التناوب) */
@@ -1735,6 +1810,12 @@ module.exports = async function handler(req, res) {
     ruleTone = wxo.rule && typeof wxo.rule.tone === 'string' ? wxo.rule.tone : '';
     decKind = kind;
     parts = [{ text: p }]; keyMaterial = kind + '|' + sType + '|' + crop + '|' + soil + '|' + wxs + '|' + cx;
+  } else if (mode === 'arena_gen') {   /* ARENA */
+    arenaRid = typeof body.rid === 'string' ? body.rid : '';
+    arenaSpec = typeof body.spec === 'string' && ARENA_SPECS[body.spec] ? body.spec : '';
+    if (!ARENA_RID_RE.test(arenaRid) || !arenaSpec) return fail(res, 400, 'bad_request');
+    parts = [{ text: 'التخصص: ' + ARENA_SPECS[arenaSpec] + '\nرقم الجولة (للتنويع): ' + crypto.randomInt(1000000) + '\nاكتب الـ 10 أسئلة (JSON فقط).' }];
+    keyMaterial = arenaRid + '|' + arenaSpec;
   } else { /* log */
     const text = typeof body.text === 'string' ? body.text.trim().slice(0, MAX_TEXT_CHARS) : '';
     if (text.length < 3) return fail(res, 400, 'bad_request');
@@ -1746,6 +1827,13 @@ module.exports = async function handler(req, res) {
   const uid = await verifyUser(m[1]);
   if (!uid) return fail(res, 401, 'unauthorized');
 
+  if (mode === 'arena_gen') {   /* ARENA: المضيف بس، الغرفة لوبي، الأسئلة لسه ما اتولّدتش، والتخصص مطابق لللي في الغرفة */
+    const rm = await arFsRoom(arenaRid, m[1]);
+    if (!rm) return fail(res, 503, 'arena_check');
+    if (rm._missing) return fail(res, 404, 'no_room');
+    if (rm.host !== uid || rm.st !== 'lobby' || rm.qr !== false || rm.sp !== ARENA_SPECS[arenaSpec]) return fail(res, 409, 'room_state');
+    if (rm.exp && rm.exp < Date.now()) return fail(res, 410, 'expired');
+  }
   /* كاش: نفس المستخدم + نفس الوضع + نفس المدخلات → نفس الرد بدون استهلاك */
   const day = today();
   const h = crypto.createHash('sha256').update(uid + '|' + mode + '|' + keyMaterial).digest('hex');
@@ -1787,7 +1875,7 @@ module.exports = async function handler(req, res) {
     if (orOn) {
       const stA = { parts: [qAud] };
       qmSnap(stA);
-      await auditStudyAnswers(stA, t0, qRot);
+      await auditStudyAnswers(stA, t0, qRot, OR_AUDIT_CAP_MS);   /* AUDIT-TIME */
       qmMark(stA);
     }
     console.log('[farm-ai] study audit t=' + (Date.now() - t0) + 'ms ' + (qAud.explain !== before ? 'verdict' : 'no-verdict'));
@@ -1803,8 +1891,8 @@ module.exports = async function handler(req, res) {
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
-  const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : 0.3)), maxOutputTokens: OUT_TOKENS[mode] };
-  if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') gen.responseMimeType = 'application/json';
+  const gen = { temperature: mode === 'log' ? 0 : (mode === 'decide' ? 0.1 : (mode === 'diag_q' ? 0.2 : (mode === 'arena_gen' ? 0.5 : 0.3))), maxOutputTokens: OUT_TOKENS[mode] };
+  if (mode === 'log' || mode === 'diag_q' || mode === 'decide' || mode === 'arena_gen' || mode === 'study' || mode === 'study_quiz' || mode === 'study_cards') gen.responseMimeType = 'application/json';
   const reqBody = {
     systemInstruction: { parts: [{ text: (homeUser && mode === 'diagnose') ? SYSTEMS[mode].replace(FARM_FOOTER, '') : (mode === 'study' ? (qmode ? (qStage === 'plan' ? STUDY_QS_PLAN_SYS : (qStage === 'one' ? STUDY_QS_ONE_SYS : STUDY_QS_SYS)) : STUDY_SYS) : SYSTEMS[generalAsk ? 'general' : mode]) }] },
     contents: [{ role: 'user', parts: parts }],
@@ -1971,6 +2059,25 @@ module.exports = async function handler(req, res) {
     const sc = sanitizeStudyCards(parsed, studyN);
     if (!sc) return fail(res, 502, 'blocked');
     payload = { cards: sc.cards };
+  } else if (mode === 'arena_gen') {   /* ARENA: تحقق + إعادة محاولة واحدة لو الرد ناقص/تالف + كتابة الأسئلة والمفاتيح */
+    const parseAr = function (o) { try { return sanitizeArena(JSON.parse(o.replace(/^```(?:json)?\s*|\s*```$/g, ''))); } catch (e) { return null; } };
+    let qs = parseAr(out);
+    if (!qs && deadline - Date.now() > 14000) {
+      console.error('[farm-ai] arena: unusable reply, retrying once');
+      const ctlA = new AbortController(), tmA = setTimeout(function () { ctlA.abort(); }, Math.min(22000, deadline - Date.now()));
+      try {
+        const rA = await callBackend(order[order.length > 1 ? 1 : 0], reqBody, ctlA.signal, modelFor(mode));
+        const jA = JSON.parse(await rA.text()), cA = rA.ok && jA.candidates && jA.candidates[0];
+        const oA = cA && cA.content && cA.content.parts ? cA.content.parts.map(function (pp) { return (pp && pp.text) || ''; }).join('').trim() : '';
+        if (oA) qs = parseAr(oA);
+      } catch (e) { console.error('[farm-ai] arena retry failed:', e && e.name); } finally { clearTimeout(tmA); }
+    }
+    if (!qs) return fail(res, 502, 'blocked');
+    const wr = await arenaWrite(arenaRid, qs, m[1]);
+    if (wr === 'conflict') return fail(res, 409, 'room_state');
+    if (wr !== 'ok') return fail(res, 502, 'arena_write');
+    console.log('[farm-ai] arena ' + arenaRid + ' ' + arenaSpec + ': 10 questions written t=' + (Date.now() - t0) + 'ms');
+    payload = { arena: { n: qs.length } };
   } else if (mode === 'decide') {
     let parsed = null;
     try { parsed = JSON.parse(out.replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { /* غير صالح */ }
