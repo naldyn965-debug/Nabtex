@@ -417,11 +417,12 @@ module.exports = async function handler(req, res) {
       const cur = { m: p.m | 0, w: p.w | 0, ws: p.ws | 0, bs: p.bs | 0, c: p.c | 0, pf: p.pf | 0, tw: p.tw | 0, dd: p.dd | 0, dc: p.dc | 0, ac: Array.isArray(p.ac) ? p.ac.filter(function (x) { return ACH_IDS.indexOf(x) > -1; }) : [] };
       const capped = cur.dd === day && cur.dc >= DAILY_CAP;
       const credited = ev.counted && r.active && !capped;
-      entries[u] = { s: r.s, c: r.cc, w: r.won ? 1 : 0, k: credited ? 1 : 0, n: [] };
+      entries[u] = { s: r.s, c: r.cc, w: r.won ? 1 : 0, k: credited ? 1 : 0, n: [], ws: cur.ws, bs: cur.bs, ps: cur.ws };   /* WIN-STREAK: ws/bs بعد المباراة · ps قبلها (مباراة ما اتحسبتش = السلسلة زي ما هي) */
       if (!credited) return;
       const nx = { m: cur.m + 1, w: cur.w + (r.won ? 1 : 0), c: cur.c + r.cc, pf: cur.pf + (r.cc === NQ ? 1 : 0), tw: cur.tw + (r.won && r.team ? 1 : 0), dd: day, dc: (cur.dd === day ? cur.dc : 0) + 1 };
       nx.ws = r.won ? cur.ws + 1 : (r.draw ? cur.ws : 0);   /* تعادل الفرق ما بيكسرش السلسلة */
       nx.bs = Math.max(cur.bs, nx.ws);
+      entries[u].ws = nx.ws; entries[u].bs = nx.bs;
       const ctx = { m: nx.m, w: nx.w, bs: nx.bs, cc: r.cc, fast: r.fast, team: r.team, won: r.won };
       const have = cur.ac.slice(), added = [];
       ACH_IDS.forEach(function (id) { if (have.indexOf(id) === -1 && ACH[id](ctx)) { have.push(id); added.push(id); } });
@@ -441,7 +442,7 @@ module.exports = async function handler(req, res) {
     const rmap = {};
     uids.forEach(function (u) {
       const e = entries[u];
-      rmap[u] = { mapValue: { fields: { s: I(e.s), c: I(e.c), w: I(e.w), k: I(e.k), n: { arrayValue: { values: e.n.map(S) } } } } };
+      rmap[u] = { mapValue: { fields: { s: I(e.s), c: I(e.c), w: I(e.w), k: I(e.k), n: { arrayValue: { values: e.n.map(S) } }, ws: I(e.ws), bs: I(e.bs), ps: I(e.ps) } } };
     });
     writes.unshift({
       update: { name: FS_ROOT + '/arena_results/' + mid, fields: { rid: S(rid), ts: TS(now), exp: TS(now + 30 * 86400000), np: I(uids.length), ct: { booleanValue: ev.counted }, md: S(room.md === 't' ? 't' : 's'), r: { mapValue: { fields: rmap } } } },
@@ -451,7 +452,7 @@ module.exports = async function handler(req, res) {
     const cm = await fs(':commit', { method: 'POST', body: JSON.stringify({ writes: writes }) }, tok);
     if (cm.status === 200) {
       const mine = entries[uid], ru = ev.res[uid];
-      return send(res, 200, { ok: true, counted: ev.counted, me: { s: mine.s, c: mine.c, w: mine.w, k: mine.k, n: mine.n, rank: ru.rank, q: mine.q || null } });
+      return send(res, 200, { ok: true, counted: ev.counted, me: { s: mine.s, c: mine.c, w: mine.w, k: mine.k, n: mine.n, ws: mine.ws, bs: mine.bs, ps: mine.ps, rank: ru.rank, q: mine.q || null } });
     }
     const code = cm.json && cm.json.error && cm.json.error.status;
     if (code === 'ALREADY_EXISTS' || code === 'FAILED_PRECONDITION' || code === 'ABORTED' || cm.status === 409) continue;   /* حد سبقنا أو البروفايل اتغيّر — نقرا من الأول */
