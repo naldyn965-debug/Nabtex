@@ -613,6 +613,7 @@
     cssHub();
     cssProf();
     cssQuests();
+    cssRM();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -635,6 +636,7 @@
     if (o.code) joinRoom(o.code);
   }
   function close() {
+    rmLeave(true);
     detach();
     PV = null;
     if (root) { root.remove(); root = null; document.documentElement.style.overflow = ''; }
@@ -778,7 +780,7 @@
     }
     var stat = function (v, l) { return h('div', {}, [h('b', { text: v }), h('span', { text: l })]); };
     box.appendChild(h('div', { class: 'nba-pfs' }, [stat(String(w), 'انتصارات'), stat(String(m), 'مباريات'), stat(m ? Math.round(w / m * 100) + '%' : '—', 'نسبة الفوز')]));
-    if (ws > 0) box.appendChild(h('div', { class: 'nba-pfk' }, [h('span', { class: 'nba-streak' }, [ico(I.fire), 'سلسلة انتصارات ×' + ws]), bs > ws ? h('span', { style: 'color:var(--muted)', text: 'أفضل سلسلة: ' + bs }) : null]));
+    if (ws > 0 || bs > 0) box.appendChild(h('div', { class: 'nba-pfk' }, [ws > 0 ? h('span', { class: 'nba-streak' }, [ico(I.fire), 'سلسلة انتصارات ×' + ws]) : h('span', { style: 'color:var(--muted)', text: 'مفيش سلسلة انتصارات حالية' }), bs > 0 ? h('span', { style: 'color:var(--muted)', text: 'أفضل سلسلة: ' + bs }) : null]));   /* WIN-STREAK */
     else if (!m && c.ok) box.appendChild(h('div', { class: 'nba-fn dim', text: own ? 'لسه ما لعبتش مباريات — أول مباراة بتبدأ بيها ملفك.' : 'لسه ما لعبش مباريات.' }));
     var tabs = h('div', { class: 'nba-pftabs', role: 'group', 'aria-label': 'أقسام الملف' }, [['ach', 'الإنجازات'], ['ttl', 'الألقاب']].map(function (t) {
       return h('button', { class: 'nba-pft', 'aria-pressed': PV.tab === t[0] ? 'true' : 'false', onclick: function () { PV.tab = t[0]; paintProfile(); } }, [t[1]]);
@@ -829,7 +831,12 @@
         }
       } catch (e) { /* ignore */ }
       if (sess.fin.st === 'busy') sess.fin = { st: 'err' };
-      if (sess.fin.st === 'ok') { try { await loadProf(uid, true, true); } catch (e) { /* ignore */ } }
+      if (sess.fin.st === 'ok') {
+        try { await loadProf(uid, true, true); } catch (e) { /* ignore */ }
+        try {   /* WIN-STREAK: الخادم كتب بروفايلات كل لاعبين المباراة في نفس الـ commit → نحدّث سلاسلهم المعروضة جنب الأسماء */
+          await Promise.all(Object.keys(sess.players || {}).filter(function (u) { return u !== uid; }).map(function (u) { return loadProf(u, false, true).catch(function () { /* ignore */ }); }));
+        } catch (e) { /* ignore */ }
+      }
       if (sess === S) { paintFin(); repaintCards(); }
     })();
   }
@@ -840,13 +847,20 @@
     if (f.st === 'busy') { el.appendChild(h('div', { class: 'nba-fn' }, [h('div', { class: 'nba-spin d', style: 'margin:0 auto 8px' }), 'جاري تسجيل تقدّمك في الساحة…'])); return; }
     if (f.st === 'err') { el.appendChild(h('div', { class: 'nba-fn dim', text: 'تعذّر تسجيل تقدّمك في الملف الشخصي دلوقتي. نتيجة المباراة هنا سليمة.' })); return; }
     if (f.st !== 'ok' || !f.d || !f.d.me) return;
-    var d = f.d, mi = d.me, uid = S.uid, c = PC[uid] || {}, p = c.p || {}, ws = num(p.ws), eq = typeof p.eq === 'string' ? p.eq : '';
-    if (!d.counted) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'المباراة دي ما اتحسبتش في الإحصائيات — لازم لاعبين اتنين على الأقل يجاوبوا 3 أسئلة أو أكتر.' })); return; }
-    if (!mi.k) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'مباراتك ما اتحسبتش في ملفك (ما جاوبتش بما يكفي، أو وصلت للحد اليومي).' })); return; }
+    var d = f.d, mi = d.me, uid = S.uid, c = PC[uid] || {}, p = c.p || {}, eq = typeof p.eq === 'string' ? p.eq : '';
+    /* WIN-STREAK: الأرقام من رد الخادم المتحقَّق (ws بعد المباراة · bs أفضل · ps قبلها) — لو مش موجودة (marker قديم) بنرجع للبروفايل */
+    var ws = typeof mi.ws === 'number' ? mi.ws : num(p.ws), bs = typeof mi.bs === 'number' ? mi.bs : num(p.bs), ps = typeof mi.ps === 'number' ? mi.ps : -1;
+    var keep = ws > 0 ? ' سلسلة انتصاراتك (×' + ws + ') ما اتأثّرتش.' : '';
+    if (!d.counted) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'المباراة دي ما اتحسبتش في الإحصائيات — لازم لاعبين اتنين على الأقل يجاوبوا 3 أسئلة أو أكتر.' + keep })); return; }
+    if (!mi.k) { el.appendChild(h('div', { class: 'nba-fn dim', text: 'مباراتك ما اتحسبتش في ملفك (ما جاوبتش بما يكفي، أو وصلت للحد اليومي).' + keep })); return; }
     var card = h('div', { class: 'nba-card nba-prg' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'تقدّمك في الساحة' }),
       h('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px' }, [
         h('span', { class: 'nba-tag' + (mi.w ? ' g' : ''), text: mi.w ? 'انتصار اتسجّل في ملفك' : 'مباراة اتسجّلت في ملفك' }),
         ws >= 1 && mi.w ? h('span', { class: 'nba-streak' }, [ico(I.fire), 'سلسلة انتصارات ×' + ws]) : null])]);
+    var sl = mi.w ? (bs > ws ? 'أفضل سلسلة ليك: ' + bs : (ws >= 2 ? 'ده أفضل رقم ليك لحد دلوقتي!' : ''))
+      : (ps > 0 && ws === 0 ? 'السلسلة اتصفّرت (كانت ×' + ps + ')' + (bs > 0 ? ' — أفضل سلسلة ليك: ' + bs : '')
+        : (ps > 0 && ws === ps ? 'تعادل — سلسلتك محفوظة ×' + ws : (bs > 0 ? 'أفضل سلسلة ليك: ' + bs : '')));
+    if (sl) card.appendChild(h('div', { class: 'nba-skl', text: sl }));   /* WIN-STREAK */
     (mi.n || []).forEach(function (id) {
       var a = achOf(id); if (!a) return;
       card.appendChild(h('div', { class: 'nba-ng' }, [h('span', { class: 'nba-aic', style: 'background:rgba(61,220,132,.16);color:var(--brand-l)' }, [ico(PIc[a.i])]),
@@ -1030,6 +1044,194 @@
   }
   /* ═════════ نهاية المهام ═════════ */
 
+  /* ═════════ إعادة المباراة + عرض السلاسل (ARENA-REMATCH) ═════════
+     - دعوة الإعادة = مستند واحد arena_rematch/{كود الغرفة القديمة} (فدعوة واحدة بس لكل مباراة): by (اللي طلب) · pl (أسماء اللاعبين السابقين) · rs (الردود) · ny (عدد الموافقين) · nr (كود الغرفة الجديدة).
+     - اللاعب بيرد على نفسه بس. الغرفة الجديدة بتتعمل بـ createRoom/joinRoom الأصليين (نفس قواعد arena_rooms) ومن اللاعب اللي طلب الإعادة بس، وبس لما 2+ يكونوا وافقوا (القواعد بتفرض ده والـ nr بيتكتب مرة واحدة).
+       مفيش أي تدخّل في محرّك المباراة (الجدول الزمني/النقاط/الأسئلة) ولا في تسجيل النتايج: الغرفة الجديدة مباراة جديدة بكود وt0 جداد → marker جديد في arena_results، فمفيش احتساب مرتين ولا مكافآت مكررة.
+     - متابعة الدعوة (RMS) مستقلة عن S: لاعب وافق وخرج للهب برضو بيتنقل للغرفة الجديدة أول ما تتعمل. ردود الأشخاص اللي ما ردّوش بتتحسب «في الانتظار» لحد انتهاء المهلة.
+     للتراجع: امسح الكتلة دي + كتلة arena_rematch في firestore.rules + سطور rm* في createRoom/attach/close/leaveGame/sweep/vResults/open وسطر streakChip في boardCard. */
+  var RM_WIN = 120000;   /* مهلة الرد (بتوقيت السيرفر) — لازم ≤ 5 دقايق (arRmCreate في firestore.rules) */
+  var RMS = null;         /* ARENA-REMATCH state { rid, uid, ref, unsub, tm, d, ok, fc, err, busy:{p,c,r,j}, cd, jf, told, cdEl } */
+  function rmRef(rid) { return window.db.collection('arena_rematch').doc(rid); }
+  function rmInfo(d) {
+    var ids = Object.keys(d.pl || {}).sort(function (a, b) { return (S && S.players[a] && S.players[b]) ? (S.players[a].j - S.players[b].j) : (a < b ? -1 : 1); }), rs = d.rs || {}, o = { ids: ids, y: 0, n: 0, p: 0, st: {} };
+    ids.forEach(function (u) { var v = rs[u] === 'y' ? 'y' : (rs[u] === 'n' ? 'n' : 'p'); o.st[u] = v; o[v]++; });
+    return o;
+  }
+  function rmEnd(d) { return d && d.exp && d.exp.toMillis ? d.exp.toMillis() : 0; }
+  function rmExpired(d) { return !!d && srvNow() >= rmEnd(d); }
+  async function rmTaken(ref) {   /* true = الدعوة اتربطت بغرفة (أو اتلغت) → createRoom يبطّل يحاول */
+    try { var sn = await ref.get(); return !sn.exists || !!(sn.data() && sn.data().nr); } catch (e) { return false; }
+  }
+  function rmWatch() {
+    if (!S || !window.db || !S.uid) return;
+    if (RMS && RMS.rid === S.rid) return;
+    rmStop();
+    var m = RMS = { rid: S.rid, uid: S.uid, ref: rmRef(S.rid), unsub: null, tm: 0, d: null, ok: false, fc: true, err: false, busy: {}, cd: 0, jf: 0, told: 0, cdEl: null, sig: '' };
+    m.unsub = m.ref.onSnapshot({ includeMetadataChanges: true }, function (sn) {
+      if (RMS !== m) return;
+      m.err = false; m.fc = !!sn.metadata.fromCache; m.d = sn.exists ? sn.data() : null;
+      m.ok = !m.fc || !!m.d;   /* لسه ما اتأكدناش من السيرفر إن مفيش دعوة → نمنع «ريماتش» لحد ما نتأكد (بيمنع دعوتين) */
+      if (m.d && !m.d.nr && !m.tm) m.tm = setInterval(rmTick, 1000);
+      rmStep(); rmPaint();
+    }, function (e) { if (RMS !== m) return; m.err = true; m.ok = true; console.warn('[arena] rematch', e && e.code); rmPaint(); });
+  }
+  function rmStop() {
+    var m = RMS; RMS = null;
+    if (!m) return;
+    try { if (m.unsub) m.unsub(); } catch (e) { /* ignore */ }
+    clearInterval(m.tm);
+  }
+  function rmTick() {
+    var m = RMS; if (!m) return;
+    if (!m.d || m.d.nr || srvNow() > rmEnd(m.d) + 20000) { clearInterval(m.tm); m.tm = 0; }
+    rmStep(); rmPaint();
+  }
+  /* القرار الوحيد في الدورة: (1) الدعوة اتربطت بغرفة → اللي وافق ينضم · (2) أنا اللي طلبت و2+ وافقوا و(الكل رد أو المهلة خلصت) → أعمل الغرفة */
+  function rmStep() {
+    var m = RMS; if (!m || !m.d || m.fc || m.err) return;
+    var d = m.d, info = rmInfo(d), uid = m.uid;
+    if (d.nr) { if (info.st[uid] === 'y') rmJoin(d.nr, false); return; }
+    if (d.by !== uid || m.busy.c || Date.now() < m.cd) return;
+    var end = rmEnd(d);
+    if (d.ny >= 2 && info.y >= 2 && (info.p === 0 || srvNow() >= end) && srvNow() < end + 12000) rmCreate();
+  }
+  async function rmCreate() {
+    var m = RMS; if (!m || !m.d || m.busy.c || m.d.nr || m.d.by !== m.uid) return;
+    var d = m.d; m.busy.c = true; rmPaint();
+    var ok = false;
+    try { ok = await createRoom({ md: d.md, sp: specKey(d.sp) || 'mix', mx: d.mx, rm: m.ref }); } catch (e) { ok = false; }
+    if (RMS !== m) return;   /* نجح: attach() قفل الدعوة ونقلنا للوبي الجديد */
+    m.busy.c = false; m.cd = Date.now() + 5000;
+    if (!ok) toast('تعذّر إنشاء الغرفة الجديدة، هنحاول تاني…', 'err');
+    rmPaint();
+  }
+  async function rmJoin(code, manual) {
+    var m = RMS; if (!m || m.busy.j || (S && S.rid === code)) return;
+    if (S && S.rid !== m.rid) { if (!m.told) { m.told = 1; toast('الغرفة الجديدة جاهزة — الكود ' + code, 'inf'); } return; }   /* لاعب في غرفة تانية: ما نشدّوش غصب */
+    if (!manual && m.jf >= 3) return;
+    m.busy.j = true; rmPaint();
+    var ok = false;
+    try { ok = await joinRoom(code); } catch (e) { ok = false; }
+    if (RMS !== m) return;   /* نجح: attach() قفل الدعوة */
+    m.busy.j = false;
+    if (!ok) { m.jf++; if (m.jf < 3) setTimeout(function () { if (RMS === m) rmStep(); }, 2500 * m.jf); else toast('تعذّر الانضمام للغرفة الجديدة. الكود: ' + code, 'err'); }
+    rmPaint();
+  }
+  async function rmPropose() {
+    var m = RMS, sess = S;
+    if (!m || !sess || sess.rid !== m.rid || !m.ok || m.d || m.busy.p || !sess.room) return;
+    var r = sess.room, uid = sess.uid, ids = Object.keys(sess.players);
+    if (ids.length < 2 || !sess.players[uid]) return;
+    var pl = {}, rs = {}, T = firebase.firestore.Timestamp;
+    ids.forEach(function (u) { var p = sess.players[u]; pl[u] = { n: String(p.n || 'لاعب').slice(0, 24), ph: (typeof p.ph === 'string' && /^https:\/\//.test(p.ph) && p.ph.length <= 300) ? p.ph : '' }; });
+    rs[uid] = 'y';
+    m.busy.p = true; rmPaint();
+    try {
+      await window.db.runTransaction(async function (tx) {   /* لو حد سبقنا (دعوتين في نفس اللحظة) المعاملة بتشوف المستند وما بتكتبش حاجة → دعوة واحدة بس */
+        var sn = await tx.get(m.ref);
+        if (sn.exists) return;
+        tx.set(m.ref, { by: uid, t0: r.t0, md: r.md, sp: r.sp, mx: r.mx, pl: pl, rs: rs, ny: 1, nr: '', exp: T.fromMillis(srvNow() + RM_WIN), cr: SV() });
+      });
+    } catch (e) { console.warn('[arena] rematch propose', e && e.code); toast('تعذّر بدء الإعادة، جرّب تاني', 'err'); }
+    if (RMS === m) { m.busy.p = false; rmPaint(); }
+  }
+  async function rmRespond(v) {
+    var m = RMS; if (!m || !m.d || m.busy.r) return;
+    var d = m.d, uid = m.uid, cur = d.rs && d.rs[uid];
+    if (d.nr || rmExpired(d) || d.by === uid || cur === 'y' || cur === v) return;
+    m.busy.r = true; rmPaint();
+    var FV = firebase.firestore.FieldValue, FP = firebase.firestore.FieldPath;
+    try {
+      if (v === 'y') await m.ref.update(new FP('rs', uid), 'y', 'ny', FV.increment(1));   /* القبول نهائي (القواعد بتمنع الرد التاني فمفيش عدّ مرتين) */
+      else await m.ref.update(new FP('rs', uid), 'n');
+    } catch (e) { toast(e && e.code === 'permission-denied' ? 'انتهت مهلة الرد على الدعوة' : 'تعذّر إرسال ردك، جرّب تاني', 'err'); }
+    if (RMS === m) { m.busy.r = false; rmPaint(); }
+  }
+  /* خروج من شاشة النتيجة/الساحة: اللي طلب الإعادة بيلغيها (ما حدش غيره يقدر يعمل الغرفة) · اللي لسه ما ردّش بيترفض · اللي وافق بيفضل مستني الغرفة */
+  function rmLeave(all) {   /* all = قفل الساحة بالكامل (مفيش حد هيستنى الغرفة) */
+    var m = RMS; if (!m) return;
+    var d = m.d, uid = m.uid, keep = false;
+    if (d && !d.nr && !rmExpired(d)) {
+      try {
+        if (d.by === uid) m.ref.delete().catch(function () { /* ignore */ });
+        else if (!(d.rs && d.rs[uid])) m.ref.update(new firebase.firestore.FieldPath('rs', uid), 'n').catch(function () { /* ignore */ });
+        else keep = d.rs[uid] === 'y';
+      } catch (e) { /* ignore */ }
+    }
+    if (!keep || all) rmStop();
+  }
+  /* بننتقل لغرفة جديدة (attach): لو دي غرفة الإعادة بنقفل المتابعة، ولو كنا مضيف الغرفة القديمة بننضّفها بعد ما النتايج تتسجّل وكل اللاعبين ينضموا */
+  function rmMoved(rid) {
+    if (!RMS || RMS.rid === rid) return;
+    var old = RMS.rid, host = S && S.rid === old && S.room && S.room.host === S.uid, fin = S && S.finP;
+    rmStop();
+    if (host) Promise.race([fin || Promise.resolve(), sleep(8000)]).catch(function () { /* ignore */ }).then(function () { return sleep(25000); }).then(function () { cleanup(old); });
+  }
+  function streakChip(uid) {   /* WIN-STREAK: سلسلة اللاعب جنب اسمه في النتيجة النهائية — بعد ما الخادم يتحقق بس */
+    if (!S || !S.fin || S.fin.st !== 'ok') return null;
+    var c = PC[uid], w = uid === S.uid && S.fin.d && S.fin.d.me && typeof S.fin.d.me.ws === 'number' ? S.fin.d.me.ws : (c && c.ok && c.p ? num(c.p.ws) : 0);
+    return w >= 2 ? h('span', { class: 'nba-skc', title: 'سلسلة انتصارات' }, [ico(I.fire), String(w)]) : null;
+  }
+  function rmPaint() {
+    var m = RMS, el = S && S.rmEl;
+    if (!m || !el || !el.isConnected || m.rid !== S.rid) return;
+    var d = m.d, uid = m.uid, info = d ? rmInfo(d) : null, exp = d ? rmExpired(d) : false;
+    var sig = [m.ok ? 1 : 0, m.err ? 1 : 0, m.busy.p ? 1 : 0, m.busy.c ? 1 : 0, m.busy.r ? 1 : 0, m.busy.j ? 1 : 0, m.jf, exp ? 1 : 0, d ? [d.by, d.nr, d.ny, JSON.stringify(d.rs || {})].join('~') : '-'].join('|');
+    if (el.getAttribute('data-sig') === sig) { rmCd(m, d); return; }   /* ما نعيدش بناء الكارت كل ثانية (بيضيّع الضغطات) */
+    el.setAttribute('data-sig', sig); el.innerHTML = '';
+    var kids = [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'إعادة المباراة' })], busy = function (t) { return [h('div', { class: 'nba-spin d', style: 'margin:0 auto 8px' }), t]; };
+    m.cdEl = null;
+    if (m.err && !d) kids.push(h('div', { class: 'nba-fn dim', text: 'تعذّر تحميل حالة الإعادة دلوقتي.' }));
+    else if (!d) {
+      kids.push(h('div', { class: 'nba-note', style: 'margin-top:0', text: 'ادعُ نفس اللاعبين لمباراة جديدة بنفس الإعدادات. الغرفة الجديدة بتتعمل لما اللاعبين يوافقوا.' }));
+      kids.push(h('button', { class: 'nba-btn', disabled: !m.ok || m.busy.p || Object.keys(S.players).length < 2, onclick: rmPropose }, [m.busy.p ? h('div', { class: 'nba-spin' }) : ico(I.swap), 'ريماتش']));
+    } else {
+      var ids = info.ids, me0 = info.st[uid];
+      var list = h('div', { class: 'nba-rml' });
+      ids.forEach(function (u) {
+        var pp = d.pl[u] || {}, v = info.st[u];
+        list.appendChild(h('div', { class: 'nba-row' + (u === uid ? ' me' : '') }, [avatar(u, { n: pp.n, ph: pp.ph }, 36),
+          h('div', { class: 'nm' }, [h('b', { text: pp.n || 'لاعب' }), h('small', { text: u === d.by ? (u === uid ? 'أنت · طلبت الإعادة' : 'طلب الإعادة') : (u === uid ? 'أنت' : '') })]),
+          h('span', { class: 'nba-tag ' + (v === 'y' ? '' : (v === 'n' ? 'no' : 'g dim')), text: v === 'y' ? 'وافق' : (v === 'n' ? 'رفض' : 'في الانتظار') })]));
+      });
+      kids.push(list);
+      if (d.nr) {
+        if (m.busy.j || me0 === 'y') kids.push(h('div', { class: 'nba-fn' }, busy('الغرفة الجديدة جاهزة — جاري الانتقال…')));
+        else { kids.push(h('div', { class: 'nba-fn', text: 'الغرفة الجديدة اتعملت (الكود ' + d.nr + ').' })); kids.push(h('button', { class: 'nba-btn sm', onclick: function () { rmJoin(d.nr, true); } }, ['انضم للغرفة الجديدة'])); }
+        if (m.jf >= 3 && me0 === 'y') kids.push(h('button', { class: 'nba-btn sm', onclick: function () { m.jf = 0; rmJoin(d.nr, true); } }, ['حاول الانضمام تاني']));
+      } else if (exp) {
+        kids.push(h('div', { class: 'nba-fn dim', text: info.y < 2 ? 'انتهت مهلة الإعادة — ما حدش وافق في الوقت.' : (d.by === uid && m.busy.c ? 'جاري إنشاء الغرفة…' : 'انتهت مهلة الإعادة.') }));
+      } else {
+        if (info.p === 0 && info.y < 2) kids.push(h('div', { class: 'nba-fn dim', text: 'كل اللاعبين رفضوا الإعادة.' }));
+        else { var cd = h('span', { class: 'nba-tag g', text: '' }); m.cdEl = cd; kids.push(h('div', { class: 'nba-fn' }, ['الدعوة بتنتهي بعد ', cd])); rmCd(m, d); }
+        if (uid !== d.by && (me0 === 'p' || me0 === 'n')) kids.push(h('div', { class: 'nba-seg' }, [
+          h('button', { class: 'nba-btn', disabled: m.busy.r, onclick: function () { rmRespond('y'); } }, [m.busy.r ? h('div', { class: 'nba-spin' }) : ico(I.check), 'قبول']),
+          me0 === 'p' ? h('button', { class: 'nba-btn sec', disabled: m.busy.r, onclick: function () { rmRespond('n'); } }, [ico(I.x), 'رفض']) : null]));
+        else if (me0 === 'y' && uid !== d.by) kids.push(h('div', { class: 'nba-fn dim', text: 'وافقت — في انتظار باقي اللاعبين.' }));
+        if (uid === d.by) {
+          kids.push(h('button', { class: 'nba-btn', disabled: info.y < 2 || m.busy.c, onclick: rmCreate }, [m.busy.c ? h('div', { class: 'nba-spin' }) : ico(I.bolt), info.p > 0 ? 'ابدأ بمن وافق (' + info.y + ')' : 'إنشاء الغرفة']));
+          if (info.y < 2) kids.push(h('div', { class: 'nbx-why', text: 'لازم لاعب واحد على الأقل يوافق معاك.' }));
+        }
+      }
+    }
+    el.appendChild(h('div', { class: 'nba-card nba-rm' }, kids));
+  }
+  function rmCd(m, d) { if (m && m.cdEl && d) m.cdEl.textContent = Math.max(0, Math.ceil((rmEnd(d) - srvNow()) / 1000)) + ' ث'; }
+  function cssRM() {
+    if (document.getElementById('nba-css-rm')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-rm';
+    st.textContent = [
+      '.nba-rm .nba-rml{margin-bottom:10px}.nba-rm .nba-row{min-height:52px}',
+      '.nba-tag.no{background:rgba(255,92,108,.12);color:#ff9aa4;border-color:rgba(255,92,108,.3)}.nba-tag.dim{opacity:.75}',
+      '.nba-rm .nba-btn{margin-top:4px}.nba-rm .nba-seg .nba-btn{margin-top:0}.nba-rm .nba-fn{padding:6px 4px 8px}',
+      '.nba-skl{margin-top:8px;font-size:12.5px;font-weight:800;color:var(--gold-l)}',
+      '.nba-skc{display:inline-flex;align-items:center;gap:2px;margin-inline-start:6px;font-size:10.5px;font-weight:800;color:var(--gold-l);vertical-align:1px}.nba-skc .nba-ico{width:12px;height:12px}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  /* ═════════ نهاية إعادة المباراة ═════════ */
+
   /* ───────── إنشاء / انضمام ───────── */
   async function createRoom(o) {
     var u = me(), tries = 0, last = null;
@@ -1038,14 +1240,19 @@
       var code = genCode(), rr = rref(code), b = window.db.batch();
       b.set(rr, { host: u.uid, st: 'lobby', md: o.md, sp: specLabel(o.sp), mx: o.mx, pc: 1, na: o.md === 't' ? 1 : 0, nb: 0, qr: false, cr: SV(), exp: firebase.firestore.Timestamp.fromMillis(Date.now() + 3 * 3600000) });
       b.set(rr.collection('pl').doc(u.uid), { n: myName(), ph: myPhoto(), tm: 0, ls: SV(), j: SV() });
-      try { await b.commit(); V.busy = false; attach(code); return; } catch (e) { last = e; if (!e || e.code !== 'permission-denied') break; }   /* permission-denied هنا = الكود متكرر (أو ساعة الجهاز غلط) → كود جديد */
+      if (o.rm) b.update(o.rm, { nr: code });   /* ARENA-REMATCH: ربط الغرفة بالدعوة في نفس الـ batch (nr بيتكتب مرة واحدة بس — القواعد) */
+      try { await b.commit(); V.busy = false; attach(code); return true; } catch (e) {
+        last = e; if (!e || e.code !== 'permission-denied') break;   /* permission-denied هنا = الكود متكرر (أو ساعة الجهاز غلط) → كود جديد */
+        if (o.rm && await rmTaken(o.rm)) break;                       /* ARENA-REMATCH: حد سبقنا وعمل الغرفة (أو الدعوة اتلغت) → مفيش داعي نكرّر */
+      }
     }
     V.busy = false; V.err = 'تعذّر إنشاء الغرفة. اتأكد من الاتصال ومن ضبط تاريخ ووقت جهازك وحاول تاني.'; render();
     if (last) console.warn('[arena] create', last);
+    return false;
   }
   async function joinRoom(code) {
     code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (!/^[A-HJKMNP-Z2-9]{6}$/.test(code)) { V.err = 'الكود لازم يكون 6 حروف/أرقام.'; render(); return; }
+    if (!/^[A-HJKMNP-Z2-9]{6}$/.test(code)) { V.err = 'الكود لازم يكون 6 حروف/أرقام.'; render(); return false; }
     var u = me(), rr = rref(code), pr = rr.collection('pl').doc(u.uid);
     V.busy = true; V.err = ''; V.view = 'join'; V.code = code; render();
     try {
@@ -1062,18 +1269,19 @@
         tx.update(rr, up);
         tx.set(pr, { n: myName(), ph: myPhoto(), tm: tm, ls: SV(), j: SV() });
       });
-      V.busy = false; attach(code);
+      V.busy = false; attach(code); return true;
     } catch (e) {
       V.busy = false; V.view = 'hub';
       var m = { nf: 'مفيش غرفة بالكود ده.', started: 'اللعبة في الغرفة دي بدأت بالفعل.', expired: 'الغرفة دي انتهت صلاحيتها.', full: 'الغرفة اكتملت (6 لاعبين كحد أقصى).' }[e && e.k];
       V.err = m || 'تعذّر الانضمام. اتأكد من الكود والاتصال وحاول تاني.';
       if (!m) console.warn('[arena] join', e);
-      render();
+      render(); return false;
     }
   }
 
   /* ───────── الاشتراك في الغرفة (مستمعين اتنين بس: الغرفة + اللاعبين) ───────── */
   function attach(rid) {
+    rmMoved(rid);   /* ARENA-REMATCH: لو رايحين للغرفة الجديدة بنقفل متابعة الدعوة (وتنضيف الغرفة القديمة لو إحنا مضيفها) قبل ما detach() يمسح S */
     detach();
     S = { rid: rid, uid: me().uid, off: 0, bestRtt: 1e9, room: null, players: {}, t0: 0, q: {}, k: {}, ans: {}, my: {}, rev: {}, pend: {}, nextTry: {}, unsub: [], hbSent: 0, lastLs: 0, fx: {}, shown: {}, seen: {}, ln: 0 };
     ls('nbArenaRoom', rid);
@@ -1249,6 +1457,10 @@
         var r = d.data(), over = (r.exp && r.exp.toMillis() < now) || (r.st === 'play' && r.t0 && r.t0.toMillis() + 280000 < now);
         if (over && d.id !== (S && S.rid)) jobs.push(cleanup(d.id));
       });
+      try {   /* ARENA-REMATCH: دعوات إعادة قديمة بتاعتنا (الدعوة بتفضل ≥ دقيقة بعد انتهاء مهلتها علشان آخر لاعب يلحق ينضم) */
+        var rm = await window.db.collection('arena_rematch').where('by', '==', u.uid).limit(5).get();
+        rm.forEach(function (d) { var x = d.data(); if (x.exp && x.exp.toMillis() + 60000 < now && !(RMS && RMS.rid === d.id)) jobs.push(d.ref.delete().catch(function () { /* ignore */ })); });
+      } catch (e) { /* ignore */ }
       await Promise.all(jobs);
     } catch (e) { /* ignore */ }
   }
@@ -1549,7 +1761,7 @@
       card.appendChild(h('div', { class: cls, style: st, role: fin ? 'button' : null, tabindex: fin ? '0' : null, onclick: fin ? function () { openProfile(u, p); } : null,
         onkeydown: fin ? function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); openProfile(u, p); } } : null }, [
         h('span', { class: 'rk r' + (i + 1), text: String(i + 1) }), avatar(u, p, 32),
-        h('span', { class: 'nm' }, [p.n + (teams ? (p.tm ? ' · ب' : ' · أ') : ''), titleChip(u)]),
+        h('span', { class: 'nm' }, [p.n + (teams ? (p.tm ? ' · ب' : ' · أ') : ''), titleChip(u), fin ? streakChip(u) : null]),
         fin ? h('span', { class: 'nba-tag', text: correctCount(u) + '/' + NQ }) : null,
         upTo != null && S.rev[upTo] && pts(u, upTo) ? h('span', { class: 'nba-tag g', text: '+' + pts(u, upTo) }) : null, sc,
         fin ? h('i', { class: 'pb', style: 'width:' + Math.round(t[u] / max * 100) + '%;left:auto' }) : null]));
@@ -1629,6 +1841,7 @@
     w.appendChild(h('div', { class: 'nba-card nba-win' }, [h('div', { class: 'nba-badge', text: won ? 'مبروك — أنت من الأبطال' : 'انتهت المواجهة' }), h('div', { class: 'tr' }, [ico(I.trophy)]), h('h2', { text: title }), h('p', { text: sub })]));
     if (!S.fin && once('fin')) startFinalize();
     S.finEl = h('div', { class: 'nba-finw' }); w.appendChild(S.finEl); paintFin();
+    S.rmEl = h('div', { class: 'nba-rmw' }); w.appendChild(S.rmEl); rmWatch(); rmPaint();   /* ARENA-REMATCH */
     if (teams) {
       var tot = Math.max(1, tt[0] + tt[1]);
       w.appendChild(h('div', { class: 'nba-card' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'نتيجة الفرق' }), h('div', { class: 'nba-tvs' }, [
@@ -1658,6 +1871,7 @@
   }
   function isHostNow() { return !!(S && S.room && S.room.host === S.uid); }
   async function leaveGame() {
+    rmLeave();   /* ARENA-REMATCH: لو لسه ما رديتش على دعوة الإعادة بنرفضها (أو بنلغيها لو إحنا اللي طلبناها) */
     var rid = S && S.rid, host = S && S.room && S.room.host === S.uid, fin = S && S.finP;
     ls('nbArenaRoom', null); detach(); V = { view: 'hub', key: '' };
     if (rid && host) { if (fin) Promise.race([fin, sleep(6000)]).catch(function () { /* ignore */ }).then(function () { cleanup(rid); }); else cleanup(rid); }   /* ARENA-PROFILE: نستنى تسجيل النتيجة (حد أقصى 6ث) قبل ما نمسح بيانات الغرفة */

@@ -829,6 +829,50 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── ARENA REMATCH (إعادة المباراة) — arena.js ─────────────────────────────────────────────────────────────
+    // arena_rematch/{rid}: دعوة إعادة لمباراة خلصت (rid = كود الغرفة القديمة، فدعوة واحدة بس لكل مباراة). بتتكتب مرة واحدة من لاعب كان في المباراة (by) وبتحمل نسخة من إعدادات الغرفة (md/sp/mx)
+    //   pl = أسماء اللاعبين السابقين (ثابتة) · rs = ردود اللاعبين {uid: 'y'|'n'} (اللي مالوش رد = في الانتظار) · ny = عدد اللي وافقوا · nr = كود الغرفة الجديدة ('' لحد ما تتعمل).
+    //   كل لاعب بيكتب رده هو بس (ومش قادر يكتب رد حد تاني)، والمُنشئ مقبوله تلقائيًا. الغرفة الجديدة بتتعمل في نفس الـ batch اللي بيكتب nr (مرة واحدة بس، ولما 2+ يكونوا وافقوا):
+    //   لو طلبين اتبعتوا مع بعض، التاني بيترفض كله (الغرفة معاه كمان) فمفيش غرفتين. الغرفة نفسها بتعدّي على قواعد arena_rooms زي أي غرفة — ما فيش تغيير فيها. مفيش أي لمس لـ arena_profiles/arena_results (المكافآت من الخادم بس).
+    // للتراجع: امسح الكتلة دي + كتلة arena في arena.js (ARENA-REMATCH).
+    function arRmCreate(rid) {
+      let n = request.resource.data; let r = get(arRoom(rid)).data;
+      return isAuth() && rid.matches('^[A-HJKMNP-Z2-9]{6}$') && arMember(rid)
+        && n.keys().hasOnly(['by', 't0', 'md', 'sp', 'mx', 'pl', 'rs', 'ny', 'nr', 'exp', 'cr'])
+        && n.by == request.auth.uid
+        && r.st == 'play' && request.time >= arClose(rid, 9)
+        && n.t0 == r.t0 && n.md == r.md && n.sp == r.sp && n.mx == r.mx
+        && n.ny == 1 && n.nr == ''
+        && n.rs is map && n.rs.size() == 1 && n.rs[request.auth.uid] == 'y'
+        && n.pl is map && n.pl.size() >= 2 && n.pl.size() <= 6 && n.pl.size() <= r.mx && request.auth.uid in n.pl
+        && n.cr == request.time && n.exp is timestamp && n.exp > request.time && n.exp <= request.time + duration.value(5, 'm');
+    }
+    // رد لاعب مدعو (قبول/رفض) على نفسه بس. الرفض ممكن يتحوّل لقبول لحد ما الغرفة تتعمل؛ القبول نهائي (عدّاد ny بيزيد بس).
+    function arRmRespond() {
+      let o = resource.data; let n = request.resource.data; let u = request.auth.uid;
+      return isAuth() && o.nr == '' && request.time < o.exp && u in o.pl && u != o.by
+        && n.diff(o).affectedKeys().hasOnly(['rs', 'ny'])
+        && n.rs.diff(o.rs).affectedKeys().hasOnly([u])
+        && ((u in o.rs) ? (o.rs[u] == 'n' && n.rs[u] == 'y') : (n.rs[u] in ['y', 'n']))
+        && n.ny == o.ny + (n.rs[u] == 'y' ? 1 : 0);
+    }
+    // إنشاء الغرفة الجديدة: المُنشئ بس، مرة واحدة، 2+ موافقين، والغرفة (بنفس الإعدادات ومضيفها هو) بتتكتب في نفس الـ batch
+    function arRmRoom() {
+      let o = resource.data; let n = request.resource.data; let nr = request.resource.data.nr;
+      return isAuth() && o.by == request.auth.uid && o.nr == '' && o.ny >= 2 && request.time < o.exp + duration.value(15, 's')
+        && n.diff(o).affectedKeys().hasOnly(['nr'])
+        && nr is string && nr.matches('^[A-HJKMNP-Z2-9]{6}$')
+        && !exists(arRoom(nr)) && existsAfter(arRoom(nr))
+        && getAfter(arRoom(nr)).data.host == request.auth.uid && getAfter(arRoom(nr)).data.md == o.md && getAfter(arRoom(nr)).data.mx == o.mx;
+    }
+    match /arena_rematch/{rid} {
+      allow get: if isAuth() && (resource == null || request.auth.uid in resource.data.pl);   // resource == null: لسه ما اتعملتش → «مش موجودة» بدل permission-denied
+      allow list: if isAuth() && resource.data.by == request.auth.uid;                        // تنضيف دعوات المُنشئ نفسه بس
+      allow create: if arRmCreate(rid);
+      allow update: if arRmRespond() || arRmRoom();
+      allow delete: if isAuth() && (resource.data.by == request.auth.uid || (request.time > resource.data.exp && request.auth.uid in resource.data.pl));
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
