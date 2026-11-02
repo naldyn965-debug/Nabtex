@@ -15,6 +15,15 @@
  *   (نفس المستخدم في Supabase functions). من غيره الخادم بيرد 503 والـ Arena بتفضل شغّالة عادي من غير تسجيل إنجازات.
  * - الأرقام لازم تطابق arena.js و firestore.rules (LEAD / QDUR / SLOT / NQ / BONUS).
  * للتراجع: امسح الملف ده وكتلة arena_profiles في firestore.rules ووظائف البروفايل في arena.js.
+ *
+ * ── المهام اليومية (DAILY-QUESTS) ──
+ * POST { action: 'quests' }            → حالة مهام النهارده (قراءة بس — مفيش كتابة)
+ * POST { action: 'claim', k: 'm|c|w' } → استلام مكافأة مهمة مكتملة
+ * arena_quests/{uid}: d (يوم القاهرة YYYY-MM-DD) · ex (نهاية اليوم) · g/r/p/cl = [هدف، مكافأة XP، تقدّم، اتستلمت؟] للمهام m (مباريات) / c (إجابات صحيحة) / w (انتصارات).
+ *   الكتابة من الخادم بس (Admin) والقواعد بتقفل أي وصول من العميل (default deny). التقدّم بيتزوّد جوه نفس commit تسجيل المباراة (marker create-only ⇒ المباراة بتتحسب مرة واحدة).
+ *   الاستلام: commit واحد ذرّي = حدث xp_events/{uid}_aq_{yyyymmdd}_{k} (create-only) + xp_wallet (نفس محفظة الـ NBXP — مفيش محفظة جديدة) + علامة cl في arena_quests (شرط updateTime).
+ *   اليوم = Africa/Cairo بتوقيت الخادم (Intl — بيراعي التوقيت الصيفي)، مش ساعة الجهاز. اللي ما اتستلمش قبل منتصف الليل بيضيع.
+ * للتراجع: امسح كتلة DAILY-QUESTS هنا وسطور q في finalize، وكتلة المهام في arena.js، وارجع ?v في index.html.
  */
 'use strict';
 const crypto = require('crypto');
@@ -32,6 +41,12 @@ const MIN_ACTIVE_ANSWERS = 3;            /* اللاعب «فعّال» = جاو
 const DAILY_CAP = 30;                    /* أقصى عدد مباريات بتتحسب للاعب في اليوم (حماية من التدوير) */
 const FAST_MS = 3000, FAST_NEED = 5;     /* إنجاز «برق الحقل»: 5 إجابات صحيحة كل واحدة أقل من 3 ثواني في مباراة واحدة */
 const RID_RE = /^[A-HJKMNP-Z2-9]{6}$/;
+
+/* DAILY-QUESTS: k = m مباريات · c إجابات صحيحة · w انتصارات. g = الهدف، r = مكافأة XP. أي تعديل هنا بيسري على مهام اليوم الجديد بس (اللي اتولّد بيفضل بقيمه). */
+const QUEST_TZ = 'Africa/Cairo';
+const QUESTS = [{ k: 'm', g: 2, r: 10 }, { k: 'c', g: 10, r: 10 }, { k: 'w', g: 1, r: 15 }];
+const QK = QUESTS.map(function (q) { return q.k; });
+const MAX_QUEST_XP = 50;                /* سقف أمان لمكافأة المهمة الواحدة (بيتفحص على القيمة المخزّنة) */
 
 /* كتالوج الإنجازات: id → شرط (بيتقيّم على نتيجة المباراة + الإجماليات بعد التحديث). نفس الـ ids في arena.js و firestore.rules */
 const ACH = {
@@ -87,7 +102,7 @@ async function verifyUser(idToken) {
     const r = await fetch(LOOKUP_URL + encodeURIComponent(FIREBASE_WEB_KEY), { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idToken }) });
     if (!r.ok) return null;
     const j = await r.json(), u = j && j.users && j.users[0];
-    return u && u.localId ? String(u.localId) : null;
+    return u && u.localId ? { uid: String(u.localId), name: typeof u.displayName === 'string' ? u.displayName : '' } : null;
   } catch (e) { return null; } finally { clearTimeout(t); }
 }
 
@@ -146,6 +161,8 @@ function fd(doc) { const o = {}, f = (doc && doc.fields) || {}; Object.keys(f).f
 const S = function (v) { return { stringValue: v }; };
 const I = function (v) { return { integerValue: String(Math.max(0, Math.floor(v))) }; };
 const TS = function (ms) { return { timestampValue: new Date(ms).toISOString() }; };
+const AI = function (a) { return { arrayValue: { values: a.map(function (v) { return { integerValue: String(Math.max(0, Math.floor(v))) }; }) } }; };
+const AB = function (a) { return { arrayValue: { values: a.map(function (v) { return { booleanValue: !!v }; }) } }; };
 
 async function fs(path, opt, tok) {
   const ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
@@ -213,6 +230,112 @@ function evaluate(room, players, ans, keys) {
   return { res: res, counted: activeN >= 2 };
 }
 
+/* ═════════ DAILY-QUESTS ═════════ */
+/* يوم القاهرة (YYYY-MM-DD) من Intl — بيراعي التوقيت الصيفي المصري، ومش بيتأثر بتوقيت الجهاز/العملية (TZ). */
+let dayFmt = null;
+function cairoKey(ms) {
+  if (!dayFmt) dayFmt = new Intl.DateTimeFormat('en-US', { timeZone: QUEST_TZ, calendar: 'gregory', numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const p = {};
+  dayFmt.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+  return p.year + '-' + p.month + '-' + p.day;
+}
+/* أول لحظة بيتغيّر فيها يوم القاهرة بعد ms (بحث ثنائي — بيغطي يوم 23 ساعة/25 ساعة بتاع تغيير الساعة من غير أي افتراض ثابت) */
+function cairoDayEnd(ms) {
+  const k = cairoKey(ms);
+  let lo = ms, hi = ms + 26 * 3600000;
+  while (hi - lo > 1) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (cairoKey(mid) === k) lo = mid; else hi = mid;
+  }
+  return hi;
+}
+function isInt(v, lo, hi) { return typeof v === 'number' && v === Math.floor(v) && v >= lo && v <= hi; }
+function all3(a, f) { return Array.isArray(a) && a.length === 3 && a.every(f); }
+/* حالة مهام اليوم من الوثيقة المخزّنة (x = fd(doc) أو null). لو مفيش وثيقة لليوم ده أو شكلها مش سليم ⇒ حالة جديدة (stored:false) */
+function questState(x, day, ex) {
+  const fresh = { d: day, ex: ex, g: QUESTS.map(function (q) { return q.g; }), r: QUESTS.map(function (q) { return q.r; }), p: [0, 0, 0], cl: [false, false, false] };
+  if (!x || x.d !== day) return { s: fresh, stored: false };
+  if (!all3(x.g, function (v) { return isInt(v, 1, 1000); }) || !all3(x.r, function (v) { return isInt(v, 0, MAX_QUEST_XP); })
+      || !all3(x.p, function (v) { return isInt(v, 0, 1000); }) || !all3(x.cl, function (v) { return typeof v === 'boolean'; })) return { s: fresh, stored: false };
+  return { s: { d: day, ex: ex, g: x.g.slice(), r: x.r.slice(), p: x.p.map(function (v, i) { return Math.min(v, x.g[i]); }), cl: x.cl.slice() }, stored: true };
+}
+function questView(s) {
+  return { d: s.d, ex: s.ex, t: QUESTS.map(function (q, i) { return { k: q.k, g: s.g[i], r: s.r[i], p: s.p[i], c: !!s.cl[i] }; }) };
+}
+/* زيادة التقدّم بعد مباراة اتحسبت. بترجّع { s, write } — write = null لو مفيش تغيير (مفيش كتابة ⇒ أقل تكلفة) */
+function questApply(uid, doc, day, ex, delta, now) {
+  const st = questState(doc ? fd(doc) : null, day, ex), s = st.s;
+  const np = s.p.map(function (v, i) { return Math.min(s.g[i], v + delta[i]); });
+  const changed = np.some(function (v, i) { return v !== s.p[i]; });
+  s.p = np;
+  if (!changed && st.stored) return { s: s, write: null };
+  const name = FS_ROOT + '/arena_quests/' + uid;
+  if (st.stored) {   /* نفس اليوم: بنعدّل p + lt بس (والـ cl سليمة) بشرط إن الوثيقة ما اتغيّرتش */
+    const f = { p: AI(np), lt: TS(now) };
+    return { s: s, write: { update: { name: name, fields: f }, updateMask: { fieldPaths: Object.keys(f) }, currentDocument: { updateTime: doc.updateTime } } };
+  }
+  const f = { d: S(day), ex: TS(ex), g: AI(s.g), r: AI(s.r), p: AI(np), cl: AB(s.cl), lt: TS(now) };   /* يوم جديد (أو وثيقة قديمة): استبدال كامل */
+  return { s: s, write: { update: { name: name, fields: f }, currentDocument: doc ? { updateTime: doc.updateTime } : { exists: false } } };
+}
+/* نفس nm() في academy-data.js: اسم الليدربورد (أول كلمتين، 20 حرف كحد أقصى) */
+function walletName(dn) {
+  const p = String(dn || '').trim().split(/\s+/), a = p[0] || 'طالب', b = p[1] ? a + ' ' + p[1] : a;
+  return (b.length <= 20 ? b : a).slice(0, 20);
+}
+
+/* POST {action:'quests'} — قراءة بس: وثيقة واحدة (أو مفيش) ⇒ حالة اليوم */
+async function questsAction(res, uid, tok) {
+  const now = Date.now(), day = cairoKey(now), ex = cairoDayEnd(now);
+  const docs = await batchGet(['arena_quests/' + uid], tok);
+  if (!docs) return fail(res, 503, 'read_failed');
+  const d = docs['arena_quests/' + uid];
+  return send(res, 200, { ok: true, now: now, q: questView(questState(d ? fd(d) : null, day, ex).s) });
+}
+
+/* POST {action:'claim', k} — استلام مكافأة: كل التحقق من وثيقة الخادم، والدفع في commit واحد ذرّي على نفس محفظة الـ XP */
+async function claimAction(res, uid, dispName, k, tok) {
+  const qi = QK.indexOf(k);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(200 * attempt + Math.floor(Math.random() * 150));
+    const now = Date.now(), day = cairoKey(now), ex = cairoDayEnd(now);
+    const key = 'aq_' + day.replace(/-/g, '') + '_' + k, eid = uid + '_' + key;
+    const names = ['arena_quests/' + uid, 'xp_wallet/' + uid];
+    if (attempt) names.push('xp_events/' + eid);   /* أول محاولة مش محتاجة قراءة الحدث (بيتحمي بـ exists:false) — بنقراه بس بعد تعارض */
+    const docs = await batchGet(names, tok);
+    if (!docs) return fail(res, 503, 'read_failed');
+    const qdoc = docs['arena_quests/' + uid], st = questState(qdoc ? fd(qdoc) : null, day, ex), s = st.s;
+    if (st.stored && s.cl[qi]) return send(res, 200, { ok: true, again: true, xp: 0, q: questView(s) });
+    if (!st.stored || s.p[qi] < s.g[qi]) return send(res, 409, { error: 'not_ready', q: questView(s) });
+
+    const qf = (function () { const c = s.cl.slice(); c[qi] = true; return { cl: AB(c), lt: TS(now) }; })();
+    const writes = [{ update: { name: FS_ROOT + '/arena_quests/' + uid, fields: qf }, updateMask: { fieldPaths: Object.keys(qf) }, currentDocument: { updateTime: qdoc.updateTime } }];
+    let paid = 0, total = null;
+    if (!(attempt && docs['xp_events/' + eid])) {   /* لو الحدث موجود أصلًا (حالة غير متوقعة) بنقفل العلامة من غير دفع تاني */
+      const amt = s.r[qi], wdoc = docs['xp_wallet/' + uid], w = wdoc ? fd(wdoc) : null;
+      const n0 = function (v) { return typeof v === 'number' && v > 0 ? Math.floor(v) : 0; };
+      /* نفس تعريفات NBXP للأسبوع/الشهر (dayN/wkN/monN بإزاحة +2 ساعة) علشان عدّادات المحفظة تفضل متّسقة مع باقي النظام */
+      const xd = Math.floor((now + 7200000) / 86400000), wk = Math.floor((xd + 3) / 7), t2 = new Date(now + 7200000), mo = t2.getUTCFullYear() * 12 + t2.getUTCMonth() + 1;
+      const nxp = n0(w && w.xp) + amt;
+      const wf = { xp: I(nxp), wk: I(wk), wx: I((w && n0(w.wk) === wk ? n0(w.wx) : 0) + amt), mo: I(mo), mx: I((w && n0(w.mo) === mo ? n0(w.mx) : 0) + amt), last: S(eid) };
+      if (wdoc) writes.push({ update: { name: FS_ROOT + '/xp_wallet/' + uid, fields: wf }, updateMask: { fieldPaths: Object.keys(wf) }, currentDocument: { updateTime: wdoc.updateTime } });
+      else writes.push({ update: { name: FS_ROOT + '/xp_wallet/' + uid, fields: Object.assign({ uid: S(uid), nm: S(walletName(dispName)), spent: I(0) }, wf) }, currentDocument: { exists: false } });
+      writes.push({ update: { name: FS_ROOT + '/xp_events/' + eid, fields: { uid: S(uid), type: S('arena_quest'), key: S(key), amt: I(amt), m: S(k), ts: TS(now) } }, currentDocument: { exists: false } });
+      paid = amt; total = nxp;
+    }
+    const cm = await fs(':commit', { method: 'POST', body: JSON.stringify({ writes: writes }) }, tok);
+    if (cm.status === 200) {
+      s.cl[qi] = true;
+      return send(res, 200, { ok: true, xp: paid, total: total, q: questView(s) });
+    }
+    const code = cm.json && cm.json.error && cm.json.error.status;
+    if (code === 'ALREADY_EXISTS' || code === 'FAILED_PRECONDITION' || code === 'ABORTED' || cm.status === 409) continue;   /* حد سبقنا (استلام تاني/مباراة اتسجّلت) — نقرا من الأول */
+    console.error('[arena-profile] claim commit http ' + cm.status + ' ' + String(code || ''));
+    return fail(res, 503, 'write_failed');
+  }
+  return fail(res, 503, 'busy');
+}
+/* ═════════ نهاية DAILY-QUESTS ═════════ */
+
 /* ───────── الـ handler ───────── */
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return fail(res, 405, 'method_not_allowed'); }
@@ -222,16 +345,21 @@ module.exports = async function handler(req, res) {
   if (!m) return fail(res, 401, 'unauthorized');
   let body;
   try { body = await readBody(req); } catch (e) { return fail(res, e && e.message === 'too_large' ? 413 : 400, 'bad_request'); }
-  if (!body || typeof body !== 'object' || body.action !== 'finalize') return fail(res, 400, 'bad_request');
+  const action = body && typeof body === 'object' ? body.action : '';
+  if (action !== 'finalize' && action !== 'quests' && action !== 'claim') return fail(res, 400, 'bad_request');
   const rid = typeof body.rid === 'string' ? body.rid : '';
-  if (!RID_RE.test(rid)) return fail(res, 400, 'bad_request');
+  if (action === 'finalize' && !RID_RE.test(rid)) return fail(res, 400, 'bad_request');
+  if (action === 'claim' && (typeof body.k !== 'string' || QK.indexOf(body.k) < 0)) return fail(res, 400, 'bad_request');
   if (!serviceAccount()) return fail(res, 503, 'not_configured');
 
-  const uid = await verifyUser(m[1]);
-  if (!uid) return fail(res, 401, 'unauthorized');
+  const who = await verifyUser(m[1]);
+  if (!who) return fail(res, 401, 'unauthorized');
+  const uid = who.uid;
   if (limited(uid)) return fail(res, 429, 'slow_down');
   const tok = await adminToken();
   if (!tok) return fail(res, 503, 'not_configured');
+  if (action === 'quests') return questsAction(res, uid, tok);
+  if (action === 'claim') return claimAction(res, uid, who.name, body.k, tok);
 
   /* 1) الغرفة + اللاعبين */
   const rr = await fs('/arena_rooms/' + rid, { method: 'GET' }, tok);
@@ -256,6 +384,7 @@ module.exports = async function handler(req, res) {
   for (let i = 0; i < NQ; i++) { names.push('arena_rooms/' + rid + '/k/' + i); }
   uids.forEach(function (u) {
     names.push('arena_profiles/' + u);
+    names.push('arena_quests/' + u);   /* DAILY-QUESTS: وثيقة المهام (قراءة واحدة للاعب جوه نفس batchGet) */
     for (let i = 0; i < NQ; i++) names.push('arena_rooms/' + rid + '/ans/' + u + '_' + i);
   });
 
@@ -280,6 +409,7 @@ module.exports = async function handler(req, res) {
       }
     });
     const ev = evaluate(room, players, ans, keys), now = Date.now(), day = cairoDay(now);
+    const qDay = cairoKey(now), qEx = cairoDayEnd(now);   /* DAILY-QUESTS: يوم القاهرة الحقيقي (مش اليوم الثابت +2 بتاع DAILY_CAP) */
     const writes = [], entries = {};
 
     uids.forEach(function (u) {
@@ -302,6 +432,10 @@ module.exports = async function handler(req, res) {
         updateMask: { fieldPaths: Object.keys(fields) },   /* eq (اللقب المُجهّز) بيتكتب من العميل — مش جوه الماسك فمش بيتمسح */
         currentDocument: d ? { updateTime: d.updateTime } : { exists: false }
       });
+      /* DAILY-QUESTS: التقدّم من نفس المباراة المتحقَّق منها (مباراة اتحسبت = +1 · إجابات صحيحة من الخادم · انتصار) — في نفس commit الـ marker */
+      const qa = questApply(u, docs['arena_quests/' + u], qDay, qEx, [1, r.cc, r.won ? 1 : 0], now);
+      if (qa.write) writes.push(qa.write);
+      entries[u].q = questView(qa.s);
     });
 
     const rmap = {};
@@ -317,7 +451,7 @@ module.exports = async function handler(req, res) {
     const cm = await fs(':commit', { method: 'POST', body: JSON.stringify({ writes: writes }) }, tok);
     if (cm.status === 200) {
       const mine = entries[uid], ru = ev.res[uid];
-      return send(res, 200, { ok: true, counted: ev.counted, me: { s: mine.s, c: mine.c, w: mine.w, k: mine.k, n: mine.n, rank: ru.rank } });
+      return send(res, 200, { ok: true, counted: ev.counted, me: { s: mine.s, c: mine.c, w: mine.w, k: mine.k, n: mine.n, rank: ru.rank, q: mine.q || null } });
     }
     const code = cm.json && cm.json.error && cm.json.error.status;
     if (code === 'ALREADY_EXISTS' || code === 'FAILED_PRECONDITION' || code === 'ABORTED' || cm.status === 409) continue;   /* حد سبقنا أو البروفايل اتغيّر — نقرا من الأول */
