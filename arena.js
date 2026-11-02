@@ -604,6 +604,180 @@
     document.head.appendChild(st);
   }
 
+  function cssArena() {
+    if (document.getElementById('nba-css-zx')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-zx';
+    st.textContent = [
+      /* ── أساس الصفحة ── */
+      '.nba-root.nba-lb:has(.nbz){background:radial-gradient(70% 26% at 50% 100%,rgba(43,217,138,.07),transparent 70%),#0A1510}',
+      '.nba-wrap.nbz{padding-top:12px;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}',
+      '.nba-wrap.nbz.nba-hubw::before{display:none}',
+      '.nbz .nba-sp{display:none}',
+      /* ── المشهد ── */
+      '.nbz-stage{position:relative;display:flex;flex-direction:column;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 0;overflow:hidden;background:radial-gradient(70% 36% at 50% 42%,rgba(43,217,138,.16),transparent 72%),linear-gradient(180deg,#030A06 0,#07150E 32%,#0B1D14 60%,#0A1510 100%)}',
+      '.nbz-stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(180deg,transparent,#0A1510);pointer-events:none}',
+      '.nbz-stars{position:absolute;inset:0 0 46% 0;opacity:.6;background-image:radial-gradient(1.3px 1.3px at 12% 16%,#fff,transparent),radial-gradient(1px 1px at 27% 8%,#dfffee,transparent),radial-gradient(1.2px 1.2px at 41% 22%,#fff,transparent),radial-gradient(1px 1px at 58% 11%,#fff,transparent),radial-gradient(1.4px 1.4px at 73% 19%,#fff6d6,transparent),radial-gradient(1px 1px at 86% 9%,#fff,transparent),radial-gradient(1px 1px at 93% 27%,#dfffee,transparent),radial-gradient(1.1px 1.1px at 6% 34%,#fff,transparent),radial-gradient(1px 1px at 66% 33%,#fff,transparent);animation:nbzTw 6s ease-in-out infinite alternate}',
+      '.nbz-stage .nba-top{position:relative;z-index:4;height:60px;padding:6px 0}',
+      '.nbz .nba-ttl{color:#F2F8F4;text-shadow:0 1px 12px rgba(0,0,0,.7)}',
+      '.nbz-stage .nba-x{width:40px;height:40px;border-radius:14px;background:rgba(3,10,6,.55);border:1px solid rgba(255,255,255,.1)}',
+      '.nba-root:has(.nbz) .nba-snb .nba-x{width:40px;height:40px;border-radius:14px;background:rgba(3,10,6,.55);border:1px solid rgba(255,255,255,.1)}',
+      '.nbz-vista{position:relative;z-index:1;flex:none;margin:-22px -16px 0;height:clamp(200px,33vh,318px);height:clamp(200px,33dvh,318px);will-change:transform;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 76%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 76%,transparent 100%)}',
+      '.nbz-vista svg{position:absolute;left:0;top:0;width:100%;height:100%;display:block}',
+      '.nbz-ry{animation:nbzRy 7s ease-in-out infinite alternate}.nbz-ry.b{animation-duration:9s;animation-delay:-3s}',
+      '.nbz-br{transform-box:fill-box;transform-origin:50% 60%;animation:nbzBr 4.2s ease-in-out infinite}',
+      '.nbz-rn{animation:nbzRn 3.4s ease-in-out infinite}',
+      '.nbz-ff{position:absolute;inset:0;pointer-events:none}',
+      '.nbz-ff i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:#9BF5C8;box-shadow:0 0 8px 2px rgba(124,240,182,.45);opacity:0;animation:nbzFly var(--d) ease-in-out var(--dl) infinite;will-change:transform,opacity}',
+      '.nbz-ff i.g{background:#FFE29A;box-shadow:0 0 8px 2px rgba(242,184,75,.45)}',
+      '.nbz-mist{position:absolute;left:-25%;right:-25%;bottom:-8px;height:40%;pointer-events:none;background:radial-gradient(40% 70% at 20% 100%,rgba(150,215,185,.16),transparent 70%),radial-gradient(35% 60% at 62% 100%,rgba(150,215,185,.12),transparent 70%),radial-gradient(30% 55% at 90% 100%,rgba(150,215,185,.14),transparent 70%);animation:nbzMist 22s ease-in-out infinite alternate}',
+      /* ── لوحة اللاعب ── */
+      '.nbz-pl{position:relative;z-index:3;display:flex;align-items:center;gap:12px;padding-top:4px}',
+      '.nbz-av{position:relative;flex:none;width:64px;height:64px;display:grid;place-items:center}',
+      '.nbz-rg{position:absolute;inset:0}.nbz-rg svg{width:100%;height:100%;transform:rotate(-90deg)}',
+      '.nbz-rg circle{fill:none;stroke-width:2.6}.nbz-rg .t{stroke:rgba(255,255,255,.13)}',
+      '.nbz-rg .v{stroke:#F2B84B;stroke-linecap:round;transition:stroke-dasharray 1s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 3px rgba(242,184,75,.55))}',
+      '.nbz-av .nba-av{width:50px!important;height:50px!important;box-shadow:0 0 0 2px #07120B,0 6px 14px rgba(0,0,0,.5)}',
+      '.nbz-lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);padding:1px 8px;border-radius:9px;background:linear-gradient(180deg,#F8D27A,#C98A24);color:#2A1B03;font:900 10.5px/1.55 var(--f-ui,Cairo,sans-serif);letter-spacing:.06em;white-space:nowrap;direction:ltr;box-shadow:0 2px 6px rgba(0,0,0,.55)}',
+      '.nbz-lv[hidden]{display:none}',
+      '.nbz-pt{flex:1;min-width:0}',
+      '.nbz-nm{font-size:17px;font-weight:900;line-height:1.3;color:#F2F8F4;text-shadow:0 1px 10px rgba(0,0,0,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.nbz-rk{display:block;font-size:12.5px;font-weight:700;color:#AFC6B8}',
+      '.nbz-pl.on .nbz-rk{color:#F2C66A}',
+      '.nbz-xpb{display:none;margin-top:6px}.nbz-pl.on .nbz-xpb{display:block}',
+      '.nbz-xpb .bar{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}',
+      '.nbz-xpb .bar i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,#1FB872,#7CF0B6);transition:width 1s cubic-bezier(.2,.8,.2,1)}',
+      '.nbz-xpb span{display:block;margin-top:3px;font-size:10.5px;font-weight:700;color:#9DB7A8;direction:ltr;text-align:right;letter-spacing:.04em}',
+      '.nbz-pl .nba-pfbtn{margin-inline-start:0;flex:none;border:1px solid rgba(255,255,255,.12);background:rgba(3,10,6,.5);color:#EAF4EE;border-radius:14px;min-height:38px;padding:7px 13px}',
+      '.nbz-pl .nba-pfbtn .nba-ico{color:#F2C66A}',
+      /* ── العنوان وزر اللعب ── */
+      '.nbz-hero{position:relative;z-index:3;margin-top:-30px;padding-bottom:20px}',
+      '.nbz-h{margin:0;font-size:clamp(30px,9vw,38px);line-height:1.2;font-weight:900;color:#F4FAF6;text-shadow:0 3px 22px rgba(0,0,0,.65)}',
+      '.nbz-h em{font-style:normal;background:linear-gradient(180deg,#8AF5C6,#2BD98A 62%,#1DB06E);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(43,217,138,.32))}',
+      '.nbz-p{margin:10px 0 0;max-width:33ch;color:#B9CEC1;font-size:14px;line-height:1.75;text-shadow:0 1px 10px rgba(0,0,0,.7)}',
+      '.nbz-play{position:relative;display:flex;align-items:center;gap:14px;width:100%;min-height:70px;margin-top:20px;padding:10px 14px;border:0;border-radius:20px;cursor:pointer;color:#04140A;font:inherit;text-align:right;background:linear-gradient(180deg,#4CF0A8 0,#2BD98A 48%,#1CB574 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -4px 0 rgba(6,70,40,.4),0 18px 36px -10px rgba(43,217,138,.55);transition:transform .15s,filter .2s}',
+      '.nbz-play::before{content:"";position:absolute;left:-5px;right:-5px;top:-5px;bottom:-5px;border-radius:25px;border:1.5px solid rgba(43,217,138,.5);opacity:0;pointer-events:none;animation:nbzAura 2.8s ease-out infinite}',
+      '.nbz-play::after{content:"";position:absolute;left:3px;right:3px;top:3px;bottom:3px;border-radius:17px;border:1px solid rgba(255,230,160,.5);pointer-events:none}',
+      '.nbz-play .gl{position:absolute;left:0;right:0;top:0;bottom:0;border-radius:inherit;overflow:hidden;pointer-events:none}',
+      '.nbz-play .gl::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:nbzShine 5s ease-in-out 1.2s infinite}',
+      '.nbz-play .ic{position:relative;flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:#06190F;color:#7CF0B6;box-shadow:inset 0 0 0 1px rgba(242,184,75,.5)}.nbz-play .ic .nba-ico{width:22px;height:22px}',
+      '.nbz-play .tx{position:relative;display:block}',
+      '.nbz-play .tx b{display:block;font-size:22px;font-weight:900;line-height:1.2}',
+      '.nbz-play .tx small{display:block;font:800 10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;opacity:.68;direction:ltr;text-align:right}',
+      '.nbz-play .ar{position:relative;margin-inline-start:auto;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(4,20,10,.14)}.nbz-play .ar .nba-ico{width:18px;height:18px}',
+      '.nbz-play:active{transform:translateY(2px) scale(.985);filter:brightness(.96)}',
+      '@media (hover:hover){.nbz-play:hover{filter:brightness(1.06)}.nbz-play:hover .ar{transform:translateX(-3px)}}',
+      '.nbz-play .ar{transition:transform .2s}',
+      '.nbz-info{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;font-size:12px;font-weight:700;color:#9DB7A8}',
+      '.nbz-info b{margin-inline-end:5px;font-size:15px;font-weight:900;color:#EAF4EE;font-variant-numeric:tabular-nums}',
+      '.nbz-info>i{width:3px;height:3px;border-radius:50%;background:#F2B84B;opacity:.75}',
+      '.nbz-info .lv b{color:#2BD98A;letter-spacing:.08em}',
+      '.nbz-info .lv b::before{content:"";display:inline-block;width:6px;height:6px;margin-inline-end:6px;border-radius:50%;background:#2BD98A;vertical-align:middle;animation:nbxLive 1.6s ease-in-out infinite}',
+      /* ── رجوع لغرفة شغّالة ── */
+      '.nbz-rs{display:flex;align-items:center;gap:10px;margin-top:6px;padding:12px 14px;border-radius:18px;background:linear-gradient(90deg,rgba(242,184,75,.05),rgba(242,184,75,.15));box-shadow:inset 3px 0 0 #F2B84B}',
+      '.nbz-rs .tt{flex:1;min-width:0}.nbz-rs small{display:block;font-size:12px;font-weight:700;color:#C9B27A}',
+      '.nbz-rs b{display:block;font:800 17px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.2em;color:#FFE7B0;direction:ltr;text-align:right}',
+      '.nbz-b{flex:none;border:0;border-radius:12px;min-height:40px;padding:0 14px;font:800 13px var(--f-ui,Cairo,sans-serif);color:#2A1B03;cursor:pointer;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}',
+      '.nbz-b:active{transform:scale(.96)}',
+      '.nbz-gh{flex:none;border:0;background:none;color:#98B0A2;font:700 13px var(--f-ui,Cairo,sans-serif);min-height:40px;padding:0 6px;cursor:pointer}',
+      /* ── عناوين الأقسام ── */
+      '.nbz-st{display:flex;align-items:center;gap:10px;margin:28px 0 12px;font-size:15.5px;font-weight:900;color:#EAF4EE}',
+      '.nbz-st::before{content:"";flex:none;width:8px;height:8px;border-radius:1.5px;background:#F2B84B;transform:rotate(45deg);box-shadow:0 0 10px rgba(242,184,75,.5)}',
+      '.nbz-st::after{content:"";flex:1;height:1px;background:linear-gradient(to left,rgba(255,255,255,.14),transparent)}',
+      '.nbz-st small{order:3;font-size:11.5px;font-weight:700;color:#8FA99A}',
+      '.nbz-st small+*{display:none}',
+      /* ── أنماط اللعب ── */
+      '.nbz-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
+      '.nbz-m{position:relative;display:flex;align-items:flex-end;min-height:196px;padding:0;border:0;border-radius:22px;overflow:hidden;text-align:right;color:#EAF4EE;font:inherit;cursor:pointer;isolation:isolate;--a:#2BD98A;background:radial-gradient(120% 90% at 85% 0,rgba(43,217,138,.34),transparent 62%),linear-gradient(165deg,#14492D,#0A1A12 72%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 16px 28px -14px rgba(0,0,0,.8);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .25s}',
+      '.nbz-m.team{--a:#F2B84B;background:radial-gradient(120% 90% at 15% 0,rgba(242,184,75,.26),transparent 62%),linear-gradient(195deg,#24401F,#0A1A12 72%)}',
+      '.nbz-m .art{position:absolute;left:0;right:0;bottom:0;height:55%;z-index:-1}.nbz-m .art svg{width:100%;height:100%;display:block}',
+      '.nbz-m::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.08) 50%,transparent 62%);transform:translateX(120%);transition:transform .7s;pointer-events:none}',
+      '.nbz-m .gm{position:absolute;top:14px;inset-inline-start:14px;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;color:var(--a);background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.13),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 0 26px -4px var(--a)}.nbz-m .gm .nba-ico{width:28px;height:28px}',
+      '.nbz-m .tx{display:block;width:100%;padding:14px}',
+      '.nbz-m small{display:block;font:800 10px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;color:var(--a);direction:ltr;text-align:right}',
+      '.nbz-m b{display:block;margin-top:2px;font-size:20px;font-weight:900;line-height:1.25}',
+      '.nbz-m em{display:block;margin-top:3px;font-style:normal;font-size:12px;font-weight:600;line-height:1.55;color:#B4CABD}',
+      '.nbz-m .ch{display:inline-block;margin-top:9px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;color:#EAF4EE;background:rgba(0,0,0,.34)}',
+      '.nbz-m:active{transform:scale(.97)}',
+      '@media (hover:hover){.nbz-m:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 22px 34px -14px rgba(0,0,0,.85)}.nbz-m:hover::after{transform:translateX(-120%)}}',
+      /* ── المهام اليومية كمهام بمكافآت ── */
+      '.nbz .nba-qs{margin-top:28px}',
+      '.nbz .nbq-c{padding:0;margin:0;background:none;border:0;box-shadow:none;border-radius:0}',
+      '.nbz .nbq-h{align-items:center}',
+      '.nbz .nbq-ti{font-size:15.5px;font-weight:900;color:#EAF4EE}.nbz .nbq-ti .nba-ico{color:#F2B84B}',
+      '.nbz .nbq-h .nba-tag{background:rgba(242,184,75,.12);color:#FFD98A;border:0;direction:ltr;font-variant-numeric:tabular-nums;padding:3px 11px}',
+      '.nbz .nbq-sub{margin:4px 0 6px;color:#8FA99A;font-size:11.5px}',
+      '.nbz .nbq-r{position:relative;gap:12px;margin-top:9px;padding:12px 14px 12px 10px;border:0;border-radius:18px;overflow:hidden;background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(43,217,138,.07));transition:background .3s}',
+      '.nbz .nbq-r::before{content:"";position:absolute;top:12px;bottom:12px;right:0;width:3px;border-radius:3px 0 0 3px;background:#2BD98A;opacity:.55}',
+      '.nbz .nbq-r.rd{background:linear-gradient(90deg,rgba(242,184,75,.05),rgba(242,184,75,.16))}',
+      '.nbz .nbq-r.rd::before{background:#F2B84B;opacity:1;box-shadow:0 0 12px rgba(242,184,75,.65)}',
+      '.nbz .nbq-r.cl{opacity:.7}',
+      '.nbz .nbq-i{width:46px;height:52px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1F5E3C,#0E2A1D);color:#7CF0B6}',
+      '.nbz .nbq-r.rd .nbq-i{background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03}',
+      '.nbz .nbq-r.cl .nbq-i{background:linear-gradient(160deg,#35E597,#168A57);color:#04140A}',
+      '.nbz .nbq-t b{font-size:14px;font-weight:800;color:#EAF4EE}',
+      '.nbz .nbq-t em{color:#9DB7A8}',
+      '.nbz .nbq-r.cl .nbq-t b{color:#B4CABD}',
+      '.nbz .nbq-pb{height:8px;border-radius:8px;background:rgba(0,0,0,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);overflow:hidden}',
+      '.nbz .nbq-pb i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#1FB872,#7CF0B6);box-shadow:0 0 10px rgba(43,217,138,.5);transition:width .7s cubic-bezier(.2,.8,.2,1)}',
+      '.nbz .nbq-r.rd .nbq-pb i{background:linear-gradient(90deg,#D99A2B,#FFE29A);box-shadow:0 0 10px rgba(242,184,75,.55)}',
+      '.nbz .nbq-rw{display:inline-flex;align-items:center;gap:7px;direction:ltr;unicode-bidi:isolate;border:0;background:rgba(242,184,75,.11);color:#FFD98A;padding:5px 11px;font-size:12px;font-weight:800}',
+      '.nbz .nbq-rw::before{content:"";width:8px;height:8px;border-radius:1.5px;background:linear-gradient(135deg,#FFE7A8,#D9962A);transform:rotate(45deg);box-shadow:0 0 8px rgba(242,184,75,.7)}',
+      '.nbz .nbq-bt{position:relative;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 58%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(242,184,75,.28)}',
+      '.nbz .nbq-bt::after{content:"";position:absolute;left:-4px;right:-4px;top:-4px;bottom:-4px;border-radius:99px;border:2px solid rgba(242,184,75,.55);opacity:0;pointer-events:none;animation:nbzAura 1.9s ease-out infinite}',
+      '.nbz .nbq-bt[disabled]::after{display:none}',
+      '.nbz .nbq-dn{background:none;border:0;padding:0;color:#7CF0B6;font-size:12.5px;font-weight:800}',
+      '.nbz .nbq-dn::before{content:"";display:inline-block;width:5px;height:9px;margin-inline-end:7px;border:solid #7CF0B6;border-width:0 2.2px 2.2px 0;transform:rotate(45deg) translateY(-2px)}',
+      '.nbz .nbq-nt{border-top:0;padding-top:10px;color:#7F9A8B}',
+      '.nbz .nbq-sk i{height:64px;border-radius:18px}',
+      /* ── التخصصات كلاسات ── */
+      '.nbz-cls{display:flex;gap:12px;margin:0 -16px;padding:6px 16px 18px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-inline:16px;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%)}',
+      '.nbz-cls::-webkit-scrollbar{display:none}',
+      '.nbz-c{position:relative;flex:none;width:136px;height:198px;padding:14px 12px;border:0;border-radius:22px;display:flex;flex-direction:column;align-items:flex-start;text-align:right;color:#EAF4EE;font:inherit;cursor:pointer;overflow:hidden;isolation:isolate;scroll-snap-align:start;background:radial-gradient(90% 62% at 50% 22%,hsl(var(--h) 58% 34%/.62),transparent 74%),linear-gradient(180deg,#12281C,#0A1710);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 16px 26px -16px rgba(0,0,0,.85);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .25s,opacity .25s;animation:nbzCi .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--n,0)*40ms + 120ms)}',
+      '.nbz-c i{font:800 10.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-style:normal;letter-spacing:.14em;color:hsl(var(--h) 45% 72%/.75);direction:ltr}',
+      '.nbz-em{align-self:center;display:grid;place-items:center;width:68px;height:68px;margin-top:8px;border-radius:50%;color:hsl(var(--h) 72% 70%);background:radial-gradient(circle at 50% 32%,hsl(var(--h) 60% 30%),hsl(var(--h) 55% 13%));box-shadow:inset 0 0 0 1.5px hsl(var(--h) 60% 55%/.55),0 0 24px -2px hsl(var(--h) 70% 50%/.5);transition:transform .25s,box-shadow .25s,color .2s,background .2s}',
+      '.nbz-em .nba-ico{width:32px;height:32px}',
+      '.nbz-ep{margin-top:auto;font-size:10.5px;font-weight:800;color:#E7C06E}',
+      '.nbz-cn{margin-top:3px;font-size:13px;font-weight:800;line-height:1.35;color:#F0F7F2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}',
+      '.nbz-c:active{transform:scale(.96)}',
+      '@media (hover:hover){.nbz-c:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px hsl(var(--h) 55% 50%/.4),0 22px 32px -14px rgba(0,0,0,.9)}.nbz-c:hover .nbz-em{transform:scale(1.07)}}',
+      '.nbz-c.sel,.nbz-c.sel:hover{transform:scale(1.04);box-shadow:0 0 0 2px #F2B84B,0 0 30px -4px rgba(242,184,75,.5)}',
+      '.nbz-c.sel .nbz-em{color:#04140A;background:hsl(var(--h) 68% 58%);box-shadow:0 0 30px 2px hsl(var(--h) 70% 55%/.6);animation:nbxPop .35s ease-out}',
+      '.nbz-c.sel::after{content:"✓";position:absolute;top:10px;inset-inline-end:10px;width:20px;height:20px;border-radius:50%;background:#F2B84B;color:#2A1B03;font:900 12px/20px sans-serif;text-align:center;animation:nbxPop .3s ease-out}',
+      '.nbz-cls:has(.sel) .nbz-c:not(.sel){opacity:.4}',
+      '@media (min-width:768px),(hover:hover) and (pointer:fine){.nbz-cls{flex-wrap:wrap;overflow:visible;margin:0;padding:6px 0 10px;-webkit-mask-image:none;mask-image:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr))}.nbz-c{width:auto}.nbz-st small{display:none}}',
+      /* ── الانضمام بكود ── */
+      '.nbz-gate{margin-top:10px}',
+      '.nbz-gl{margin-bottom:10px;font-size:14px;font-weight:800;color:#CFE0D6}',
+      '.nbz-jg{display:flex;align-items:stretch;height:58px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#0B1710,#0E1E16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 2px 10px rgba(0,0,0,.5);transition:box-shadow .2s}',
+      '.nbz-jg:focus-within{box-shadow:inset 0 0 0 1.5px rgba(242,184,75,.7),0 0 0 4px rgba(242,184,75,.1)}',
+      '.nbz-jg.bad{box-shadow:inset 0 0 0 1.5px #FF6B5E,0 0 0 4px rgba(255,107,94,.14);animation:nbxShake .4s}',
+      '.nbz-jg input{flex:1;min-width:0;border:0;outline:0;background:none;padding:0 10px;color:#FFE7B0;font:800 21px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;text-align:center;text-transform:uppercase;direction:ltr}',
+      '.nbz-jg input::placeholder{color:#4F6B5C;opacity:1}',
+      '.nbz-jg button{flex:none;min-width:104px;border:0;background:rgba(255,255,255,.05);color:#7F9A8B;font:800 15px var(--f-ui,Cairo,sans-serif);cursor:not-allowed;transition:background .2s,color .2s}',
+      '.nbz-jg button:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);animation:nbxPop .3s ease-out}',
+      '.nbz-gate .nbx-fh,.nbz-gate .nbx-er{margin-top:9px}',
+      /* ── حركة الدخول + الحركات ── */
+      '.nbz-h,.nbz-p,.nbz-play,.nbz-info{animation:nbzUp .7s cubic-bezier(.2,.8,.2,1) both}',
+      '.nbz-p{animation-delay:.08s}.nbz-play{animation-delay:.16s}.nbz-info{animation-delay:.26s}',
+      '@keyframes nbzUp{from{opacity:0;transform:translate3d(0,16px,0)}to{opacity:1;transform:none}}',
+      '@keyframes nbzCi{from{opacity:0;transform:translate3d(18px,0,0)}to{opacity:1;transform:none}}',
+      '@keyframes nbzTw{from{opacity:.35}to{opacity:.75}}',
+      '@keyframes nbzRy{from{opacity:.65}to{opacity:1}}',
+      '@keyframes nbzBr{0%,100%{opacity:.14;transform:scaleY(.94)}50%{opacity:.4;transform:scaleY(1.04)}}',
+      '@keyframes nbzRn{0%,100%{opacity:.35}50%{opacity:1}}',
+      '@keyframes nbzFly{0%{transform:translate3d(0,0,0);opacity:0}15%{opacity:.9}50%{transform:translate3d(var(--dx),-46px,0)}85%{opacity:.6}100%{transform:translate3d(calc(var(--dx)*-.6),-92px,0);opacity:0}}',
+      '@keyframes nbzMist{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(6%,0,0)}}',
+      '@keyframes nbzAura{0%{opacity:.75;transform:scale(.98)}100%{opacity:0;transform:scale(1.07)}}',
+      '@keyframes nbzShine{0%,70%{left:-60%}100%{left:140%}}',
+      /* ── شاشات صغيرة / قصيرة / عريضة ── */
+      '@media (max-width:360px){.nbz-h{font-size:29px}.nbz-c{width:124px;height:190px}.nbz-modes{gap:10px}.nbz-m b{font-size:18px}}',
+      '@media (max-height:700px){.nbz-vista{height:clamp(170px,30vh,230px)}.nbz-play{min-height:64px}}',
+      '@media (min-width:560px){.nbz-stage{margin-inline:0;border-radius:0 0 28px 28px}.nbz-vista{margin-inline:0}}',
+      '@media (prefers-reduced-motion:reduce){.nbz *,.nbz *::before,.nbz *::after{animation:none!important;transition:none!important}.nbz-ff,.nbz-mist{display:none}.nbz-vista{transform:none!important}.nbz-m::after{display:none}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
   /* ───────── فتح / قفل ───────── */
   function open(o) {
     o = o || {};
@@ -614,6 +788,7 @@
     cssProf();
     cssQuests();
     cssRM();
+    cssArena();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -1639,39 +1814,153 @@
   }
 
   /* ───────── شاشة الساحة (v4 — لوبي ألعاب) ───────── */
+  /* ═════════ ARENA-LOBBY-X: لوبي الساحة بشكل لعبة (عرض فقط) ═════════
+     - نفس الدوال ونفس الحالة بالظبط (V / S / joinRoom / openProfile / qCard / ls('nbArenaRoom') / handlers التخصصات) — اللي اتغيّر الـ DOM والـ CSS بس. مفيش قراءة/كتابة جديدة غير loadProf (الموجودة أصلًا، بكاش 90ث) لعرض المستوى والـ XP.
+     - المشهد SVG/CSS مولَّد بالكود (بدون صور ولا شبكة ولا مكتبات). كل الكلاسات nbz-* ومقصورة على .nbz فمفيش أي تأثير على شاشات الغرفة/السؤال/النتيجة.
+     للتراجع: رجّع vHub2 القديمة من الـ git وامسح الكتلة دي + سطر cssArena() في open(). */
+  var NBZ_HUE = { pp: 152, path: 166, ent: 92, hort: 126, bio: 182, soil: 38, food: 46, gen: 204, crop: 74, irr: 192, anim: 26, eco: 50, mix: 44 };
+  var NBZ_CL = { pp: 'الحارس', path: 'الطبيب', ent: 'الصيّاد', hort: 'البستاني', bio: 'الكيميائي', soil: 'حارس الأرض', food: 'الطاهي', gen: 'المُهجّن', crop: 'الحصّاد', irr: 'سيّد المياه', anim: 'الراعي', eco: 'المخطِّط', mix: 'المتجوّل' };
+  var NBZ_HILL = '<svg viewBox="0 0 160 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70V40C20 28 38 34 58 42S104 30 124 34 150 42 160 38V70Z" fill="#000" opacity=".26"/><path d="M0 70V54C26 46 50 52 76 56S128 48 160 52V70Z" fill="#000" opacity=".4"/></svg>';
+  function nbzRaw(tag, cls, html) { var e = document.createElement(tag); e.className = cls; e.innerHTML = html; e.setAttribute('aria-hidden', 'true'); return e; }
+  /* أشجار طبقات (3 مثلثات لكل شجرة) بتوزيع ثابت — بدون Math.random علشان الشكل يبقى ثابت */
+  function nbzTrees(base, n, h0, h1, fill, op, skip) {
+    var d = '', i, k, cx, th, tw, w2, b2, a2, sd = base * 7 + n;
+    function r() { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }
+    for (i = 0; i < n; i++) {
+      cx = -8 + (i + 0.15 + r() * 0.7) * (416 / n); th = h0 + r() * (h1 - h0); tw = th * (0.36 + r() * 0.1);
+      if (skip && Math.abs(cx - 200) < skip) continue;
+      for (k = 0; k < 3; k++) {
+        w2 = tw * (1 - k * 0.24); b2 = base - th * k * 0.27; a2 = base - th * (0.56 + k * 0.22);
+        d += 'M' + (cx - w2 / 2).toFixed(1) + ' ' + b2.toFixed(1) + 'L' + cx.toFixed(1) + ' ' + a2.toFixed(1) + 'L' + (cx + w2 / 2).toFixed(1) + ' ' + b2.toFixed(1) + 'Z';
+      }
+    }
+    return '<path d="' + d + '" fill="' + fill + '" opacity="' + op + '"/>';
+  }
+  function nbzLeaves(m) {
+    var g = '<path d="M-6 300C0 262 16 236 46 216C46 246 36 276 22 300Z"/><path d="M8 300C20 270 44 252 78 246C68 270 52 288 40 300Z"/><path d="M-6 300C-4 246 6 206 30 168C42 210 40 260 28 300Z"/><path d="M30 300C40 280 62 268 92 268C80 284 64 296 52 300Z"/>';
+    return '<g fill="#030A06"' + (m ? ' transform="translate(400 0) scale(-1 1)"' : '') + '>' + g + '</g>';
+  }
+  /* المشهد: بوابة حجرية قديمة بحرف N متوهّج وسط غابة ليلية — طبقات (سما · جبال · غابة بعيدة · غابة قريبة · البوابة · أرض · أوراق أمامية) */
+  function nbzVista() {
+    var svg = '<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><defs>'
+      + '<radialGradient id="nbzHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE9B8" stop-opacity=".30"/><stop offset="1" stop-color="#FFE9B8" stop-opacity="0"/></radialGradient>'
+      + '<linearGradient id="nbzRay" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2BD98A" stop-opacity=".24"/><stop offset="1" stop-color="#2BD98A" stop-opacity="0"/></linearGradient>'
+      + '<radialGradient id="nbzDoor" cx=".5" cy=".66" r=".72"><stop offset="0" stop-color="#A8FFD6"/><stop offset=".38" stop-color="#2BD98A"/><stop offset="1" stop-color="#0D5C38"/></radialGradient>'
+      + '<linearGradient id="nbzStone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#23452F"/><stop offset=".55" stop-color="#112219"/><stop offset="1" stop-color="#09140E"/></linearGradient>'
+      + '<linearGradient id="nbzFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4B34"/><stop offset="1" stop-color="#0A1D14"/></linearGradient>'
+      + '<mask id="nbzMk"><rect width="400" height="300" fill="#fff"/><circle cx="328" cy="118" r="16" fill="#000"/></mask></defs>'
+      + '<circle cx="318" cy="124" r="62" fill="url(#nbzHalo)"/><circle cx="318" cy="124" r="16" fill="#F3E6C4" opacity=".92" mask="url(#nbzMk)"/>'
+      + '<path class="nbz-ry" d="M176 252L224 252L336 -40L64 -40Z" fill="url(#nbzRay)"/><path class="nbz-ry b" d="M190 252L210 252L250 -40L150 -40Z" fill="url(#nbzRay)"/>'
+      + '<path d="M0 190C40 158 82 166 124 186C166 206 214 150 264 164C312 178 352 156 400 176V300H0Z" fill="url(#nbzFar)"/>'
+      + nbzTrees(206, 30, 24, 50, '#0B241A', 0.95, 0)
+      + '<path d="M0 232C60 214 120 222 168 236C200 244 232 244 266 234C320 218 360 222 400 236V300H0Z" fill="#08190F"/>'
+      + nbzTrees(246, 15, 40, 74, '#06130C', 1, 78)
+      + '<g class="nbz-pt"><ellipse cx="200" cy="268" rx="126" ry="13" fill="#2BD98A" opacity=".2"/>'
+      + '<path d="M146 270V176Q146 120 200 120Q254 120 254 176V270Z" fill="url(#nbzStone)"/>'
+      + '<path d="M146 270V176Q146 120 200 120Q254 120 254 176V270" fill="none" stroke="#2BD98A" stroke-opacity=".26" stroke-width="1.2"/>'
+      + '<path d="M170 270V186Q170 148 200 148Q230 148 230 186V270Z" fill="url(#nbzDoor)"/>'
+      + '<ellipse class="nbz-br" cx="200" cy="236" rx="22" ry="40" fill="#D4FFE9" opacity=".22"/>'
+      + '<path d="M170 270V186Q170 148 200 148Q230 148 230 186V270" fill="none" stroke="#F2B84B" stroke-opacity=".62" stroke-width="1.2"/>'
+      + '<g transform="translate(168 181) scale(1.6)"><path d="M12 30V10L28 25V10" fill="none" stroke="#06231A" stroke-width="4.5"/><circle cx="28" cy="31.5" r="2.6" fill="#06231A"/></g>'
+      + '<g fill="#F2B84B"><circle class="nbz-rn" cx="158" cy="152" r="1.9"/><circle class="nbz-rn" style="animation-delay:.8s" cx="242" cy="152" r="1.9"/><circle class="nbz-rn" style="animation-delay:1.6s" cx="154" cy="206" r="1.9"/><circle class="nbz-rn" style="animation-delay:2.2s" cx="246" cy="206" r="1.9"/></g>'
+      + '<path d="M158 134C150 152 156 168 150 188" fill="none" stroke="#2A7A50" stroke-width="2" stroke-linecap="round" opacity=".85"/><circle cx="150" cy="190" r="2.6" fill="#4FD39A"/>'
+      + '<path d="M240 138C250 158 244 176 252 198" fill="none" stroke="#2A7A50" stroke-width="2" stroke-linecap="round" opacity=".85"/><circle cx="252" cy="200" r="2.6" fill="#4FD39A"/></g>'
+      + '<path d="M0 300V264C30 252 70 260 108 272C150 284 250 284 292 272C330 260 370 252 400 264V300Z" fill="#040C07"/>'
+      + nbzLeaves(0) + nbzLeaves(1) + '</svg>';
+    var v = h('div', { class: 'nbz-vista', 'aria-hidden': 'true' });
+    v.innerHTML = svg;
+    var ff = h('div', { class: 'nbz-ff' }), fx = [[12, 58, 3, 9, 0, 14], [24, 76, 2, 11, 2.2, -10], [36, 48, 3, 8, 4.1, 12], [46, 70, 2, 12, 1.1, -8], [58, 54, 3, 10, 3.3, 10], [68, 78, 2, 9, 5.2, -14], [78, 46, 3, 13, 0.6, 8], [88, 66, 2, 10, 2.9, -12], [30, 86, 2, 12, 6.1, 10], [64, 90, 3, 11, 4.6, -9]];
+    fx.forEach(function (f, n) { ff.appendChild(h('i', { class: n % 3 === 0 ? 'g' : '', style: '--x:' + f[0] + '%;--y:' + f[1] + '%;--s:' + f[2] + 'px;--d:' + f[3] + 's;--dl:' + f[4] + 's;--dx:' + f[5] + 'px' })); });
+    v.appendChild(ff); v.appendChild(h('div', { class: 'nbz-mist' }));
+    return v;
+  }
+  function nbzParallax(st, vista) {
+    if (RM() || !root) return;
+    var raf = 0;
+    function on() {
+      if (!st.isConnected) { root.removeEventListener('scroll', on); return; }
+      if (raf) return;
+      raf = requestAnimationFrame(function () { raf = 0; var y = Math.max(0, Math.min(root.scrollTop, 520)); vista.style.transform = 'translate3d(0,' + (y * 0.16).toFixed(1) + 'px,0)'; });
+    }
+    root.addEventListener('scroll', on, { passive: true });
+  }
+  function nbzRing(pc) { var C = 2 * Math.PI * 21; return '<svg viewBox="0 0 48 48" aria-hidden="true"><circle class="t" cx="24" cy="24" r="21"/><circle class="v" cx="24" cy="24" r="21" data-c="' + C.toFixed(2) + '" style="stroke-dasharray:0 ' + C.toFixed(2) + '"/></svg>'; }
+  /* المستوى/الـ XP من نفس مصدر شاشة الملف الشخصي (PC + NBXP.lv) — لو مش متاح بيفضل «جاهز للتحدي؟» */
+  function nbzLvl(uid) {
+    var c = PC[uid], x = nbxp();
+    if (!c || !x || typeof c.xp !== 'number') return null;
+    var L = x.lv(c.xp), span = L.hi ? L.hi - L.lo : 1;
+    return { i: L.i + 1, n: L.n, xp: c.xp, hi: L.hi || 0, pc: L.hi ? Math.max(0, Math.min(100, Math.round((c.xp - L.lo) / span * 100))) : 100 };
+  }
   function vHub2(w) {
-    var saved = ls('nbArenaRoom'), u = me(), nm = ((u && (u.displayName || '')) || '').trim() || 'لاعب';
-    w.classList.add('nba-hubw');
-    w.appendChild(top());
-    function stat(a, b) { return h('div', {}, [h('b', { text: a }), h('span', { text: b })]); }
-    w.appendChild(h('div', { class: 'nbx-hero' }, [
-      h('div', { class: 'nbx-pl' }, [avatar(u ? u.uid : 'x', { n: nm, ph: u && u.photoURL }, 36), h('div', {}, [h('div', { text: 'أهلاً ' + nm.split(' ')[0] }), h('small', { text: 'جاهز للتحدي؟' })]),
-        u ? h('button', { class: 'nba-pfbtn', 'aria-label': 'ملفي الشخصي', onclick: function () { openProfile(u.uid, { n: myName(), ph: myPhoto() }); } }, [ico(PIc.user), 'ملفي']) : null]),
-      h('h2', { class: 'nbx-h' }, ['تحدّى أصحابك', h('br'), 'في ', h('em', { text: 'الزراعة' })]),
-      h('p', { class: 'nbx-p', text: '10 أسئلة في تخصصك، نقاط لحظية، واللي بيجاوب أسرع بياخد أكتر.' })]));
-    w.appendChild(h('div', { class: 'nbx-stats' }, [stat('2–6', 'لاعبين'), stat('10', 'أسئلة'), stat('LIVE', 'نقاط لحظية')]));
-    if (saved) w.appendChild(h('div', { class: 'nba-card' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'عندك غرفة شغّالة: ' + saved }), h('div', { class: 'nba-seg' }, [
-      h('button', { class: 'nba-btn', onclick: function () { joinRoom(saved); } }, ['ارجع للغرفة']),
-      h('button', { class: 'nba-btn sec', onclick: function () { ls('nbArenaRoom', null); V.key = ''; render(); } }, ['تجاهل'])])]));
+    var saved = ls('nbArenaRoom'), u = me(), uid = u ? u.uid : 'x', nm = ((u && (u.displayName || '')) || '').trim() || 'لاعب';
+    w.classList.add('nba-hubw', 'nbz');
+    var go = function (md) { V = { view: 'create', md: md, mx: 4, sp: 'pp' }; render(); };
+    function sec(t, hint) { return h('div', { class: 'nbz-st' }, [h('span', { text: t }), hint ? h('small', { text: hint }) : null]); }
+    function stat(a, b, c) { return h('span', { class: c || '' }, [h('b', { text: a }), b]); }
+    /* ── لوحة اللاعب: صورة بحلقة تقدّم XP + المستوى + اللقب ── */
+    var ringBox = h('span', { class: 'nbz-rg' }); ringBox.innerHTML = nbzRing(0);
+    var lvB = h('span', { class: 'nbz-lv', hidden: true });
+    var rk = h('small', { class: 'nbz-rk', text: 'جاهز للتحدي؟' }), xpf = h('i'), xpt = h('span');
+    var xpb = h('div', { class: 'nbz-xpb' }, [h('div', { class: 'bar', role: 'progressbar', 'aria-label': 'التقدّم نحو المستوى التالي', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0' }, [xpf]), xpt]);
+    var pl = h('div', { class: 'nbz-pl' }, [
+      h('div', { class: 'nbz-av' }, [ringBox, avatar(uid, { n: nm, ph: u && u.photoURL }, 50), lvB]),
+      h('div', { class: 'nbz-pt' }, [h('div', { class: 'nbz-nm', text: 'أهلاً ' + nm.split(' ')[0] }), rk, xpb]),
+      u ? h('button', { class: 'nba-pfbtn', 'aria-label': 'ملفي الشخصي', onclick: function () { openProfile(u.uid, { n: myName(), ph: myPhoto() }); } }, [ico(PIc.user), 'ملفي']) : null]);
+    function paint() {
+      if (!pl.isConnected) return;
+      var L = nbzLvl(uid); if (!L) return;
+      pl.classList.add('on'); lvB.hidden = false; lvB.textContent = 'LV ' + L.i;
+      rk.textContent = 'المستوى ' + L.i + ' — ' + L.n;
+      xpf.style.width = L.pc + '%'; xpt.textContent = L.hi ? L.xp + ' / ' + L.hi + ' XP' : L.xp + ' XP · أعلى مستوى';
+      xpb.firstChild.setAttribute('aria-valuenow', String(L.pc));
+      var v = ringBox.querySelector('.v');
+      if (v) requestAnimationFrame(function () { v.style.strokeDasharray = (+v.getAttribute('data-c') * L.pc / 100).toFixed(2) + ' ' + v.getAttribute('data-c'); });
+    }
+    if (u) { paint(); loadProf(uid, true).then(paint, function () { /* ignore */ }); }
+    /* ── المشهد + العنوان + زر العب الآن (نفس إجراء «إنشاء غرفة جديدة» القديم بالظبط) ── */
+    var vista = nbzVista();
+    var hero = h('div', { class: 'nbz-hero' }, [
+      h('h2', { class: 'nbz-h' }, ['تحدّى أصحابك', h('br'), 'في ', h('em', { text: 'الزراعة' })]),
+      h('p', { class: 'nbz-p', text: '10 أسئلة في تخصصك، نقاط لحظية، واللي بيجاوب أسرع بياخد أكتر.' }),
+      h('button', { class: 'nbz-play', 'aria-label': 'العب الآن — إنشاء غرفة جديدة', onclick: function () { go('s'); } }, [
+        h('span', { class: 'gl', 'aria-hidden': 'true' }), h('span', { class: 'ic' }, [ico(I.bolt)]),
+        h('span', { class: 'tx' }, [h('b', { text: 'العب الآن' }), h('small', { text: 'PLAY NOW' })]),
+        h('span', { class: 'ar' }, [ico('<path d="M15 5l-7 7 7 7"/>')])]),
+      h('div', { class: 'nbz-info' }, [stat('2–6', 'لاعبين'), h('i'), stat('10', 'أسئلة'), h('i'), stat('LIVE', 'نقاط لحظية', 'lv')])]);
+    var stage = h('div', { class: 'nbz-stage' }, [h('div', { class: 'nbz-stars', 'aria-hidden': 'true' }), top(), pl, vista, hero]);
+    w.appendChild(stage); nbzParallax(stage, vista);
+    if (saved) w.appendChild(h('div', { class: 'nbz-rs' }, [
+      h('div', { class: 'tt' }, [h('small', { text: 'عندك غرفة شغّالة' }), h('b', { text: saved })]),
+      h('button', { class: 'nbz-b', onclick: function () { joinRoom(saved); } }, ['ارجع للغرفة']),
+      h('button', { class: 'nbz-gh', onclick: function () { ls('nbArenaRoom', null); V.key = ''; render(); } }, ['تجاهل'])]));
+    /* ── أنماط اللعب: نفس حالة إنشاء الغرفة (md: s فردي / t فريقين) ── */
+    function mode(md, eb, ttl, sub, chip, ic, cls) {
+      return h('button', { class: 'nbz-m ' + cls, onclick: function () { go(md); } }, [nbzRaw('span', 'art', NBZ_HILL), h('span', { class: 'gm' }, [ico(ic)]),
+        h('span', { class: 'tx' }, [h('small', { text: eb }), h('b', { text: ttl }), h('em', { text: sub }), h('span', { class: 'ch', text: chip })])]);
+    }
+    w.appendChild(sec('اختار طريقة اللعب'));
+    w.appendChild(h('div', { class: 'nbz-modes' }, [
+      mode('s', 'SOLO', 'فردي', 'كل واحد لنفسه، والأسرع ياخد أكتر', '2–6 لاعبين', I.crown, 'solo'),
+      mode('t', 'TEAMS', 'فريقين', 'فريقين متساويين بيتنافسوا على النقاط', '2 · 4 · 6 لاعبين', I.users, 'team')]));
     w.appendChild(qCard());   /* DAILY-QUESTS */
-    w.appendChild(h('div', { class: 'nbx-sec', text: 'اختار تخصص التحدي' }));
-    w.appendChild(h('div', { class: 'nbx-tiles' }, SPECS.map(function (s, n) {
-      return h('button', { class: 'nbx-t', style: '--n:' + n, 'aria-pressed': 'false', onclick: function (e) {
+    /* ── التخصصات ككلاسات: نفس handler الاختيار القديم حرفيًا ── */
+    w.appendChild(sec('اختار تخصص التحدي', 'اسحب للمزيد ‹'));
+    w.appendChild(h('div', { class: 'nbz-cls' }, SPECS.map(function (s, n) {
+      return h('button', { class: 'nbz-c', style: '--n:' + n + ';--h:' + (NBZ_HUE[s[0]] || 150), 'aria-pressed': 'false', onclick: function (e) {
         var b = e.currentTarget; if (b.parentNode.querySelector('.sel')) return;
-        var go = function () { if (!root || S || V.view !== 'hub') return; V = { view: 'create', md: 's', mx: 4, sp: s[0] }; render(); };
+        var go2 = function () { if (!root || S || V.view !== 'hub') return; V = { view: 'create', md: 's', mx: 4, sp: s[0] }; render(); };
         b.classList.add('sel'); b.setAttribute('aria-pressed', 'true');
-        if (RM()) go(); else setTimeout(go, 160);
-      } }, [h('i', { text: (n < 9 ? '0' : '') + (n + 1) }), h('span', { class: 'nbx-ti' }, [ico(SPI[s[0]] || SPI.mix)]), h('span', { class: 'nbx-tl', text: s[1] })]);
+        if (RM()) go2(); else setTimeout(go2, 160);
+      } }, [h('i', { text: (n < 9 ? '0' : '') + (n + 1) }), h('span', { class: 'nbz-em' }, [ico(SPI[s[0]] || SPI.mix)]), h('small', { class: 'nbz-ep', text: NBZ_CL[s[0]] || '' }), h('span', { class: 'nbz-cn', text: s[1] })]);
     })));
-    w.appendChild(h('div', { class: 'nba-sp' }));
-    w.appendChild(h('button', { class: 'nba-btn nbx-ch', style: 'min-height:58px;font-size:16.5px;margin-top:16px', onclick: function () { V = { view: 'create', md: 's', mx: 4, sp: 'pp' }; render(); } }, [ico(I.users), 'إنشاء غرفة جديدة']));
-    w.appendChild(h('div', { class: 'nbx-jl', text: 'عندك كود من صاحبك؟' }));
+    /* ── الانضمام بكود ── */
     var jb = h('button', { disabled: String(V.code || '').trim().length < 6, onclick: function () { joinRoom($('#nba-code').value); } }, ['انضمام']);
     var inp = h('input', { id: 'nba-code', maxlength: '6', placeholder: 'ABC234', 'aria-label': 'كود الغرفة', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', value: V.code || '',
       oninput: function (e) { jb.disabled = e.target.value.trim().length < 6; },
       onkeydown: function (e) { if (e.key === 'Enter') joinRoom(e.target.value); } });
-    w.appendChild(h('div', { class: 'nbx-jg' + (V.err ? ' bad' : '') }, [inp, jb]));
-    w.appendChild(V.err ? h('div', { class: 'nbx-er', role: 'alert', text: V.err }) : h('div', { class: 'nbx-fh', text: 'الكود 6 خانات (حروف وأرقام). الزر يتفعّل لما تكمله.' }));
+    w.appendChild(h('div', { class: 'nbz-gate' }, [h('div', { class: 'nbz-gl', text: 'عندك كود من صاحبك؟' }), h('div', { class: 'nbz-jg' + (V.err ? ' bad' : '') }, [inp, jb]),
+      V.err ? h('div', { class: 'nbx-er', role: 'alert', text: V.err }) : h('div', { class: 'nbx-fh', text: 'الكود 6 خانات (حروف وأرقام). الزر يتفعّل لما تكمله.' })]));
   }
 
   /* ───────── شاشة الغرفة (v3) ───────── */
