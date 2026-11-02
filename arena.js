@@ -612,6 +612,7 @@
     cssResp();
     cssHub();
     cssProf();
+    cssQuests();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
       toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
@@ -821,7 +822,7 @@
             var tok = await me().getIdToken(), ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 15000), r;
             try { r = await fetch('/api/arena-profile', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: JSON.stringify({ action: 'finalize', rid: rid }), signal: ctl.signal }); } finally { clearTimeout(tm); }
             var j = await r.json().catch(function () { return {}; });
-            if (r.ok && j && j.ok) { sess.fin = { st: 'ok', d: j }; break; }
+            if (r.ok && j && j.ok) { sess.fin = { st: 'ok', d: j }; if (j.me && qValid(j.me.q)) qSet(j.me.q); else Q.at = 0; break; }
             if (r.status === 503 && j && j.error === 'not_configured') { sess.fin = { st: 'off' }; break; }
             if (r.status !== 503 && r.status !== 429 && r.status !== 409) { sess.fin = { st: 'err' }; break; }
           } catch (e) { /* شبكة: نعيد المحاولة */ }
@@ -854,6 +855,7 @@
     });
     card.appendChild(h('button', { class: 'nba-btn sec sm', style: 'margin-top:10px', onclick: function () { openProfile(uid, { n: myName(), ph: myPhoto() }); } }, [ico(PIc.user), 'ملفي الشخصي']));
     el.appendChild(card);
+    el.appendChild(qCard());   /* DAILY-QUESTS */
   }
   function cssProf() {
     if (document.getElementById('nba-css-pf')) return;
@@ -893,6 +895,140 @@
     document.head.appendChild(st);
   }
   /* ═════════ نهاية بروفايل ═════════ */
+
+  /* ═════════ المهام اليومية (DAILY-QUESTS) ═════════
+     - الحالة والتقدّم والمكافآت كلها من الخادم (/api/arena-profile: quests / claim). العميل بيعرض ويطلب الاستلام بس — مفيش رقم بيتكتب من هنا.
+     - الـ XP بتدخل محفظة NBXP الموجودة (xp_wallet) من الخادم في commit واحد ذرّي مع علامة الاستلام وحدث الـ ledger. مفيش محفظة جديدة.
+     - اليوم = Africa/Cairo بيحدّده الخادم (مش ساعة الجهاز). التقدّم بيجي في ردّ finalize (من غير قراءة زيادة) والباقي كاش 90ث في الذاكرة. مفيش مستمعين onSnapshot.
+     للتراجع: امسح الكتلة دي (لحد «نهاية المهام») + سطر cssQuests() في open() + سطري qSet/qCard في startFinalize/paintFin + qCard() في vHub2. */
+  var QIC = { m: PIc.flag, c: PIc.target, w: I.trophy };
+  var Q = { uid: '', d: null, at: 0, sk: 0, p: null, err: false, off: false, tm: 0, busy: {} };
+  function qValid(q) {
+    return !!q && typeof q.d === 'string' && typeof q.ex === 'number' && Array.isArray(q.t) && q.t.length === 3 &&
+      q.t.every(function (t) { return t && /^[mcw]$/.test(t.k) && isFinite(t.g) && isFinite(t.p) && isFinite(t.r) && t.g > 0; });
+  }
+  function qLeft() { return Q.d ? Q.d.ex - (Date.now() + Q.sk) : 0; }   /* الوقت المتبقي لتجديد المهام (بساعة الخادم) */
+  function qSet(q, now) {
+    var u = me(); if (!u || !qValid(q)) return;
+    if (typeof now === 'number') Q.sk = now - Date.now();
+    Q.uid = u.uid; Q.d = q; Q.at = Date.now(); Q.err = false;
+    clearTimeout(Q.tm);
+    var ms = qLeft() + 1500;   /* مؤقّت واحد بس لحد التجديد — بعدها نجيب مهام اليوم الجديد */
+    if (ms > 0 && ms < 26 * 3600000) Q.tm = setTimeout(function () { Q.d = null; Q.at = 0; if (root) { qRepaint(); qLoad(true); } }, ms);
+  }
+  function qClear() { clearTimeout(Q.tm); Q.uid = ''; Q.d = null; Q.at = 0; Q.err = false; Q.p = null; Q.busy = {}; }
+  async function qApi(body) {
+    var tok = await me().getIdToken(), ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 15000), r;
+    try { r = await fetch('/api/arena-profile', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: JSON.stringify(body), signal: ctl.signal }); } finally { clearTimeout(tm); }
+    var j = await r.json().catch(function () { return {}; });
+    return { status: r.status, body: j || {} };
+  }
+  function qLoad(force) {
+    var u = me(); if (!u || Q.off) return Promise.resolve(null);
+    if (Q.uid && Q.uid !== u.uid) qClear();
+    if (!force && Q.d && Date.now() - Q.at < 90000 && qLeft() > 0) return Promise.resolve(Q.d);
+    if (Q.p) return Q.p;
+    Q.err = false;
+    var run = qApi({ action: 'quests' }).then(function (r) {
+      if (r.status === 200 && r.body.ok && qValid(r.body.q)) qSet(r.body.q, r.body.now);
+      else if (r.status === 503 && r.body.error === 'not_configured') Q.off = true;   /* الخادم مش مظبوط: نخفي الكارت — الساحة شغّالة عادي */
+      else Q.err = true;
+    }, function () { Q.err = true; }).then(function () { if (Q.p === run) Q.p = null; qRepaint(); return Q.d; });
+    Q.p = run;
+    return run;
+  }
+  function qAr(n, one, two, few, many) { return n === 1 ? one : n === 2 ? two : n + ' ' + (n <= 10 ? few : many); }
+  function qLabel(k, g) {
+    return k === 'm' ? 'خلّص ' + qAr(g, 'مباراة', 'مباراتين', 'مباريات', 'مباراة')
+      : k === 'c' ? 'جاوب ' + qAr(g, 'إجابة صح', 'إجابتين صح', 'إجابات صح', 'إجابة صح')
+      : 'اكسب ' + qAr(g, 'مباراة', 'مباراتين', 'مباريات', 'مباراة');
+  }
+  function qRemain() {
+    var ms = Math.max(0, qLeft()), hr = Math.floor(ms / 3600000), mn = Math.floor((ms % 3600000) / 60000);
+    return hr > 0 ? hr + ' س' + (mn ? ' و' + mn + ' د' : '') : Math.max(1, mn) + ' د';
+  }
+  async function qClaim(k, btn) {
+    if (Q.busy[k]) return;
+    Q.busy[k] = 1; btn.disabled = true; btn.classList.add('ld');
+    try {
+      var r = await qApi({ action: 'claim', k: k });
+      if (r.status === 200 && r.body.ok) {
+        qSet(r.body.q, r.body.now);
+        if (r.body.xp > 0) { toast('+' + r.body.xp + ' XP اتضافت لمحفظتك', 'ok'); SFX.play('correct'); var c = PC[me().uid]; if (c) { c.wat = 0; c.at = 0; } }
+        else toast('المكافأة دي اتستلمت قبل كده', 'inf');
+      } else if (r.status === 409) {
+        if (qValid(r.body.q)) qSet(r.body.q);
+        toast('المهمة لسه ما خلصتش أو اليوم اتجدد.', 'inf');
+      } else if (r.status === 429) toast('استنى لحظة وجرّب تاني.', 'inf');
+      else toast('تعذّر استلام المكافأة دلوقتي. جرّب تاني.', 'err');
+    } catch (e) { toast('تعذّر الاتصال. جرّب تاني.', 'err'); }
+    Q.busy[k] = 0; qRepaint();
+  }
+  function qRow(t) {
+    var lb = qLabel(t.k, t.g), pc = Math.max(0, Math.min(100, Math.round(t.p / t.g * 100))), ready = t.p >= t.g;
+    var act = t.c ? h('span', { class: 'nba-tag g nbq-dn', text: 'اتستلمت' }, [])
+      : ready ? h('button', { class: 'nbq-bt', 'aria-label': 'استلم ' + t.r + ' XP — ' + lb, onclick: function (e) { qClaim(t.k, e.currentTarget); } }, ['استلم +' + t.r])
+      : h('span', { class: 'nbq-rw', text: '+' + t.r + ' XP' });
+    return h('div', { class: 'nbq-r' + (t.c ? ' cl' : ready ? ' rd' : '') }, [
+      h('span', { class: 'nbq-i' }, [ico(QIC[t.k])]),
+      h('div', { class: 'nbq-m' }, [
+        h('div', { class: 'nbq-t' }, [h('b', { text: lb }), h('em', { text: Math.min(t.p, t.g) + '/' + t.g })]),
+        h('div', { class: 'nba-pbar nbq-pb', role: 'progressbar', 'aria-label': lb, 'aria-valuemin': '0', 'aria-valuemax': String(t.g), 'aria-valuenow': String(Math.min(t.p, t.g)) }, [h('i', { style: 'width:' + pc + '%' })])]),
+      h('div', { class: 'nbq-a' }, [act])]);
+  }
+  function qFill(el) {
+    el.innerHTML = '';
+    if (Q.off) { el.hidden = true; return; }
+    el.hidden = false;
+    var d = Q.d, done = d ? d.t.filter(function (t) { return t.c; }).length : 0;
+    var head = h('div', { class: 'nbq-h' }, [h('div', { class: 'nbq-ti' }, [ico(PIc.target), h('b', { text: 'المهام اليومية' })]), d ? h('span', { class: 'nba-tag' + (done === 3 ? ' g' : ''), text: done + '/3' }) : null]);
+    var kids = [head];
+    if (!d) kids.push(Q.err ? h('div', { class: 'nbq-er' }, ['تعذّر تحميل المهام دلوقتي.', h('button', { class: 'nba-eqb', onclick: function () { qLoad(true); qRepaint(); } }, ['إعادة المحاولة'])])
+      : h('div', { class: 'nbq-sk', 'aria-busy': 'true', 'aria-label': 'جاري تحميل المهام' }, [h('i'), h('i'), h('i')]));
+    else {
+      kids.push(h('div', { class: 'nbq-sub', text: 'بتتجدد كل يوم 12 بالليل بتوقيت القاهرة • باقي ' + qRemain() }));
+      d.t.forEach(function (t) { kids.push(qRow(t)); });
+      kids.push(h('div', { class: 'nbq-nt', text: 'بتتحسب المباريات اللي لاعبين اتنين على الأقل جاوبوا فيها 3 أسئلة أو أكتر.' }));
+    }
+    el.appendChild(h('div', { class: 'nba-card nbq-c' }, kids));
+  }
+  function qRepaint() { if (!root) return; var l = root.querySelectorAll('.nba-qs'); for (var i = 0; i < l.length; i++) qFill(l[i]); }
+  function qCard() {
+    var el = h('div', { class: 'nba-qs', 'aria-live': 'polite' });
+    if (Q.uid && me() && Q.uid !== me().uid) qClear();
+    qFill(el);
+    qLoad(false);
+    return el;
+  }
+  function cssQuests() {
+    if (document.getElementById('nba-css-q')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-q';
+    st.textContent = [
+      '.nba-qs[hidden]{display:none}',
+      '.nbq-c{padding:14px 14px 10px;border-color:rgba(61,220,132,.22)}',
+      '.nbq-h{display:flex;align-items:center;justify-content:space-between;gap:8px}',
+      '.nbq-ti{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;color:var(--ink)}.nbq-ti .nba-ico{color:var(--brand-l)}',
+      '.nbq-sub{font-size:11.5px;font-weight:700;color:var(--muted);margin:2px 0 10px}',
+      '.nbq-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}',
+      '.nbq-i{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:var(--slate)}.nbq-i .nba-ico{width:20px;height:20px}',
+      '.nbq-r.rd .nbq-i,.nbq-r.cl .nbq-i{background:rgba(61,220,132,.16);color:var(--brand-l)}',
+      '.nbq-m{flex:1;min-width:0}',
+      '.nbq-t{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;line-height:1.4}.nbq-t b{font-size:13.5px;font-weight:800;color:var(--ink2)}.nbq-t em{font-style:normal;font-size:12px;font-weight:800;color:var(--muted);direction:ltr;font-variant-numeric:tabular-nums}',
+      '.nbq-r.cl .nbq-t b{color:var(--muted)}.nbq-r.cl .nbq-pb i{opacity:.45}',
+      '.nbq-pb{height:7px}',
+      '.nbq-a{flex:none;min-width:64px;display:flex;justify-content:flex-end}',
+      '.nbq-rw{font-size:12px;font-weight:800;color:var(--gold-l);background:var(--gold-pale);border:1px solid rgba(245,184,61,.28);border-radius:99px;padding:3px 9px;white-space:nowrap}',
+      '.nbq-bt{border:0;border-radius:99px;min-height:40px;padding:0 16px;font:800 13px var(--f-ui,Cairo,sans-serif);color:#04140a;background:linear-gradient(180deg,#43EBA3,#22C47D);cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(43,217,138,.25);transition:transform .15s,opacity .2s}',
+      '.nbq-bt:active{transform:scale(.96)}.nbq-bt[disabled]{opacity:.6;cursor:default}.nbq-bt.ld{opacity:.6}',
+      '.nbq-nt{font-size:11px;font-weight:600;color:var(--muted);line-height:1.6;padding-top:8px;border-top:1px solid var(--line)}',
+      '.nbq-er{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;color:var(--ink2);padding:12px 0 6px}',
+      '.nbq-sk{display:grid;gap:10px;padding:12px 0 4px}.nbq-sk i{display:block;height:36px;border-radius:11px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:nbqSh 1.2s linear infinite}',
+      '@keyframes nbqSh{from{background-position:200% 0}to{background-position:-200% 0}}',
+      '@media (prefers-reduced-motion:reduce){.nbq-sk i{animation:none}.nbq-bt{transition:none}.nbq-pb i{transition:none}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  /* ═════════ نهاية المهام ═════════ */
 
   /* ───────── إنشاء / انضمام ───────── */
   async function createRoom(o) {
@@ -1305,6 +1441,7 @@
     if (saved) w.appendChild(h('div', { class: 'nba-card' }, [h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'عندك غرفة شغّالة: ' + saved }), h('div', { class: 'nba-seg' }, [
       h('button', { class: 'nba-btn', onclick: function () { joinRoom(saved); } }, ['ارجع للغرفة']),
       h('button', { class: 'nba-btn sec', onclick: function () { ls('nbArenaRoom', null); V.key = ''; render(); } }, ['تجاهل'])])]));
+    w.appendChild(qCard());   /* DAILY-QUESTS */
     w.appendChild(h('div', { class: 'nbx-sec', text: 'اختار تخصص التحدي' }));
     w.appendChild(h('div', { class: 'nbx-tiles' }, SPECS.map(function (s, n) {
       return h('button', { class: 'nbx-t', style: '--n:' + n, 'aria-pressed': 'false', onclick: function (e) {
