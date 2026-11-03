@@ -13,7 +13,8 @@
   var SPECS = [['pp', 'وقاية النبات'], ['path', 'أمراض النبات'], ['ent', 'علم الحشرات الاقتصادية'], ['hort', 'البساتين والفاكهة'],
     ['bio', 'التكنولوجيا الحيوية الزراعية'], ['soil', 'علوم الأراضي والتسميد'], ['food', 'علوم وتكنولوجيا الأغذية'], ['gen', 'الوراثة وتربية النبات'],
     ['crop', 'المحاصيل الحقلية'], ['irr', 'الري والموارد المائية'], ['anim', 'الإنتاج الحيواني والداجني'], ['eco', 'الاقتصاد والإرشاد الزراعي'],
-    ['mix', 'منوّع (كل التخصصات الزراعية)']];
+    ['rel', 'أسئلة دينية'], ['gk', 'معلومات عامة'], ['fb', 'كرة القدم'],
+    ['mix', 'منوّع (كل التخصصات الزراعية)'], ['custom', 'موضوع من اختيارك']];
   var LEAD = 5000, QDUR = 20000, SLOT = 26000, NQ = 10, BONUS = 50, STALE = 75000;   /* نفس أرقام firestore.rules (arOpen/arClose) */
   var ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', COLS = ['#1B6B3A', '#c9871a', '#2b6cb0', '#b83280', '#6b46c1', '#c05621'];
   var LETTERS = ['أ', 'ب', 'ج', 'د'], DIFF = { e: 'سهل', m: 'متوسط', h: 'صعب' };
@@ -42,6 +43,8 @@
   function myPhoto() { var p = me() && me().photoURL; return (typeof p === 'string' && /^https:\/\//.test(p) && p.length <= 300) ? p : ''; }
   function specLabel(k) { for (var i = 0; i < SPECS.length; i++) if (SPECS[i][0] === k) return SPECS[i][1]; return ''; }
   function specKey(l) { for (var i = 0; i < SPECS.length; i++) if (SPECS[i][1] === l) return SPECS[i][0]; return ''; }
+  /* موضوع حرّ يكتبه اللاعب: نفس تنضيف الخادم (arenaClean في api/farm-ai.js) بالحرف، لأن الخادم بيقارنه بـ sp المخزّن في الغرفة */
+  function cleanTopic(t) { return typeof t === 'string' ? t.replace(/[\u0000-\u001f\u007f<>]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40) : ''; }
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* private mode */ } return null; }
   function genCode() { var a = new Uint8Array(6), s = ''; (window.crypto || window.msCrypto).getRandomValues(a); for (var i = 0; i < 6; i++) s += ALPHA.charAt(a[i] % ALPHA.length); return s; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -591,7 +594,11 @@
     irr: '<path d="M12 2.5C8 8 5 11 5 15a7 7 0 0014 0c0-4-3-7-7-12.5z"/>',
     anim: '<circle cx="7" cy="10" r="1.8"/><circle cx="12" cy="7" r="1.8"/><circle cx="17" cy="10" r="1.8"/><path d="M12 12c-3 0-5 3-5 5.5 0 1.5 1.5 2.5 3 2 1-.3 1.5-.5 2-.5s1 .2 2 .5c1.5.5 3-.5 3-2C17 15 15 12 12 12z"/>',
     eco: '<path d="M3 21h18"/><path d="M6 21v-7M12 21V4M18 21V10"/>',
-    mix: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'
+    mix: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    rel: '<path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/>',
+    gk: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/>',
+    fb: '<circle cx="12" cy="12" r="9"/><path d="M12 8l3.5 2.5-1.3 4H9.8l-1.3-4z"/><path d="M12 3v5M15.5 10.5L20 9M14.2 14.5L17 18M9.8 14.5L7 18M8.5 10.5L4 9"/>',
+    custom: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'
   };
 
   /* ───────── تحسين شاشة ساحة نبتيكس الرئيسية (إضافة فقط — نفس الكلاسات ونفس المنطق، وبتتحمّل بعد باقي الستايلات) ───────── */
@@ -1122,6 +1129,53 @@
     document.head.appendChild(st);
   }
 
+  /* إصلاح الكيبورد (آيفون): الساحة position:fixed فبتفضل بارتفاع الـ layout viewport، ولما الكيبورد يفتح
+     Safari بيحرّك/يصغّر الـ visual viewport فيظهر محتوى الصفحة اللي ورا الساحة فوق الكيبورد.
+     الحل: ما دام حقل جوه الساحة عليه فوكس، نضبط ارتفاع/موضع الساحة على الـ visualViewport؛ وغير كده نرجّع للـ CSS. */
+  var KB_BOUND = false;
+  function kbSync() {
+    var vv = window.visualViewport;
+    if (!vv || !root) return;
+    var a = document.activeElement;
+    if (!(a && root.contains(a) && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'))) {
+      if (root.style.height) root.style.height = '';
+      if (root.style.top) root.style.top = '';
+      return;
+    }
+    root.style.height = vv.height + 'px'; root.style.top = vv.offsetTop + 'px';
+  }
+  function kbBind() {
+    if (KB_BOUND) return;
+    KB_BOUND = true;
+    if (window.visualViewport) { window.visualViewport.addEventListener('resize', kbSync); window.visualViewport.addEventListener('scroll', kbSync); }
+    var kbRetry = function () { [60, 200, 450, 800].forEach(function (t) { setTimeout(kbSync, t); }); };   /* الكيبورد بيستقر متأخر على آيفون */
+    document.addEventListener('focusin', function (ev) {
+      kbRetry();
+      var el = ev.target;
+      if (!root || !el || !root.contains(el) || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+      [250, 500, 900].forEach(function (t) { setTimeout(function () {   /* نخلّي الحقل ظاهر فوق الكيبورد */
+        if (!root || document.activeElement !== el) return;
+        var r = el.getBoundingClientRect(), rr = root.getBoundingClientRect();
+        if (r.bottom > rr.bottom - 12 || r.top < rr.top + 12) root.scrollTop += (r.top - rr.top) - Math.max(0, (rr.height - r.height) / 2);
+      }, t); });
+    });
+    document.addEventListener('focusout', kbRetry);
+  }
+
+  /* حقل «موضوع من اختيارك» في شاشة غرفة جديدة (إضافة فقط) */
+  function cssTopic() {
+    if (document.getElementById('nba-css-tp')) return;
+    var st = document.createElement('style'); st.id = 'nba-css-tp';
+    st.textContent = [
+      '.nbz-tp{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px;border-radius:18px;background:linear-gradient(180deg,#112419,#0B1610);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}',
+      '.nbz-tp small{font-size:11.5px;font-weight:800;color:#E7C06E}',
+      '.nbz-tp input{width:100%;box-sizing:border-box;height:48px;padding:0 14px;border:0;border-radius:14px;outline:0;background:#0B1710;color:#EAF4EE;font:700 16px var(--f-ui,Cairo,sans-serif);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}',
+      '.nbz-tp input:focus{box-shadow:inset 0 0 0 1.5px rgba(242,184,75,.7),0 0 0 4px rgba(242,184,75,.1)}',
+      '.nbz-tp input::placeholder{color:#4F6B5C;opacity:1}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
   /* ───────── فتح / قفل ───────── */
   function open(o) {
     o = o || {};
@@ -1132,20 +1186,22 @@
     cssProf();
     cssQuests();
     cssRM();
+    cssTopic();
     cssArena();
     if (!me()) {
       try { sessionStorage.setItem('nbArenaPending', o.code || '1'); } catch (e) { /* ignore */ }
-      toast('سجّل الدخول الأول علشان تدخل ساحة نبتيكس', 'inf');
+      toast('سجّل الدخول الأول علشان تدخل نبتيكس ارينا', 'inf');
       if (typeof window.openAuth === 'function') window.openAuth('login');
       return;
     }
     if (!root) {
-      root = h('div', { class: 'nba-root', role: 'dialog', 'aria-label': 'ساحة نبتيكس' }, [h('div', { class: 'nba-wrap' })]);
+      root = h('div', { class: 'nba-root', role: 'dialog', 'aria-label': 'نبتيكس ارينا' }, [h('div', { class: 'nba-wrap' })]);
       root.appendChild(fxLayer()); root.appendChild(sndUI());
       root.addEventListener('pointerdown', function (e) { SFX.unlock(); var pp = root.querySelector('.nba-pop'); if (pp && !pp.hidden && !(e.target.closest && e.target.closest('.nba-snb'))) pp.hidden = true; }, { passive: true });
       root.addEventListener('keydown', SFX.unlock);
       root.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('button'); if (b && !b.classList.contains('nba-opt') && !b.hasAttribute('data-nosnd') && !b.closest('.nba-snb')) SFX.play('ui'); });
       document.body.appendChild(root);
+      kbBind();
       document.documentElement.style.overflow = 'hidden';
       sweep();
     }
@@ -1640,7 +1696,7 @@
     var m = RMS; if (!m || !m.d || m.busy.c || m.d.nr || m.d.by !== m.uid) return;
     var d = m.d; m.busy.c = true; rmPaint();
     var ok = false;
-    try { ok = await createRoom({ md: d.md, sp: specKey(d.sp) || 'mix', mx: d.mx, rm: m.ref }); } catch (e) { ok = false; }
+    try { ok = await createRoom({ md: d.md, sp: specKey(d.sp) || 'custom', topic: d.sp, mx: d.mx, rm: m.ref }); } catch (e) { ok = false; }
     if (RMS !== m) return;   /* نجح: attach() قفل الدعوة ونقلنا للوبي الجديد */
     m.busy.c = false; m.cd = Date.now() + 5000;
     if (!ok) toast('تعذّر إنشاء الغرفة الجديدة، هنحاول تاني…', 'err');
@@ -1774,11 +1830,12 @@
 
   /* ───────── إنشاء / انضمام ───────── */
   async function createRoom(o) {
-    var u = me(), tries = 0, last = null;
+    var u = me(), tries = 0, last = null, spLbl = o.sp === 'custom' ? cleanTopic(o.topic) : specLabel(o.sp);
+    if (o.sp === 'custom' && spLbl.length < 2) { V.err = 'اكتب موضوع الأسئلة (حرفين على الأقل).'; render(); return false; }
     V.busy = true; V.err = ''; render();
     while (tries++ < 5) {
       var code = genCode(), rr = rref(code), b = window.db.batch();
-      b.set(rr, { host: u.uid, st: 'lobby', md: o.md, sp: specLabel(o.sp), mx: o.mx, pc: 1, na: o.md === 't' ? 1 : 0, nb: 0, qr: false, cr: SV(), exp: firebase.firestore.Timestamp.fromMillis(Date.now() + 3 * 3600000) });
+      b.set(rr, { host: u.uid, st: 'lobby', md: o.md, sp: spLbl, mx: o.mx, pc: 1, na: o.md === 't' ? 1 : 0, nb: 0, qr: false, cr: SV(), exp: firebase.firestore.Timestamp.fromMillis(Date.now() + 3 * 3600000) });
       b.set(rr.collection('pl').doc(u.uid), { n: myName(), ph: myPhoto(), tm: 0, ls: SV(), j: SV() });
       if (o.rm) b.update(o.rm, { nr: code });   /* ARENA-REMATCH: ربط الغرفة بالدعوة في نفس الـ batch (nr بيتكتب مرة واحدة بس — القواعد) */
       try { await b.commit(); V.busy = false; attach(code); return true; } catch (e) {
@@ -2006,14 +2063,14 @@
   }
   /* توليد الأسئلة (طلب واحد للغرفة) مع إعادة محاولة وتعامل مع الأخطاء */
   async function genQuestions() {
-    var key = specKey(S.room.sp), lastErr = 'تعذّر تجهيز الأسئلة، حاول تاني.';
+    var key = specKey(S.room.sp) || 'custom', lastErr = 'تعذّر تجهيز الأسئلة، حاول تاني.';
     for (var a = 0; a < 3; a++) {
       try {
         var u = me(), tok = await u.getIdToken(), hd = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok };
         if (typeof window.nbDevId === 'function') hd['X-NB-Device'] = window.nbDevId();
         var ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 58000);
         var r;
-        try { r = await fetch('/api/farm-ai', { method: 'POST', headers: hd, body: JSON.stringify({ mode: 'arena_gen', rid: S.rid, spec: key }), signal: ctl.signal }); } finally { clearTimeout(tm); }
+        try { r = await fetch('/api/farm-ai', { method: 'POST', headers: hd, body: JSON.stringify({ mode: 'arena_gen', rid: S.rid, spec: key, topic: key === 'custom' ? S.room.sp : undefined }), signal: ctl.signal }); } finally { clearTimeout(tm); }
         if (r.ok) return;
         var j = await r.json().catch(function () { return {}; });
         if (r.status === 409) { var d = await rref(S.rid).get(); if (d.exists && d.data().qr) return; throw new Error('الغرفة اتغيّرت، ارجع للوبي وحاول تاني.'); }
@@ -2042,8 +2099,8 @@
   }
   function shareLink() { return location.origin + '/?arena=' + S.rid; }
   async function share() {
-    var txt = 'تعالى نلعب مسابقة زراعية في ساحة نبتيكس! الكود: ' + S.rid;
-    try { if (navigator.share) { await navigator.share({ title: 'ساحة نبتيكس', text: txt, url: shareLink() }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    var txt = 'تعالى نلعب مسابقة زراعية في نبتيكس ارينا! الكود: ' + S.rid;
+    try { if (navigator.share) { await navigator.share({ title: 'نبتيكس ارينا', text: txt, url: shareLink() }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
     copy(txt + '\n' + shareLink(), 'اتنسخ لينك الدعوة');
   }
   function copy(text, msg) {
@@ -2055,7 +2112,7 @@
   /* ───────── الواجهة ───────── */
   function top(title, onClose) {
     return h('div', { class: 'nba-top' }, [
-      h('div', { class: 'nba-ttl' }, [h('div', { class: 'nba-logo' }, [ico(I.bolt)]), h('span', { text: title || 'ساحة نبتيكس' })]),
+      h('div', { class: 'nba-ttl' }, [h('div', { class: 'nba-logo' }, [ico(I.bolt)]), h('span', { text: title || 'نبتيكس ارينا' })]),
       h('button', { class: 'nba-x', 'aria-label': 'إغلاق', onclick: onClose || close }, [ico(I.x)])
     ]);
   }
@@ -2187,12 +2244,14 @@
     w.appendChild(sec('التخصص'));
     w.appendChild(h('div', { class: 'nbz-sp' }, SPECS.map(function (s) {
       var on = o.sp === s[0];
-      return h('button', { class: 'nbz-sc' + (on ? ' on' : ''), style: '--h:' + (NBZ_HUE[s[0]] || 150), 'aria-pressed': on ? 'true' : 'false', onclick: function () { o.sp = s[0]; up(); } }, [
+      return h('button', { class: 'nbz-sc' + (on ? ' on' : ''), style: '--h:' + (NBZ_HUE[s[0]] || 150), 'aria-pressed': on ? 'true' : 'false', onclick: function () { o.sp = s[0]; up(); if (s[0] === 'custom') setTimeout(function () { var t = document.getElementById('nba-topic'); if (t) { t.focus(); try { t.scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ } } }, 60); } }, [
         h('span', { class: 'nbz-em' }, [ico(SPI[s[0]] || SPI.mix)]), h('span', { class: 'nbz-sx' }, [h('small', { text: NBZ_CL[s[0]] || '' }), h('b', { text: s[1] })])]);
     })));
+    if (o.sp === 'custom') w.appendChild(h('div', { class: 'nbz-tp' }, [h('small', { text: 'اكتب موضوع الأسئلة اللي عايز تتسابقوا فيه' }),
+      h('input', { id: 'nba-topic', maxlength: '40', placeholder: 'مثال: تاريخ مصر القديمة', 'aria-label': 'موضوع الأسئلة', autocomplete: 'off', value: o.topic || '', oninput: function (e) { o.topic = e.target.value; } })]));
     w.appendChild(h('div', { class: 'nbz-bar' }, [
       h('div', { class: 'nbz-sum', text: (teams ? 'فريقين' : 'فردي') + ' · ' + o.mx + ' لاعبين · ' + specLabel(o.sp) }),
-      h('button', { class: 'nbz-play go', disabled: !!o.busy, onclick: function () { createRoom({ md: o.md, mx: o.mx, sp: o.sp }); } }, [
+      h('button', { class: 'nbz-play go', disabled: !!o.busy, onclick: function () { createRoom({ md: o.md, mx: o.mx, sp: o.sp, topic: o.topic }); } }, [
         h('span', { class: 'gl', 'aria-hidden': 'true' }), h('span', { class: 'ic' }, [o.busy ? h('div', { class: 'nba-spin d' }) : ico(I.bolt)]),
         h('span', { class: 'tx' }, [h('b', { text: o.busy ? 'جاري الإنشاء…' : 'إنشاء الغرفة' }), h('small', { text: 'CREATE ROOM' })]),
         h('span', { class: 'ar' }, [ico('<path d="M15 5l-7 7 7 7"/>')])])]));
@@ -2260,8 +2319,8 @@
      - نفس الدوال ونفس الحالة بالظبط (V / S / joinRoom / openProfile / qCard / ls('nbArenaRoom') / handlers التخصصات) — اللي اتغيّر الـ DOM والـ CSS بس. مفيش قراءة/كتابة جديدة غير loadProf (الموجودة أصلًا، بكاش 90ث) لعرض المستوى والـ XP.
      - المشهد SVG/CSS مولَّد بالكود (بدون صور ولا شبكة ولا مكتبات). كل الكلاسات nbz-* ومقصورة على .nbz فمفيش أي تأثير على شاشات الغرفة/السؤال/النتيجة.
      للتراجع: رجّع vHub2 القديمة من الـ git وامسح الكتلة دي + سطر cssArena() في open(). */
-  var NBZ_HUE = { pp: 152, path: 166, ent: 92, hort: 126, bio: 182, soil: 38, food: 46, gen: 204, crop: 74, irr: 192, anim: 26, eco: 50, mix: 44 };
-  var NBZ_CL = { pp: 'الحارس', path: 'الطبيب', ent: 'الصيّاد', hort: 'البستاني', bio: 'الكيميائي', soil: 'حارس الأرض', food: 'الطاهي', gen: 'المُهجّن', crop: 'الحصّاد', irr: 'سيّد المياه', anim: 'الراعي', eco: 'المخطِّط', mix: 'المتجوّل' };
+  var NBZ_HUE = { pp: 152, path: 166, ent: 92, hort: 126, bio: 182, soil: 38, food: 46, gen: 204, crop: 74, irr: 192, anim: 26, eco: 50, mix: 44, rel: 268, gk: 218, fb: 132, custom: 320 };
+  var NBZ_CL = { pp: 'الحارس', path: 'الطبيب', ent: 'الصيّاد', hort: 'البستاني', bio: 'الكيميائي', soil: 'حارس الأرض', food: 'الطاهي', gen: 'المُهجّن', crop: 'الحصّاد', irr: 'سيّد المياه', anim: 'الراعي', eco: 'المخطِّط', mix: 'المتجوّل', rel: 'الحكيم', gk: 'الموسوعي', fb: 'الهدّاف', custom: 'المبتكر' };
   var NBZ_HILL = '<svg viewBox="0 0 160 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70V40C20 28 38 34 58 42S104 30 124 34 150 42 160 38V70Z" fill="#000" opacity=".26"/><path d="M0 70V54C26 46 50 52 76 56S128 48 160 52V70Z" fill="#000" opacity=".4"/></svg>';
   function nbzRaw(tag, cls, html) { var e = document.createElement(tag); e.className = cls; e.innerHTML = html; e.setAttribute('aria-hidden', 'true'); return e; }
   /* أشجار طبقات (3 مثلثات لكل شجرة) بتوزيع ثابت — بدون Math.random علشان الشكل يبقى ثابت */
