@@ -804,6 +804,32 @@
       '.nbz-sx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:800;line-height:1.35}',
       '.nbz-sc.on{box-shadow:0 0 0 2px #F2B84B,0 0 24px -6px rgba(242,184,75,.5)}',
       '.nbz-sc.on .nbz-em{color:#04140A;background:hsl(var(--h) 68% 58%);box-shadow:0 0 24px 1px hsl(var(--h) 70% 55%/.55)}',
+      /* ── التخصص: العنصر المختار فقط هو المُنوَّر — الباقي هادئ ومحايد (تنسيق فقط) ── */
+      '.nbz-sc:not(.on){background:linear-gradient(180deg,#112419,#0B1610);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}',
+      '.nbz-sc:not(.on) .nbz-em{color:#8FA99A;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.1)}',
+      '.nbz-sc:not(.on) .nbz-sx small{color:#B39C62}',
+      '.nbz-sc:not(.on) .nbz-sx b{color:#CFDDD4}',
+      /* ── «عندك كود غرفة؟» في شاشة إنشاء الغرفة ── */
+      '.nbz-jn{margin:2px 0 4px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,#112419,#0B1610);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:box-shadow .25s}',
+      '.nbz-jn.open{box-shadow:inset 0 0 0 1px rgba(242,184,75,.24)}',
+      '.nbz-jn .jn-hd{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 14px;border:0;background:none;color:#EAF4EE;font:inherit;text-align:right;cursor:pointer}',
+      '.nbz-jn .jn-ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;color:#E7C06E;background:rgba(242,184,75,.08);box-shadow:inset 0 0 0 1.5px rgba(242,184,75,.22)}.nbz-jn .jn-ic .nba-ico{width:20px;height:20px}',
+      '.nbz-jn .jn-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.nbz-jn .jn-tx b{font-size:14px;font-weight:800;color:#EAF4EE}.nbz-jn .jn-tx small{font-size:11.5px;font-weight:600;color:#8FA99A}',
+      '.nbz-jn .jn-cv{flex:none;display:grid;place-items:center;color:#7F9A8B;transition:transform .28s ease}.nbz-jn .jn-cv .nba-ico{width:18px;height:18px}.nbz-jn.open .jn-cv{transform:rotate(180deg)}',
+      '.nbz-jn .jn-bd{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .3s ease,visibility 0s .3s}.nbz-jn.open .jn-bd{grid-template-rows:1fr;visibility:visible;transition-delay:0s}',
+      '.nbz-jn .jn-in{min-height:0;overflow:hidden}.nbz-jn .jn-pd{padding:2px 14px 16px}',
+      '.nbz-jn .jn-fd{position:relative;direction:ltr}',
+      '.nbz-jn .jn-cells{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}',
+      '.nbz-jn .jn-c{display:grid;place-items:center;height:56px;border-radius:14px;color:#FFE7B0;font:800 22px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:linear-gradient(180deg,#0B1710,#0E1E16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 2px 8px rgba(0,0,0,.45);transition:box-shadow .18s}',
+      '.nbz-jn .jn-c.f{box-shadow:inset 0 0 0 1px rgba(242,184,75,.4),inset 0 2px 8px rgba(0,0,0,.4)}',
+      '.nbz-jn.foc .jn-c.a{box-shadow:inset 0 0 0 1.5px rgba(242,184,75,.85),0 0 0 3px rgba(242,184,75,.12)}',
+      '.nbz-jn.foc .jn-c.a:empty::after{content:\"\";width:2px;height:24px;border-radius:1px;background:#F2B84B;animation:nbzJcb 1s steps(1) infinite}@keyframes nbzJcb{50%{opacity:0}}',
+      '.nbz-jn .jn-ov{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;background:none;color:transparent;caret-color:transparent;font-size:16px;direction:ltr;cursor:text}',
+      '.nbz-jn .jn-go{display:block;width:100%;min-height:52px;margin-top:12px;border:0;border-radius:16px;font:800 15px var(--f-ui,Cairo,sans-serif);color:#7F9A8B;background:rgba(255,255,255,.05);cursor:not-allowed;transition:background .2s,color .2s}',
+      '.nbz-jn .jn-go:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 20px -10px rgba(242,184,75,.55)}.nbz-jn .jn-go:not([disabled]):active{filter:brightness(.95)}',
+      '.nbz-jn .jn-ht{margin-top:10px;text-align:center;font-size:12px;font-weight:600;color:#8FA99A}',
+      '.nbz-cr .nbz-jn+.nbz-st.f{margin-top:22px}',
+      '@media (prefers-reduced-motion:reduce){.nbz-jn,.nbz-jn .jn-bd,.nbz-jn .jn-cv,.nbz-jn .jn-c{transition:none}.nbz-jn.foc .jn-c.a:empty::after{animation:none}}',
       '.nbz-bar{position:sticky;bottom:0;z-index:5;margin:18px -16px 0;padding:22px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(10,21,16,0),#0A1510 20px)}',
       '.nbz-sum{margin-bottom:10px;text-align:center;font-size:12.5px;font-weight:700;color:#A9C0B2}',
       '.nbz-bar .nbz-play{margin-top:0}',
@@ -838,6 +864,25 @@
       '.nbz-lb .nbx-seats .nba-row.host{background:linear-gradient(90deg,rgba(242,184,75,.04),rgba(242,184,75,.15))}.nbz-lb .nbx-seats .nba-row.host::after{background:#F2B84B;opacity:1;box-shadow:0 0 12px rgba(242,184,75,.6)}',
       '.nbz-lb .nbx-seats .nba-row.em{background:none;border:1.5px dashed rgba(255,255,255,.12);color:#7F9A8B}',
       '.nbz-lb .nba-row .nm b{font-size:14.5px;color:#F2F8F4}',
+      /* ── بريميوم: كارت اللاعب في اللوبي (تنسيق فقط — بدون أي تغيير في المنطق) ── */
+      '.nbz-lb .nbx-seats{gap:10px}',
+      '.nbz-lb .nbx-seats .nba-row::before,.nbz-lb .nbx-seats .nba-row:not(.em)::after{display:none}',
+      '.nbz-lb .nbx-seats .nba-row:not(.em){gap:14px;min-height:72px;padding:12px 16px 12px 14px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.022));box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.05);transition:box-shadow .25s ease,background .25s ease}',
+      '.nbz-lb .nbx-seats .nba-row.me:not(.em){background:linear-gradient(180deg,rgba(43,217,138,.09),rgba(43,217,138,.03));box-shadow:inset 0 0 0 1px rgba(43,217,138,.26),inset 0 1px 0 rgba(255,255,255,.05)}',
+      '.nbz-lb .nbx-seats .nba-row.host:not(.em){background:linear-gradient(180deg,rgba(242,184,75,.09),rgba(242,184,75,.025));box-shadow:inset 0 0 0 1px rgba(242,184,75,.28),inset 0 1px 0 rgba(255,255,255,.05)}',
+      '.nbz-lb .nbx-seats .nba-row[role=button]:active{filter:brightness(1.1)}',
+      '.nbz-lb .nbx-seats .nba-av{width:46px!important;height:46px!important;box-shadow:0 0 0 2px #101B15,0 0 0 3.5px var(--c,#2BD98A)}',
+      '.nbz-lb .nbx-seats .nba-hc{box-sizing:border-box;top:-4px;right:-4px;width:18px;height:18px;background:linear-gradient(145deg,#F8D27A,#D9A03A);color:#3A2400;border:2px solid #101B15;box-shadow:none}',
+      '.nbz-lb .nbx-seats .nba-hc .nba-ico{width:9px;height:9px}',
+      '.nbz-lb .nbx-seats .nba-dot{width:11px;height:11px;bottom:1px;left:1px;border:2px solid #101B15}',
+      '.nbz-lb .nbx-seats .nba-dot.on{box-shadow:0 0 8px rgba(61,220,132,.55)}',
+      '.nbz-lb .nbx-seats .nba-row .nm{gap:2px}',
+      '.nbz-lb .nbx-seats .nba-row .nm b{font-size:15px}',
+      '.nbz-lb .nbx-seats .nba-row .nm small{font-size:11.5px;font-weight:600;color:#86A093}',
+      '.nbz-lb .nbx-seats .nba-row.me .nm small{color:#6FDDA6}',
+      '.nbz-lb .nbx-seats .nba-row.host .nm small{color:#D6B062}',
+      '.nbz-lb .nbx-seats .nba-ib.tx{height:32px;padding:0 12px;border:0;border-radius:99px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:#C5D8CC;font-size:11.5px;font-weight:700}',
+      '@media (prefers-reduced-motion:reduce){.nbz-lb .nbx-seats .nba-row{transition:none}}',
       '.nbz-lb .nba-tag{border:0;background:rgba(242,184,75,.13);color:#FFD98A}',
       '.nbz-lb .nba-card.tight{margin:22px 0 12px;padding:0;border:0;background:none;box-shadow:none;border-radius:0}',
       '.nbz-lb .nba-team{border:0;border-radius:20px;padding:10px;background:linear-gradient(180deg,rgba(43,217,138,.17),rgba(43,217,138,.03))}',
@@ -1243,9 +1288,10 @@
     if (document.getElementById('nba-css-pf')) return;
     var st = document.createElement('style'); st.id = 'nba-css-pf';
     st.textContent = [
-      '.nba-ttc{display:inline-flex;align-items:center;max-width:100%;padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.6;color:#F8E2AE;text-shadow:0 1px 1px rgba(0,0,0,.45);border:1px solid transparent;background:linear-gradient(180deg,rgba(255,224,150,.20),rgba(242,184,75,.04)) padding-box,linear-gradient(#101C13,#101C13) padding-box,linear-gradient(135deg,#FFEFC2 0%,#E9B44C 38%,#8E6420 62%,#F2C66A 100%) border-box;background-origin:border-box;box-shadow:inset 0 1px 0 rgba(255,246,220,.22),0 2px 8px rgba(242,184,75,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
-      '.nba-ttc.sm{display:flex;margin:2px auto 0;width:fit-content;font-size:9.5px;padding:0 6px}',
-      '.nba-ttc.big{position:relative;font-size:12.5px;padding:3px 13px}',
+      '.nba-ttc{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 11px 2px 10px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.55;color:#F1D58F;border:1px solid transparent;background:linear-gradient(180deg,#141A11,#0D120C) padding-box,linear-gradient(135deg,#F7DC9C 0%,#C9973F 42%,#7A5518 68%,#E6BC63 100%) border-box;background-origin:border-box;box-shadow:inset 0 1px 0 rgba(255,240,200,.10),0 1px 4px rgba(0,0,0,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
+      '.nba-ttc::before{content:"";flex:none;width:4px;height:4px;border-radius:1px;transform:rotate(45deg);background:linear-gradient(135deg,#FFE9B0,#D9A03A);box-shadow:0 0 5px rgba(242,184,75,.5)}',
+      '.nba-ttc.sm{display:flex;margin:2px auto 0;width:fit-content;gap:4px;font-size:9.5px;padding:0 8px 0 7px}.nba-ttc.sm::before,.nba-lead .nm .nba-ttc::before{width:3px;height:3px}',
+      '.nba-ttc.big{position:relative;gap:7px;font-size:12.5px;padding:3px 15px 3px 14px}.nba-ttc.big::before{width:5px;height:5px}',
       '.nba-ttc.big::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.26) 50%,transparent 65%);transform:translateX(-120%);animation:nba-ttc-sh 4.5s ease-in-out 1.2s infinite;pointer-events:none}@keyframes nba-ttc-sh{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}@media (prefers-reduced-motion:reduce){.nba-ttc.big::after{animation:none;display:none}}',
       '.nba-nl{display:flex;align-items:center;gap:6px;min-width:0}',
       '.nba-lead .nm .nba-ttc{margin-inline-start:6px;vertical-align:1px;font-size:9.5px;padding:0 6px}',
@@ -1936,6 +1982,42 @@
     w.appendChild(top());
     w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:70px auto 12px' }), 'جاري الانضمام للغرفة ' + (V.code || '') + '…']));
   }
+  /* ARENA-JOIN-CODE: «عندك كود غرفة؟» جوه شاشة إنشاء الغرفة — بيستخدم joinRoom نفسها بالظبط (نفس التحقق ونفس الترانزاكشن)، واجهة بس. الحالة محفوظة في V.jc (الكود) و V.jo (مفتوح/مقفول) عشان تفضل لما الشاشة تتعاد رسمها */
+  function nbzJoinStrip() {
+    var OK = /[A-HJKMNP-Z2-9]/, cells = [], i;
+    for (i = 0; i < 6; i++) cells.push(h('span', { class: 'jn-c' }));
+    var box = h('div', { class: 'nbz-jn' + (V.jo ? ' open' : '') });
+    var go = h('button', { class: 'jn-go', type: 'button', disabled: '', onclick: submit }, ['انضمام']);
+    var inp = h('input', { class: 'jn-ov', id: 'nbz-jc', 'aria-label': 'كود الغرفة (6 خانات)', autocomplete: 'off', autocapitalize: 'characters', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'go',
+      oninput: function () {
+        var v = String(inp.value).toUpperCase().split('').filter(function (ch) { return OK.test(ch); }).join('').slice(0, 6);
+        inp.value = v; V.jc = v; paint();
+      },
+      onfocus: function () { box.classList.add('foc'); paint(); },
+      onblur: function () { box.classList.remove('foc'); paint(); },
+      onclick: function () { try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) { /* ignore */ } },
+      onkeydown: function (e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } } });
+    inp.value = V.jc || '';
+    function paint() {
+      var v = V.jc || '', at = Math.min(v.length, 5);
+      cells.forEach(function (c, k) { c.textContent = v.charAt(k); c.className = 'jn-c' + (v.charAt(k) ? ' f' : '') + (k === at ? ' a' : ''); });
+      go.disabled = v.length < 6;
+    }
+    function submit() { if ((V.jc || '').length === 6) joinRoom(V.jc); }
+    var hd = h('button', { class: 'jn-hd', type: 'button', 'aria-expanded': V.jo ? 'true' : 'false', 'aria-controls': 'nbz-jb', onclick: function () {
+      V.jo = !V.jo; box.classList.toggle('open', !!V.jo); hd.setAttribute('aria-expanded', V.jo ? 'true' : 'false');
+      if (V.jo) setTimeout(function () { try { inp.focus(); } catch (e) { /* ignore */ } }, RM() ? 0 : 200);
+    } }, [
+      h('span', { class: 'jn-ic' }, [ico('<path d="M4 8a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2a2 2 0 000-4z"/><path d="M13 6v2M13 11v2M13 16v2"/>')]),
+      h('span', { class: 'jn-tx' }, [h('b', { text: 'عندك كود غرفة؟' }), h('small', { text: 'انضم لصاحبك بدل ما تنشئ غرفة' })]),
+      h('span', { class: 'jn-cv', 'aria-hidden': 'true' }, [ico('<path d="M6 9l6 6 6-6"/>')])]);
+    box.appendChild(hd);
+    box.appendChild(h('div', { class: 'jn-bd', id: 'nbz-jb' }, [h('div', { class: 'jn-in' }, [h('div', { class: 'jn-pd' }, [
+      h('div', { class: 'jn-fd' }, [h('div', { class: 'jn-cells', 'aria-hidden': 'true' }, cells), inp]), go,
+      h('div', { class: 'jn-ht', text: 'اكتب الكود أو الصقه — 6 حروف وأرقام.' })])])]));
+    paint();
+    return box;
+  }
   /* ARENA-LOBBY-X: شاشة «غرفة جديدة» بنفس لغة اللوبي — نفس الحالة (V.md / V.mx / V.sp) ونفس createRoom بالظبط، العرض بس اللي اتغيّر */
   function vCreate(w) {
     var o = V, teams = o.md === 't', mxs = teams ? [2, 4, 6] : [2, 3, 4, 5, 6];
@@ -1950,6 +2032,7 @@
     }
     var lbl = teams ? 'عدد اللاعبين (فريقين متساويين)' : 'الحد الأقصى للاعبين';
     w.appendChild(h('div', { class: 'nbz-stage cr' }, [h('div', { class: 'nbz-stars', 'aria-hidden': 'true' }), top('غرفة جديدة', function () { V = { view: 'hub' }; render(); }), nbzVista()]));
+    w.appendChild(nbzJoinStrip());
     w.appendChild(errBox());
     w.appendChild(sec('نمط اللعب', true));
     w.appendChild(h('div', { class: 'nbz-mds' }, [pk('s', 'فردي', 'كل واحد لنفسه', I.crown), pk('t', 'فريقين', 'فريقين متساويين', I.users)]));
