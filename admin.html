@@ -613,6 +613,12 @@ body[data-light] .fsa-card{background:#f3faf4}
 .fr-sum{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.7}
 .fr-exp{width:100%;margin-top:6px;padding:9px;border-radius:9px;border:1px solid var(--emerald);background:var(--approved-bg);color:var(--emerald);font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
 .fr-exp[disabled]{opacity:.6;cursor:wait}
+.ar-sum{display:flex;gap:6px;margin-bottom:8px}
+.ar-sum>div{flex:1;text-align:center;border:1px solid var(--border);border-radius:10px;padding:7px 4px;font-size:10.5px;color:var(--muted);line-height:1.5}
+.ar-sum b{display:block;font-size:19px;color:var(--emerald);font-weight:900}
+.ar-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 2px;font-size:12px;border-bottom:1px solid var(--border)}
+.ar-row:last-child{border-bottom:0}
+.ar-row b{font-weight:900}
 .fr-alt{background:transparent;border-color:var(--border-md);color:var(--muted)}
 </style>
 </head>
@@ -733,6 +739,17 @@ body[data-light] .fsa-card{background:#f3faf4}
           <button class="fr-exp" onclick="fregShare()">حفظ / مشاركة الملف</button>
           <button class="fr-exp fr-alt" onclick="fregOpen()">فتح الملف</button>
         </div>
+      </div>
+      <div class="sidebar-courses" data-atab="home" id="arena-admin-block">
+        <div class="courses-heading"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>غرف نبتيكس ارينا</div>
+        <div class="ar-sum">
+          <div><b id="ar-today">—</b>اتلعبت النهارده</div>
+          <div><b id="ar-live">—</b>لايف دلوقتي</div>
+          <div><b id="ar-total">—</b>إجمالي النهارده</div>
+        </div>
+        <div id="ar-days"><div class="fsa-empty">جاري التحميل...</div></div>
+        <div class="fr-sum" style="margin:6px 0 0">آخر 7 أيام بتوقيت القاهرة. القراءة مرة واحدة (مستند شهري + الغرف الشغّالة بس) من غير تحديث لحظي.</div>
+        <button class="fr-exp" id="ar-btn" onclick="arenaStatsLoad()">تحديث</button>
       </div>
       <div class="sidebar-courses" data-atab="profile">
         <div class="courses-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-inline-end:3px"><rect x="2.3" y="6.3" width="15.4" height="10" rx="1.6"/><path d="M7 6.3V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.3"/><path d="M2.3 11.3h15.4"/></svg> مبيعات المسوّقين بالعمولة</div>
@@ -1102,6 +1119,7 @@ auth.onAuthStateChanged(async function(user) {
   startFarmSubListeners();
   startAiSubListeners();
   startFarmsCountListener();
+  arenaStatsLoad();
 });
 
 function showAuth() {
@@ -2797,6 +2815,38 @@ function startFarmSubListeners() {
           (a.note ? '<br>ملاحظة: ' + fsubEsc(a.note) : '') + '</div>';
       }).join('');
     }, function() { document.getElementById('fsub-admin-audit').innerHTML = '<div class="fsa-empty">—</div>'; });
+}
+
+/* ── إحصائية غرف نبتيكس ارينا: arena_stats/YYYY-MM (حقل pDD لكل يوم) + الغرف الشغّالة دلوقتي — قراءة واحدة بس عند الدخول/الضغط على «تحديث» ── */
+function arCairoKey(ms) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date(ms)); }
+async function arenaStatsLoad() {
+  const btn = document.getElementById('ar-btn'), host = document.getElementById('ar-days');
+  if (!host) return;
+  if (btn) btn.disabled = true;
+  try {
+    const now = Date.now(), keys = [];
+    for (let i = 0; i < 7; i++) { const k = arCairoKey(now - i * 86400000); if (keys.indexOf(k) < 0) keys.push(k); }
+    const months = []; keys.forEach(function(k) { const m = k.slice(0, 7); if (months.indexOf(m) < 0) months.push(m); });
+    /* الغرفة الشغّالة = بدأت ولسه مفيش تسجيل لنتيجتها: LEAD 5ث + 9 فواصل × 26ث + 20ث + سماحية 1.5ث (نفس ثوابت api/arena-profile.js) */
+    const since = firebase.firestore.Timestamp.fromMillis(now - (5000 + 9 * 26000 + 20000 + 1500));
+    const res = await Promise.all(months.map(function(m) { return db.collection('arena_stats').doc(m).get(); }).concat([db.collection('arena_rooms').where('t0', '>', since).limit(50).get()]));
+    const live = res[res.length - 1], docs = {};
+    months.forEach(function(m, i) { docs[m] = res[i].exists ? res[i].data() : {}; });
+    const cnt = function(k) { return (docs[k.slice(0, 7)] || {})['p' + k.slice(8, 10)] | 0; };
+    let liveN = 0; live.forEach(function(d) { if ((d.data() || {}).st === 'play') liveN++; });
+    const today = cnt(keys[0]);
+    document.getElementById('ar-today').textContent = today;
+    document.getElementById('ar-live').textContent = liveN + (live.size >= 50 ? '+' : '');
+    document.getElementById('ar-total').textContent = today + liveN;
+    let sum = 0;
+    host.innerHTML = keys.map(function(k, i) {
+      const n = cnt(k); sum += n;
+      const lbl = i === 0 ? 'النهارده' : i === 1 ? 'امبارح' : new Date(k + 'T12:00:00Z').toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
+      return '<div class="ar-row"><span>' + lbl + '</span><b>' + n + '</b></div>';
+    }).join('') + '<div class="ar-row"><span>مجموع آخر 7 أيام</span><b>' + sum + '</b></div>';
+  } catch (e) {
+    host.innerHTML = '<div class="fsa-empty">تعذّر التحميل: ' + String(e && e.message || e).replace(/[<>&]/g, ' ') + ' (تأكد من نشر firestore.rules الجديدة)</div>';
+  } finally { if (btn) btn.disabled = false; }
 }
 
 /* ── عدد المزارع المسجّلة في نظام إدارة المزرعة ── */

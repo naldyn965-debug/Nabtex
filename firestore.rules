@@ -775,7 +775,7 @@ service cloud.firestore {
 
     match /arena_rooms/{rid} {
       allow get: if isAuth();
-      allow list: if isAuth() && resource.data.host == request.auth.uid;   // تنضيف غرف المضيف نفسه بس
+      allow list: if (isAuth() && resource.data.host == request.auth.uid) || isAdmin();   // تنضيف غرف المضيف نفسه بس + الأدمن (عدّاد الغرف الشغّالة في admin.html)
       allow create: if arRoomCreate(rid);
       allow update: if arRoomStart() || arRoomReady(rid) || arRoomJoin(rid) || arRoomLeave(rid) || arRoomSwitch(rid) || arRoomHost(rid);
       allow delete: if isAuth() && (resource.data.host == request.auth.uid || request.time > resource.data.exp);
@@ -827,6 +827,11 @@ service cloud.firestore {
     }
     match /arena_results/{mid} {
       allow read, write: if false;
+    }
+    // arena_stats/{YYYY-MM}: عدّاد الغرف اللي اتلعبت لكل يوم (حقل pDD) — بيكتبه الخادم بس (Admin SDK) من api/arena-profile.js، والأدمن بس يقراه (admin.html). للتراجع: امسح الكتلة دي.
+    match /arena_stats/{m} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // ── ARENA REMATCH (إعادة المباراة) — arena.js ─────────────────────────────────────────────────────────────
