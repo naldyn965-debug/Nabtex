@@ -834,6 +834,10 @@
       '.nbz-sum{margin-bottom:10px;text-align:center;font-size:12.5px;font-weight:700;color:#A9C0B2}',
       '.nbz-bar .nbz-play{margin-top:0}',
       '.nbz-play[disabled]{cursor:default;filter:grayscale(.7) brightness(.72)}.nbz-play[disabled]::before,.nbz-play[disabled] .gl{display:none}',
+      /* ── مسافات زرار الإجراء الرئيسي (إنشاء الغرفة / العب الآن / ابدأ): العنوان والسطر الصغير كانوا لازقين في بعض ── */
+      '.nbz-play{gap:16px;min-height:74px;padding:12px 16px}',
+      '.nbz-play .tx b{line-height:1.35;margin-bottom:4px}',
+      '.nbz-play .tx small{letter-spacing:.24em;margin-right:-.24em;opacity:.72}',
       '.nbz-lb .nbz-vista{height:clamp(140px,18vh,172px);height:clamp(140px,18dvh,172px)}',
       '.nbz-lb .nbx-tk{position:relative;z-index:3;margin:-26px 0 6px;border:0;border-radius:24px;background:radial-gradient(120% 90% at 50% 0,rgba(43,217,138,.17),transparent 62%),linear-gradient(180deg,#14301F,#0B1A12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 22px 38px -16px rgba(0,0,0,.85)}',
       '.nbz-lb .nbx-tk .a{padding:16px 18px 2px}',
@@ -963,6 +967,21 @@
       '.nbz-gm .nba-stat b{color:#7CF0B6}.nbz-gm .nba-stat.g b{color:#FFD98A}',
       '.nbz-gm .nba-tvs .t{border:0;border-radius:18px;background:linear-gradient(180deg,rgba(43,217,138,.17),rgba(43,217,138,.04))}.nbz-gm .nba-tvs .t.b{background:linear-gradient(180deg,rgba(242,184,75,.18),rgba(242,184,75,.04))}',
       '.nbz-gm .nba-pod .st::before{background:linear-gradient(180deg,#1FB872,#0E2A1D)}.nbz-gm .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFE29A,#D99A2B)}',
+      /* ── البوديوم: تاج فعلي + مراكز أنيقة (تنسيق فقط) ── */
+      '.nba-card:has(>.nba-pod){padding-top:48px!important}',
+      '.nba-pod{position:relative}',
+      '.nba-pod::after{content:\"\";position:absolute;left:4%;right:4%;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent)}',
+      '.nba-pod>div{max-width:128px;gap:8px}',
+      '.nba-pod .st{border-radius:16px 16px 0 0;place-items:start center;padding-top:13px;font-size:22px}',
+      '.nba-root .nba-card .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFE9A8 0,#F2B84B 40%,rgba(185,128,31,.45) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 0 0 1px rgba(255,226,154,.35)}',
+      '.nba-root .nba-card .nba-pod .p2 .st::before{background:linear-gradient(180deg,rgba(130,245,185,.42),rgba(61,220,132,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(122,240,174,.25)}',
+      '.nba-root .nba-card .nba-pod .p3 .st::before{opacity:1;background:linear-gradient(180deg,rgba(236,160,100,.42),rgba(236,160,100,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 0 0 1px rgba(236,160,100,.26)}',
+      '.nba-pod .p2 .st,.nba-pod .p3 .st{color:#EAF8F0}',
+      '.nba-pod .p1 .st{filter:drop-shadow(0 -8px 20px rgba(245,184,61,.2))}',
+      '.nba-pod .st::after{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:900 46px/1 var(--f-ui,Cairo,sans-serif);opacity:.13;pointer-events:none}.nba-pod .p1 .st::after{content:\"1\"}.nba-pod .p2 .st::after{content:\"2\"}.nba-pod .p3 .st::after{content:\"3\"}',
+      '.nba-pod .cr{top:-31px;filter:drop-shadow(0 2px 10px rgba(245,184,61,.42)) drop-shadow(0 1px 0 rgba(0,0,0,.4))}.nba-pod .cr svg{display:block;width:46px;height:auto}',
+      '.nba-pod .cr .sp{transform-box:fill-box;transform-origin:center;animation:nbzTw 2.8s ease-in-out infinite}@keyframes nbzTw{0%,100%{opacity:.2;transform:scale(.55)}50%{opacity:1;transform:scale(1)}}',
+      '@media (prefers-reduced-motion:reduce){.nba-pod .cr,.nba-pod .cr .sp{animation:none}}',
       '.nbz-gm .nba-btn{border-radius:16px}',
       /* ── الملف الشخصي ── */
       '.nba-pf{--brand:#2BD98A;--brand-l:#7CF0B6;--brand-d:#157A3D;--gold:#F2B84B;--gold-l:#FFD98A;--gold-pale:rgba(242,184,75,.13);--muted:#8FA99A;--slate:#A9BCB0;--ink2:#CFE0D6;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.12);background:rgba(2,8,5,.8)}',
@@ -1982,6 +2001,25 @@
     w.appendChild(top());
     w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:70px auto 12px' }), 'جاري الانضمام للغرفة ' + (V.code || '') + '…']));
   }
+  /* ARENA-CROWN: تاج الفائز في البوديوم — SVG مفصّل (ذهب متدرّج + أوجه + أحجار) بدل الأيقونة الخطية. عرض بس */
+  function nbzCrown() {
+    var G = 'stroke="#8A5410" stroke-linejoin="round"', d = h('span', { class: 'cr', 'aria-hidden': 'true' });
+    d.innerHTML = ['<svg viewBox="-1 0 66 48" xmlns="http://www.w3.org/2000/svg" focusable="false">',
+      '<defs><linearGradient id="nbzCg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1BF"/><stop offset=".45" stop-color="#F4BE50"/><stop offset="1" stop-color="#B9791A"/></linearGradient>',
+      '<linearGradient id="nbzCb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9D77C"/><stop offset="1" stop-color="#9A5F10"/></linearGradient>',
+      '<radialGradient id="nbzCe" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#A8FFD6"/><stop offset="1" stop-color="#0F8F57"/></radialGradient></defs>',
+      '<path d="M9 38 4 15l16 12L32 9l12 18 16-12-5 23z" fill="url(#nbzCg)" ' + G + ' stroke-width="1.3"/>',
+      '<path d="M32 9l12 18 16-12-5 23H32z" fill="#7A4708" opacity=".2"/>',
+      '<path d="M32 9l3 18-3 11-3-11z" fill="#fff" opacity=".32"/>',
+      '<path d="M20 27l4 11M44 27l-4 11" fill="none" stroke="#8A5410" stroke-width=".9" opacity=".45"/>',
+      '<rect x="8" y="37" width="48" height="8" rx="2.5" fill="url(#nbzCb)" ' + G + ' stroke-width="1.2"/>',
+      '<rect x="9.5" y="38.2" width="45" height="1.5" rx=".75" fill="#fff" opacity=".45"/>',
+      '<circle cx="4" cy="13" r="3.3" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/><circle cx="32" cy="6.5" r="4.2" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/><circle cx="60" cy="13" r="3.3" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/>',
+      '<circle cx="3.2" cy="12" r="1" fill="#fff" opacity=".8"/><circle cx="31" cy="5.2" r="1.3" fill="#fff" opacity=".8"/><circle cx="59.2" cy="12" r="1" fill="#fff" opacity=".8"/>',
+      '<circle cx="32" cy="41" r="2.5" fill="url(#nbzCe)" stroke="#8A5410" stroke-width=".8"/><circle cx="20" cy="41" r="1.6" fill="#FFF1BF" stroke="#8A5410" stroke-width=".6"/><circle cx="44" cy="41" r="1.6" fill="#FFF1BF" stroke="#8A5410" stroke-width=".6"/>',
+      '<path class="sp" d="M52 3l1.2 3.8L57 8l-3.8 1.2L52 13l-1.2-3.8L47 8l3.8-1.2z" fill="#FFF6D6"/></svg>'].join('');
+    return d;
+  }
   /* ARENA-JOIN-CODE: «عندك كود غرفة؟» جوه شاشة إنشاء الغرفة — بيستخدم joinRoom نفسها بالظبط (نفس التحقق ونفس الترانزاكشن)، واجهة بس. الحالة محفوظة في V.jc (الكود) و V.jo (مفتوح/مقفول) عشان تفضل لما الشاشة تتعاد رسمها */
   function nbzJoinStrip() {
     var OK = /[A-HJKMNP-Z2-9]/, cells = [], i;
@@ -2482,7 +2520,7 @@
         h('div', { class: 'nba-tbar' }, [h('i', { style: '--p:' + Math.round(tt[0] / tot * 100) + '%' })])]));
     } else if (order.length >= 2) {
       var pod = h('div', { class: 'nba-pod' });
-      [1, 0, 2].forEach(function (pi) { var u = order[pi]; if (!u) return; pod.appendChild(h('div', { class: 'p' + (pi + 1) }, [pi === 0 ? h('span', { class: 'cr' }, [ico(I.crown)]) : null, avatar(u, S.players[u], pi === 0 ? 54 : 44), h('small', { text: S.players[u].n }), h('div', { class: 'st' }, [h('span', { text: String(t[u]) })])])); });
+      [1, 0, 2].forEach(function (pi) { var u = order[pi]; if (!u) return; pod.appendChild(h('div', { class: 'p' + (pi + 1) }, [pi === 0 ? nbzCrown() : null, avatar(u, S.players[u], pi === 0 ? 54 : 44), h('small', { text: S.players[u].n }), h('div', { class: 'st' }, [h('span', { text: String(t[u]) })])])); });
       w.appendChild(h('div', { class: 'nba-card', style: 'padding-top:30px' }, [pod]));
     }
     var ms = stats(S.uid), st = function (v, lb, fmt, g, n) { var b = h('b', { text: '0' }); countUp(b, 0, v, 900, fmt); return h('div', { class: 'nba-stat' + (g ? ' g' : ''), style: '--dl:' + (n * 90 + 200) + 'ms' }, [b, h('span', { text: lb })]); };
