@@ -921,6 +921,12 @@
       '.nbz-gm .nba-pips i.cur{background:var(--tc,#7CF0B6);box-shadow:0 0 10px var(--tc,#7CF0B6)}',
       '.nbz-gm .nba-qn b{font-size:32px}',
       '.nbz-tc{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 9px;border-radius:99px;background:var(--ta);color:var(--tc);font-size:12px;font-weight:800}.nbz-tc .nba-ico{width:14px;height:14px}',
+      /* ── شارة الجولة · الصعوبة: بريميوم (تنسيق + تقسيم النص لأجزاء) ── */
+      '.nba-qn .nbz-tc{display:inline-flex;align-items:center;gap:9px;padding:3px 4px 3px 14px;border:1px solid transparent;border-radius:99px;font-size:12.5px;font-weight:800;color:#EAF4EE;background:linear-gradient(180deg,#15211A,#0C1510) padding-box,linear-gradient(135deg,var(--tc),rgba(255,255,255,.1) 52%,var(--tc)) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 18px -10px var(--tc)}',
+      '.nba-qn .nbz-tc .ti{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;color:#04140A;background:var(--tc);box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}.nba-qn .nbz-tc .ti .nba-ico{width:13px;height:13px}',
+      '.nba-qn .nbz-tc .rl{color:#EAF4EE}',
+      '.nba-qn .nbz-tc i{flex:none;width:1px;height:12px;background:rgba(255,255,255,.2)}',
+      '.nba-qn .nbz-tc .df{color:var(--tc)}',
       '.nbz-gm .nba-ring circle{stroke-width:4}',
       '.nbz-gm .nba-ring .fg{stroke:#2BD98A}',
       '.nbz-gm .nba-ring{filter:drop-shadow(0 0 8px rgba(43,217,138,.3))}',
@@ -2463,7 +2469,7 @@
     var ring = h('div', { class: 'nba-ring', role: 'timer' }), num = h('span', { class: 'n' }), fg;
     ring.innerHTML = '<svg viewBox="0 0 56 56" aria-hidden="true"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22"/></svg>';
     fg = ring.querySelector('.fg'); ring.appendChild(num);
-    w.appendChild(h('div', { class: 'nba-qh' }, [h('div', { class: 'nba-qn' }, [h('b', { text: String(i + 1) }), h('span', { text: '/ ' + NQ }), q ? h('span', { class: 'nbz-tc' }, [ico(T.ic), nbzRdLabel(rd) + ' · ' + (DIFF[q.d] || '')]) : null]), ring]));
+    w.appendChild(h('div', { class: 'nba-qh' }, [h('div', { class: 'nba-qn' }, [h('b', { text: String(i + 1) }), h('span', { text: '/ ' + NQ }), q ? h('span', { class: 'nbz-tc' }, [h('span', { class: 'ti' }, [ico(T.ic)]), h('span', { class: 'rl', text: nbzRdLabel(rd) }), h('i', { 'aria-hidden': 'true' }), h('span', { class: 'df', text: DIFF[q.d] || '' })]) : null]), ring]));
     if (!q) { w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:44px auto 12px' }), 'جاري تحميل السؤال…'])); }
     else {
       w.appendChild(h('div', { class: 'nba-qcard' + (fresh ? ' in' : '') }, [h('div', { class: 'nba-q', text: q.q })]));
