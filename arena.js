@@ -88,7 +88,53 @@
       v.gain.setValueAtTime(0.0001, s); v.gain.exponentialRampToValueAtTime(g || 0.2, s + 0.012); v.gain.exponentialRampToValueAtTime(0.0001, s + d);
       o.connect(v); v.connect(mg); o.start(s); o.stop(s + d + 0.05);
     }
+    /* ARENA-CROWD: صوت جمهور مُولَّد بالكامل بـ WebAudio (هدير + تصفيق + هتاف + صفارة) — مفيش ملفات صوت، ومحترم لزرار الصوت ومستواه */
+    var nzb = null;
+    function noiseBuf() {
+      if (nzb && nzb.sampleRate === ctx.sampleRate) return nzb;
+      var n = Math.floor(ctx.sampleRate * 2), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+      for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      nzb = b; return b;
+    }
+    function crowd(big) {
+      if (!ctx || !on || vol <= 0 || ctx.state !== 'running') return;
+      var T = big ? 5.2 : 3.2, now = ctx.currentTime + 0.02, buf = noiseBuf(), bus = ctx.createGain(), lp = ctx.createBiquadFilter(), i;
+      lp.type = 'lowpass'; lp.frequency.value = 7500; bus.gain.value = big ? 0.9 : 0.75; bus.connect(lp); lp.connect(mg);
+      /* هدير الجمهور */
+      var bs = ctx.createBufferSource(), bb = ctx.createBiquadFilter(), bg = ctx.createGain(), pk = big ? 1 : 0.7;
+      bs.buffer = buf; bs.loop = true; bb.type = 'bandpass'; bb.frequency.value = 850; bb.Q.value = 0.55;
+      bg.gain.setValueAtTime(0, now); bg.gain.linearRampToValueAtTime(pk, now + 0.6); bg.gain.linearRampToValueAtTime(pk * 0.8, now + T * 0.55); bg.gain.linearRampToValueAtTime(0, now + T);
+      bs.connect(bb); bb.connect(bg); bg.connect(bus); bs.start(now); bs.stop(now + T + 0.1);
+      /* تصفيق: نبضات قصيرة عشوائية بكثافة بتعلى وتهدى */
+      var nc = big ? 190 : 110;
+      for (i = 0; i < nc; i++) {
+        var at = now + 0.05 + (T - 0.4) * (Math.random() + Math.random()) / 2, cs = ctx.createBufferSource(), cf = ctx.createBiquadFilter(), cg = ctx.createGain(),
+          a = (0.25 + Math.random() * 0.55) * 0.5, d = 0.03 + Math.random() * 0.03;
+        cs.buffer = buf; cf.type = 'bandpass'; cf.frequency.value = 1200 + Math.random() * 2800; cf.Q.value = 0.9;
+        cg.gain.setValueAtTime(0.0001, at); cg.gain.exponentialRampToValueAtTime(a, at + 0.003); cg.gain.exponentialRampToValueAtTime(0.0001, at + d);
+        cs.connect(cf); cf.connect(cg); cg.connect(bus); cs.start(at, Math.random() * 1.8, d + 0.02);
+      }
+      if (!big) return;
+      /* هتاف «أووو/آآآ» — كذا صوت بدرجات مختلفة */
+      [[0.05, 240, 1.3], [0.2, 300, 1.1], [0.4, 380, 1.4], [0.65, 440, 1.0], [0.95, 520, 1.2], [1.3, 290, 1.5]].forEach(function (v) {
+        var s0 = now + v[0], f0 = v[1], du = v[2], o = ctx.createOscillator(), lf = ctx.createOscillator(), lg = ctx.createGain(),
+          a1 = ctx.createBiquadFilter(), a2 = ctx.createBiquadFilter(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(f0, s0); o.frequency.linearRampToValueAtTime(f0 * 1.45, s0 + du * 0.35); o.frequency.linearRampToValueAtTime(f0 * 0.95, s0 + du);
+        lf.frequency.value = 5.5; lg.gain.value = 6; lf.connect(lg); lg.connect(o.frequency);
+        a1.type = 'bandpass'; a1.frequency.value = 700; a1.Q.value = 5; a2.type = 'bandpass'; a2.frequency.value = 1150; a2.Q.value = 6;
+        g.gain.setValueAtTime(0, s0); g.gain.linearRampToValueAtTime(0.22, s0 + 0.12); g.gain.linearRampToValueAtTime(0.154, s0 + du * 0.6); g.gain.linearRampToValueAtTime(0, s0 + du);
+        o.connect(a1); o.connect(a2); a1.connect(g); a2.connect(g); g.connect(bus);
+        o.start(s0); lf.start(s0); o.stop(s0 + du + 0.05); lf.stop(s0 + du + 0.05);
+      });
+      /* صفارة ملعب قصيرة */
+      var ws = now + 0.7, wo = ctx.createOscillator(), wl = ctx.createOscillator(), wlg = ctx.createGain(), wg = ctx.createGain();
+      wo.type = 'sine'; wo.frequency.setValueAtTime(2500, ws); wo.frequency.linearRampToValueAtTime(3300, ws + 0.25); wo.frequency.linearRampToValueAtTime(2900, ws + 0.6);
+      wl.frequency.value = 18; wlg.gain.value = 90; wl.connect(wlg); wlg.connect(wo.frequency);
+      wg.gain.setValueAtTime(0, ws); wg.gain.linearRampToValueAtTime(0.05, ws + 0.03); wg.gain.linearRampToValueAtTime(0.04, ws + 0.45); wg.gain.linearRampToValueAtTime(0, ws + 0.6);
+      wo.connect(wg); wg.connect(bus); wo.start(ws); wl.start(ws); wo.stop(ws + 0.65); wl.stop(ws + 0.65);
+    }
     var fx = {
+      crowd: function (big) { crowd(!!big); },
       ui: function () { t(640, 0, 0.05, 'triangle', 0.12); },
       pop: function () { t(440, 0, 0.1, 'sine', 0.2, 880); t(1320, 0.07, 0.08, 'sine', 0.08); },
       pick: function () { t(700, 0, 0.08, 'triangle', 0.22, 1000); t(180, 0, 0.09, 'sine', 0.2); },
@@ -215,6 +261,13 @@
     for (var i = 0; i < n; i++) c.appendChild(h('i', { style: '--x:' + (Math.random() * 100).toFixed(1) + '%;--w:' + (6 + Math.random() * 6).toFixed(1) + 'px;--c:' + cols[i % cols.length] + ';--t:' + (2.6 + Math.random() * 2).toFixed(2) + 's;--d:' + (Math.random() * 0.9).toFixed(2) + 's;--dx:' + Math.round(Math.random() * 160 - 80) + 'px;--r:' + Math.round(360 + Math.random() * 720) + 'deg' }));
     root.appendChild(c); setTimeout(function () { c.remove(); }, 6500);
   }
+  /* ARENA-PODIUM: رقم نقاط البوديوم بيعدّ من صفر لحد قيمته بعد ما العمود يطلع (نفس countUp الموجودة) */
+  function podScore(v, pi) {
+    v = Math.max(0, Math.round(Number(v) || 0));
+    var sp = h('span', { text: RM() ? String(v) : '0' });
+    if (!RM()) setTimeout(function () { countUp(sp, 0, v, 1000, String); }, [1150, 800, 500][pi] || 500);
+    return sp;
+  }
   function countUp(el, from, to, ms, fmt) {
     fmt = fmt || String;
     if (RM() || from === to) { el.textContent = fmt(to); return; }
@@ -274,7 +327,7 @@
       '.nba-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border:0;border-radius:var(--r3);padding:13px 16px;font:800 15px var(--f-ui,Cairo,sans-serif);cursor:pointer;color:#04140a;background:linear-gradient(135deg,var(--brand-l),var(--brand) 55%,#22b868);box-shadow:0 8px 22px rgba(61,220,132,.28),inset 0 1px 0 rgba(255,255,255,.45);transition:transform .15s,box-shadow .2s,filter .2s,opacity .2s}',
       '.nba-btn:active{transform:scale(.97)}.nba-btn[disabled]{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.35)}',
       '.nba-btn.sec{background:rgba(255,255,255,.05);color:var(--ink);border:1.5px solid var(--line2);box-shadow:none}',
-      '.nba-btn.gold{color:#2a1a00;background:linear-gradient(135deg,var(--gold-l),var(--gold) 60%,#e09a1c);box-shadow:0 8px 26px rgba(245,184,61,.32),inset 0 1px 0 rgba(255,255,255,.5);font-size:16.5px;min-height:58px}',
+      '.nba-btn.gold{color:#2a1a00;background:linear-gradient(135deg,var(--gold-l),var(--gold) 60%,#f7c04a);box-shadow:0 8px 26px rgba(245,184,61,.32),inset 0 1px 0 rgba(255,255,255,.5);font-size:16.5px;min-height:58px}',
       '.nba-btn.gold:not([disabled]){animation:nbaGlow 2.2s ease-in-out infinite}',
       '.nba-btn.gold:not([disabled])::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:nbaShine 3s ease-in-out infinite}',
       '.nba-btn.sm{width:auto;min-height:42px;padding:8px 14px;font-size:13px;border-radius:var(--r2)}',
@@ -646,7 +699,7 @@
       '.nbz-rg circle{fill:none;stroke-width:2.6}.nbz-rg .t{stroke:rgba(255,255,255,.13)}',
       '.nbz-rg .v{stroke:#F2B84B;stroke-linecap:round;transition:stroke-dasharray 1s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 3px rgba(242,184,75,.55))}',
       '.nbz-av .nba-av{width:50px!important;height:50px!important;box-shadow:0 0 0 2px #07120B,0 6px 14px rgba(0,0,0,.5)}',
-      '.nbz-lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);padding:1px 8px;border-radius:9px;background:linear-gradient(180deg,#F8D27A,#C98A24);color:#2A1B03;font:900 10.5px/1.55 var(--f-ui,Cairo,sans-serif);letter-spacing:.06em;white-space:nowrap;direction:ltr;box-shadow:0 2px 6px rgba(0,0,0,.55)}',
+      '.nbz-lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);padding:1px 8px;border-radius:9px;background:linear-gradient(180deg,#FFE29A,#F5BF47);color:#2A1B03;font:900 10.5px/1.55 var(--f-ui,Cairo,sans-serif);letter-spacing:.06em;white-space:nowrap;direction:ltr;box-shadow:0 2px 6px rgba(0,0,0,.55)}',
       '.nbz-lv[hidden]{display:none}',
       '.nbz-pt{flex:1;min-width:0}',
       '.nbz-nm{font-size:17px;font-weight:900;line-height:1.3;color:#F2F8F4;text-shadow:0 1px 10px rgba(0,0,0,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
@@ -685,7 +738,7 @@
       '.nbz-rs{display:flex;align-items:center;gap:10px;margin-top:6px;padding:12px 14px;border-radius:18px;background:linear-gradient(90deg,rgba(242,184,75,.05),rgba(242,184,75,.15));box-shadow:inset 3px 0 0 #F2B84B}',
       '.nbz-rs .tt{flex:1;min-width:0}.nbz-rs small{display:block;font-size:12px;font-weight:700;color:#C9B27A}',
       '.nbz-rs b{display:block;font:800 17px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.2em;color:#FFE7B0;direction:ltr;text-align:right}',
-      '.nbz-b{flex:none;border:0;border-radius:12px;min-height:40px;padding:0 14px;font:800 13px var(--f-ui,Cairo,sans-serif);color:#2A1B03;cursor:pointer;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}',
+      '.nbz-b{flex:none;border:0;border-radius:12px;min-height:40px;padding:0 14px;font:800 13px var(--f-ui,Cairo,sans-serif);color:#2A1B03;cursor:pointer;background:linear-gradient(180deg,#FFE9A8,#FFD56A 60%,#F5BF47);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}',
       '.nbz-b:active{transform:scale(.96)}',
       '.nbz-gh{flex:none;border:0;background:none;color:#98B0A2;font:700 13px var(--f-ui,Cairo,sans-serif);min-height:40px;padding:0 6px;cursor:pointer}',
       /* ── عناوين الأقسام ── */
@@ -721,17 +774,17 @@
       '.nbz .nbq-r.rd::before{background:#F2B84B;opacity:1;box-shadow:0 0 12px rgba(242,184,75,.65)}',
       '.nbz .nbq-r.cl{opacity:.7}',
       '.nbz .nbq-i{width:46px;height:52px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1F5E3C,#0E2A1D);color:#7CF0B6}',
-      '.nbz .nbq-r.rd .nbq-i{background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03}',
+      '.nbz .nbq-r.rd .nbq-i{background:linear-gradient(160deg,#FFE29A,#F5BF47);color:#2A1B03}',
       '.nbz .nbq-r.cl .nbq-i{background:linear-gradient(160deg,#35E597,#168A57);color:#04140A}',
       '.nbz .nbq-t b{font-size:14px;font-weight:800;color:#EAF4EE}',
       '.nbz .nbq-t em{color:#9DB7A8}',
       '.nbz .nbq-r.cl .nbq-t b{color:#B4CABD}',
       '.nbz .nbq-pb{height:8px;border-radius:8px;background:rgba(0,0,0,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);overflow:hidden}',
       '.nbz .nbq-pb i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#1FB872,#7CF0B6);box-shadow:0 0 10px rgba(43,217,138,.5);transition:width .7s cubic-bezier(.2,.8,.2,1)}',
-      '.nbz .nbq-r.rd .nbq-pb i{background:linear-gradient(90deg,#D99A2B,#FFE29A);box-shadow:0 0 10px rgba(242,184,75,.55)}',
+      '.nbz .nbq-r.rd .nbq-pb i{background:linear-gradient(90deg,#F5BF47,#FFE9A8);box-shadow:0 0 10px rgba(242,184,75,.55)}',
       '.nbz .nbq-rw{display:inline-flex;align-items:center;gap:7px;direction:ltr;unicode-bidi:isolate;border:0;background:rgba(242,184,75,.11);color:#FFD98A;padding:5px 11px;font-size:12px;font-weight:800}',
-      '.nbz .nbq-rw::before{content:"";width:8px;height:8px;border-radius:1.5px;background:linear-gradient(135deg,#FFE7A8,#D9962A);transform:rotate(45deg);box-shadow:0 0 8px rgba(242,184,75,.7)}',
-      '.nbz .nbq-bt{position:relative;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 58%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(242,184,75,.28)}',
+      '.nbz .nbq-rw::before{content:"";width:8px;height:8px;border-radius:1.5px;background:linear-gradient(135deg,#FFF0C0,#F5BF47);transform:rotate(45deg);box-shadow:0 0 8px rgba(242,184,75,.7)}',
+      '.nbz .nbq-bt{position:relative;color:#2A1B03;background:linear-gradient(180deg,#FFE9A8,#FFD56A 58%,#F5BF47);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(242,184,75,.28)}',
       '.nbz .nbq-bt::after{content:"";position:absolute;left:-4px;right:-4px;top:-4px;bottom:-4px;border-radius:99px;border:2px solid rgba(242,184,75,.55);opacity:0;pointer-events:none;animation:nbzAura 1.9s ease-out infinite}',
       '.nbz .nbq-bt[disabled]::after{display:none}',
       '.nbz .nbq-dn{background:none;border:0;padding:0;color:#7CF0B6;font-size:12.5px;font-weight:800}',
@@ -764,7 +817,7 @@
       '.nbz-jg input{flex:1;min-width:0;border:0;outline:0;background:none;padding:0 10px;color:#FFE7B0;font:800 21px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;text-align:center;text-transform:uppercase;direction:ltr}',
       '.nbz-jg input::placeholder{color:#4F6B5C;opacity:1}',
       '.nbz-jg button{flex:none;min-width:104px;border:0;background:rgba(255,255,255,.05);color:#7F9A8B;font:800 15px var(--f-ui,Cairo,sans-serif);cursor:not-allowed;transition:background .2s,color .2s}',
-      '.nbz-jg button:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);animation:nbxPop .3s ease-out}',
+      '.nbz-jg button:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE9A8,#FFD56A 60%,#F5BF47);animation:nbxPop .3s ease-out}',
       '.nbz-gate .nbx-fh,.nbz-gate .nbx-er{margin-top:9px}',
       /* ── حركة الدخول + الحركات ── */
       '.nbz-h,.nbz-p,.nbz-play,.nbz-info{animation:nbzUp .7s cubic-bezier(.2,.8,.2,1) both}',
@@ -795,7 +848,7 @@
       '.nbz-pk:active,.nbz-sc:active,.nbz-sn:active{transform:scale(.96)}',
       '.nbz-seats{display:flex;justify-content:center;gap:8px}',
       '.nbz-sn{flex:1;min-width:0;max-width:92px;height:58px;border:0;cursor:pointer;color:#CFE0D6;font:900 20px var(--f-ui,Cairo,sans-serif);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1B3D29,#0E2016);transition:transform .2s,background .2s,color .2s}',
-      '.nbz-sn.on{color:#2A1B03;background:linear-gradient(160deg,#FFE29A,#F2B84B 60%,#C98A24);transform:scale(1.08)}',
+      '.nbz-sn.on{color:#2A1B03;background:linear-gradient(160deg,#FFE9A8,#FFD56A 60%,#F5BF47);transform:scale(1.08)}',
       '.nbz-sp{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
       '.nbz-sp>.nbz-sc:last-child:nth-child(odd){grid-column:1/-1}',
       '.nbz-sc{position:relative;display:flex;align-items:center;gap:10px;min-height:68px;padding:10px;border:0;border-radius:18px;text-align:right;color:#EAF4EE;font:inherit;cursor:pointer;background:radial-gradient(90% 130% at 100% 50%,hsl(var(--h) 55% 30%/.5),transparent 72%),linear-gradient(180deg,#12281C,#0A1710);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transition:transform .2s,box-shadow .25s}',
@@ -826,7 +879,7 @@
       '.nbz-jn.foc .jn-c.a:empty::after{content:\"\";width:2px;height:24px;border-radius:1px;background:#F2B84B;animation:nbzJcb 1s steps(1) infinite}@keyframes nbzJcb{50%{opacity:0}}',
       '.nbz-jn .jn-ov{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;background:none;color:transparent;caret-color:transparent;font-size:16px;direction:ltr;cursor:text}',
       '.nbz-jn .jn-go{display:block;width:100%;min-height:52px;margin-top:12px;border:0;border-radius:16px;font:800 15px var(--f-ui,Cairo,sans-serif);color:#7F9A8B;background:rgba(255,255,255,.05);cursor:not-allowed;transition:background .2s,color .2s}',
-      '.nbz-jn .jn-go:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 60%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 20px -10px rgba(242,184,75,.55)}.nbz-jn .jn-go:not([disabled]):active{filter:brightness(.95)}',
+      '.nbz-jn .jn-go:not([disabled]){cursor:pointer;color:#2A1B03;background:linear-gradient(180deg,#FFE9A8,#FFD56A 60%,#F5BF47);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 20px -10px rgba(242,184,75,.55)}.nbz-jn .jn-go:not([disabled]):active{filter:brightness(.95)}',
       '.nbz-jn .jn-ht{margin-top:10px;text-align:center;font-size:12px;font-weight:600;color:#8FA99A}',
       '.nbz-cr .nbz-jn+.nbz-st.f{margin-top:22px}',
       '@media (prefers-reduced-motion:reduce){.nbz-jn,.nbz-jn .jn-bd,.nbz-jn .jn-cv,.nbz-jn .jn-c{transition:none}.nbz-jn.foc .jn-c.a:empty::after{animation:none}}',
@@ -876,7 +929,7 @@
       '.nbz-lb .nbx-seats .nba-row.host:not(.em){background:linear-gradient(180deg,rgba(242,184,75,.09),rgba(242,184,75,.025));box-shadow:inset 0 0 0 1px rgba(242,184,75,.28),inset 0 1px 0 rgba(255,255,255,.05)}',
       '.nbz-lb .nbx-seats .nba-row[role=button]:active{filter:brightness(1.1)}',
       '.nbz-lb .nbx-seats .nba-av{width:46px!important;height:46px!important;box-shadow:0 0 0 2px #101B15,0 0 0 3.5px var(--c,#2BD98A)}',
-      '.nbz-lb .nbx-seats .nba-hc{box-sizing:border-box;top:-4px;right:-4px;width:18px;height:18px;background:linear-gradient(145deg,#F8D27A,#D9A03A);color:#3A2400;border:2px solid #101B15;box-shadow:none}',
+      '.nbz-lb .nbx-seats .nba-hc{box-sizing:border-box;top:-4px;right:-4px;width:18px;height:18px;background:linear-gradient(145deg,#FFE29A,#F5BF47);color:#3A2400;border:2px solid #101B15;box-shadow:none}',
       '.nbz-lb .nbx-seats .nba-hc .nba-ico{width:9px;height:9px}',
       '.nbz-lb .nbx-seats .nba-dot{width:11px;height:11px;bottom:1px;left:1px;border:2px solid #101B15}',
       '.nbz-lb .nbx-seats .nba-dot.on{box-shadow:0 0 8px rgba(61,220,132,.55)}',
@@ -894,7 +947,7 @@
       '.nbz-lb .nba-team .nba-row{border:0;border-radius:14px;background:rgba(0,0,0,.24)}',
       '.nbz-lb .nba-team .nba-row.em{background:none;border:1.5px dashed rgba(255,255,255,.12)}',
       '.nbz-lb .nba-team h4{font-size:14.5px}',
-      '.nbz-lb .nba-teams{gap:22px}.nbz-lb .nba-vs{width:40px;height:46px;font-size:12px;border:0;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03;box-shadow:none}',
+      '.nbz-lb .nba-teams{gap:22px}.nbz-lb .nba-vs{width:40px;height:46px;font-size:12px;border:0;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#FFE29A,#F5BF47);color:#2A1B03;box-shadow:none}',
       '.nbz-lb .nbx-why{margin:10px 0 0;font-size:12.5px;color:#A9C0B2;line-height:1.7}',
       '.nbz-lb .nbz-bar{margin-top:14px}',
       '.nbz-wait{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 8px;padding:14px;border-radius:18px;background:rgba(255,255,255,.05);color:#CFE0D6;font-weight:700}',
@@ -910,7 +963,7 @@
       '.nbz-gm .nba-big{color:#F4FAF6;text-shadow:0 0 36px rgba(43,217,138,.8),0 0 90px rgba(43,217,138,.35)}',
       '.nbz-gm .nba-lbl{color:#CFE0D6}',
       '.nbz-gm .nba-mp small{color:#EAF4EE}',
-      '.nbz-gm .nba-vsb{width:44px;height:50px;display:grid;place-items:center;align-self:center;font-size:13px;color:#2A1B03;text-shadow:none;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#F8D27A,#B9801F);animation:none}',
+      '.nbz-gm .nba-vsb{width:44px;height:50px;display:grid;place-items:center;align-self:center;font-size:13px;color:#2A1B03;text-shadow:none;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#FFE29A,#F5BF47);animation:none}',
       '.nbz-gm .nba-note{color:#A9BCB0}',
       /* ── رأس السؤال: الجولة + التقدّم ── */
       '.nbz-gm .nba-pips{gap:4px;margin:4px 0 12px}',
@@ -941,7 +994,7 @@
       '.nbz-gm .nba-opt .lt{width:38px;height:42px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1F5E3C,#0E2A1D);color:#9FF0C8;font-size:15px}',
       '.nbz-gm .nba-opt .lt .nba-ico{width:18px;height:18px}',
       '.nbz-gm .nba-opt.sel{background:linear-gradient(180deg,rgba(242,184,75,.2),rgba(242,184,75,.06));box-shadow:0 0 0 2px #F2B84B,0 0 26px -4px rgba(242,184,75,.45)}',
-      '.nbz-gm .nba-opt.sel .lt{background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03}',
+      '.nbz-gm .nba-opt.sel .lt{background:linear-gradient(160deg,#FFE29A,#F5BF47);color:#2A1B03}',
       '.nbz-gm .nba-opt.ok{background:linear-gradient(180deg,rgba(43,217,138,.3),rgba(43,217,138,.08));box-shadow:0 0 0 2px #2BD98A,0 0 30px -2px rgba(43,217,138,.5)}',
       '.nbz-gm .nba-opt.ok .lt{background:linear-gradient(160deg,#6BF3B4,#1FB872);color:#04140A}',
       '.nbz-gm .nba-opt.no{background:rgba(255,107,94,.13);box-shadow:0 0 0 2px #FF6B5E}',
@@ -967,19 +1020,19 @@
       '@keyframes nbzRb{0%{opacity:0;transform:scaleY(.55)}12%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}',
       /* ── النتيجة النهائية ── */
       '.nbz-gm .nba-win{border:0;border-radius:26px;background:radial-gradient(90% 70% at 50% 0,rgba(242,184,75,.24),transparent 70%),linear-gradient(180deg,#14301F,#0B1A12);box-shadow:inset 0 0 0 1px rgba(242,184,75,.18),0 24px 40px -20px rgba(0,0,0,.9)}',
-      '.nbz-gm .nba-win .tr{width:88px;height:98px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#F8D27A,#B9801F);box-shadow:none}',
+      '.nbz-gm .nba-win .tr{width:88px;height:98px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#FFE29A,#F5BF47);box-shadow:none}',
       '.nbz-gm .nba-badge{border:0;background:rgba(242,184,75,.13)}',
       '.nbz-gm .nba-stat{border:0;border-radius:18px;background:rgba(255,255,255,.045)}',
       '.nbz-gm .nba-stat b{color:#7CF0B6}.nbz-gm .nba-stat.g b{color:#FFD98A}',
       '.nbz-gm .nba-tvs .t{border:0;border-radius:18px;background:linear-gradient(180deg,rgba(43,217,138,.17),rgba(43,217,138,.04))}.nbz-gm .nba-tvs .t.b{background:linear-gradient(180deg,rgba(242,184,75,.18),rgba(242,184,75,.04))}',
-      '.nbz-gm .nba-pod .st::before{background:linear-gradient(180deg,#1FB872,#0E2A1D)}.nbz-gm .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFE29A,#D99A2B)}',
+      '.nbz-gm .nba-pod .st::before{background:linear-gradient(180deg,#1FB872,#0E2A1D)}.nbz-gm .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFE9A8,#F5BF47)}',
       /* ── البوديوم: تاج فعلي + مراكز أنيقة (تنسيق فقط) ── */
       '.nba-card:has(>.nba-pod){padding-top:48px!important}',
       '.nba-pod{position:relative}',
       '.nba-pod::after{content:\"\";position:absolute;left:4%;right:4%;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent)}',
       '.nba-pod>div{max-width:128px;gap:8px}',
       '.nba-pod .st{border-radius:16px 16px 0 0;place-items:start center;padding-top:13px;font-size:22px}',
-      '.nba-root .nba-card .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFE9A8 0,#F2B84B 40%,rgba(185,128,31,.45) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 0 0 1px rgba(255,226,154,.35)}',
+      '.nba-root .nba-card .nba-pod .p1 .st::before{background:linear-gradient(180deg,#FFEBB0 0,#FFD25E 40%,rgba(245,191,71,.7) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 0 0 1px rgba(255,226,154,.35)}',
       '.nba-root .nba-card .nba-pod .p2 .st::before{background:linear-gradient(180deg,rgba(130,245,185,.42),rgba(61,220,132,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(122,240,174,.25)}',
       '.nba-root .nba-card .nba-pod .p3 .st::before{opacity:1;background:linear-gradient(180deg,rgba(236,160,100,.42),rgba(236,160,100,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 0 0 1px rgba(236,160,100,.26)}',
       '.nba-pod .p2 .st,.nba-pod .p3 .st{color:#EAF8F0}',
@@ -988,7 +1041,42 @@
       '.nba-pod .cr{top:-31px;filter:drop-shadow(0 2px 10px rgba(245,184,61,.42)) drop-shadow(0 1px 0 rgba(0,0,0,.4))}.nba-pod .cr svg{display:block;width:46px;height:auto}',
       '.nba-pod .cr .sp{transform-box:fill-box;transform-origin:center;animation:nbzTw 2.8s ease-in-out infinite}@keyframes nbzTw{0%,100%{opacity:.2;transform:scale(.55)}50%{opacity:1;transform:scale(1)}}',
       '@media (prefers-reduced-motion:reduce){.nba-pod .cr,.nba-pod .cr .sp{animation:none}}',
+      /* ARENA-PODIUM-PREMIUM: بوديوم النتيجة — تنسيق وحركة فقط */
+      '.nba-root .nba-pod{gap:12px;padding-top:4px}',
+      '.nba-root .nba-pod>div{gap:9px;animation:none}.nba-root .nba-pod>div>*{z-index:1}',
+      '.nba-root .nba-pod .st{padding-top:12px}.nba-root .nba-pod .p1 .st{height:140px;filter:drop-shadow(0 -10px 26px rgba(245,184,61,.28))}.nba-root .nba-pod .p2 .st{height:112px}.nba-root .nba-pod .p3 .st{height:96px}',
+      '.nba-root .nba-pod .p1::before{content:"";position:absolute;left:50%;top:-52px;width:176px;height:176px;margin-left:-88px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,184,75,.32),rgba(242,184,75,.1) 58%,transparent 74%);pointer-events:none;z-index:0;animation:nbzPdFd .9s ease-out 1s both,nbzPdSp 3.4s ease-in-out 1s infinite}',
+      '.nba-root .nba-pod .nba-av{animation:nbzPdAv .55s cubic-bezier(.2,1.35,.3,1) both;animation-delay:calc(var(--dl) + .5s)}',
+      '.nba-root .nba-pod .p1 .nba-av{--c:#F2B84B;animation:nbzPdAv .55s cubic-bezier(.2,1.35,.3,1) both,nbzPdGl 2.8s ease-in-out infinite;animation-delay:calc(var(--dl) + .5s),calc(var(--dl) + 1.2s)}.nba-root .nba-pod .p2 .nba-av{--c:#8FE3B8}.nba-root .nba-pod .p3 .nba-av{--c:#E8A06A}',
+      '.nba-root .nba-pod small{font-size:12.5px;animation:nbzPdIn .45s ease-out both;animation-delay:calc(var(--dl) + .7s)}.nba-root .nba-pod .p1 small{font-size:14px;color:#FFE9B0}.nba-root .nba-pod .p2 small,.nba-root .nba-pod .p3 small{color:#E4F2EA}',
+      '.nba-root .nba-pod .cr{top:-42px;z-index:2;animation:nbzPdCr .75s cubic-bezier(.2,1.35,.3,1) 1.25s both,nbaBob 2.4s ease-in-out 2.1s infinite}',
+      '.nba-root .nba-pod .st>span{display:flex;flex-direction:column;align-items:center;line-height:1.15;font-size:24px;animation:nbzPdIn .5s ease-out both;animation-delay:calc(var(--dl) + .35s)}.nba-root .nba-pod .p1 .st>span{font-size:30px}',
+      '.nba-root .nba-pod .st>span::after{content:"نقطة";font:700 10.5px/1.5 var(--f-ui,Cairo,sans-serif);opacity:.68;margin-top:1px}',
+      '.nba-root .nba-pod .st::after{left:50%;right:auto;bottom:12px;width:30px;height:34px;margin-left:-15px;display:grid;place-items:center;font:900 14px/1 var(--f-ui,Cairo,sans-serif);opacity:1;text-align:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);animation:nbzPdBd .5s cubic-bezier(.2,1.35,.3,1) both;animation-delay:calc(var(--dl) + .55s)}',
+      '.nba-root .nba-pod .p1 .st::after{background:linear-gradient(160deg,#FFF6D0,#F5BF47);color:#3A2400}.nba-root .nba-pod .p2 .st::after{background:linear-gradient(160deg,#D6FBE8,#3FBF86);color:#06281A}.nba-root .nba-pod .p3 .st::after{background:linear-gradient(160deg,#FAD2AE,#C97A3E);color:#2D1500}',
+      '@keyframes nbzPdAv{from{opacity:0;transform:translateY(-18px) scale(.6)}to{opacity:1;transform:none}}@keyframes nbzPdIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes nbzPdBd{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}',
+      '@keyframes nbzPdCr{from{opacity:0;transform:translateY(-26px) rotate(-14deg) scale(.7)}to{opacity:1;transform:none}}@keyframes nbzPdFd{from{opacity:0}to{opacity:1}}@keyframes nbzPdSp{0%,100%{transform:scale(.94)}50%{transform:scale(1.08)}}',
+      '@keyframes nbzPdGl{0%,100%{box-shadow:0 0 0 2px #07110b,0 0 0 4px #F2B84B,0 0 14px -2px rgba(242,184,75,.55)}50%{box-shadow:0 0 0 2px #07110b,0 0 0 4px #FFD98A,0 0 30px 2px rgba(242,184,75,.8)}}',
       '.nbz-gm .nba-btn{border-radius:16px}',
+      /* ARENA-WIN-PREMIUM: كارت البطل — صيغة محايدة للجنسين + تنسيق وحركة */
+      '.nba-root .nba-card.nba-win{padding:26px 16px 24px;border:0;border-radius:26px;background:linear-gradient(90deg,transparent,rgba(255,226,154,.55),transparent) top center/62% 1px no-repeat,radial-gradient(90% 70% at 50% 0,rgba(242,184,75,.26),transparent 70%),linear-gradient(180deg,#14301F,#0B1A12);box-shadow:inset 0 0 0 1px rgba(242,184,75,.2),0 24px 40px -20px rgba(0,0,0,.9)}.nba-root .nba-card.nba-win>*{z-index:1}',
+      '.nba-root .nba-card.nba-win::before{top:-63px;width:360px;height:360px;margin-left:-180px;z-index:0;background:repeating-conic-gradient(rgba(242,184,75,.15) 0 4deg,transparent 4deg 15deg);-webkit-mask:radial-gradient(circle,#000 8%,transparent 66%);mask:radial-gradient(circle,#000 8%,transparent 66%);animation:nbaSpin 48s linear infinite}',
+      '.nba-root .nba-card.nba-win::after{content:"";position:absolute;left:50%;top:22px;width:190px;height:190px;margin-left:-95px;border-radius:50%;z-index:0;pointer-events:none;background:radial-gradient(closest-side,rgba(242,184,75,.38),rgba(242,184,75,.1) 60%,transparent 75%);animation:nbzPdFd .9s ease-out .3s both,nbzWnHl 3.6s ease-in-out 1.2s infinite}',
+      '.nba-root .nba-card.nba-win .nba-badge{display:inline-flex;align-items:center;gap:9px;margin-bottom:16px;padding:6px 16px;border:1px solid transparent;border-radius:99px;font-size:12.5px;font-weight:800;line-height:1.5;color:#F1D58F;background:linear-gradient(180deg,#1B2B18,#0F190E) padding-box,linear-gradient(135deg,#FFF0C0 0%,#F5CB62 42%,#E8B243 68%,#FFE9A8 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,240,200,.1),0 4px 14px -6px rgba(0,0,0,.6)}',
+      '.nba-root .nba-card.nba-win .nba-badge::before,.nba-root .nba-card.nba-win .nba-badge::after{content:"";flex:none;width:5px;height:5px;border-radius:1px;transform:rotate(45deg);background:linear-gradient(135deg,#FFF3C4,#F5BF47);box-shadow:0 0 6px rgba(242,184,75,.5)}',
+      '.nba-root .nba-card.nba-win .tr{width:92px;height:104px;margin:0 auto 18px;background:linear-gradient(160deg,#F7CF6C,#E0A030)}',
+      '.nba-root .nba-card.nba-win .tr::before,.nba-root .nba-card.nba-win .tr::after{content:"";position:absolute;inset:3px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}',
+      '.nba-root .nba-card.nba-win .tr::before{background:linear-gradient(160deg,#FFF0C0 0,#FFD56A 46%,#F2B84B 100%)}',
+      '.nba-root .nba-card.nba-win .tr::after{background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.6) 50%,transparent 62%) no-repeat;background-size:260% 100%;background-position:160% 0;animation:nbzWnSh 4.4s ease-in-out 1.6s infinite}',
+      '.nba-root .nba-card.nba-win .tr .nba-ico{position:relative;z-index:1;width:44px;height:44px;color:#3A2400}',
+      '.nba-root .nba-card.nba-win h2{margin:0;font-size:24px;line-height:1.35;color:#F4FAF6}.nba-root .nba-card.nba-win h2.nbz-wh{display:flex;flex-direction:column;align-items:center;gap:6px}',
+      '.nba-root .nba-card.nba-win .nbz-wk{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#CDB679}',
+      '.nba-root .nba-card.nba-win .nbz-wk::before,.nba-root .nba-card.nba-win .nbz-wk::after{content:"";width:26px;height:1px}.nba-root .nba-card.nba-win .nbz-wk::before{background:linear-gradient(to left,transparent,rgba(242,184,75,.6))}.nba-root .nba-card.nba-win .nbz-wk::after{background:linear-gradient(to right,transparent,rgba(242,184,75,.6))}',
+      '.nba-root .nba-card.nba-win .nbz-wn{display:block;max-width:100%;font-size:31px;font-weight:900;line-height:1.25;overflow-wrap:anywhere;color:#F6D98A;filter:drop-shadow(0 2px 12px rgba(242,184,75,.32))}',
+      '@supports ((-webkit-background-clip:text) or (background-clip:text)){.nba-root .nba-card.nba-win .nbz-wn{background:linear-gradient(180deg,#FFF8DC 0,#FFDF7E 52%,#F5BF47 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}}',
+      '.nba-root .nba-card.nba-win p{display:inline-flex;align-items:center;margin-top:14px;padding:6px 18px;border-radius:99px;font-size:13.5px;font-weight:800;color:#CFE0D6;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);font-variant-numeric:tabular-nums}',
+      '@keyframes nbzWnSh{0%,45%{background-position:160% 0}100%{background-position:-60% 0}}@keyframes nbzWnHl{0%,100%{transform:scale(.92)}50%{transform:scale(1.08)}}',
+      '@media (max-height:480px){.nba-root .nba-card.nba-win .tr{width:68px;height:76px;margin-bottom:10px}.nba-root .nba-card.nba-win .nbz-wn{font-size:26px}}',
       /* ── الملف الشخصي ── */
       '.nba-pf{--brand:#2BD98A;--brand-l:#7CF0B6;--brand-d:#157A3D;--gold:#F2B84B;--gold-l:#FFD98A;--gold-pale:rgba(242,184,75,.13);--muted:#8FA99A;--slate:#A9BCB0;--ink2:#CFE0D6;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.12);background:rgba(2,8,5,.8)}',
       '.nba-pfb{padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));border:0;border-radius:28px 28px 0 0;background:linear-gradient(180deg,#0B1D14,#08130D);box-shadow:0 -24px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}',
@@ -1018,11 +1106,11 @@
       '.nba-pfb .nba-ai.eq{background:linear-gradient(90deg,rgba(242,184,75,.05),rgba(242,184,75,.17))}.nba-pfb .nba-ai.eq::before{background:#F2B84B;box-shadow:0 0 12px rgba(242,184,75,.6)}',
       '.nba-pfb .nba-aic{width:46px;height:52px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,255,255,.07);color:#6F8A7A}',
       '.nba-pfb .nba-ai.on .nba-aic{background:linear-gradient(160deg,#35E597,#168A57);color:#04140A}',
-      '.nba-pfb .nba-ai.eq .nba-aic{background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03}',
+      '.nba-pfb .nba-ai.eq .nba-aic{background:linear-gradient(160deg,#FFE29A,#F5BF47);color:#2A1B03}',
       '.nba-pfb .nba-aim b{font-size:14.5px;color:#F2F8F4}.nba-pfb .nba-ai:not(.on) .nba-aim b{color:#B4CABD}',
       '.nba-pfb .nba-aim small{color:#8FA99A}',
       '.nba-pfb .nba-ai.on .nba-alk{color:#2BD98A}',
-      '.nba-pfb .nba-eqb{min-height:36px;padding:6px 16px;color:#2A1B03;background:linear-gradient(180deg,#FFE29A,#F2B84B 58%,#D99A2B);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}',
+      '.nba-pfb .nba-eqb{min-height:36px;padding:6px 16px;color:#2A1B03;background:linear-gradient(180deg,#FFE9A8,#FFD56A 58%,#F5BF47);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}',
       '.nba-pfb .nba-tag.g{border:0;background:rgba(242,184,75,.15);color:#FFD98A}',
       '.nba-pfb .nba-btn.sec{border-radius:14px;background:rgba(255,255,255,.06);border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}',
       /* ── شاشات صغيرة / قصيرة / عريضة ── */
@@ -1313,8 +1401,8 @@
     if (document.getElementById('nba-css-pf')) return;
     var st = document.createElement('style'); st.id = 'nba-css-pf';
     st.textContent = [
-      '.nba-ttc{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 11px 2px 10px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.55;color:#F1D58F;border:1px solid transparent;background:linear-gradient(180deg,#141A11,#0D120C) padding-box,linear-gradient(135deg,#F7DC9C 0%,#C9973F 42%,#7A5518 68%,#E6BC63 100%) border-box;background-origin:border-box;box-shadow:inset 0 1px 0 rgba(255,240,200,.10),0 1px 4px rgba(0,0,0,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
-      '.nba-ttc::before{content:"";flex:none;width:4px;height:4px;border-radius:1px;transform:rotate(45deg);background:linear-gradient(135deg,#FFE9B0,#D9A03A);box-shadow:0 0 5px rgba(242,184,75,.5)}',
+      '.nba-ttc{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 11px 2px 10px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.55;color:#F1D58F;border:1px solid transparent;background:linear-gradient(180deg,#141A11,#0D120C) padding-box,linear-gradient(135deg,#FFF0C0 0%,#F5CB62 42%,#E8B243 68%,#FFE9A8 100%) border-box;background-origin:border-box;box-shadow:inset 0 1px 0 rgba(255,240,200,.10),0 1px 4px rgba(0,0,0,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
+      '.nba-ttc::before{content:"";flex:none;width:4px;height:4px;border-radius:1px;transform:rotate(45deg);background:linear-gradient(135deg,#FFF3C4,#F5BF47);box-shadow:0 0 5px rgba(242,184,75,.5)}',
       '.nba-ttc.sm{display:flex;margin:2px auto 0;width:fit-content;gap:4px;font-size:9.5px;padding:0 8px 0 7px}.nba-ttc.sm::before,.nba-lead .nm .nba-ttc::before{width:3px;height:3px}',
       '.nba-ttc.big{position:relative;gap:7px;font-size:12.5px;padding:3px 15px 3px 14px}.nba-ttc.big::before{width:5px;height:5px}',
       '.nba-ttc.big::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.26) 50%,transparent 65%);transform:translateX(-120%);animation:nba-ttc-sh 4.5s ease-in-out 1.2s infinite;pointer-events:none}@keyframes nba-ttc-sh{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}@media (prefers-reduced-motion:reduce){.nba-ttc.big::after{animation:none;display:none}}',
@@ -1344,7 +1432,18 @@
       '.nba-alk{flex:none;display:inline-flex;color:var(--muted)}.nba-ai.on .nba-alk{color:var(--brand)}',
       '.nba-eqb{flex:none;border:0;border-radius:99px;padding:6px 14px;font:800 12px var(--f-ui,Cairo,sans-serif);cursor:pointer;color:#04140a;background:var(--brand);min-height:34px}.nba-eqb[disabled]{opacity:.55}',
       '.nba-fn{text-align:center;font-size:13px;font-weight:700;color:var(--ink2);padding:6px 4px 12px;line-height:1.7}.nba-fn.dim{color:var(--muted)}',
-      '.nba-prg{border-color:rgba(61,220,132,.3)}.nba-ng{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}'
+      '.nba-prg{border-color:rgba(61,220,132,.3)}.nba-ng{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}',
+      /* ARENA-PRG-PREMIUM: تلميع كارت «تقدّمك في الساحة» فقط — CSS بحت، مفيش أي تغيير في المنطق أو النصوص */
+      '.nba-root .nba-card.nba-prg{background:radial-gradient(120% 80% at 100% 0,rgba(242,184,75,.09),transparent 58%),linear-gradient(180deg,#12281C,#0B1A12);border:0;border-radius:22px;padding:16px 16px 18px;box-shadow:inset 0 0 0 1px rgba(242,184,75,.16),inset 0 1px 0 rgba(255,255,255,.05),0 18px 32px -18px rgba(0,0,0,.85)}',
+      '.nba-root .nba-card.nba-prg::before{content:"";position:absolute;top:0;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,226,154,.6),transparent);pointer-events:none}',
+      '.nba-root .nba-card.nba-prg>.nba-lbl{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;font-weight:800;color:#DCC285}.nba-root .nba-card.nba-prg>.nba-lbl::after{content:"";flex:1;height:1px;background:rgba(242,184,75,.2)}',
+      '.nba-root .nba-card.nba-prg>div:nth-child(2)>.nba-tag{min-height:32px;padding:0 12px;gap:7px;font-size:12.5px;font-weight:800;line-height:1;border-radius:99px;color:#7CF0B6;background:linear-gradient(180deg,rgba(43,217,138,.14),rgba(43,217,138,.05));border:1px solid rgba(43,217,138,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}',
+      '.nba-root .nba-card.nba-prg>div:nth-child(2)>.nba-tag.g{color:#FFD98A;background:linear-gradient(180deg,rgba(242,184,75,.16),rgba(242,184,75,.05));border-color:rgba(242,184,75,.38)}',
+      '.nba-root .nba-card.nba-prg>div:nth-child(2)>.nba-tag::before{content:"";flex:none;width:17px;height:17px;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M4.2 8.4l2.5 2.5 5-5.4%27 fill=%27none%27 stroke=%27%2304140A%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E") center/11px 11px no-repeat,linear-gradient(160deg,#7CF0B6,#1FB872);box-shadow:0 0 10px rgba(43,217,138,.35)}',
+      '.nba-root .nba-card.nba-prg>div:nth-child(2)>.nba-tag.g::before{background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M4.2 8.4l2.5 2.5 5-5.4%27 fill=%27none%27 stroke=%27%232A1B03%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E") center/11px 11px no-repeat,linear-gradient(160deg,#FFE9A8,#F5BF47);box-shadow:0 0 10px rgba(242,184,75,.4)}',
+      '.nba-root .nba-card.nba-prg>div:nth-child(2)>.nba-streak{min-height:32px;padding:0 14px;gap:6px;font-size:12.5px;line-height:1;color:#2A1B03;background:linear-gradient(180deg,#FFE9A8,#FFD56A 58%,#F5BF47);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 16px -8px rgba(242,184,75,.7)}',
+      '.nba-root .nba-card.nba-prg>.nba-skl{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:12.5px;font-weight:700;color:#E8D5A3}',
+      '.nba-root .nba-card.nba-prg>.nba-btn{min-height:44px;padding:8px 18px;border:0;border-radius:14px;font-size:13px;color:#EAF4EE;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}'
     ].join('\n');
     document.head.appendChild(st);
   }
@@ -2009,20 +2108,20 @@
   }
   /* ARENA-CROWN: تاج الفائز في البوديوم — SVG مفصّل (ذهب متدرّج + أوجه + أحجار) بدل الأيقونة الخطية. عرض بس */
   function nbzCrown() {
-    var G = 'stroke="#8A5410" stroke-linejoin="round"', d = h('span', { class: 'cr', 'aria-hidden': 'true' });
+    var G = 'stroke="#C98A24" stroke-linejoin="round"', d = h('span', { class: 'cr', 'aria-hidden': 'true' });
     d.innerHTML = ['<svg viewBox="-1 0 66 48" xmlns="http://www.w3.org/2000/svg" focusable="false">',
-      '<defs><linearGradient id="nbzCg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1BF"/><stop offset=".45" stop-color="#F4BE50"/><stop offset="1" stop-color="#B9791A"/></linearGradient>',
-      '<linearGradient id="nbzCb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9D77C"/><stop offset="1" stop-color="#9A5F10"/></linearGradient>',
+      '<defs><linearGradient id="nbzCg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1BF"/><stop offset=".45" stop-color="#FFD25E"/><stop offset="1" stop-color="#F2B84B"/></linearGradient>',
+      '<linearGradient id="nbzCb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE29A"/><stop offset="1" stop-color="#F2B84B"/></linearGradient>',
       '<radialGradient id="nbzCe" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#A8FFD6"/><stop offset="1" stop-color="#0F8F57"/></radialGradient></defs>',
       '<path d="M9 38 4 15l16 12L32 9l12 18 16-12-5 23z" fill="url(#nbzCg)" ' + G + ' stroke-width="1.3"/>',
-      '<path d="M32 9l12 18 16-12-5 23H32z" fill="#7A4708" opacity=".2"/>',
+      '<path d="M32 9l12 18 16-12-5 23H32z" fill="#C98A24" opacity=".16"/>',
       '<path d="M32 9l3 18-3 11-3-11z" fill="#fff" opacity=".32"/>',
-      '<path d="M20 27l4 11M44 27l-4 11" fill="none" stroke="#8A5410" stroke-width=".9" opacity=".45"/>',
+      '<path d="M20 27l4 11M44 27l-4 11" fill="none" stroke="#C98A24" stroke-width=".9" opacity=".45"/>',
       '<rect x="8" y="37" width="48" height="8" rx="2.5" fill="url(#nbzCb)" ' + G + ' stroke-width="1.2"/>',
       '<rect x="9.5" y="38.2" width="45" height="1.5" rx=".75" fill="#fff" opacity=".45"/>',
       '<circle cx="4" cy="13" r="3.3" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/><circle cx="32" cy="6.5" r="4.2" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/><circle cx="60" cy="13" r="3.3" fill="url(#nbzCg)" ' + G + ' stroke-width="1.1"/>',
       '<circle cx="3.2" cy="12" r="1" fill="#fff" opacity=".8"/><circle cx="31" cy="5.2" r="1.3" fill="#fff" opacity=".8"/><circle cx="59.2" cy="12" r="1" fill="#fff" opacity=".8"/>',
-      '<circle cx="32" cy="41" r="2.5" fill="url(#nbzCe)" stroke="#8A5410" stroke-width=".8"/><circle cx="20" cy="41" r="1.6" fill="#FFF1BF" stroke="#8A5410" stroke-width=".6"/><circle cx="44" cy="41" r="1.6" fill="#FFF1BF" stroke="#8A5410" stroke-width=".6"/>',
+      '<circle cx="32" cy="41" r="2.5" fill="url(#nbzCe)" stroke="#C98A24" stroke-width=".8"/><circle cx="20" cy="41" r="1.6" fill="#FFF1BF" stroke="#C98A24" stroke-width=".6"/><circle cx="44" cy="41" r="1.6" fill="#FFF1BF" stroke="#C98A24" stroke-width=".6"/>',
       '<path class="sp" d="M52 3l1.2 3.8L57 8l-3.8 1.2L52 13l-1.2-3.8L47 8l3.8-1.2z" fill="#FFF6D6"/></svg>'].join('');
     return d;
   }
@@ -2509,12 +2608,12 @@
   function vResults(w) {
     var t = totals(), order = ranked(t), teams = S.room.md === 't', tt = teams ? teamTotals(t) : null;
     w.classList.add('nbz-cr'); w.appendChild(nbzStage('النتيجة النهائية', function () { leaveGame(); }));
-    var ready = Object.keys(S.rev).length >= NQ, title, sub, won = false, meP = S.players[S.uid], rank = order.indexOf(S.uid) + 1;
+    var ready = Object.keys(S.rev).length >= NQ, title, wname = '', sub, won = false, meP = S.players[S.uid], rank = order.indexOf(S.uid) + 1;
     if (!ready) { w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:60px auto 12px' }), 'جاري احتساب النتيجة النهائية…'])); return; }
     if (teams) { title = tt[0] === tt[1] ? 'تعادل بين الفريقين!' : (tt[0] > tt[1] ? 'الفريق أ فاز!' : 'الفريق ب فاز!'); sub = tt[0] + ' × ' + tt[1]; won = tt[0] !== tt[1] && (tt[0] > tt[1] ? 0 : 1) === (meP && meP.tm ? 1 : 0); }
-    else { var top1 = order.filter(function (u) { return t[u] === t[order[0]]; }); title = top1.length > 1 ? 'تعادل على المركز الأول!' : S.players[order[0]].n + ' هو البطل!'; sub = t[order[0]] + ' نقطة'; won = top1.indexOf(S.uid) > -1; }
-    if (once('res')) { SFX.play(won ? 'win' : 'end'); confetti(won ? 80 : 28); }
-    w.appendChild(h('div', { class: 'nba-card nba-win' }, [h('div', { class: 'nba-badge', text: won ? 'مبروك — أنت من الأبطال' : 'انتهت المواجهة' }), h('div', { class: 'tr' }, [ico(I.trophy)]), h('h2', { text: title }), h('p', { text: sub })]));
+    else { var top1 = order.filter(function (u) { return t[u] === t[order[0]]; }); title = top1.length > 1 ? 'تعادل على المركز الأول!' : 'التاج من نصيب ' + (S.players[order[0]].n || '—'); wname = top1.length > 1 ? '' : (S.players[order[0]].n || '—');   /* صيغة محايدة للجنسين */ sub = t[order[0]] + ' نقطة'; won = top1.indexOf(S.uid) > -1; }
+    if (once('res')) { SFX.play(won ? 'win' : 'end'); confetti(won ? 80 : 28); var resS = S; setTimeout(function () { if (S === resS) SFX.play('crowd', won); }, 900); }   /* ARENA-CROWD */
+    w.appendChild(h('div', { class: 'nba-card nba-win' }, [h('div', { class: 'nba-badge', text: won ? 'مبروك — أنت من الأبطال' : 'انتهت المواجهة' }), h('div', { class: 'tr' }, [ico(I.trophy)]), (wname ? h('h2', { class: 'nbz-wh' }, [h('span', { class: 'nbz-wk', text: 'التاج من نصيب' }), h('bdi', { class: 'nbz-wn', text: wname })]) : h('h2', { text: title })), h('p', { text: sub })]));
     if (!S.fin && once('fin')) startFinalize();
     S.finEl = h('div', { class: 'nba-finw' }); w.appendChild(S.finEl); paintFin();
     S.rmEl = h('div', { class: 'nba-rmw' }); w.appendChild(S.rmEl); rmWatch(); rmPaint();   /* ARENA-REMATCH */
@@ -2526,7 +2625,7 @@
         h('div', { class: 'nba-tbar' }, [h('i', { style: '--p:' + Math.round(tt[0] / tot * 100) + '%' })])]));
     } else if (order.length >= 2) {
       var pod = h('div', { class: 'nba-pod' });
-      [1, 0, 2].forEach(function (pi) { var u = order[pi]; if (!u) return; pod.appendChild(h('div', { class: 'p' + (pi + 1) }, [pi === 0 ? nbzCrown() : null, avatar(u, S.players[u], pi === 0 ? 54 : 44), h('small', { text: S.players[u].n }), h('div', { class: 'st' }, [h('span', { text: String(t[u]) })])])); });
+      [1, 0, 2].forEach(function (pi) { var u = order[pi]; if (!u) return; pod.appendChild(h('div', { class: 'p' + (pi + 1) }, [pi === 0 ? nbzCrown() : null, avatar(u, S.players[u], pi === 0 ? 54 : 44), h('small', { text: S.players[u].n }), h('div', { class: 'st' }, [podScore(t[u], pi)])])); });
       w.appendChild(h('div', { class: 'nba-card', style: 'padding-top:30px' }, [pod]));
     }
     var ms = stats(S.uid), st = function (v, lb, fmt, g, n) { var b = h('b', { text: '0' }); countUp(b, 0, v, 900, fmt); return h('div', { class: 'nba-stat' + (g ? ' g' : ''), style: '--dl:' + (n * 90 + 200) + 'ms' }, [b, h('span', { text: lb })]); };
