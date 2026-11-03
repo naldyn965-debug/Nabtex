@@ -769,6 +769,35 @@
       '@keyframes nbzMist{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(6%,0,0)}}',
       '@keyframes nbzAura{0%{opacity:.75;transform:scale(.98)}100%{opacity:0;transform:scale(1.07)}}',
       '@keyframes nbzShine{0%,70%{left:-60%}100%{left:140%}}',
+      '.nbz-cr .nbz-vista{margin-top:-4px;height:clamp(150px,20vh,190px);height:clamp(150px,20dvh,190px);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 34%,#000 76%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 34%,#000 76%,transparent 100%)}',
+      '.nbz-cr .nbz-stage::after{height:60px}',
+      '.nbz-cr .nbz-st.f{margin-top:10px}',
+      '.nbz-cr .nba-err{margin:10px 0 0}',
+      '.nbz-mds{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
+      '.nbz-pk{position:relative;display:flex;align-items:center;gap:10px;min-height:80px;padding:12px;border:0;border-radius:20px;text-align:right;color:#EAF4EE;font:inherit;cursor:pointer;overflow:hidden;--a:#2BD98A;background:linear-gradient(165deg,#14301F,#0B1A12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:transform .2s,box-shadow .25s,background .25s}',
+      '.nbz-pk.t{--a:#F2B84B}',
+      '.nbz-pk .gm{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;color:var(--a);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}.nbz-pk .gm .nba-ico{width:22px;height:22px}',
+      '.nbz-pk b{display:block;font-size:16.5px;font-weight:900;line-height:1.3}',
+      '.nbz-pk em{display:block;margin-top:1px;font-style:normal;font-size:11.5px;font-weight:600;line-height:1.45;color:#9FB8A9}',
+      '.nbz-pk.on{background:radial-gradient(110% 110% at 90% 0,rgba(43,217,138,.34),transparent 66%),linear-gradient(165deg,#165236,#0B1A12);box-shadow:0 0 0 2px #F2B84B,0 14px 26px -12px rgba(43,217,138,.45)}',
+      '.nbz-pk.t.on{background:radial-gradient(110% 110% at 90% 0,rgba(242,184,75,.3),transparent 66%),linear-gradient(165deg,#3A4A1F,#0B1A12)}',
+      '.nbz-pk.on .gm{background:var(--a);color:#04140A;box-shadow:0 0 22px -2px var(--a);animation:nbxPop .3s ease-out}',
+      '.nbz-pk:active,.nbz-sc:active,.nbz-sn:active{transform:scale(.96)}',
+      '.nbz-seats{display:flex;justify-content:center;gap:8px}',
+      '.nbz-sn{flex:1;min-width:0;max-width:92px;height:58px;border:0;cursor:pointer;color:#CFE0D6;font:900 20px var(--f-ui,Cairo,sans-serif);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1B3D29,#0E2016);transition:transform .2s,background .2s,color .2s}',
+      '.nbz-sn.on{color:#2A1B03;background:linear-gradient(160deg,#FFE29A,#F2B84B 60%,#C98A24);transform:scale(1.08)}',
+      '.nbz-sp{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
+      '.nbz-sp>.nbz-sc:last-child:nth-child(odd){grid-column:1/-1}',
+      '.nbz-sc{position:relative;display:flex;align-items:center;gap:10px;min-height:68px;padding:10px;border:0;border-radius:18px;text-align:right;color:#EAF4EE;font:inherit;cursor:pointer;background:radial-gradient(90% 130% at 100% 50%,hsl(var(--h) 55% 30%/.5),transparent 72%),linear-gradient(180deg,#12281C,#0A1710);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transition:transform .2s,box-shadow .25s}',
+      '.nbz-sc .nbz-em{flex:none;width:42px;height:42px;margin:0}.nbz-sc .nbz-em .nba-ico{width:21px;height:21px}',
+      '.nbz-sx{min-width:0}.nbz-sx small{display:block;font-size:10px;font-weight:800;color:#E7C06E}',
+      '.nbz-sx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:800;line-height:1.35}',
+      '.nbz-sc.on{box-shadow:0 0 0 2px #F2B84B,0 0 24px -6px rgba(242,184,75,.5)}',
+      '.nbz-sc.on .nbz-em{color:#04140A;background:hsl(var(--h) 68% 58%);box-shadow:0 0 24px 1px hsl(var(--h) 70% 55%/.55)}',
+      '.nbz-bar{position:sticky;bottom:0;z-index:5;margin:18px -16px 0;padding:22px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(10,21,16,0),#0A1510 20px)}',
+      '.nbz-sum{margin-bottom:10px;text-align:center;font-size:12.5px;font-weight:700;color:#A9C0B2}',
+      '.nbz-bar .nbz-play{margin-top:0}',
+      '.nbz-play[disabled]{cursor:default;filter:grayscale(.5) brightness(.85)}.nbz-play[disabled]::before,.nbz-play[disabled] .gl{display:none}',
       /* ── شاشات صغيرة / قصيرة / عريضة ── */
       '@media (max-width:360px){.nbz-h{font-size:29px}.nbz-c{width:124px;height:190px}.nbz-modes{gap:10px}.nbz-m b{font-size:18px}}',
       '@media (max-height:700px){.nbz-vista{height:clamp(170px,30vh,230px)}.nbz-play{min-height:64px}}',
@@ -1741,21 +1770,42 @@
     w.appendChild(top());
     w.appendChild(h('div', { class: 'nba-note' }, [h('div', { class: 'nba-spin d', style: 'margin:70px auto 12px' }), 'جاري الانضمام للغرفة ' + (V.code || '') + '…']));
   }
+  /* ARENA-LOBBY-X: شاشة «غرفة جديدة» بنفس لغة اللوبي — نفس الحالة (V.md / V.mx / V.sp) ونفس createRoom بالظبط، العرض بس اللي اتغيّر */
   function vCreate(w) {
     var o = V, teams = o.md === 't', mxs = teams ? [2, 4, 6] : [2, 3, 4, 5, 6];
     if (mxs.indexOf(o.mx) === -1) o.mx = teams ? 4 : 4;
-    w.appendChild(top('غرفة جديدة', function () { V = { view: 'hub' }; render(); }));
+    w.classList.add('nbz', 'nbz-cr');
+    var up = function () { V.key = ''; render(); };
+    function sec(t, first) { return h('div', { class: 'nbz-st' + (first ? ' f' : '') }, [h('span', { text: t })]); }
+    function pk(k, ttl, sub, ic) {
+      var on = o.md === k;
+      return h('button', { class: 'nbz-pk ' + k + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: function () { o.md = k; up(); } }, [
+        h('span', { class: 'gm' }, [ico(ic)]), h('span', { class: 'tx' }, [h('b', { text: ttl }), h('em', { text: sub })])]);
+    }
+    var lbl = teams ? 'عدد اللاعبين (فريقين متساويين)' : 'الحد الأقصى للاعبين';
+    w.appendChild(h('div', { class: 'nbz-stage cr' }, [h('div', { class: 'nbz-stars', 'aria-hidden': 'true' }), top('غرفة جديدة', function () { V = { view: 'hub' }; render(); }), nbzVista()]));
     w.appendChild(errBox());
-    var seg = function (items, cur, fn) { return h('div', { class: 'nba-seg' }, items.map(function (it) { return h('button', { class: 'nba-btn ' + (cur === it[0] ? '' : 'sec') + ' sm', style: 'flex:1;justify-content:center', onclick: function () { fn(it[0]); } }, [it[1]]); })); };
-    w.appendChild(h('div', { class: 'nba-card' }, [
-      h('div', { class: 'nba-lbl', style: 'margin-top:0', text: 'نمط اللعب' }),
-      seg([['s', 'فردي'], ['t', 'فريقين']], o.md, function (v) { o.md = v; V.key = ''; render(); }),
-      h('div', { class: 'nba-lbl', text: teams ? 'عدد اللاعبين (فريقين متساويين)' : 'الحد الأقصى للاعبين' }),
-      seg(mxs.map(function (n) { return [n, String(n)]; }), o.mx, function (v) { o.mx = v; V.key = ''; render(); }),
-      h('div', { class: 'nba-lbl', text: 'التخصص' }),
-      h('div', { class: 'nba-chips' }, SPECS.map(function (s) { return h('button', { class: 'nba-chip' + (o.sp === s[0] ? ' on' : ''), onclick: function () { o.sp = s[0]; V.key = ''; render(); } }, [s[1]]); }))]));
-    w.appendChild(h('button', { class: 'nba-btn', disabled: !!o.busy, onclick: function () { createRoom({ md: o.md, mx: o.mx, sp: o.sp }); } }, [o.busy ? h('div', { class: 'nba-spin' }) : null, o.busy ? 'جاري الإنشاء…' : 'إنشاء الغرفة']));
+    w.appendChild(sec('نمط اللعب', true));
+    w.appendChild(h('div', { class: 'nbz-mds' }, [pk('s', 'فردي', 'كل واحد لنفسه', I.crown), pk('t', 'فريقين', 'فريقين متساويين', I.users)]));
+    w.appendChild(sec(lbl));
+    w.appendChild(h('div', { class: 'nbz-seats', role: 'group', 'aria-label': lbl }, mxs.map(function (n) {
+      var on = o.mx === n;
+      return h('button', { class: 'nbz-sn' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: function () { o.mx = n; up(); } }, [String(n)]);
+    })));
+    w.appendChild(sec('التخصص'));
+    w.appendChild(h('div', { class: 'nbz-sp' }, SPECS.map(function (s) {
+      var on = o.sp === s[0];
+      return h('button', { class: 'nbz-sc' + (on ? ' on' : ''), style: '--h:' + (NBZ_HUE[s[0]] || 150), 'aria-pressed': on ? 'true' : 'false', onclick: function () { o.sp = s[0]; up(); } }, [
+        h('span', { class: 'nbz-em' }, [ico(SPI[s[0]] || SPI.mix)]), h('span', { class: 'nbz-sx' }, [h('small', { text: NBZ_CL[s[0]] || '' }), h('b', { text: s[1] })])]);
+    })));
+    w.appendChild(h('div', { class: 'nbz-bar' }, [
+      h('div', { class: 'nbz-sum', text: (teams ? 'فريقين' : 'فردي') + ' · ' + o.mx + ' لاعبين · ' + specLabel(o.sp) }),
+      h('button', { class: 'nbz-play go', disabled: !!o.busy, onclick: function () { createRoom({ md: o.md, mx: o.mx, sp: o.sp }); } }, [
+        h('span', { class: 'gl', 'aria-hidden': 'true' }), h('span', { class: 'ic' }, [o.busy ? h('div', { class: 'nba-spin d' }) : ico(I.bolt)]),
+        h('span', { class: 'tx' }, [h('b', { text: o.busy ? 'جاري الإنشاء…' : 'إنشاء الغرفة' }), h('small', { text: 'CREATE ROOM' })]),
+        h('span', { class: 'ar' }, [ico('<path d="M15 5l-7 7 7 7"/>')])])]));
   }
+
 
   function playerRow(uid, p, extra, sz) {
     var onl = p.ls && (srvNow() - p.ls) < STALE, r = S.room, fresh = !S.seen[uid], n = S.ln++;
