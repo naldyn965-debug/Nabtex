@@ -60,7 +60,7 @@
     share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>',
     crown: '<path d="M3 18l2-11 5 5 2-8 2 8 5-5 2 11z"/>',
     swap: '<path d="M7 4l-4 4 4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',
-    bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    bolt: '<path d="M13.5 2L4.5 14h7l-1 8 9-12h-7z"/>',
     check: '<polyline points="20 6 9 17 4 12"/>',
     fire: '<path d="M12 2c1 4 5 5 5 10a5 5 0 01-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>',
     vol: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/>',
@@ -668,7 +668,7 @@
       '.nbz-play::after{content:"";position:absolute;left:3px;right:3px;top:3px;bottom:3px;border-radius:17px;border:1px solid rgba(255,230,160,.5);pointer-events:none}',
       '.nbz-play .gl{position:absolute;left:0;right:0;top:0;bottom:0;border-radius:inherit;overflow:hidden;pointer-events:none}',
       '.nbz-play .gl::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:nbzShine 5s ease-in-out 1.2s infinite}',
-      '.nbz-play .ic{position:relative;flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:#06190F;color:#7CF0B6;box-shadow:inset 0 0 0 1px rgba(242,184,75,.5)}.nbz-play .ic .nba-ico{width:22px;height:22px}',
+      '.nbz-play .ic{position:relative;flex:none;width:46px;height:46px;padding:0;border-radius:15px;display:grid;place-items:center;background:#06190F;color:#7CF0B6;box-shadow:inset 0 0 0 1px rgba(242,184,75,.5)}.nbz-play .ic .nba-ico{width:22px;height:22px}',
       '.nbz-play .tx{position:relative;display:block}',
       '.nbz-play .tx b{display:block;font-size:22px;font-weight:900;line-height:1.2}',
       '.nbz-play .tx small{display:block;font:800 10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;opacity:.68;direction:ltr;text-align:right}',
@@ -701,7 +701,7 @@
       '.nbz-m .art{position:absolute;left:0;right:0;bottom:0;height:55%;z-index:-1}.nbz-m .art svg{width:100%;height:100%;display:block}',
       '.nbz-m::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.08) 50%,transparent 62%);transform:translateX(120%);transition:transform .7s;pointer-events:none}',
       '.nbz-m .gm{position:absolute;top:14px;inset-inline-start:14px;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;color:var(--a);background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.13),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 0 26px -4px var(--a)}.nbz-m .gm .nba-ico{width:28px;height:28px}',
-      '.nbz-m .tx{display:block;width:100%;padding:14px}',
+      '.nbz-m .tx{display:block;width:100%;padding:82px 14px 14px}',
       '.nbz-m small{display:block;font:800 10px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3em;color:var(--a);direction:ltr;text-align:right}',
       '.nbz-m b{display:block;margin-top:2px;font-size:20px;font-weight:900;line-height:1.25}',
       '.nbz-m em{display:block;margin-top:3px;font-style:normal;font-size:12px;font-weight:600;line-height:1.55;color:#B4CABD}',
@@ -738,6 +738,7 @@
       '.nbz .nbq-dn::before{content:"";display:inline-block;width:5px;height:9px;margin-inline-end:7px;border:solid #7CF0B6;border-width:0 2.2px 2.2px 0;transform:rotate(45deg) translateY(-2px)}',
       '.nbz .nbq-nt{border-top:0;padding-top:10px;color:#7F9A8B}',
       '.nbz .nbq-sk i{height:64px;border-radius:18px}',
+      '.nbz-gm .nba-qs .nbq-c{padding:16px 14px 14px}',
       /* ── التخصصات كلاسات ── */
       '.nbz-cls{display:flex;gap:12px;margin:0 -16px;padding:6px 16px 18px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-inline:16px;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%)}',
       '.nbz-cls::-webkit-scrollbar{display:none}',
@@ -929,7 +930,7 @@
       '.nbz-av.pf{width:104px;height:104px}.nbz-av.pf .nba-av{width:84px!important;height:84px!important;font-size:30px;box-shadow:0 0 0 3px #08130D,0 10px 24px rgba(0,0,0,.55)}',
       '.nbz-av.pf .nbz-lv{bottom:-8px;font-size:11.5px;padding:2px 10px}',
       '.nba-pfb .nba-pfu h3{margin-top:8px;font-size:22px;text-shadow:0 1px 12px rgba(0,0,0,.5)}',
-      '.nba-pfb .nba-ttc.big{border:0;background:rgba(242,184,75,.13);color:#FFD98A;padding:4px 14px}',
+      '.nba-pfb .nba-ttc.big{color:#FBE7B5;padding:4px 16px;box-shadow:inset 0 1px 0 rgba(255,246,220,.25),0 0 0 3px rgba(242,184,75,.06),0 6px 18px rgba(242,184,75,.18)}',
       '.nba-pfb .nba-pfl{border:0;border-radius:20px;padding:14px 16px;background:linear-gradient(180deg,#12281C,#0B1A12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}',
       '.nba-pfb .nba-pfl .t span:first-child{color:#F2C66A;font-weight:900;font-size:13.5px}',
       '.nba-pfb .nba-pbar{height:8px;background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}',
@@ -1242,9 +1243,10 @@
     if (document.getElementById('nba-css-pf')) return;
     var st = document.createElement('style'); st.id = 'nba-css-pf';
     st.textContent = [
-      '.nba-ttc{display:inline-flex;align-items:center;max-width:100%;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.6;color:var(--gold-l);background:var(--gold-pale);border:1px solid rgba(245,184,61,.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
+      '.nba-ttc{display:inline-flex;align-items:center;max-width:100%;padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:800;line-height:1.6;color:#F8E2AE;text-shadow:0 1px 1px rgba(0,0,0,.45);border:1px solid transparent;background:linear-gradient(180deg,rgba(255,224,150,.20),rgba(242,184,75,.04)) padding-box,linear-gradient(#101C13,#101C13) padding-box,linear-gradient(135deg,#FFEFC2 0%,#E9B44C 38%,#8E6420 62%,#F2C66A 100%) border-box;background-origin:border-box;box-shadow:inset 0 1px 0 rgba(255,246,220,.22),0 2px 8px rgba(242,184,75,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}',
       '.nba-ttc.sm{display:flex;margin:2px auto 0;width:fit-content;font-size:9.5px;padding:0 6px}',
-      '.nba-ttc.big{font-size:12.5px;padding:3px 12px}',
+      '.nba-ttc.big{position:relative;font-size:12.5px;padding:3px 13px}',
+      '.nba-ttc.big::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.26) 50%,transparent 65%);transform:translateX(-120%);animation:nba-ttc-sh 4.5s ease-in-out 1.2s infinite;pointer-events:none}@keyframes nba-ttc-sh{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}@media (prefers-reduced-motion:reduce){.nba-ttc.big::after{animation:none;display:none}}',
       '.nba-nl{display:flex;align-items:center;gap:6px;min-width:0}',
       '.nba-lead .nm .nba-ttc{margin-inline-start:6px;vertical-align:1px;font-size:9.5px;padding:0 6px}',
       '.nba-row[role=button],.nba-lead[role=button]{cursor:pointer}.nba-row[role=button]:focus-visible,.nba-lead[role=button]:focus-visible{outline:2px solid var(--brand);outline-offset:2px}',
@@ -1360,8 +1362,9 @@
   function qFill(el) {
     el.innerHTML = '';
     if (Q.off) { el.hidden = true; return; }
-    el.hidden = false;
     var d = Q.d, done = d ? d.t.filter(function (t) { return t.c; }).length : 0;
+    el.hidden = !!(d && done === 3);   /* كل المهام اتستلمت: الكارت بيختفي — وبيرجع لوحده مع تجديد اليوم */
+    if (el.hidden) return;
     var head = h('div', { class: 'nbq-h' }, [h('div', { class: 'nbq-ti' }, [ico(PIc.target), h('b', { text: 'المهام اليومية' })]), d ? h('span', { class: 'nba-tag' + (done === 3 ? ' g' : ''), text: done + '/3' }) : null]);
     var kids = [head];
     if (!d) kids.push(Q.err ? h('div', { class: 'nbq-er' }, ['تعذّر تحميل المهام دلوقتي.', h('button', { class: 'nba-eqb', onclick: function () { qLoad(true); qRepaint(); } }, ['إعادة المحاولة'])])
