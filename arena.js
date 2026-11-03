@@ -797,7 +797,49 @@
       '.nbz-bar{position:sticky;bottom:0;z-index:5;margin:18px -16px 0;padding:22px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(10,21,16,0),#0A1510 20px)}',
       '.nbz-sum{margin-bottom:10px;text-align:center;font-size:12.5px;font-weight:700;color:#A9C0B2}',
       '.nbz-bar .nbz-play{margin-top:0}',
-      '.nbz-play[disabled]{cursor:default;filter:grayscale(.5) brightness(.85)}.nbz-play[disabled]::before,.nbz-play[disabled] .gl{display:none}',
+      '.nbz-play[disabled]{cursor:default;filter:grayscale(.7) brightness(.72)}.nbz-play[disabled]::before,.nbz-play[disabled] .gl{display:none}',
+      '.nbz-lb .nbz-vista{height:clamp(140px,18vh,172px);height:clamp(140px,18dvh,172px)}',
+      '.nbz-lb .nbx-tk{position:relative;z-index:3;margin:-26px 0 6px;border:0;border-radius:24px;background:radial-gradient(120% 90% at 50% 0,rgba(43,217,138,.17),transparent 62%),linear-gradient(180deg,#14301F,#0B1A12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 22px 38px -16px rgba(0,0,0,.85)}',
+      '.nbz-lb .nbx-tk .a{padding:16px 18px 2px}',
+      '.nbz-lb .nbx-tk .l{font-size:11.5px;font-weight:800;color:#9FB8A9}',
+      '.nbz-lb .nbx-cv{font-size:clamp(34px,11vw,46px);color:#8AF5C6;text-shadow:0 0 26px rgba(43,217,138,.45)}',
+      '.nbz-lb .nbx-code.cp .nbx-cv{color:#FFD98A;text-shadow:0 0 26px rgba(242,184,75,.5)}',
+      '.nbz-lb .nbx-tk .p{border-top:1.5px dashed rgba(255,255,255,.14)}',
+      '.nbz-lb .nbx-tk .p::before,.nbz-lb .nbx-tk .p::after{background:#0A1510}',
+      '.nbz-lb .nbx-meta{gap:7px;flex-wrap:wrap}',
+      '.nbz-lb .nbx-meta i{display:none}',
+      '.nbz-lb .nbx-meta span{padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.06);color:#CFE0D6;font-size:12.5px;font-weight:700}',
+      '.nbz-lb .nbx-meta span:first-child{color:#E7C06E}',
+      '.nba-wrap.nbz-lb .nbx-tk .nba-btn{margin-bottom:0;min-height:46px;border-radius:14px;font-size:13.5px}',
+      '.nba-wrap.nbz-lb .nbx-tk .nba-btn.sec{background:rgba(255,255,255,.06);color:#EAF4EE;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}',
+      '.nba-wrap.nbz-lb .nbx-tk .nba-btn:not(.sec){background:linear-gradient(180deg,#4CF0A8,#2BD98A 55%,#1CB574);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 20px -8px rgba(43,217,138,.55)}',
+      '.nba-wrap.nbz-lb .nba-btn.sec{border-radius:16px;background:rgba(255,255,255,.06);border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}.nba-wrap.nbz-lb>.nba-btn.sec{margin-bottom:12px}.nbz-bar .nba-btn.sec{margin:8px 0 0}',
+      '.nbz-lb .nbx-sh{margin:24px 2px 12px}',
+      '.nbz-lb .nbx-sh b{display:flex;align-items:center;gap:10px;font-size:15.5px;font-weight:900;color:#EAF4EE}',
+      '.nbz-lb .nbx-sh b::before{content:"";width:8px;height:8px;border-radius:1.5px;background:#F2B84B;transform:rotate(45deg);box-shadow:0 0 10px rgba(242,184,75,.5)}',
+      '.nbz-lb .nbx-mt{gap:5px}.nbz-lb .nbx-mt i{max-width:32px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);transition:background .3s}',
+      '.nbz-lb .nbx-mt i.on{background:linear-gradient(90deg,#1FB872,#7CF0B6);box-shadow:0 0 8px rgba(43,217,138,.5)}',
+      '.nbz-lb .nbx-sh span{color:#F2C66A;font-weight:800}',
+      '.nbz-lb .nbx-seats{display:flex;flex-direction:column;gap:8px;border-top:0}',
+      '.nbz-lb .nbx-seats .nba-row{position:relative;overflow:hidden;min-height:68px;padding:10px 14px 10px 12px;border:0;border-radius:18px;background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(43,217,138,.07))}',
+      '.nbz-lb .nbx-seats .nba-row::before{width:22px;color:#5F7D6D}',
+      '.nbz-lb .nbx-seats .nba-row:not(.em)::after{content:"";position:absolute;top:12px;bottom:12px;right:0;width:3px;border-radius:3px 0 0 3px;background:#2BD98A;opacity:.5}',
+      '.nbz-lb .nbx-seats .nba-row.me{background:linear-gradient(90deg,rgba(43,217,138,.05),rgba(43,217,138,.16))}.nbz-lb .nbx-seats .nba-row.me::after{opacity:1;box-shadow:0 0 12px rgba(43,217,138,.6)}',
+      '.nbz-lb .nbx-seats .nba-row.host{background:linear-gradient(90deg,rgba(242,184,75,.04),rgba(242,184,75,.15))}.nbz-lb .nbx-seats .nba-row.host::after{background:#F2B84B;opacity:1;box-shadow:0 0 12px rgba(242,184,75,.6)}',
+      '.nbz-lb .nbx-seats .nba-row.em{background:none;border:1.5px dashed rgba(255,255,255,.12);color:#7F9A8B}',
+      '.nbz-lb .nba-row .nm b{font-size:14.5px;color:#F2F8F4}',
+      '.nbz-lb .nba-tag{border:0;background:rgba(242,184,75,.13);color:#FFD98A}',
+      '.nbz-lb .nba-card.tight{margin:22px 0 12px;padding:0;border:0;background:none;box-shadow:none;border-radius:0}',
+      '.nbz-lb .nba-team{border:0;border-radius:20px;padding:10px;background:linear-gradient(180deg,rgba(43,217,138,.17),rgba(43,217,138,.03))}',
+      '.nbz-lb .nba-team.b{background:linear-gradient(180deg,rgba(242,184,75,.18),rgba(242,184,75,.03))}',
+      '.nbz-lb .nba-team .nba-row{border:0;border-radius:14px;background:rgba(0,0,0,.24)}',
+      '.nbz-lb .nba-team .nba-row.em{background:none;border:1.5px dashed rgba(255,255,255,.12)}',
+      '.nbz-lb .nba-team h4{font-size:14.5px}',
+      '.nbz-lb .nba-teams{gap:22px}.nbz-lb .nba-vs{width:40px;height:46px;font-size:12px;border:0;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#F8D27A,#B9801F);color:#2A1B03;box-shadow:none}',
+      '.nbz-lb .nbx-why{margin:10px 0 0;font-size:12.5px;color:#A9C0B2;line-height:1.7}',
+      '.nbz-lb .nbz-bar{margin-top:14px}',
+      '.nbz-wait{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 8px;padding:14px;border-radius:18px;background:rgba(255,255,255,.05);color:#CFE0D6;font-weight:700}',
+      '.nbz-wait .nba-wt{background:#2BD98A}',
       /* ── شاشات صغيرة / قصيرة / عريضة ── */
       '@media (max-width:360px){.nbz-h{font-size:29px}.nbz-c{width:124px;height:190px}.nbz-modes{gap:10px}.nbz-m b{font-size:18px}}',
       '@media (max-height:700px){.nbz-vista{height:clamp(170px,30vh,230px)}.nbz-play{min-height:64px}}',
@@ -2019,8 +2061,8 @@
     var hostP = S.players[r.host], hostStale = !hostP || !hostP.ls || (srvNow() - hostP.ls) > STALE;
     var balanced = !teams || (r.pc % 2 === 0 && r.na === r.nb), canStart = isHost && r.pc >= 2 && balanced && !V.busy;
     S.ln = 0;
-    w.classList.add('nba-lobw');
-    w.appendChild(top('الغرفة', leaveLobby));
+    w.classList.add('nba-lobw', 'nbz', 'nbz-cr', 'nbz-lb');   /* ARENA-LOBBY-X: نفس لغة اللوبي */
+    w.appendChild(h('div', { class: 'nbz-stage cr' }, [h('div', { class: 'nbz-stars', 'aria-hidden': 'true' }), top('الغرفة', leaveLobby), nbzVista()]));
     function flash(b, label) { var tn = b.lastChild, old = tn.nodeValue; tn.nodeValue = label; setTimeout(function () { tn.nodeValue = old; }, 1600); }
     var code = h('button', { class: 'nbx-code', 'data-nosnd': '1', 'aria-label': 'نسخ كود الغرفة ' + S.rid, onclick: function (e) { copy(S.rid, 'اتنسخ الكود'); var b = e.currentTarget; b.classList.remove('cp'); void b.offsetWidth; b.classList.add('cp'); SFX.play('pop'); } },
       [h('span', { class: 'nbx-cv', text: S.rid })]);
@@ -2062,11 +2104,17 @@
     if (meP) S.seenInit = true;
     w.appendChild(h('div', { class: 'nba-sp' }));
     if (isHost) {
-      w.appendChild(h('button', { class: 'nba-btn gold nbx-ch', style: 'margin-top:16px', disabled: !canStart, onclick: startGame }, [V.busy ? h('div', { class: 'nba-spin' }) : null, V.busy ? (r.qr ? 'جاري البدء…' : 'جاري تجهيز الأسئلة… (ممكن ياخد لحد 30 ثانية)') : (r.qr ? 'ابدأ اللعبة' : 'ابدأ وجهّز الأسئلة')]));
-      if (r.pc < 2) w.appendChild(h('div', { class: 'nbx-why', text: 'لازم لاعب واحد على الأقل (' + r.pc + ' / 2) عشان تبدأ المباراة. ابعت الكود لصاحبك.' }));
+      var lab = V.busy ? (r.qr ? 'جاري البدء…' : 'جاري تجهيز الأسئلة… (ممكن ياخد لحد 30 ثانية)') : (r.qr ? 'ابدأ اللعبة' : 'ابدأ وجهّز الأسئلة');
+      w.appendChild(h('div', { class: 'nbz-bar' }, [
+        h('button', { class: 'nbz-play go', disabled: !canStart, onclick: startGame }, [
+          h('span', { class: 'gl', 'aria-hidden': 'true' }), h('span', { class: 'ic' }, [V.busy ? h('div', { class: 'nba-spin d' }) : ico(I.bolt)]),
+          h('span', { class: 'tx' }, [h('b', { text: lab, style: lab.length > 16 ? 'font-size:15px' : '' }), h('small', { text: 'START MATCH' })]),
+          h('span', { class: 'ar' }, [ico('<path d="M15 5l-7 7 7 7"/>')])]),
+        r.pc < 2 ? h('div', { class: 'nbx-why', text: 'لازم لاعب واحد على الأقل (' + r.pc + ' / 2) عشان تبدأ المباراة. ابعت الكود لصاحبك.' }) : null]));
     } else {
-      w.appendChild(h('div', { class: 'nba-note' }, [r.qr ? 'الأسئلة جاهزة — في انتظار المضيف يبدأ اللعبة…' : 'في انتظار المضيف يبدأ اللعبة…']));
-      if (hostStale) w.appendChild(h('button', { class: 'nba-btn sec', onclick: function () { takeHost(S.uid); } }, [ico(I.crown), 'المضيف مش متصل — تولّى الإدارة']));
+      w.appendChild(h('div', { class: 'nbz-bar' }, [
+        h('div', { class: 'nba-note nbz-wait' }, [h('span', { class: 'nba-wt' }), r.qr ? 'الأسئلة جاهزة — في انتظار المضيف يبدأ اللعبة…' : 'في انتظار المضيف يبدأ اللعبة…']),
+        hostStale ? h('button', { class: 'nba-btn sec', onclick: function () { takeHost(S.uid); } }, [ico(I.crown), 'المضيف مش متصل — تولّى الإدارة']) : null]));
     }
   }
 
