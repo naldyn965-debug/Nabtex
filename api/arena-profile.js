@@ -173,6 +173,11 @@ async function fs(path, opt, tok) {
     return { status: r.status, json: j };
   } catch (e) { return { status: 0, json: null }; } finally { clearTimeout(t); }
 }
+/* ARENA-STATS: عدّاد يومي لعدد الغرف اللي اتلعبت — مستند شهري arena_stats/YYYY-MM فيه pDD (DD = يوم القاهرة). بيتزوّد بـ commit منفصل
+   بعد نجاح commit المباراة (marker الـ create-only بيضمن مرة واحدة لكل مباراة)، وأي فشل هنا مش بيأثّر على تسجيل المباراة. للتراجع: امسح الدالة والنداء. */
+async function statBump(dayKey, tok) {
+  await fs(':commit', { method: 'POST', body: JSON.stringify({ writes: [{ update: { name: FS_ROOT + '/arena_stats/' + dayKey.slice(0, 7) }, updateMask: { fieldPaths: [] }, updateTransforms: [{ fieldPath: 'p' + dayKey.slice(8, 10), increment: { integerValue: '1' } }] }] }) }, tok);
+}
 /* batchGet: name → {found doc | null}. بنقسّم لدفعات 100 */
 async function batchGet(names, tok) {
   const out = {};
@@ -451,6 +456,7 @@ module.exports = async function handler(req, res) {
 
     const cm = await fs(':commit', { method: 'POST', body: JSON.stringify({ writes: writes }) }, tok);
     if (cm.status === 200) {
+      await statBump(qDay, tok);   /* ARENA-STATS */
       const mine = entries[uid], ru = ev.res[uid];
       return send(res, 200, { ok: true, counted: ev.counted, me: { s: mine.s, c: mine.c, w: mine.w, k: mine.k, n: mine.n, ws: mine.ws, bs: mine.bs, ps: mine.ps, rank: ru.rank, q: mine.q || null } });
     }
