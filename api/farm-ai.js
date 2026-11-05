@@ -166,227 +166,6 @@ function judgeUpstream(status, text) {
   return { next: false, cool: 0 };   /* 400 عادي = الطلب نفسه غلط، تغيير الـ backend مش هيفيد */
 }
 
-/* ═══ ROUTER-V2 (إضافة) — تحسين أداء واستقرار راوتر جيميناي (503/429/502 + زمن الاستجابة + استمرار التبريد بين cold starts) ═══
-   1) الموديل القوي (GEMINI_STUDY_MODEL): أول 503/429/اسم موديل غلط = إيقافه 60–120ث (strongOffUntil) والانتقال علطول لـ MODEL من غير تجربة باقي الـ backends بالموديل القوي.
-   2) التبريد لكل (موديل + backend) = mbCool: فشل موديل ما بيعطّلش الـ backend لموديلات تانية. 401/403/مفتاح غلط بس بيعطّل الـ backend كله (cooldown القديم).
-   3) سقف المحاولة حسب الوضع (attemptCapFor) مع ترك FALLBACK_RESERVE_MS للـ fallback قبل نهاية UPSTREAM_TIMEOUT_MS.
-   4) انتقال فوري عند 429/503 · لو المحاولة عدّت 8ث نجرّب backend تاني بالتوازي (حد أقصى محاولتين شغّالين، أول رد ناجح يكسب والباقي يتلغي) · ترتيب الـ backends بآخر زمن نجاح مع بقاء التناوب الحالي (nextStart) كأساس.
-   5) حالة التبريد بتتحفظ في Upstash (nbx:cd:<model>:<backend>، TTL = مدة التبريد) وبتتقرا بـ MGET واحد أول الطلب (≤1.5ث)؛ لو Upstash مش متظبط/فشل/اتأخر نكمّل بالسلوك المحلي من غير ما الطلب يتعطّل. كاش الردود فاضل محلي.
-   الصرف (aiCharge) والكاش بيحصلوا في handler مرة واحدة بعد اختيار رد واحد — الكتلة دي ما بتلمسهم.
-   للتراجع: متغير NBX_ROUTER_V2=off في Vercel بيرجّع الحلقة القديمة بالظبط، أو امسح الكتلة دي + بلوك ROUTER-V2 في handler. ═══ */
-const ROUTER_V2 = !/^(off|0|false|none)$/i.test(String(process.env.NBX_ROUTER_V2 || '').trim());
-const HEDGE_AFTER_MS = 8000;          /* محاولة عدّت المدة دي = نجرّب backend تاني بالتوازي */
-const HEDGE_MIN_REMAIN_MS = 10000;    /* ما نفتحش محاولة موازية لو الوقت المتبقي أقل من كده */
-const STRONG_COOL_MIN_MS = 60000, STRONG_COOL_MAX_MS = 120000;   /* مدة إيقاف الموديل القوي */
-const FALLBACK_RESERVE_MS = 12000;    /* وقت محجوز للموديل العادي بعد فشل القوي */
-const CD_TIMEOUT_MS = 1500;           /* مهلة أي استدعاء Upstash للتبريد */
-const LAT_FRESH_MS = 10 * 60000, LAT_BUCKET_MS = 2000;   /* ترتيب بآخر زمن نجاح: القياس صالح 10 دقايق، وفروق أقل من 2ث تتعامل كتعادل (فيفضل التناوب) */
-const mbCool = new Map();             /* "model|backend" → وقت انتهاء التبريد (ms) — best-effort على مستوى الـ instance (+ Upstash) */
-const latMap = new Map();             /* "mode|model|backend" → { ms, at } آخر زمن استجابة ناجح */
-let upOffUntil = 0;                   /* قاطع دائرة: لو Upstash فشل/اتأخر نتخطّاه 30ث */
-let cdQueue = [];                     /* كتابات التبريد المعلّقة — بتتبعت دفعة واحدة آخر الراوتر */
-
-/* سقف المحاولة الواحدة حسب الوضع (الميزانية الكلية فاضلة UPSTREAM_TIMEOUT_MS) */
-function attemptCapFor(mode) {
-  if (mode === 'study') return 45000;
-  if (mode === 'study_ask') return 18000;
-  if (mode === 'study_quiz' || mode === 'study_cards') return 20000;
-  return 20000;
-}
-
-function cdPart(s) { return String(s).replace(/[^A-Za-z0-9._-]/g, '_'); }
-function cdKey(model, backend) { return 'nbx:cd:' + cdPart(model) + ':' + cdPart(backend); }   /* _all = الـ backend كله · _strong = إيقاف الموديل القوي */
-
-/* pipeline واحد على Upstash بمهلة 1.5ث؛ أي فشل = null + قاطع دائرة (الراوتر بيكمّل محليًا) */
-async function upPipe(cmds) {
-  if (!(UPSTASH_URL && UPSTASH_TOKEN) || Date.now() < upOffUntil) return null;
-  const c = new AbortController();
-  const t = setTimeout(function () { c.abort(); }, CD_TIMEOUT_MS);
-  try {
-    const r = await fetch(UPSTASH_URL + '/pipeline', {
-      method: 'POST', signal: c.signal,
-      headers: { Authorization: 'Bearer ' + UPSTASH_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify(cmds)
-    });
-    const j = r.ok ? await r.json() : null;
-    if (!Array.isArray(j)) { upOffUntil = Date.now() + 30000; return null; }
-    return j;
-  } catch (e) { upOffUntil = Date.now() + 30000; return null; } finally { clearTimeout(t); }
-}
-
-/* أول الطلب: استرجاع حالات التبريد المحفوظة (cold start) بـ MGET واحد — مفيش حاجة بترمي */
-async function cdLoad(backends) {
-  try {
-    const hasStrong = !!(STUDY_MODEL && STUDY_MODEL !== MODEL);
-    if (backends.length < 2 && !hasStrong) return;   /* backend واحد وموديل واحد: التبريد مش بيغيّر أي قرار */
-    const keys = [], slots = [];
-    backends.forEach(function (b) {
-      keys.push(cdKey('_all', b.name)); slots.push({ t: 'all', b: b.name });
-      keys.push(cdKey(MODEL, b.name)); slots.push({ t: 'mb', m: MODEL, b: b.name });
-      if (hasStrong) { keys.push(cdKey(STUDY_MODEL, b.name)); slots.push({ t: 'mb', m: STUDY_MODEL, b: b.name }); }
-    });
-    if (hasStrong) { keys.push(cdKey('_strong', STUDY_MODEL)); slots.push({ t: 'strong' }); }
-    const res = await upPipe([['MGET'].concat(keys)]);
-    const arr = res && res[0] && Array.isArray(res[0].result) ? res[0].result : null;
-    if (!arr) return;
-    const now = Date.now();
-    arr.forEach(function (v, i) {
-      const until = parseInt(v, 10), s = slots[i];
-      if (!s || !Number.isFinite(until) || until <= now || until > now + 2 * 3600000) return;
-      if (s.t === 'all') cooldown.set(s.b, Math.max(cooldown.get(s.b) || 0, until));
-      else if (s.t === 'mb') { const k = s.m + '|' + s.b; mbCool.set(k, Math.max(mbCool.get(k) || 0, until)); }
-      else strongOffUntil = Math.max(strongOffUntil, until);
-    });
-  } catch (e) { /* نكمّل بالحالة المحلية */ }
-}
-/* kind: 'mb' (موديل+backend) · 'all' (backend كله) · 'strong' (إيقاف الموديل القوي) — بيسجّل محليًا وبيحط الكتابة في الطابور */
-function cdSet(kind, model, backend, ms) {
-  if (!(ms > 0)) return;
-  const now = Date.now();
-  let until = now + ms, key;
-  if (kind === 'strong') { strongOffUntil = Math.max(strongOffUntil, until); until = strongOffUntil; key = cdKey('_strong', model); }
-  else if (kind === 'all') { until = Math.max(until, cooldown.get(backend) || 0); cooldown.set(backend, until); key = cdKey('_all', backend); }
-  else { const k = model + '|' + backend; until = Math.max(until, mbCool.get(k) || 0); mbCool.set(k, until); key = cdKey(model, backend); }
-  if (UPSTASH_URL && UPSTASH_TOKEN) cdQueue.push(['SET', key, String(until), 'PX', String(Math.max(1, until - now))]);   /* TTL = مدة التبريد */
-}
-async function cdFlush() {
-  if (!cdQueue.length) return;
-  const q = cdQueue; cdQueue = [];
-  await upPipe(q);
-}
-
-/* قائمة محاولات لموديل معيّن: اللي مش في تبريد (backend كله أو موديل+backend) بالترتيب الدائري من start، ثم ترتيب بآخر زمن نجاح (التعادل = التناوب).
-   strict: لو الكل في تبريد بيرجّع فاضي (الموديل القوي بيتخطّى)؛ غير كده بنجرّب الأقرب انتهاءً بس (زي pickOrder القديم). */
-function routeList(backends, start, model, mode, strict) {
-  const now = Date.now(), n = backends.length, ready = [], cooling = [];
-  for (let i = 0; i < n; i++) {
-    const b = backends[(start + i) % n];
-    const until = Math.max(cooldown.get(b.name) || 0, mbCool.get(model + '|' + b.name) || 0);
-    if (until <= now) ready.push(b); else cooling.push({ b: b, until: until });
-  }
-  if (!ready.length) {
-    if (strict) return [];
-    cooling.sort(function (a, c) { return a.until - c.until; });
-    return cooling.slice(0, 1).map(function (x) { return x.b; });
-  }
-  if (ready.length < 2) return ready;
-  return ready.map(function (b, i) {
-    const l = latMap.get(mode + '|' + model + '|' + b.name);
-    return { b: b, i: i, k: (l && now - l.at < LAT_FRESH_MS) ? Math.floor(l.ms / LAT_BUCKET_MS) : 0 };
-  }).sort(function (a, c) { return a.k - c.k || a.i - c.i; }).map(function (x) { return x.b; });
-}
-
-/* محاولة واحدة على backend — ما بترميش أبدًا (بترجّع { b, r, t, err }) */
-async function rvAttempt(b, model, reqBody, useGround, ctl) {
-  try {
-    let r = await callBackend(b, reqBody, ctl.signal, model);
-    if (!r.ok && r.status === 400 && useGround) {   /* الموديل/الحساب مش بيدعم Grounding → كمّل من غيره */
-      console.error('[farm-ai] grounding rejected, retrying without it');
-      delete reqBody.tools;
-      r = await callBackend(b, reqBody, ctl.signal, model);
-    }
-    const t = await r.text();
-    return { b: b, r: r, t: t, err: null };
-  } catch (e) { return { b: b, r: null, t: '', err: e }; }
-}
-
-/* مرحلة واحدة (موديل واحد على قائمة backends): انتقال فوري عند الفشل، ومحاولة موازية بعد HEDGE_AFTER_MS، وأول نجاح بيكسب والباقي بيتلغي.
-   P = { R, list, model ('' = MODEL), mk (اسم الموديل للمفاتيح), mode, reqBody, useGround, cap, phaseEnd, strongPhase }
-   بترجّع { won, modelLevel (دليل إن المشكلة من الموديل نفسه), hardStop (400 عادي: الطلب نفسه غلط), cool } */
-async function rvPhase(P) {
-  const R = P.R, list = P.list, mk = P.mk, out = { won: false, modelLevel: false, hardStop: false, cool: 0 };
-  let next = 0, inflight = [], hedgeOff = false;
-  function cancelAll() {
-    inflight.forEach(function (a) { a.cancelled = true; clearTimeout(a.timer); try { a.ctl.abort(); } catch (e) { /* */ } });
-    inflight = [];
-  }
-  function launch() {
-    const b = list[next++], now = Date.now(), remain = P.phaseEnd - now;
-    const ctl = new AbortController();
-    const timer = setTimeout(function () { ctl.abort(); }, next < list.length ? Math.min(P.cap, remain) : remain);   /* آخر محاولة بتاخد الباقي كله (زي الحلقة القديمة) */
-    const a = { b: b, ctl: ctl, timer: timer, t0: now, cancelled: false };
-    a.p = rvAttempt(b, P.model, P.reqBody, P.useGround, ctl).then(function (x) { clearTimeout(timer); x.a = a; return x; });
-    inflight.push(a);
-  }
-  try {
-    while (true) {
-      if (!inflight.length) {
-        if (next >= list.length) break;
-        if (next > 0 && P.phaseEnd - Date.now() < 3000) break;
-        launch();
-      }
-      const racers = inflight.map(function (a) { return a.p; });
-      let ht = null;
-      if (!hedgeOff && inflight.length < 2 && next < list.length) {   /* محاولة موازية واحدة بس، ولو فيه backend تاني متاح */
-        const wait = Math.max(0, inflight[0].t0 + HEDGE_AFTER_MS - Date.now());
-        racers.push(new Promise(function (res) { ht = setTimeout(function () { res(null); }, wait); }));
-      }
-      const x = await Promise.race(racers);
-      if (ht) clearTimeout(ht);
-      if (x === null) {   /* المحاولة الأولى عدّت 8ث */
-        if (P.phaseEnd - Date.now() >= HEDGE_MIN_REMAIN_MS) { console.log('[farm-ai] ' + mk + ': ' + inflight[0].b.name + ' slow >' + HEDGE_AFTER_MS + 'ms → also trying ' + list[next].name + ' in parallel'); launch(); }
-        else hedgeOff = true;
-        continue;
-      }
-      inflight = inflight.filter(function (a) { return a !== x.a; });
-      if (x.a.cancelled) continue;
-      const name = x.b.name;
-      if (x.err) {   /* اتصال فاشل / مهلة */
-        R.lastErr = x.err; R.up = null;
-        console.error('[farm-ai] backend ' + name + (P.strongPhase ? ' (' + mk + ')' : '') + ' unreachable:', x.err && x.err.name);
-        cdSet('mb', mk, name, 15000);
-        out.cool = Math.max(out.cool, 15000);
-        continue;
-      }
-      const st = x.r.status, v = judgeUpstream(st, x.t);
-      R.up = x.r; R.text = x.t; R.lastErr = null;
-      if (!v) {   /* نجاح */
-        latMap.set(P.mode + '|' + mk + '|' + name, { ms: Date.now() - x.a.t0, at: Date.now() });
-        R.rateLimited = false; out.won = true;
-        break;
-      }
-      console.error('[farm-ai] backend ' + name + (P.strongPhase ? ' (' + mk + ')' : '') + ' → http ' + st + errBrief(x.t));
-      if (st === 429) R.rateLimited = true;
-      const keyBad = st === 401 || st === 403 || (st === 400 && /api key/i.test(x.t || ''));
-      if (keyBad) { cdSet('all', '', name, v.cool); continue; }   /* مفتاح الـ backend نفسه عطلان: بيأثر على كل الموديلات (مش دليل على الموديل) */
-      const modelBad = st === 404 || (st === 400 && /model/i.test(x.t || ''));   /* اسم موديل غلط/اتقفل */
-      if (v.cool) cdSet('mb', mk, name, v.cool);
-      if (P.strongPhase && (st === 429 || st === 503 || modelBad)) {   /* دليل إن المشكلة من الموديل القوي نفسه: ما نكررهوش على باقي الـ backends */
-        out.modelLevel = true; out.cool = Math.max(out.cool, modelBad ? STRONG_COOL_MAX_MS : (v.cool || 0));
-        break;
-      }
-      out.cool = Math.max(out.cool, v.cool || 0);
-      if (!v.next) { out.hardStop = true; break; }   /* 400 عادي = الطلب نفسه غلط */
-    }
-  } finally { cancelAll(); }
-  return out;
-}
-
-/* الراوتر الجديد: مرحلة الموديل القوي (لو متاح) ← fallback للموديل العادي، وبيرجّع نفس متغيرات الحلقة القديمة { up, text, rateLimited, lastErr } */
-async function routerRun(o) {
-  const R = { up: null, text: '', rateLimited: false, lastErr: null };
-  const base = { R: R, mode: o.mode, reqBody: o.reqBody, useGround: o.useGround, cap: attemptCapFor(o.mode) };
-  try {
-    const strong = modelFor(o.mode);
-    let ranStrong = false;
-    if (strong) {
-      const sl = routeList(o.backends, o.start, strong, o.mode, true);
-      const pe = o.deadline - FALLBACK_RESERVE_MS;
-      if (sl.length && pe - Date.now() >= 3000) {
-        ranStrong = true;
-        const pr = await rvPhase(Object.assign({}, base, { list: sl, model: strong, mk: strong, strongPhase: true, phaseEnd: pe }));
-        if (pr.won || pr.hardStop) return R;
-        cdSet('strong', strong, '', Math.min(STRONG_COOL_MAX_MS, Math.max(STRONG_COOL_MIN_MS, pr.cool || 0)));   /* 60–120ث بدل 10 دقايق */
-        console.error('[farm-ai] ' + o.mode + ': ' + strong + ' unavailable, falling back to ' + MODEL);
-      }
-    }
-    if (ranStrong && o.deadline - Date.now() < 3000) return R;
-    const wl = routeList(o.backends, o.start, MODEL, o.mode, false);
-    await rvPhase(Object.assign({}, base, { list: wl, model: '', mk: MODEL, strongPhase: false, phaseEnd: o.deadline }));
-    return R;
-  } finally { await cdFlush(); }
-}
-
 const usage = new Map();   /* uid|mode → { day, n } */
 const cache = new Map();   /* hash → { at, payload } */
 let globalUse = { day: '', n: 0 };
@@ -2160,10 +1939,7 @@ module.exports = async function handler(req, res) {
   if (useGround) reqBody.tools = [{ google_search: {} }];
 
   /* الراوتر: تناوب دائري من الدور الحالي، ومحاولة واحدة لكل backend، وكل ده جوّه ميزانية UPSTREAM_TIMEOUT_MS */
-  const cdP = ROUTER_V2 ? cdLoad(backends) : null;   /* ROUTER-V2: MGET واحد لحالات التبريد بالتوازي مع عدّاد التناوب (مش بيرمي) */
-  const startIdx = qRot >= 0 ? qRot % Math.max(1, backends.length) : await nextStart(backends.length);   /* STUDY-QSEQ: سؤال بسؤال = تناوب بالتتابع بدل العدّاد العام */
-  if (cdP) await cdP;
-  const order = pickOrder(backends, startIdx);
+  const order = pickOrder(backends, qRot >= 0 ? qRot % Math.max(1, backends.length) : await nextStart(backends.length));   /* STUDY-QSEQ: سؤال بسؤال = تناوب بالتتابع بدل العدّاد العام */
   const deadline = Date.now() + UPSTREAM_TIMEOUT_MS;
   const attemptCap = (mode === 'study' || mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards') ? STUDY_ATTEMPT_MS : ATTEMPT_CAP_MS;
   let up = null, text = '', rateLimited = false, lastErr = null;
@@ -2173,13 +1949,7 @@ module.exports = async function handler(req, res) {
     const lr = await qmLadderRun({ order: order, reqBody: reqBody, deadline: deadline, t0: t0, attemptCap: attemptCap, stage: qStage, hint: (qStage === 'one' && body.qone && typeof body.qone.hint === 'string') ? body.qone.hint.slice(0, 200) : '' });
     up = lr.up; text = lr.text; rateLimited = lr.rateLimited; lastErr = lr.lastErr; qmL = true;
   }
-  /* ROUTER-V2: الراوتر الجديد (strong fallback فوري + تبريد لكل موديل/backend + محاولة موازية بعد 8ث + Upstash). NBX_ROUTER_V2=off = الحلقة القديمة تحت بالظبط. */
-  let rv2 = false;
-  if (ROUTER_V2 && !qmL) {
-    const rr = await routerRun({ backends: backends, start: startIdx, mode: mode, reqBody: reqBody, useGround: useGround, deadline: deadline });
-    up = rr.up; text = rr.text; rateLimited = rr.rateLimited; lastErr = rr.lastErr; rv2 = true;
-  }
-  for (let bi = 0; bi < (qmL || rv2 ? 0 : order.length); bi++) {   /* QM-LADDER / ROUTER-V2 */
+  for (let bi = 0; bi < (qmL ? 0 : order.length); bi++) {   /* QM-LADDER */
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
@@ -2207,7 +1977,7 @@ module.exports = async function handler(req, res) {
     } finally { clearTimeout(timer); }
   }
   /* STUDY-FALLBACK: لو الموديل الأقوى (GEMINI_STUDY_MODEL) وكل الـ backends رجّعت 429/5xx (حصته المجانية أقل بكتير)، نعيد المرة دي بالموديل الأساسي (MODEL) في نفس الطلب بدل ما الطالب يشوف خطأ. من غير GEMINI_STUDY_MODEL مفيش أي تأثير. للتراجع: امسح الكتلة دي. */
-  if (!qmL && !rv2 && modelFor(mode) && (!up || !up.ok) && (rateLimited || (up && (up.status === 429 || up.status >= 500 || up.status === 404 || (up.status === 400 && /model/i.test(text || '')))))) {
+  if (!qmL && modelFor(mode) && (!up || !up.ok) && (rateLimited || (up && (up.status === 429 || up.status >= 500 || up.status === 404 || (up.status === 400 && /model/i.test(text || '')))))) {
     console.error('[farm-ai] ' + mode + ': ' + modelFor(mode) + ' unavailable, falling back to ' + MODEL);
     strongOffUntil = Date.now() + ((rateLimited || (up && up.status === 429)) ? (/PerDay/i.test(text || '') ? 30 * 60000 : 60000) : 10 * 60000);   /* حصة يومية: نص ساعة · دقيقة: 60ث · اسم موديل غلط/5xx: 10 دقايق */
     for (let fi = 0; fi < order.length; fi++) {
