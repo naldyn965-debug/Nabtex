@@ -1623,6 +1623,145 @@ function cleanOptions(o) {
   return out;
 }
 
+/* ═══ GROQ-FALLBACK (إضافة) — لما جيميناي يبقى مشغول (429 / 5xx / timeout / مفتاح أو موديل مقفول) على كل الـ backends، الطلب نفسه بيتكمّل على موديلات Groq بالتتابع بدل ما المستخدم يشوف رسالة خطأ.
+   ازاي بيشتغل: (1) بعد ما محاولات جيميناي كلها تفشل (أو من الأول لو كل backends جيميناي لسه في تبريد) بنحوّل نفس الطلب (systemInstruction + contents + generationConfig) لصيغة chat.completions ونجرّب موديلات Groq واحد ورا التاني — الأقوى الأول — ولكل موديل كل مفاتيح Groq (GROQ_API_KEY.._4) بالدور الدائري.
+   (2) التبريد: 429 بيتبرّد للمفتاح+الموديل ده بس (من retry-after) وننتقل للمفتاح التالي · موديل مقفول/مش موجود بيتبرّد للكل 30 دقيقة وننتقل للموديل التالي · مفتاح غلط (401) بيتبرّد للمفتاح كله. التبريد ده منفصل تمامًا عن تبريد حلّال Groq (solverCool) فمفيش تداخل.
+   (3) الرد بيرجع بنفس شكل رد جيميناي (candidates/parts) فباقي الكود (التحقق، النقاط، الكاش، الواجهة) بيشتغل من غير أي تغيير. أي فشل = السلوك القديم بالظبط (429 busy / 502).
+   (4) الطلبات اللي فيها صور بتروح لموديل بيقرا الصور (GROQ_FALLBACK_VISION_MODELS) وبحد 3 صور: التشخيص بيقصّ الزوايا الزيادة، وصفحات «ذاكر مع نبتكس» الأكتر من 3 مش بتتحوّل (مينفعش نحذف صفحات من المذاكرة).
+   اختياري: GROQ_FALLBACK=off يوقفه كله · GROQ_FALLBACK_PRE=0 يوقف التحويل الاستباقي بس (والتحويل بعد فشل جيميناي يفضل شغّال) · GROQ_FALLBACK_MODELS / GROQ_FALLBACK_VISION_MODELS (مفصولة بفاصلة، الأقوى الأول؛ الافتراضي GROQ_MODEL ← qwen/qwen3.8-27b ← openai/gpt-oss-20b، وللصور qwen/qwen3.8-27b) · GROQ_FALLBACK_MAX_OUT (1000..16000، الافتراضي 8000). المفاتيح هي نفس مفاتيح Groq الموجودة.
+   للتراجع: امسح الكتلة دي + بلوكي GROQ-FALLBACK جوه handler (قبل حلقة المحاولات وقبل if (!up)) + رجّع شرط الحلقة لـ (qmL ? 0 : order.length). ═══ */
+const GFB_OFF = String(process.env.GROQ_FALLBACK || '').trim().toLowerCase() === 'off';
+const GFB_PRE = String(process.env.GROQ_FALLBACK_PRE || '').trim() !== '0';
+function gfbList(envName, dflt) {
+  const e = String(process.env[envName] || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9._:\/-]{3,100}$/.test(x); });
+  return (e.length ? e : dflt).filter(function (x, i, a) { return a.indexOf(x) === i; }).slice(0, 4);
+}
+const GFB_TEXT = gfbList('GROQ_FALLBACK_MODELS', [GROQ_MODEL, 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b']);
+const GFB_VISION = gfbList('GROQ_FALLBACK_VISION_MODELS', ['qwen/qwen3.8-27b']);
+const GFB_MAX_OUT = Math.min(16000, Math.max(1000, parseInt(process.env.GROQ_FALLBACK_MAX_OUT, 10) || 8000));
+const GFB_MAX_IMAGES = 3;      /* حد الصور في الطلب الواحد عند موديل الصور في Groq */
+const GFB_ATTEMPT_MS = 22000;  /* أقصى وقت لمحاولة واحدة */
+const GFB_END_MS = 52000;      /* نهاية مرحلة التحويل من بداية الطلب (الدالة maxDuration 60 والواجهة بتقطع عند 60ث) */
+const GFB_MIN_MS = 3500;       /* لو الباقي أقل من كده منبدأش محاولة جديدة */
+const GFB_PRE_MS = 18000;      /* سقف التحويل الاستباقي — الباقي من الميزانية بيفضل لجيميناي لو Groq فشل */
+const gfbCool = new Map();     /* مفتاح|موديل (أو مفتاح|* أو *|موديل) → وقت انتهاء التبريد — best-effort على مستوى الـ instance */
+let gfbRr = 0;
+
+function gfbCooling(key, model) {
+  const now = Date.now();
+  return (gfbCool.get(key + '|' + model) || 0) > now || (gfbCool.get(key + '|*') || 0) > now || (gfbCool.get('*|' + model) || 0) > now;
+}
+/* رد بنفس شكل رد جيميناي عشان باقي handler يقرأه من غير أي تغيير */
+function gfbWrap(t) { return JSON.stringify({ candidates: [{ content: { parts: [{ text: t }] }, finishReason: 'STOP' }] }); }
+
+/* بيحوّل طلب جيميناي لصيغة chat.completions (أو null لو الطلب مش قابل للتحويل) */
+function gfbPlan(reqBody, mode) {
+  const src = reqBody && reqBody.contents && reqBody.contents[0] && reqBody.contents[0].parts;
+  if (!Array.isArray(src) || !src.length) return null;
+  const imgAt = [];
+  src.forEach(function (p, i) { if (p && p.inlineData && p.inlineData.data) imgAt.push(i); });
+  let parts = src;
+  if (imgAt.length > GFB_MAX_IMAGES) {
+    if (mode !== 'diagnose' && mode !== 'diag_q') return null;   /* صفحات المذاكرة مينفعش يتحذف منها */
+    const drop = {};
+    imgAt.slice(GFB_MAX_IMAGES).forEach(function (i) {
+      drop[i] = 1;
+      if (i > 0 && src[i - 1] && typeof src[i - 1].text === 'string' && /^الصورة \d/.test(src[i - 1].text)) drop[i - 1] = 1;   /* سطر عنوان الزاوية بتاع الصورة المحذوفة */
+    });
+    parts = src.filter(function (p, i) { return !drop[i]; });
+  }
+  parts = parts.filter(function (p) { return p && ((p.inlineData && p.inlineData.data) || (typeof p.text === 'string' && p.text)); });
+  if (!parts.length) return null;
+  const sys = (((reqBody.systemInstruction || {}).parts) || []).map(function (p) { return (p && p.text) || ''; }).join('\n');
+  const hasImg = parts.some(function (p) { return p.inlineData; });
+  const json = !!(reqBody.generationConfig && reqBody.generationConfig.responseMimeType === 'application/json');
+  const all = sys + ' ' + parts.map(function (p) { return p.text || ''; }).join(' ');
+  const content = hasImg
+    ? parts.map(function (p) { return p.inlineData ? { type: 'image_url', image_url: { url: 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data } } : { type: 'text', text: p.text }; })
+    : parts.map(function (p) { return p.text; }).join('\n\n');
+  return {
+    json: json, models: hasImg ? GFB_VISION : GFB_TEXT,
+    messages: [{ role: 'system', content: (json && !/json/i.test(all)) ? sys + '\nأجب بـ JSON صالح فقط.' : sys }, { role: 'user', content: content }]
+  };
+}
+
+/* بيجرّب موديلات Groq بالتتابع (موديل ← كل المفاتيح ← الموديل اللي بعده) لحد أول رد سليم. بيرجّع { text, model, key } أو null — ومبيرميش أي خطأ. capMs = أقصى وقت للمرحلة دي. */
+async function groqFallbackRun(reqBody, mode, t0, capMs) {
+  try {
+    const plan = gfbPlan(reqBody, mode);
+    if (!plan) return null;
+    const gc = reqBody.generationConfig || {};
+    const okJson = function (o) {
+      try { JSON.parse(o.replace(/^```(?:json)?\s*|\s*```$/g, '').trim()); return true; } catch (e) { /* مش JSON سليم */ }
+      return mode === 'study' && !!parseStudyJson(o);   /* فرع study بيقرا بالمحلّل المتسامح (بيصلّح الرد المقطوع) */
+    };
+    const end = Math.min(t0 + GFB_END_MS, Date.now() + capMs);
+    const n = GROQ_KEYS.length, start = gfbRr % n;
+    gfbRr = (gfbRr + 1) % 1000000000;
+    for (let mi = 0; mi < plan.models.length; mi++) {
+      const model = plan.models[mi];
+      const oss = /gpt-oss/i.test(model);
+      const pay = {
+        model: model, temperature: typeof gc.temperature === 'number' ? gc.temperature : 0.3,
+        max_completion_tokens: Math.min(GFB_MAX_OUT, (Number(gc.maxOutputTokens) || 2000) + (oss ? 1000 : 0)),   /* gpt-oss: التفكير بيتحسب من نفس الحد */
+        messages: plan.messages
+      };
+      if (plan.json) pay.response_format = { type: 'json_object' };
+      if (oss) { pay.reasoning_effort = 'low'; pay.include_reasoning = false; }
+      else if (/qwen/i.test(model)) pay.reasoning_effort = 'none';
+      const reqStr = JSON.stringify(pay);
+      for (let ki = 0; ki < n; ki++) {
+        const gk = GROQ_KEYS[(start + ki) % n];
+        if (gfbCooling(gk.name, model)) continue;
+        const left = end - Date.now();
+        if (left < GFB_MIN_MS) return null;
+        const ctl = new AbortController();
+        const tm = setTimeout(function () { ctl.abort(); }, Math.min(GFB_ATTEMPT_MS, left));
+        const ts = Date.now();
+        try {
+          const r = await fetch(GROQ_URL, {
+            method: 'POST', signal: ctl.signal,
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gk.key },
+            body: reqStr
+          });
+          const raw = await r.text();
+          if (!r.ok) {
+            console.error('[farm-ai] groq-fb ' + gk.name + ' ' + model + ' \u2192 http ' + r.status);
+            const kk = gk.name + '|' + model;
+            if (r.status === 429) {
+              const ra = parseFloat(r.headers && r.headers.get ? r.headers.get('retry-after') : '');
+              let ms = Number.isFinite(ra) ? Math.min(120000, Math.max(5000, Math.ceil(ra * 1000))) : 60000;
+              if (/per day|TPD/i.test(raw)) ms = 30 * 60000;   /* الحصة اليومية خلصت */
+              gfbCool.set(kk, Date.now() + ms); continue;      /* المفتاح التالي لنفس الموديل */
+            }
+            if (r.status === 413) { gfbCool.set(kk, Date.now() + 30000); continue; }                 /* أكبر من حد التوكن/دقيقة */
+            if (r.status === 401) { gfbCool.set(gk.name + '|*', Date.now() + 30 * 60000); continue; } /* مفتاح غلط: كل موديلاته */
+            if (r.status === 403) { gfbCool.set(kk, Date.now() + 30 * 60000); continue; }            /* صلاحية الموديل على المفتاح ده */
+            if (r.status >= 500) { gfbCool.set(kk, Date.now() + 15000); continue; }
+            if (r.status === 404 || /model_not_found|decommission|does not exist|not have access/i.test(raw)) gfbCool.set('*|' + model, Date.now() + 30 * 60000);   /* موديل اتقفل: كل المفاتيح */
+            break;   /* 400 وغيره: الموديل ده مش مناسب للطلب ده → الموديل اللي بعده */
+          }
+          let j = null;
+          try { j = JSON.parse(raw); } catch (e) { /* رد مش مقروء */ }
+          const ch = j && j.choices && j.choices[0];
+          const out = ch && ch.message && typeof ch.message.content === 'string' ? ch.message.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim() : '';
+          const cut = !!(ch && ch.finish_reason === 'length');
+          if (!out || (plan.json && ((cut && mode !== 'study') || !okJson(out)))) {
+            console.error('[farm-ai] groq-fb ' + gk.name + ' ' + model + ' unusable reply \u2014 finish: ' + (ch && ch.finish_reason) + ', chars: ' + out.length);
+            break;   /* فاضي / مقطوع / JSON مكسور → الموديل اللي بعده */
+          }
+          console.log('[farm-ai] groq-fb ok: ' + model + ' ' + gk.name + ' ' + (Date.now() - ts) + 'ms');
+          return { text: out, model: model, key: gk.name };
+        } catch (e) {
+          console.error('[farm-ai] groq-fb ' + gk.name + ' ' + model + ' unreachable:', e && e.name);
+          gfbCool.set(gk.name + '|' + model, Date.now() + 15000);
+        } finally { clearTimeout(tm); }
+      }
+    }
+  } catch (e) { console.error('[farm-ai] groq-fb failed:', e && e.name); }
+  return null;
+}
+
 module.exports = async function handler(req, res) {
   const t0 = Date.now();   /* SOLVER: بداية الطلب (لحساب الوقت المتبقي لمرحلة الحل) */
   if (req.method !== 'POST') return fail(res, 405, 'method_not_allowed', { Allow: 'POST' });
@@ -1949,7 +2088,14 @@ module.exports = async function handler(req, res) {
     const lr = await qmLadderRun({ order: order, reqBody: reqBody, deadline: deadline, t0: t0, attemptCap: attemptCap, stage: qStage, hint: (qStage === 'one' && body.qone && typeof body.qone.hint === 'string') ? body.qone.hint.slice(0, 200) : '' });
     up = lr.up; text = lr.text; rateLimited = lr.rateLimited; lastErr = lr.lastErr; qmL = true;
   }
-  for (let bi = 0; bi < (qmL ? 0 : order.length); bi++) {   /* QM-LADDER */
+  /* GROQ-FALLBACK (1/2): كل backends جيميناي لسه في تبريد (فشلوا بـ 429/5xx/timeout من لحظات) → مفيش داعي نضيّع وقت الطلب ده على محاولة هتفشل؛ نبدأ بموديلات Groq، ولو فشلت الحلقة اللي تحت بتجرّب جيميناي زي الأول بالظبط. للتراجع: امسح البلوك ده. */
+  let gfbDone = false;
+  if (!qmL && GFB_PRE && !GFB_OFF && GROQ_KEYS.length && backends.every(function (bk) { return (cooldown.get(bk.name) || 0) > Date.now(); })) {
+    gfbDone = true;
+    const g0 = await groqFallbackRun(reqBody, mode, t0, GFB_PRE_MS);
+    if (g0) { up = { ok: true, status: 200 }; text = gfbWrap(g0.text); console.log('[farm-ai] ' + mode + ': gemini cooling \u2192 groq ' + g0.model + ' ' + g0.key + ' t=' + (Date.now() - t0) + 'ms'); }
+  }
+  for (let bi = 0; bi < ((qmL || (up && up.ok)) ? 0 : order.length); bi++) {   /* QM-LADDER. GROQ-FALLBACK: لو Groq رد قبل الحلقة منجرّبش جيميناي */
     const b = order[bi];
     const remain = deadline - Date.now();
     if (bi > 0 && remain < 3000) break;
@@ -2002,6 +2148,12 @@ module.exports = async function handler(req, res) {
         cooldown.set(fb.name, Date.now() + 15000);
       } finally { clearTimeout(timerF); }
     }
+  }
+  /* GROQ-FALLBACK (2/2): جيميناي فشل على كل الـ backends بسبب زحمة/حصة/مفتاح/موديل (429، 5xx، 401/403/404، timeout، مفيش اتصال) → نكمّل نفس الطلب على موديلات Groq بالتتابع بدل رسالة الخطأ. 400 العادي (الطلب نفسه غلط) مبيتحوّلش. أي فشل = السلوك القديم زي ما هو. للتراجع: امسح البلوك ده. */
+  if (!gfbDone && !GFB_OFF && GROQ_KEYS.length && !(up && up.ok) && (rateLimited || !up || up.status === 429 || up.status >= 500 || up.status === 401 || up.status === 403 || up.status === 404 || (up.status === 400 && /api key/i.test(text || '')))) {
+    gfbDone = true;
+    const g1 = await groqFallbackRun(reqBody, mode, t0, GFB_END_MS);
+    if (g1) { up = { ok: true, status: 200 }; text = gfbWrap(g1.text); rateLimited = false; lastErr = null; console.log('[farm-ai] ' + mode + ': gemini busy \u2192 groq ' + g1.model + ' ' + g1.key + ' t=' + (Date.now() - t0) + 'ms'); }
   }
   if (!up) {
     if (rateLimited) return fail(res, 429, 'busy', { 'Retry-After': '600' });
