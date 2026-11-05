@@ -9664,7 +9664,7 @@ body.modal-open { overflow: hidden; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="arena.js?v=18" defer></script>   <!-- NABTEX ARENA (إضافة مستقلة) -->
+<script src="arena.js?v=19" defer></script>   <!-- NABTEX ARENA (إضافة مستقلة) -->
 
 <script>
 // ======================== FIREBASE CONFIG ========================
@@ -29005,6 +29005,9 @@ var MSG = {
   sub_required: 'اشترك في المساعد الذكي عشان تكمل.',   /* AI-SUB */
   sub_check: 'تعذّر التحقق من اشتراكك دلوقتي. جرّب بعد شوية.',   /* AI-SUB */
   img_limit: 'عدد الصور أكتر من المسموح في باقتك الحالية — قلّل الصور أو رقّي الباقة.',   /* AI-IMGS */
+  unreachable: 'السيرفر اتأخر في الرد. لو بتشرح 8 صفحات مرة واحدة جرّب عدد أقل (4 مثلًا) أو حاول بعد دقيقة.',
+  timeout: 'الطلب أخد وقت أطول من المسموح. قلّل عدد الصفحات (4 بدل 8) وجرّب تاني.',
+  upstream_error: 'خدمة الذكاء الاصطناعي مشغولة دلوقتي. جرّب تاني بعد دقيقة.',
   generic: 'حصلت مشكلة مؤقتة. جرّب تاني بعد شوية.'
 };
 
@@ -29115,7 +29118,7 @@ function call(mode, payload, ckExtra, done){
       body: JSON.stringify(Object.assign({ mode: mode }, payload))
     });
   }).then(function(r){
-    return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j || {} }; });
+    return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, s: r.status, j: j || {} }; });
   }).then(function(res){
     clearTimeout(timer);
     if(res.ok && (res.j.text || res.j.fields || res.j.q || res.j.study || res.j.quiz || res.j.cards)){
@@ -29127,9 +29130,9 @@ function call(mode, payload, ckExtra, done){
       done({ ok: true, j: res.j });
     } else {
       if(aiPt && (res.j.error === 'user_limit' || res.j.error === 'sub_required')){ try{ window.AiSub.get(function(){}, true); }catch(x){} }   /* AI-SUB: الرصيد الحقيقي من السيرفر */
-      done({ err: res.j.error || 'generic' });
+      done({ err: res.j.error || (res.s === 504 ? 'unreachable' : (res.s === 413 ? 'too_large' : 'generic')) });   /* رد مش JSON من Vercel (مهلة/حجم): كان كله بيطلع رسالة «مشكلة مؤقتة» */
     }
-  }).catch(function(){ clearTimeout(timer); done({ err: 'generic' }); });
+  }).catch(function(){ clearTimeout(timer); done({ err: (ctl && ctl.signal && ctl.signal.aborted) ? 'timeout' : 'generic' }); });
 }
 
 function errText(e){ return e === 'wait' ? 'استنى ثواني قبل الطلب الجاي.' : (MSG[e] || MSG.generic); }
