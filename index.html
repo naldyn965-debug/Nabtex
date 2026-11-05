@@ -28781,6 +28781,14 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbdc-tg,.nbdc-x{flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0;border:0;border-radius:50%;background:var(--ai-soft);color:var(--ai-tx);cursor:pointer;transition:transform 160ms var(--ai-ease),background 180ms,opacity 180ms}
 .nbdc-tg[aria-pressed="true"]{background:var(--ai-g);color:#fff}
 .nbdc-tg:active,.nbdc-x:active{transform:scale(.9)}
+/* DC-MIN: كارت الملف في الوضع المصغّر (بيتفعّل تلقائيًا لما الشرح يبدأ): بيفضل الهيدر + شريط التقدّم + زر الشرح بس */
+.nbdc.is-min{padding:8px 10px 10px}
+.nbdc.is-min .nbdc-ok,.nbdc.is-min .nbdc-row,.nbdc.is-min .nbdc-nav{display:none}
+.nbdc.is-min .nbdc-go small{display:none}
+.nbdc.is-min .nbdc-go{min-height:40px;border-radius:14px}
+.nbdc.is-min .nbdc-bar,.nbdc.is-min .nbdc-act{margin-top:8px}
+.nbdc-mn svg{transition:transform 200ms var(--ai-ease)}
+.nbdc:not(.is-min) .nbdc-mn svg{transform:rotate(180deg)}
 .nbdc-x[disabled]{opacity:.4;cursor:default}
 
 .nbdc-ok{display:flex;align-items:center;gap:8px;margin-top:10px;padding:7px 8px 7px 10px;border:1px solid var(--wz-ok-br);border-radius:14px;background:var(--wz-ok-bg);color:var(--wz-ok);font-size:12px;font-weight:800;line-height:1.6;animation:nbux-rise 320ms var(--ai-ease) backwards}
@@ -30856,12 +30864,15 @@ function buildScreen(){
     dcBtn.hidden = !on; dcBtn.disabled = !!(busy || dcOpening);
     dcEl.hidden = !vis;
     if(!vis){ if(dcLbI >= 0) dcLbClose(true); return; }
+    dcEl.classList.toggle('is-min', !!(D && D.min));   /* DC-MIN */
     var N = dcSize(), ae = document.activeElement, fk = (ae && dcEl.contains(ae)) ? (ae.getAttribute('data-dc') || '') + '|' + (ae.getAttribute('data-i') || '') : '';
     var L = D && D.last, endMode = !!(L && L.end), doneN = D ? dcDoneN(D) : 0, K = D ? Math.ceil(D.total / N) : 0, h = '', i;
     var from = D ? (D.win ? D.win[0] : D.at + 1) : 0, to = D ? (D.win ? D.win[1] : Math.min(D.total, D.at + N)) : 0;
     /* الرأس: اسم الملف + عدد الصفحات + أزرار المعاينة/الإغلاق */
     dcSet(dcHd, '<span class="nbdc-ic" aria-hidden="true">' + DCI.pdf + '</span><span class="nbdc-tt"><b class="nbdc-nm"><bdi>' + esc(D ? D.name : dcOpening) + '</bdi></b><small class="nbdc-sb">' +
       (!D ? 'جاري فتح الملف…' : (doneN ? 'تم شرح <b>' + doneN + '</b> من ' + dcPg(D.total) : dcPg(D.total) + ' · ' + dcPg(N) + ' في كل مرة حسب باقتك')) + '</small></span>' +
+      (D ? '<button type="button" class="nbdc-tg nbdc-mn" data-dc="mn" aria-expanded="' + (D.min ? 'false' : 'true') + '" aria-label="تصغير أو توسيع كارت الملف" title="' + (D.min ? 'توسيع' : 'تصغير') + '">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>' : '') +   /* DC-MIN */
       (D && !endMode ? '<button type="button" class="nbdc-tg" data-dc="tg" aria-pressed="' + (D.open ? 'true' : 'false') + '" aria-label="معاينة الصفحات" title="معاينة الصفحات">' + DCI.eye + '</button>' : '') +
       '<button type="button" class="nbdc-x" data-dc="x" aria-label="' + (D ? 'إغلاق الملف' : 'إلغاء فتح الملف') + '" title="' + (D ? 'إغلاق الملف' : 'إلغاء') + '"' + (busy ? ' disabled' : '') + '>' + DCI.x + '</button>');
     /* الخطوة اللي بعدها: بعد ما دفعة تخلص بيظهر إنها خلصت، والطالب يكمّل بالزر الرئيسي أو يرفع ملف جديد (من الباقي هنا) */
@@ -31070,6 +31081,7 @@ function buildScreen(){
     for(var i = 0; i < D.pages.length; i++) if(!stImgs[i] || stImgs[i].d !== D.pages[i].d) return;
     var a = D.pages[0].n, b = D.pages[D.pages.length - 1].n, v = stQi.value.trim();
     dcRun = { D: D, pages: D.pages.map(function(p){ return p.n; }), to: D.win ? D.win[1] : b };
+    D.min = true;   /* DC-MIN: تصغير تلقائي أول ما الشرح يبدأ علشان المساحة للشرح */
     if(!v || v === dcAuto){ dcAuto = (a === b ? 'الصفحة ' + a : 'الصفحات ' + a + '–' + b) + ' من «' + dcShort(D.name) + '»'; stQi.value = dcAuto; }
     D.last = null;
   }
@@ -31159,6 +31171,7 @@ function buildScreen(){
     else if(a === 'prev') dcStep(-1);
     else if(a === 'next') dcStep(1);
     else if(a === 'tg'){ if(DOC){ DOC.open = !DOC.open; dcPaint(); } }
+    else if(a === 'mn'){ if(DOC){ DOC.min = !DOC.min; dcPaint(); } }   /* DC-MIN */
     else if(a === 'x') dcClose();
     else if(a === 'new') dcAsk();
     else if(a === 'retry') dcBatch();
