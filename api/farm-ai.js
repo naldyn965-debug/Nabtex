@@ -816,6 +816,19 @@ function sanitizeLog(raw, options) {
 const FS_PROJECT = process.env.FIREBASE_PROJECT_ID || 'nabtex-b8475';
 const FS_DOCS = 'https://firestore.googleapis.com/v1/projects/' + FS_PROJECT + '/databases/(default)/documents';
 const AI_POINT = { analyze: 'chat', ask: 'chat', diag_q: 'diag', diagnose: 'fin', study: 'chat' };   /* study = شرح الصور + الملخص (نقطة شات واحدة للجلسة)؛ study_quiz (الامتحان) مش هنا: بيتحقق من الاشتراك بس وبدون نقطة تانية */
+/* STUDY-CHUNK: شرح دفعة كبيرة (Plus 8 / Pro 12 صفحة) على أجزاء من 4 صفحات بنقطة واحدة. الجزء الأول (i=0) بيتخصم عادي وبيرجّع chunkPass؛ كل جزء بعده (i>0) مجاني بشرط تصريح موقّع (HMAC) مربوط بالمستخدم وعدد الأجزاء ورقم الجزء ومدته 40 دقيقة، وبحد يومي CHUNK_DAILY. التصريح بيتحسب مستهلَك بعد نجاح الجزء بس (فإعادة المحاولة بعد فشل تمام). للتراجع: امسح الكتلة دي وكل سطر عليه STUDY-CHUNK. */
+const CHUNK_SECRET = String(process.env.CHUNK_SECRET || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.GEMINI_RELAY_SECRET || '');
+const CHUNK_TTL_MS = 40 * 60000, CHUNK_DAILY = 60;
+const chunkUsed = new Set();
+function chunkSig(uid, n, idx, exp) { return crypto.createHmac('sha256', CHUNK_SECRET).update(uid + '|' + n + '|' + idx + '|' + exp).digest('hex').slice(0, 32); }
+function chunkMint(uid, n, idx) { if (!CHUNK_SECRET || idx >= n) return ''; const exp = Date.now() + CHUNK_TTL_MS; return exp + '.' + chunkSig(uid, n, idx, exp); }
+function chunkCheck(uid, n, idx, pass) {
+  if (!CHUNK_SECRET || typeof pass !== 'string') return false;
+  const m = /^(\d{10,15})\.([0-9a-f]{32})$/.exec(pass);
+  if (!m || +m[1] < Date.now() || chunkUsed.has(m[2])) return false;
+  const want = Buffer.from(chunkSig(uid, n, idx, m[1])), got = Buffer.from(m[2]);
+  return want.length === got.length && crypto.timingSafeEqual(want, got);
+}
 const AI_TRIAL_MS = 2 * 86400000;
 const FARM_TRIAL_MS = 7 * 86400000;
 
@@ -1640,6 +1653,7 @@ module.exports = async function handler(req, res) {
   let qmode = false;   /* STUDY-QMODE: «وضع الأسئلة الفائق» (mode:'study' + qmode:true) */
   let qAud = null;   /* STUDY-QAUDIT: الجزء المطلوب مراجعته (طلب qaudit نصي من غير صور) */
   let qStage = '', qRot = -1, qPay = false;   /* STUDY-QSEQ: '' = الطلب الواحد القديم · 'plan' = فهرسة الأسئلة · 'one' = حل سؤال واحد (qRot = رقم التناوب) */
+  let chunkReq = null, chunkFree = false;   /* STUDY-CHUNK */
   let studyImgN = 0, stQa = null;   /* «ذاكر مع نبتكس»: عدد الصور المبعوتة + نتيجة فحص الاشتراك لطلبات الامتحان/السؤال (لحد الصور حسب الباقة) */
   if (mode === 'ask' && body.general === true) {
     if (!question) return fail(res, 400, 'bad_request');
@@ -1723,6 +1737,11 @@ module.exports = async function handler(req, res) {
     let askKey = '';
     if (mode === 'study') {
       qmode = body.qmode === true;   /* STUDY-QMODE */
+      const cq = body.chunk;   /* STUDY-CHUNK */
+      if (!qmode && cq && typeof cq === 'object') {
+        if (!Number.isInteger(cq.i) || !Number.isInteger(cq.n) || cq.n < 2 || cq.n > 3 || cq.i < 0 || cq.i >= cq.n || rawImgs.length > 4) return fail(res, 400, 'bad_request');
+        chunkReq = { i: cq.i, n: cq.n, pass: typeof cq.pass === 'string' ? cq.pass.slice(0, 60) : '' };
+      }
       p = qmode ? 'حل كل الأسئلة الظاهرة في الصور دي للطالب (وضع الأسئلة الفائق).' : 'اشرح المحتوى العلمي في الصور دي للطالب وجهّز له الملخص.';
       /* STUDY-QSEQ: qplan:true = فهرسة الأسئلة بس · qone = حل سؤال واحد (qi ترتيبه، qs إزاحة الجلسة للتناوب، qk = عدد الأسئلة المحلولة قبله ← بيحدد لو السؤال ده بيصرف نقطة). من غيرهم الطلب زي ما كان بالظبط. */
       if (qmode && body.qplan === true) {
@@ -1836,6 +1855,10 @@ module.exports = async function handler(req, res) {
 
   const uid = await verifyUser(m[1]);
   if (!uid) return fail(res, 401, 'unauthorized');
+  if (chunkReq && chunkReq.i > 0) {   /* STUDY-CHUNK */
+    if (!chunkCheck(uid, chunkReq.n, chunkReq.i, chunkReq.pass)) return fail(res, 403, 'chunk_expired');
+    chunkFree = true;
+  }
 
   if (mode === 'arena_gen') {   /* ARENA: المضيف بس، الغرفة لوبي، الأسئلة لسه ما اتولّدتش، والتخصص مطابق لللي في الغرفة */
     const rm = await arFsRoom(arenaRid, m[1]);
@@ -1848,16 +1871,16 @@ module.exports = async function handler(req, res) {
   const day = today();
   const h = crypto.createHash('sha256').update(uid + '|' + mode + '|' + keyMaterial).digest('hex');
   const hit = cache.get(h);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return send(res, 200, Object.assign({ cached: true }, hit.payload));
+  if (hit && !chunkReq && Date.now() - hit.at < CACHE_TTL_MS) return send(res, 200, Object.assign({ cached: true }, hit.payload));   /* STUDY-CHUNK: بدون كاش للأجزاء */
 
   /* اشتراك المساعد الذكي + النقاط اليومية (شات / تشخيص): لازم اشتراك أو تجربة أو اشتراك إدارة المزرعة، وفيه رصيد اليوم */
-  const aiPtsKind = ((qStage === 'one' && !qPay) || qStage === 'audit') ? '' : (AI_POINT[mode] || '');   /* STUDY-QAUDIT: المراجعة من غير نقطة */   /* STUDY-QSEQ: أسئلة وضع «سؤال بسؤال» من غير نقطة جديدة (النقط حسب تسعيرة qk: qPay) */
+  const aiPtsKind = ((qStage === 'one' && !qPay) || qStage === 'audit' || chunkFree) ? '' : (AI_POINT[mode] || '');   /* STUDY-QAUDIT: المراجعة من غير نقطة */   /* STUDY-QSEQ: أسئلة وضع «سؤال بسؤال» من غير نقطة جديدة (النقط حسب تسعيرة qk: qPay) */
   const devHdr = devIdOf(req);   /* DEVICE-POOL */
   let aiPts = null;
   if (aiPtsKind) {
     aiPts = await aiPointsCheck(m[1], uid, aiPtsKind, devHdr);
     if (aiPts.err) return fail(res, aiPts.err === 'sub_required' ? 402 : (aiPts.err === 'user_limit' ? 429 : 503), aiPts.err);
-  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || (qStage === 'one' && !qPay) || qStage === 'audit') {   /* STUDY-QSEQ. study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
+  } else if (mode === 'study_quiz' || mode === 'study_ask' || mode === 'study_cards' || (qStage === 'one' && !qPay) || qStage === 'audit' || chunkFree) {   /* STUDY-QSEQ. study_cards + study_ask (سؤال متابعة) زي الامتحان: اشتراك/تجربة بس من غير نقطة جديدة */
     /* امتحان «ذاكر مع نبتكس» ملحق بجلسة الشرح اللي اتصرفت نقطتها: بنتأكد من الاشتراك/التجربة بس (رصيد اليوم ممكن يكون خلص بعد نقطة الشرح) ومن غير صرف نقطة تانية — الحد اليومي LIMITS.study_quiz */
     stQa = await aiPointsCheck(m[1], uid, 'chat', devHdr);
     if (stQa.err && stQa.err !== 'user_limit') return fail(res, stQa.err === 'sub_required' ? 402 : 503, stQa.err);
@@ -1866,6 +1889,10 @@ module.exports = async function handler(req, res) {
   if (studyImgN > 4) {
     const stLim = (aiPts && aiPts.lim) || (stQa && stQa.lim) || null;
     if (!stLim || studyImgN > (stLim.imgs || 4)) return fail(res, 403, 'img_limit');
+  }
+  if (chunkReq) {   /* STUDY-CHUNK: التقسيم لـ n أجزاء يحتاج باقة imgs > (n-1)*4 (Plus 8 = جزئين، Pro 12 = 3) */
+    const cLim = (aiPts && aiPts.lim) || (stQa && stQa.lim) || null;
+    if (!cLim || (chunkReq.n - 1) * 4 >= (cLim.imgs || 4)) return fail(res, 403, 'img_limit');
   }
 
   /* STUDY-QMODE-PLUS: «وضع الأسئلة الفائق» لباقتي Plus وPro بس (عائلتي plan/study): imgs ≥ 8 = Plus أو Pro — الواجهة بتمنعه أصلًا، وده الحكم النهائي. للتراجع: امسح البلوك ده. */
@@ -1893,11 +1920,11 @@ module.exports = async function handler(req, res) {
   }
 
   /* الحدود اليومية (بتتحسب بس للطلبات اللي هتروح لجيميناي فعلًا) */
-  const uk = uid + '|' + mode + (qStage === 'one' ? '|q1' : '');   /* STUDY-QSEQ: عدّاد يومي مستقل لأسئلة سؤال بسؤال */
+  const uk = uid + '|' + mode + (qStage === 'one' ? '|q1' : '') + (chunkFree ? '|ch' : '');   /* STUDY-QSEQ: عدّاد يومي مستقل لأسئلة سؤال بسؤال */
   let u = usage.get(uk);
   if (!u || u.day !== day) { u = { day: day, n: 0 }; usage.set(uk, u); }
   if (globalUse.day !== day) globalUse = { day: day, n: 0 };
-  if (!aiPtsKind && u.n >= (qStage === 'one' ? QONE_DAILY : LIMITS[mode])) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });   /* أوضاع النقاط (شات/تشخيص) حدودها من Firestore مش من الذاكرة */
+  if (!aiPtsKind && u.n >= (qStage === 'one' ? QONE_DAILY : (chunkFree ? CHUNK_DAILY : LIMITS[mode]))) return fail(res, 429, 'user_limit', { 'Retry-After': '3600' });   /* أوضاع النقاط (شات/تشخيص) حدودها من Firestore مش من الذاكرة */
   if (globalUse.n >= DAILY_GLOBAL) return fail(res, 429, 'busy', { 'Retry-After': '3600' });
   u.n++; globalUse.n++;
 
@@ -2111,7 +2138,13 @@ module.exports = async function handler(req, res) {
     ptsOut = { chat: { left: Math.max(0, aiPts.lim.chat - aiPts.used.chat), max: aiPts.lim.chat }, diag: { left: Math.max(0, aiPts.lim.diag - aiPts.used.diag), max: aiPts.lim.diag } };
   }
 
-  cache.set(h, { at: Date.now(), payload: payload });   /* الكاش من غير points عشان الرصيد ما يتكرّرش قديم */
+  if (!chunkReq) cache.set(h, { at: Date.now(), payload: payload });   /* STUDY-CHUNK */   /* الكاش من غير points عشان الرصيد ما يتكرّرش قديم */
   if (cache.size > 200) cache.delete(cache.keys().next().value);
-  send(res, 200, Object.assign({ left: Math.max(0, LIMITS[mode] - u.n) }, payload, ptsOut ? { points: ptsOut } : {}));
+  let chunkOut = {};   /* STUDY-CHUNK */
+  if (chunkReq && mode === 'study') {
+    if (chunkFree) { const pm = /\.([0-9a-f]{32})$/.exec(chunkReq.pass); if (pm) { if (chunkUsed.size > 5000) chunkUsed.clear(); chunkUsed.add(pm[1]); } }
+    const np = chunkMint(uid, chunkReq.n, chunkReq.i + 1);
+    if (np) chunkOut = { chunkPass: np };
+  }
+  send(res, 200, Object.assign({ left: Math.max(0, LIMITS[mode] - u.n) }, payload, ptsOut ? { points: ptsOut } : {}, chunkOut));
 };
