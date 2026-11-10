@@ -24717,7 +24717,7 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
 <nav id="nb-bottom-nav" aria-label="القائمة السريعة" role="navigation">
   <div class="nb-nav-inner">
     <!-- Sliding active pill — moved by JS -->
-    <span id="nb-slide-pill" aria-hidden="true"></span>
+    <span id="nb-slide-pill" aria-hidden="true"><span class="nb-lens"></span></span>
     <!-- Home -->
     <button class="nb-nav-item active" data-page="home"
             onclick="showPage('home');window.scrollTo(0,0);" aria-label="الرئيسية" aria-current="page">
@@ -24800,6 +24800,19 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
     </button>
   </div>
 </nav>
+
+<!-- LIQUID-GLASS-NAV: refraction filter for the active lens. Chromium only (Android PWA / Chrome);
+     iOS Safari can't use SVG filters inside backdrop-filter, so CSS skips it there.
+     للتراجع: امسح الـ svg ده + كتلة <style id="nb-liquid-glass-nav"> + رجّع moveSlidePill للنسخة القديمة -->
+<svg id="nb-lens-defs" width="0" height="0" aria-hidden="true" focusable="false"
+     style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">
+  <defs>
+    <filter id="nbLensRefract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feImage href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='100'%20height='100'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='x'%20x1='0'%20y1='0'%20x2='1'%20y2='0'%3E%3Cstop%20offset='0.0'%20stop-color='rgb(255,0,0)'/%3E%3Cstop%20offset='0.1'%20stop-color='rgb(202,0,0)'/%3E%3Cstop%20offset='0.2'%20stop-color='rgb(170,0,0)'/%3E%3Cstop%20offset='0.3'%20stop-color='rgb(152,0,0)'/%3E%3Cstop%20offset='0.4'%20stop-color='rgb(139,0,0)'/%3E%3Cstop%20offset='0.5'%20stop-color='rgb(128,0,0)'/%3E%3Cstop%20offset='0.6'%20stop-color='rgb(117,0,0)'/%3E%3Cstop%20offset='0.7'%20stop-color='rgb(104,0,0)'/%3E%3Cstop%20offset='0.8'%20stop-color='rgb(86,0,0)'/%3E%3Cstop%20offset='0.9'%20stop-color='rgb(54,0,0)'/%3E%3Cstop%20offset='1.0'%20stop-color='rgb(0,0,0)'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='y'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0.0'%20stop-color='rgb(0,255,0)'/%3E%3Cstop%20offset='0.1'%20stop-color='rgb(0,202,0)'/%3E%3Cstop%20offset='0.2'%20stop-color='rgb(0,170,0)'/%3E%3Cstop%20offset='0.3'%20stop-color='rgb(0,152,0)'/%3E%3Cstop%20offset='0.4'%20stop-color='rgb(0,139,0)'/%3E%3Cstop%20offset='0.5'%20stop-color='rgb(0,128,0)'/%3E%3Cstop%20offset='0.6'%20stop-color='rgb(0,117,0)'/%3E%3Cstop%20offset='0.7'%20stop-color='rgb(0,104,0)'/%3E%3Cstop%20offset='0.8'%20stop-color='rgb(0,86,0)'/%3E%3Cstop%20offset='0.9'%20stop-color='rgb(0,54,0)'/%3E%3Cstop%20offset='1.0'%20stop-color='rgb(0,0,0)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='100'%20height='100'%20fill='black'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23x)'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23y)'%20style='mix-blend-mode:screen'/%3E%3C/svg%3E" preserveAspectRatio="none" result="nbLensMap"/>
+      <feDisplacementMap in="SourceGraphic" in2="nbLensMap" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
 <!-- ── PREMIUM CSS LAYER ── -->
 <style id="nb-premium-ui">
@@ -25667,6 +25680,174 @@ body {
 }
 </style>
 
+<style id="nb-liquid-glass-nav">
+/* ═══════════════════════════════════════════════════════════════
+   NABTEX — iOS 26 LIQUID GLASS BOTTOM NAV
+   إضافة فقط فوق #nb-premium-ui: نفس الـ HTML/IDs/الـ routes.
+   - #nb-slide-pill = الحاوية اللي بيحرّكها الـ JS (موضع + عرض)
+   - .nb-lens       = جسم العدسة الزجاجية (كل الشكل هنا)
+   للتراجع: امسح الكتلة دي + الـ svg#nb-lens-defs + .nb-lens span
+   + رجّع moveSlidePill للنسخة القديمة.
+═══════════════════════════════════════════════════════════════ */
+
+/* 1) البار: كابسولة كاملة + حافة ضوء ناعمة (الخلفية/البلور زي ما هي) */
+#nb-bottom-nav#nb-bottom-nav::before {
+  border-radius: 999px;
+  box-shadow:
+    0 16px 44px rgba(0,0,0,.18),
+    0 4px 14px  rgba(0,0,0,.10),
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -1px 1px rgba(255,255,255,.35),
+    inset 0 0 0 1px rgba(255,255,255,.22);
+}
+[data-dark] #nb-bottom-nav#nb-bottom-nav::before {
+  box-shadow:
+    0 14px 36px rgba(0,0,0,.45),
+    0 3px 10px  rgba(0,0,0,.30),
+    inset 0 1px 1px rgba(255,255,255,.26),
+    inset 0 -1px 1px rgba(255,255,255,.08),
+    inset 0 0 12px rgba(255,255,255,.035);
+}
+
+/* 2) حاوية العدسة: أطول من البار شوية (بتطلع فوقه وتحته) + حركة سائلة */
+#nb-bottom-nav #nb-slide-pill {
+  top: -5px;
+  bottom: -5px;
+  border-radius: 999px;
+  background: none;                       /* يلغي الـ wash المسطّح القديم */
+  transition:
+    transform .46s cubic-bezier(.3,1.22,.45,1),   /* overshoot خفيف = إحساس سائل */
+    width     .46s cubic-bezier(.3,1.22,.45,1),
+    opacity   .2s ease;
+}
+
+/* 3) جسم العدسة — طبقات: تدرجات + backdrop + حواف مضيئة */
+#nb-bottom-nav .nb-lens {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255,255,255,.62) 0%, rgba(255,255,255,0) 56%),
+    radial-gradient(90% 70% at 50% 114%,  rgba(255,255,255,.40) 0%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.05) 50%, rgba(255,255,255,.14));
+  -webkit-backdrop-filter: saturate(1.7) brightness(1.1) contrast(1.06);
+  backdrop-filter: saturate(1.7) brightness(1.1) contrast(1.06);
+  box-shadow:
+    0 0 0 .75px rgba(10,35,20,.16),               /* حافة خارجية = سُمك الزجاج */
+    0 12px 26px -6px rgba(0,0,0,.30),             /* ظل تحتها = مرفوعة */
+    0 3px 9px rgba(0,0,0,.14),
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    inset 0 2px 2px rgba(255,255,255,.95),        /* لمعة علوية */
+    inset 0 -2px 3px rgba(255,255,255,.55),
+    inset 5px 0 7px -3px rgba(90,170,255,.50),    /* انعكاس لوني أزرق */
+    inset -5px 0 7px -3px rgba(255,120,175,.42),  /* انعكاس لوني وردي */
+    inset 0 15px 20px -11px rgba(255,255,255,.60),
+    inset 0 -15px 22px -13px rgba(255,255,255,.38),
+    inset 0 -9px 14px -9px rgba(20,60,40,.16);    /* عمق/سُمك الزجاج */
+}
+[data-dark] #nb-bottom-nav .nb-lens {
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255,255,255,.34) 0%, rgba(255,255,255,0) 56%),
+    radial-gradient(90% 70% at 50% 114%,  rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(255,255,255,.19), rgba(255,255,255,.10) 50%, rgba(255,255,255,.16));
+  box-shadow:
+    0 0 0 .75px rgba(0,0,0,.55),
+    0 12px 26px -6px rgba(0,0,0,.60),
+    0 3px 9px rgba(0,0,0,.35),
+    inset 0 0 0 1px rgba(255,255,255,.28),
+    inset 0 2px 2px rgba(255,255,255,.55),
+    inset 0 -2px 3px rgba(255,255,255,.22),
+    inset 5px 0 7px -3px rgba(110,185,255,.45),
+    inset -5px 0 7px -3px rgba(255,130,185,.38),
+    inset 0 15px 20px -11px rgba(255,255,255,.28),
+    inset 0 -15px 22px -13px rgba(255,255,255,.18);
+}
+
+/* حلقة الحافة: انكسار/تشتت لوني (أبيض + سماوي + وردي) — مقنّعة كـ ring بسمك 1.5px */
+#nb-bottom-nav .nb-lens::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from 200deg at 50% 50%,
+    rgba(255,255,255,.95)   0deg,
+    rgba(255,255,255,.10)  40deg,
+    rgba(110,190,255,.65)  92deg,
+    rgba(255,255,255,.08) 135deg,
+    rgba(255,255,255,.92) 195deg,
+    rgba(255,255,255,.10) 240deg,
+    rgba(255,150,205,.60) 288deg,
+    rgba(255,255,255,.08) 325deg,
+    rgba(255,255,255,.95) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+/* لمعة زجاجية منحنية في الجزء العلوي */
+#nb-bottom-nav .nb-lens::after {
+  content: '';
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 3px;
+  height: 36%;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.10) 70%, rgba(255,255,255,0));
+  opacity: .8;
+}
+[data-dark] #nb-bottom-nav .nb-lens::after { opacity: .32; }
+
+/* 4) حركة الـ squash/stretch وقت الانتقال بين التابات */
+@keyframes nbLensStretch {
+  0%   { transform: scale(1, 1); }
+  28%  { transform: scale(1.12, .94); }
+  60%  { transform: scale(.985, 1.025); }
+  100% { transform: scale(1, 1); }
+}
+#nb-bottom-nav #nb-slide-pill.nb-lens-go .nb-lens {
+  animation: nbLensStretch .55s cubic-bezier(.3,.9,.4,1);
+}
+
+/* 5) الأيقونة/الليبل النشطين: متكبّرين (تكبير العدسة) وملوّنين، فوق الزجاج */
+#nb-bottom-nav .nb-nav-item.active .nb-ico {
+  color: var(--brand);
+  transform: translateY(-2px) scale(1.26);
+}
+#nb-bottom-nav .nb-nav-item.active .nb-lbl {
+  color: var(--brand);
+  transform: translateY(1px) scale(1.1);
+}
+[data-dark] #nb-bottom-nav .nb-nav-item.active .nb-ico,
+[data-dark] #nb-bottom-nav .nb-nav-item.active .nb-lbl { color: #6bd68f; }
+
+/* 6) Chromium (Android PWA / Chrome): انكسار حقيقي للخلفية عبر فلتر SVG.
+   iOS Safari مش بيدعم SVG جوه backdrop-filter — فبيستخدم الطبقات فوق بس. */
+@supports (backdrop-filter: url(#nbLensRefract)) and (not ((font: -apple-system-body) and (-webkit-appearance: none))) {
+  #nb-bottom-nav .nb-lens {
+    backdrop-filter: url(#nbLensRefract) saturate(1.7) brightness(1.1) contrast(1.06);
+  }
+}
+
+/* 7) Reduced motion / transparency */
+@media (prefers-reduced-motion: reduce) {
+  #nb-bottom-nav #nb-slide-pill { transition: opacity .2s ease; }
+  #nb-bottom-nav #nb-slide-pill.nb-lens-go .nb-lens { animation: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  #nb-bottom-nav .nb-lens {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(255,255,255,.55);
+  }
+  [data-dark] #nb-bottom-nav .nb-lens { background: rgba(255,255,255,.16); }
+}
+</style>
+
+
 <!-- ── PREMIUM JAVASCRIPT LAYER ── -->
 <script id="nb-premium-js">
 /* Nabtex Premium UI/UX — JS Layer
@@ -25680,14 +25861,35 @@ body {
   /* ══ 2. BOTTOM NAV SYNC + SLIDING PILL ══════════════════════ */
   var _bnItems   = null;   /* cached NodeList */
 
-  /* Move the background pill to the active item */
+  /* Move the glass lens to the active item. The lens is a little wider
+     than its tab (overlaps the neighbours, like iOS 26) but clamped so it
+     never pokes out of the bar on the first/last tab. First placement is
+     instant (no sweep from the corner); later moves also fire a brief
+     liquid squash-and-stretch (CSS, class nb-lens-go). */
   function moveSlidePill(activeEl) {
     var pill = document.getElementById('nb-slide-pill');
     if (!pill || !activeEl) return;
+    var inner = pill.parentNode;
     /* offsetLeft/offsetWidth work correctly for RTL flex layout */
-    pill.style.transform = 'translateX(' + activeEl.offsetLeft + 'px)';
-    pill.style.width     = activeEl.offsetWidth + 'px';
+    var x  = activeEl.offsetLeft, w = activeEl.offsetWidth;
+    var ex = Math.max(0, Math.min(12, Math.min(x, inner.clientWidth - x - w) - 2));
+    var nx = x - ex;
+    var placed = pill._nbPlaced === true;
+    var moved  = placed && Math.abs((pill._nbX || 0) - nx) > 1;
+    if (!placed) pill.style.transition = 'none';
+    pill.style.transform = 'translateX(' + nx + 'px)';
+    pill.style.width     = (w + ex * 2) + 'px';
     pill.style.opacity   = '1';
+    if (!placed) {
+      void pill.offsetWidth;
+      pill.style.transition = '';
+      pill._nbPlaced = true;
+    } else if (moved) {
+      pill.classList.remove('nb-lens-go');
+      void pill.offsetWidth;
+      pill.classList.add('nb-lens-go');
+    }
+    pill._nbX = nx;
   }
 
   function syncBottomNav(pg) {
