@@ -7,7 +7,7 @@
  *  Firebase / Auth → Network Only  (NEVER cached)
  */
 
-const SW_VERSION   = 'nabtex-v2.5.3'; // bumped: location-search (nominatim) bypasses the SW cache
+const SW_VERSION   = 'nabtex-v2.5.4'; // bumped: winter app icon (favicon.png is cache-first) — prev: v2.5.3 location-search (nominatim) bypasses the SW cache
 const SHELL_CACHE  = SW_VERSION + '-shell';
 const STATIC_CACHE = SW_VERSION + '-static';
 const FONT_CACHE   = SW_VERSION + '-fonts';
