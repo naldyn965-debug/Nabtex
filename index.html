@@ -9129,6 +9129,26 @@ body.modal-open { overflow: hidden; }
   box-shadow:0 4px 20px rgba(27,107,58,.38),0 0 0 1px rgba(46,170,92,.15) !important;
 }
 
+/* ── Academy offer ad (course info page) ── */
+.acad-offer{position:relative;margin:0 0 18px;padding:18px 18px 16px;border-radius:20px;background:linear-gradient(135deg,var(--gold-pale) 0%,var(--card) 75%);border:1px solid rgba(201,135,26,.3);box-shadow:0 8px 28px rgba(201,135,26,.14);overflow:hidden}
+.acad-offer::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l),var(--brand-l))}
+.acad-offer-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.acad-offer-tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--gold)}
+.acad-offer-save{font-size:11.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--gold),var(--gold-l));padding:4px 12px;border-radius:var(--rpill)}
+.acad-offer-head{font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.acad-offer-price{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.acad-offer-new{font-size:34px;font-weight:900;color:var(--brand);line-height:1}
+.acad-offer-new small{font-size:14px;font-weight:700;margin-inline-start:4px}
+.acad-offer-old{font-size:16px;font-weight:700;color:var(--muted);text-decoration:line-through;text-decoration-thickness:2px}
+.acad-offer-per{font-size:12.5px;color:var(--slate);margin-bottom:14px;line-height:1.7}
+.acad-offer-per b{color:var(--ink)}
+.acad-offer-timer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px dashed rgba(201,135,26,.35)}
+.acad-offer-tl{font-size:12px;font-weight:700;color:var(--slate);flex-shrink:0}
+.acad-offer-tc{display:flex;gap:6px}
+.acad-offer-u{min-width:44px;text-align:center;padding:6px 4px;border-radius:10px;background:var(--card);border:1px solid var(--line2);font-size:16px;font-weight:900;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
+.acad-offer-u i{display:block;font-style:normal;font-size:9.5px;font-weight:700;color:var(--muted);margin-top:3px}
+[data-dark] .acad-offer{background:linear-gradient(135deg,rgba(201,135,26,.14) 0%,var(--card) 75%);border-color:rgba(229,163,67,.32);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+
 /* Quiz */
 [data-dark] .acad-qcard{
   background:var(--card) !important;

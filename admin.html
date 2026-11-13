@@ -142,6 +142,10 @@ body[data-light] #admin-thm-btn .moon-icon{display:block}
 .course-toggle-btn.active:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25)}
 .course-toggle-btn.paused{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
 .course-toggle-btn.paused:hover{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.25)}
+.course-toggle-btn.offer{display:block;margin:5px auto 0;background:rgba(201,135,26,.08);color:#e5a343;border:1px solid rgba(201,135,26,.22)}
+.course-toggle-btn.offer:hover{background:rgba(201,135,26,.16)}
+.course-toggle-btn.offer.on{background:rgba(201,135,26,.2);border-color:rgba(229,163,67,.5)}
+body[data-light] .course-toggle-btn.offer{color:#b45309}
 .live-dot{display:inline-block;width:6px;height:6px;background:#4ade80;border-radius:50%;
   margin-left:5px;vertical-align:middle;animation:livePulse 1.6s ease-in-out infinite}
 @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
@@ -894,6 +898,26 @@ body[data-light] .fsa-card{background:#f3faf4}
     <div class="confirm-actions">
       <button class="confirm-btn cancel" onclick="closeConfirm()">إلغاء</button>
       <button class="confirm-btn ok" id="confirm-ok-btn" onclick="confirmAction()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="offer-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="offer-title">عرض على الدورة</div>
+    <div class="confirm-msg">سعر العرض = السعر الحالي للدورة في الكود. أدخل السعر القديم وموعد انتهاء العرض، وهيظهر الإعلان للطلاب غير المشتركين في صفحة الدورة.</div>
+    <div class="confirm-price-wrap">
+      <label class="confirm-price-lbl" for="offer-old">السعر القديم (جنيه)</label>
+      <input type="number" class="confirm-price-input" id="offer-old" min="1" step="1" inputmode="numeric">
+    </div>
+    <div class="confirm-price-wrap">
+      <label class="confirm-price-lbl" for="offer-end">ينتهي العرض في</label>
+      <input type="datetime-local" class="confirm-price-input" id="offer-end">
+    </div>
+    <div class="confirm-actions" style="flex-wrap:wrap">
+      <button class="confirm-btn cancel" onclick="closeOfferModal()">إلغاء</button>
+      <button class="confirm-btn cancel" id="offer-stop-btn" style="display:none" onclick="stopOffer()">إيقاف العرض</button>
+      <button class="confirm-btn ok" style="background:#b45309" onclick="saveOffer()">حفظ وتفعيل</button>
     </div>
   </div>
 </div>
@@ -1879,6 +1903,7 @@ function updateEnrollments() {
   el.innerHTML = Object.keys(COURSE_LABELS).map(function(cid) {
     var label    = COURSE_LABELS[cid];
     var isActive = !courseConfig[cid] || courseConfig[cid].active !== false;
+    var offerOn  = !!(courseConfig[cid] && courseConfig[cid].offer && courseConfig[cid].offer.active === true && Number(courseConfig[cid].offer.endsAt) > Date.now());
 
     // UNION: paidCourses (users) + academy_progress (studying)
     var allUids = {};
@@ -1906,6 +1931,7 @@ function updateEnrollments() {
       '<div style="flex-shrink:0;text-align:center">' +
         '<div class="course-enroll-count">' + total + '</div>' +
         '<button class="course-toggle-btn ' + (isActive ? 'active' : 'paused') + '" onclick="' + toggleClick + '">' + toggleIcon + '</button>' +
+        '<button class="course-toggle-btn offer' + (offerOn ? ' on' : '') + '" onclick="openOfferModal(\'' + cid + '\')">' + (offerOn ? 'عرض نشط' : 'عرض') + '</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -2379,6 +2405,50 @@ async function toggleCourse(cid, makeActive) {
     await db.collection('course_config').doc(cid).set({ active: makeActive }, { merge: true });
     var icon = String.fromCodePoint(makeActive ? 0x1F513 : 0x1F512);
     showToast(icon + ' ' + (makeActive ? 'تم تفعيل الدورة' : 'تم إيقاف الدورة مؤقتاً'), 'ok');
+  } catch(e) {
+    showToast('خطأ: ' + e.message, 'err');
+  }
+}
+
+/* ── Course offer ad (course_config/{cid}.offer) ─────────────── */
+var offerCid = null;
+function offerToLocalInput(ms) {
+  var d = new Date(Number(ms));
+  var p = function(n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function openOfferModal(cid) {
+  offerCid = cid;
+  var of = (courseConfig[cid] && courseConfig[cid].offer) || null;
+  document.getElementById('offer-title').textContent = 'عرض على دورة \"' + (COURSE_LABELS[cid] || cid) + '\"';
+  document.getElementById('offer-old').value = (of && of.oldPrice) ? of.oldPrice : '';
+  document.getElementById('offer-end').value = (of && of.endsAt) ? offerToLocalInput(of.endsAt) : '';
+  document.getElementById('offer-stop-btn').style.display = (of && of.active) ? '' : 'none';
+  document.getElementById('offer-overlay').classList.add('on');
+}
+function closeOfferModal() {
+  offerCid = null;
+  document.getElementById('offer-overlay').classList.remove('on');
+}
+async function saveOffer() {
+  var old = parseFloat(document.getElementById('offer-old').value);
+  var endVal = document.getElementById('offer-end').value;
+  var end = endVal ? new Date(endVal).getTime() : 0;
+  if (!(old > 0)) { showToast('أدخل السعر القديم', 'err'); return; }
+  if (!end || end <= Date.now()) { showToast('اختر موعد انتهاء في المستقبل', 'err'); return; }
+  try {
+    await db.collection('course_config').doc(offerCid).set({ offer: { active: true, oldPrice: old, endsAt: end } }, { merge: true });
+    showToast('تم تفعيل العرض', 'ok');
+    closeOfferModal();
+  } catch(e) {
+    showToast('خطأ: ' + e.message, 'err');
+  }
+}
+async function stopOffer() {
+  try {
+    await db.collection('course_config').doc(offerCid).set({ offer: { active: false } }, { merge: true });
+    showToast('تم إيقاف العرض', 'ok');
+    closeOfferModal();
   } catch(e) {
     showToast('خطأ: ' + e.message, 'err');
   }

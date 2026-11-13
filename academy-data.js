@@ -1059,6 +1059,7 @@ if((view==='lesson'||view==='quiz')&&lid&&!acIsUnlocked(lid)){
  view='home';lid=null;
 }
 AC.view=view;AC.lid=lid||null;
+if(view==='lesson'&&lid){try{acAdTrackLesson(lid)}catch(e){}}
 if(view==='path')AC.pathId=lid||null;
 if(view==='quiz'){
  var qz=AC_QUIZZES[lid];
@@ -1694,6 +1695,7 @@ return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner
 '<span class="acad-chip">'+acIco('bars',14)+' '+AC_COURSE.level+'</span>'+
 '<span class="acad-chip">'+acIco('shield',14)+' '+AC_COURSE.instructor+'</span>'+
 '</div>'+
+acAdOfferHTML()+
 '<button class="acad-start-btn" onclick="NAcademy.openLesson(\''+firstId+'\')">'+acIco('play',15)+' ابدأ المحاضرة الأولى مجاناً</button>'+
 '<button class="acad-subscribe-btn" onclick="NAcademy.subscribeNow()">'+acIco('rocket',16)+' اشترك الآن</button>'+
 '</div>'+
@@ -1775,6 +1777,98 @@ return '<div class="acad-card" style="margin-top:20px"><div class="acad-card-bod
 '<div class="acad-modules-preview" style="margin-top:0">'+
 '<div class="acad-mp-title">'+heading+'</div>'+rows+
 '</div></div></div>'
+}catch(e){return ''}
+}
+
+
+/* ── إعلان العرض (صفحة info — للطالب غير المشترك) ─────────────────
+   بيتحكم فيه الأدمن من course_config/{courseId}.offer =
+   { active, oldPrice, endsAt(ms) }. السعر الحالي = ثابت السعر الموجود في
+   الكود للكورس (هو سعر العرض الفعلي اللي بيدفعه الطالب)، والسعر القديم
+   بيدخله الأدمن. الإعلان بيختفي لوحده لو: العرض موقوف / انتهى وقته /
+   السعر القديم مش أكبر من السعر الحالي (عمره ما بيعرض خصم وهمي).
+   سلوك الطالب بيتسجل محلياً بس (localStorage) عشان يغيّر العنوان. ── */
+function acOfferPrice(cid){
+try{
+switch(cid){
+case 'mol-bio':return _MB_COURSE_PRICE;
+case 'food-safety':return _FS_COURSE_PRICE;
+case 'tissue-culture':return _TC_COURSE_PRICE;
+case 'pesticide-tech':return _PT_COURSE_PRICE;
+case 'feed-mgmt':return _FD_COURSE_PRICE;
+case 'glp':return _GLP_COURSE_PRICE;
+case 'food-microbiology':return _FMB_COURSE_PRICE;
+case 'plant-diseases':return _PD_COURSE_PRICE;
+case 'bioinformatics':return _BI_COURSE_PRICE;
+case 'landscape-design':return _LD_COURSE_PRICE;
+case 'hydroponics-professional':return _HYD_COURSE_PRICE;
+case 'biofertilizers-professional':return _BF_COURSE_PRICE;
+case 'biochemistry-professional':return _BC_COURSE_PRICE;
+}
+}catch(e){}
+return 0}
+
+function acAdKey(){
+var u=(typeof currentUser!=='undefined'&&currentUser&&currentUser.uid)?currentUser.uid:'guest';
+return 'nb-ad-'+AC_CID+'__'+u}
+function acAdGet(){try{return JSON.parse(localStorage.getItem(acAdKey())||'{}')}catch(e){return{}}}
+function acAdSet(o){try{localStorage.setItem(acAdKey(),JSON.stringify(o))}catch(e){}}
+/* أول مرة يفتح فيها الطالب محاضرة في الكورس ده */
+function acAdTrackLesson(lid){
+var o=acAdGet();o.ls=o.ls||{};
+if(!o.ls[lid]){o.ls[lid]=Date.now();acAdSet(o)}}
+/* زيارة جديدة لصفحة الكورس = بعد 30 دقيقة من آخر نشاط (إعادة الرسم مش بتتعد) */
+function acAdTrackVisit(){
+var o=acAdGet(),now=Date.now(),last=o.last||0;
+if(!last||now-last>1800000){o.v=(o.v||0)+1;o.ps=last}
+o.last=now;acAdSet(o);return o}
+
+function acAdFmt(ms){
+var t=Math.max(0,Math.floor(ms/1000));
+var d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60),sc=t%60;
+function u(n,l){return '<span class="acad-offer-u">'+(n<10?'0'+n:n)+'<i>'+l+'</i></span>'}
+return u(d,'يوم')+u(h,'ساعة')+u(m,'دقيقة')+u(sc,'ثانية')}
+function acAdTick(){
+var el=document.getElementById('acad-offer');
+if(!el){if(window._acAdTimer){clearInterval(window._acAdTimer);window._acAdTimer=null}return}
+var rem=Number(el.getAttribute('data-end'))-Date.now();
+if(rem<=0){clearInterval(window._acAdTimer);window._acAdTimer=null;if(el.parentNode)el.parentNode.removeChild(el);return}
+var tc=document.getElementById('acad-offer-tc');if(tc)tc.innerHTML=acAdFmt(rem)}
+
+function acAdOfferHTML(){
+try{
+var st=acAdTrackVisit();
+var cfg=(typeof _acCourseConfig!=='undefined')?_acCourseConfig[AC_CID]:null;
+var of=cfg&&cfg.offer;
+if(!of||of.active!==true)return '';
+var end=(of.endsAt&&typeof of.endsAt==='object'&&of.endsAt.toMillis)?of.endsAt.toMillis():Number(of.endsAt);
+var old=Number(of.oldPrice),P=acOfferPrice(AC_CID);
+if(!end||end<=Date.now()||!(P>0)||!(old>P))return '';
+var save=Math.round(old-P),pct=Math.round((old-P)/old*100);
+var N=AC_COURSE.modules.reduce(function(s,m){return s+m.lessons.length},0);
+var first=acFlatLessons()[0],done=first&&acDone(first);
+var opened=false;for(var k in (st.ls||{})){if(!acDone(k)){opened=true;break}}
+var gap=st.ps?(Date.now()-st.ps):0;
+var head;
+if(done)head='خلّصت المحاضرة المجانية — كمّل باقي الكورس بسعر العرض';
+else if(opened)head='بدأت أول محاضرة — كمّلها وافتح باقي الكورس بسعر العرض';
+else if(gap>=172800000)head='رجعت تاني! سعر العرض لسه متاح لحد ما العدّاد يخلص';
+else if((st.v||0)>=2)head='بتفكّر في الكورس؟ سعر العرض متاح لحد ما العدّاد يخلص';
+else head='عرض لفترة محدودة على هذا الكورس';
+var per=N?Math.max(1,Math.round(P/N)):0;
+var perLine=per?('يعني حوالي <b>'+per+' جنيه</b> للمحاضرة × '+N+' محاضرة'+(AC_COURSE.cert?' + شهادة إتمام':'')):'';
+if(window._acAdTimer)clearInterval(window._acAdTimer);
+window._acAdTimer=setInterval(acAdTick,1000);
+return '<div class="acad-offer" id="acad-offer" data-end="'+end+'">'+
+'<div class="acad-offer-top"><span class="acad-offer-tag">'+acIco('star',13)+' عرض لفترة محدودة</span>'+
+'<span class="acad-offer-save">وفّر '+save+' جنيه · '+pct+'%</span></div>'+
+'<div class="acad-offer-head">'+head+'</div>'+
+'<div class="acad-offer-price"><span class="acad-offer-new">'+P+'<small>جنيه</small></span>'+
+'<span class="acad-offer-old">'+old+' جنيه</span></div>'+
+(perLine?'<div class="acad-offer-per">'+perLine+'</div>':'')+
+'<div class="acad-offer-timer"><span class="acad-offer-tl">ينتهي العرض بعد</span>'+
+'<div class="acad-offer-tc" id="acad-offer-tc">'+acAdFmt(end-Date.now())+'</div></div>'+
+'</div>'
 }catch(e){return ''}
 }
 
