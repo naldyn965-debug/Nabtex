@@ -112,7 +112,7 @@
      downloading it in parallel while parsing <head>, instead of only discovering
      it once the parser reaches the <script src="academy-data.js"> tag mid-document.
      Does not change execution order/timing — same script tag, same position. -->
-<link rel="preload" as="script" href="academy-data.js?v=6">
+<link rel="preload" as="script" href="academy-data.js?v=7">
 
 <!-- Firebase SDKs moved to body — see just before Firebase initialization -->
 
@@ -9688,7 +9688,7 @@ body.modal-open { overflow: hidden; }
 
 </div>
 
-<script src="academy-data.js?v=6"></script>
+<script src="academy-data.js?v=7"></script>
 
 
 <div id="tw"></div>
@@ -9745,6 +9745,10 @@ db.enablePersistence({ synchronizeTabs: true })
 db.collection('course_config').onSnapshot(function(snap){
   _acCourseConfig={};
   snap.docs.forEach(function(d){_acCourseConfig[d.id]=d.data();});
+  // Course offers (academy ad) — academy-data.js is wrapped in an IIFE so it can't see _acCourseConfig; hand it the offers via window
+  window._acOffers={};
+  snap.docs.forEach(function(d){var o=d.data().offer;if(o)window._acOffers[d.id]=o;});
+  try{if(typeof window.acAdRefresh==='function')window.acAdRefresh();}catch(e){}
   // Live kick: if the course the student is looking at RIGHT NOW just got
   // paused by the admin, boot them to the catalog immediately instead of
   // waiting for their next click/navigation to trip the acGo() guard.

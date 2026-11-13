@@ -1783,7 +1783,9 @@ return '<div class="acad-card" style="margin-top:20px"><div class="acad-card-bod
 
 /* ── إعلان العرض (صفحة info — للطالب غير المشترك) ─────────────────
    بيتحكم فيه الأدمن من course_config/{courseId}.offer =
-   { active, oldPrice, endsAt(ms) }. السعر الحالي = ثابت السعر الموجود في
+   { active, oldPrice, endsAt(ms) } — وبيوصل هنا عن طريق window._acOffers
+   (بيتملا من الـ listener بتاع course_config في index.html؛ لازم كده لأن
+   الملف ده كله جوه IIFE فمتغير _acCourseConfig بتاعه محلي). السعر الحالي = ثابت السعر الموجود في
    الكود للكورس (هو سعر العرض الفعلي اللي بيدفعه الطالب)، والسعر القديم
    بيدخله الأدمن. الإعلان بيختفي لوحده لو: العرض موقوف / انتهى وقته /
    السعر القديم مش أكبر من السعر الحالي (عمره ما بيعرض خصم وهمي).
@@ -1838,8 +1840,7 @@ var tc=document.getElementById('acad-offer-tc');if(tc)tc.innerHTML=acAdFmt(rem)}
 function acAdOfferHTML(){
 try{
 var st=acAdTrackVisit();
-var cfg=(typeof _acCourseConfig!=='undefined')?_acCourseConfig[AC_CID]:null;
-var of=cfg&&cfg.offer;
+var of=(window._acOffers&&window._acOffers[AC_CID])||null;
 if(!of||of.active!==true)return '';
 var end=(of.endsAt&&typeof of.endsAt==='object'&&of.endsAt.toMillis)?of.endsAt.toMillis():Number(of.endsAt);
 var old=Number(of.oldPrice),P=acOfferPrice(AC_CID);
@@ -1871,6 +1872,8 @@ return '<div class="acad-offer" id="acad-offer" data-end="'+end+'">'+
 '</div>'
 }catch(e){return ''}
 }
+/* بيتنادى من index.html لما بيانات العروض توصل/تتغير من Firestore — بيعيد رسم صفحة info بس */
+window.acAdRefresh=function(){try{if(AC.view==='info')acR()}catch(e){}};
 
 
 /* ── LESSON ───────────────────────────────────────────────── */
