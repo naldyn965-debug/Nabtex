@@ -29935,7 +29935,7 @@ function buildScreen(){
     q.s.textContent = sl; q.up.hidden = !(window.AiSub && window.AiSub.plan && !(window.AiSub.top ? window.AiSub.top(card.classList.contains('nbai-focus') ? 'study' : 'ai') : window.AiSub.plan() === 'plan3'));   /* STUDY-SPLIT. القديم (للتراجع): !(window.AiSub && window.AiSub.plan && window.AiSub.plan() !== 'plan3') */
     q.ft.hidden = !sl && l > 0;
     /* سطر الفوتر: في التشخيص بالصورة بس — الدقة بتزيد بزيادة زوايا التصوير */
-    q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : (src === 'study' ? 'صوّر الصفحات بوضوح وفي إضاءة كويسة — لحد 4 صور في المرة الواحدة.' : '');
+    q.d.textContent = tab === 'diag' ? 'دقة الفحص بتزيد مع كل زاوية تصوير — صوّر من 4 زوايا لأدق تشخيص.' : (src === 'study' ? 'صوّر الصفحات بوضوح وفي إضاءة كويسة.' : '');
     q.d.hidden = !q.d.textContent;
   }
   function paintFoot(){
