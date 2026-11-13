@@ -1630,6 +1630,7 @@ return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner
 modulesHTML+
 finalExamHTML+
 '</div></div></div>'+
+acSuggestedCoursesHTML()+
 '</div></div>'}
 
 
@@ -1701,7 +1702,81 @@ return '<div class="acad-hero acad-hero--'+AC_CID+'"><div class="acad-hero-inner
 '<div class="acad-mp-title">محتوى الدورة</div>'+
 modulesHTML+
 '</div></div></div>'+
+acSuggestedCoursesHTML()+
 '</div></div>'}
+
+
+/* ── كورسات مقترحة (نهاية صفحة الكورس) ─────────────────────────
+   قسم إضافي بيظهر في آخر صفحة أي كورس (home + info) ويقترح الكورسات
+   التانية الموجودة في نفس القسم (المسار التعليمي) — من AC_LEARNING_PATHS
+   نفسها، بدون أي داتا جديدة. لو القسم مفيهوش كورسات تانية بيقترح من باقي
+   الكورسات (بحد أقصى 3). بيستخدم نفس كلاسات صفوف المحاضرات الموجودة وبيفتح
+   الكورس عن طريق NAcademy.openCourse() زي كروت الكتالوج بالظبط. ── */
+function acSugCourse(cid){
+try{
+switch(cid){
+case 'pest':return PEST_COURSE;
+case 'mol-bio':return MB_COURSE;
+case 'food-quality':return FQ_COURSE;
+case 'ag-english':return AG_COURSE;
+case 'food-safety':return FS_COURSE;
+case 'glp':return GLP_COURSE;
+case 'land-reclamation':return LR_COURSE;
+case 'tissue-culture':return TC_COURSE;
+case 'pesticide-tech':return PT_COURSE;
+case 'feed-mgmt':return FEED_COURSE;
+case 'food-microbiology':return FMB_COURSE;
+case 'plant-diseases':return PD_COURSE;
+case 'bioinformatics':return BI_COURSE;
+case 'landscape-design':return LD_COURSE;
+case 'hydroponics-professional':return HYD_COURSE;
+case 'biofertilizers-professional':return BF_COURSE;
+case 'biochemistry-professional':return BC_COURSE;
+}
+}catch(e){}
+return null}
+
+function acSuggestedCoursesHTML(){
+try{
+var path=null,i;
+/* القسم اللي الطالب جاي منه لو فيه الكورس ده (ومش الشعبة العامة) */
+if(AC.pathId&&AC.pathId!=='general'&&acPathContainsCourse(AC.pathId,AC_CID)){
+for(i=0;i<AC_LEARNING_PATHS.length;i++)if(AC_LEARNING_PATHS[i].id===AC.pathId){path=AC_LEARNING_PATHS[i];break}
+}
+/* غير كده: أول قسم متخصص بيضم الكورس */
+if(!path){
+for(i=0;i<AC_LEARNING_PATHS.length;i++){
+var pt=AC_LEARNING_PATHS[i];
+if(pt.courses!=='ALL'&&pt.courses.indexOf(AC_CID)>-1){path=pt;break}
+}
+}
+var pool=path?path.courses:[];
+var ids=pool.filter(function(id){return id!==AC_CID});
+var heading=path?('كورسات مقترحة في '+path.title):'كورسات مقترحة';
+if(!ids.length){
+ids=AC_CATALOG_ORDER.filter(function(id){return id!==AC_CID}).slice(0,3);
+heading='كورسات مقترحة';
+}
+var rows=ids.map(function(id){
+var c=acSugCourse(id);
+if(!c||!c.modules)return '';
+if(typeof _acCourseConfig!=='undefined'&&_acCourseConfig[id]&&_acCourseConfig[id].active===false)return '';
+var n=c.modules.reduce(function(s,m){return s+m.lessons.length},0);
+return '<div class="acad-lesson-row" onclick="NAcademy.openCourse(\''+id+'\')" role="button">'+
+'<div class="acad-lesson-check">'+acIco('cap',14)+'</div>'+
+'<div class="acad-lesson-info">'+
+'<div class="acad-lesson-name">'+c.title+'</div>'+
+'<div class="acad-lesson-dur">'+acIco('clock',12)+' '+c.duration+' &nbsp;·&nbsp; '+n+' محاضرة</div>'+
+'</div>'+
+'<span class="acad-lesson-arr">‹</span>'+
+'</div>'}).join('');
+if(!rows)return '';
+return '<div class="acad-card" style="margin-top:20px"><div class="acad-card-body">'+
+'<div class="acad-modules-preview" style="margin-top:0">'+
+'<div class="acad-mp-title">'+heading+'</div>'+rows+
+'</div></div></div>'
+}catch(e){return ''}
+}
 
 
 /* ── LESSON ───────────────────────────────────────────────── */
