@@ -286,6 +286,9 @@ img{display:block;max-width:100%}
 #thm-btn.is-dark .moon-icon{display:block;}
 #thm-btn:not(.is-dark) .sun-icon{display:block;}
 #thm-btn:not(.is-dark) .moon-icon{display:none;}
+/* Theme toggle inside mob-menu (moved from the top bar) */
+.mob-menu #thm-btn{display:flex;align-items:center;width:100%;text-align:start;line-height:inherit;}
+.mob-menu #thm-btn svg{width:15px;height:15px;margin-left:8px;flex-shrink:0;}
 /* Profile avatar */
 #userAvatarBtn{background:linear-gradient(135deg,var(--brand-l,#2d9a58),var(--brand,#1B6B3A));border:2px solid rgba(27,107,58,.3);color:#fff;}
 @media (hover:hover) and (pointer:fine){
@@ -1031,7 +1034,7 @@ body.modal-open { overflow: hidden; }
 .btn-hero-p span,.btn-hero-p svg{position:relative;z-index:1}
 #stk{bottom:calc(26px + env(safe-area-inset-bottom,0px))}
 .mob-menu{overflow:hidden;max-height:0;opacity:0;transition:max-height .32s var(--ease-out),opacity .28s ease,padding .28s ease;display:flex!important;padding-top:0;padding-bottom:0}
-.mob-menu.open{max-height:420px;opacity:1;padding-top:12px;padding-bottom:20px}
+.mob-menu.open{max-height:480px;opacity:1;padding-top:12px;padding-bottom:20px}
 .toast{max-width:88vw;white-space:normal;word-wrap:break-word}
 /* Toast refinement: #tw was shrink-wrapped to 50vw (left:50%) which forced every toast onto 2-3 lines. */
 #tw{width:max-content;max-width:94vw;gap:6px}
@@ -4394,14 +4397,9 @@ body.modal-open { overflow: hidden; }
       <a href="#" class="nl" onclick="showPage('ip-policy');return false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-left:5px;flex-shrink:0"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>الملكية الفكرية</a>
     </div>
     <div class="nav-actions" id="nav-actions">
-      <button class="nav-icon-btn" id="thm-btn" title="تبديل المظهر" aria-label="تبديل المظهر">
-        <!-- Sun icon (shown in dark mode) -->
-        <svg class="sun-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"/>
-        </svg>
-        <!-- Moon icon (shown in light mode) -->
-        <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      <button class="nav-icon-btn" id="nav-search-btn" title="بحث" aria-label="بحث" onclick="closeMob();showPage('search');var _si=document.getElementById('sp-inp');if(_si)_si.focus();">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
       </button>
       <button class="nav-icon-btn" id="nav-notif-btn" style="display:none;position:relative" onclick="AcNotif.togglePanel()" aria-label="الإشعارات" title="الإشعارات">
@@ -4459,10 +4457,20 @@ body.modal-open { overflow: hidden; }
   <div class="mob-menu" id="mob-menu">
     <!-- تم نقل الرئيسية / مزرعتي / السوق / الأكاديمية للشريط السفلي -->
     <a href="#" class="nl" onclick="showPage('goals');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>أهداف المنصة</a>
-    <a href="#" class="nl" onclick="closeMob();if(window.NbArena){NbArena.open()}return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>ساحة نبتيكس</a>
     <a href="#" class="nl" onclick="showPage('privacy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>سياسة الخصوصية</a>
     <a href="#" class="nl" onclick="showPage('ip-policy');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>الملكية الفكرية</a>
-    <a href="#" class="nl" onclick="showPage('market');closeMob();return false"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>السوق الزراعي</a>
+    <!-- زرار تبديل المظهر (اتنقل من الشريط العلوي — نفس الـ id والـ listener) -->
+    <button type="button" class="nl" id="thm-btn" title="تبديل المظهر" aria-label="تبديل المظهر">
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="sun-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"/>
+        </svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      <span>تبديل المظهر</span>
+    </button>
     <!-- زرار تحميل التطبيق: Android → مباشر | iOS → تعليمات -->
     <a href="#" class="nl nb-dl-btn" id="mob-install-app" onclick="closeMob();setTimeout(openPwaModal,180);return false">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-left:8px;flex-shrink:0"><path d="M12 2v13"/><path d="M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>حمّل تطبيق نبتيكس
@@ -10317,40 +10325,45 @@ const App = {
         '</div>'+
         '<div class="nb-h2-avatar" onclick="showPage(\'profile\')" role="button" aria-label="ملفي الشخصي">'+avatarHTML+'</div>'+
       '</div>'+
-      '<div class="nb-h2-search" role="search">'+
-        '<input type="text" id="nb-h2-search-inp" class="nb-h2-search-inp" placeholder="ابحث عن دورة أو محتوى..." aria-label="ابحث عن دورة أو محتوى" autocomplete="off" enterkeyhint="search" '+
-          'onkeydown="if(event.key===\'Enter\'){App._nbHeroSearch()}">'+
-        '<button class="nb-h2-search-btn" onclick="App._nbHeroSearch()" aria-label="بحث">'+
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'+
-        '</button>'+
-      '</div>'+
-    /* HOME-STUDY-BTN: زر «ذاكر مع نبتيكس» تحت شريط البحث — بيفتح Nabtex AI على وضع الذاكرة. للتراجع: امسح الزر ده + كتلة CSS (nb-home-study-btn) + NbFarmAI.openStudy + card._setSrc. */
-    '<button type="button" class="nb-h2-study" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.openStudy===\'function\'){window.NbFarmAI.openStudy(this);}">'+
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z"/><path d="M12 6.5v13"/></svg>'+
-      '<span>ذاكر مع نبتيكس</span>'+
-    '</button>'+
+    /* HOME-STUDY-BTN: اتشال زر «ذاكر مع نبتيكس» من الرئيسية بناءً على طلب المالك. للرجوع: ارجّع <button class="nb-h2-study" onclick="NbFarmAI.openStudy(this)"> + أيقونة الكتاب + <span>ذاكر مع نبتيكس</span> هنا (كتلة CSS بتاعته لسه موجودة). الدخول لـ«ذاكر» متاح من كارت «ذاكر» جوه «خدمات نبتيكس». */
+    /* SVC-TOGGLE: زر «خدمات نبتيكس» تحت «ذاكر مع نبتيكس» في الهيرو — بيفتح/يقفل قسم الخدمات (#nb-svc-section) اللي تحت الهيرو. للتراجع: امسح الزر ده + شيل id="nb-svc-section" من القسم. */
+    '<button type="button" class="nb-svc-toggle" id="nb-svc-toggle" aria-expanded="false" aria-controls="nb-svc-panel" onclick="var s=document.getElementById(\'nb-svc-section\');if(!s)return;var o=s.classList.toggle(\'nb-svc-open\');this.classList.toggle(\'nb-svc-on\',o);this.setAttribute(\'aria-expanded\',o);"><span class="nb-svc-tic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></span><span class="nb-svc-tt">خدمات نبتيكس</span><span class="nb-svc-chev" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button>'+
     '</div>'+
-    /* ── اختصارات سريعة (إضافة مستقلة — كلاسات nb-qa-* فقط، نفس وجهات التنقّل بتاعة الشريط السفلي) ──
-       للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-home-quick-actions ── */
-    '<section class="nb-h2-courses-sec nb-qa" aria-labelledby="nb-qa-title">'+
-      '<div class="nb-h2-courses-head">'+
-        '<h2 class="nb-h2-courses-title" id="nb-qa-title">ماذا تريد أن تنجز اليوم؟</h2>'+
+    /* ── خدمات نبتيكس (بديل قسم «ماذا تريد أن تنجز اليوم؟») — كلاسات nb-svc-* فقط، نفس وجهات الفتح الأصلية + ساحة نبتيكس + ذاكر + السوق.
+       للتراجع: امسح الكتلة دي + كتلة CSS اسمها nb-home-services، وارجع الكتلة القديمة (محفوظة في تعليق بعد القسم ده). ── */
+    '<section class="nb-h2-courses-sec nb-svc" id="nb-svc-section" aria-label="خدمات نبتيكس">'+
+      '<div class="nb-svc-panel" id="nb-svc-panel" role="region" aria-labelledby="nb-svc-toggle"><div class="nb-svc-clip">'+
+      '<div class="nb-svc-grid">'+
+        '<button type="button" class="nb-svc-card nb-svc-card--ai" style="--i:0" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open===\'function\'){window.NbFarmAI.open(this);}"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0.3 0.8 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="currentColor" stroke="none"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t"><bdi dir="ltr">Nabtex AI</bdi></span><span class="nb-svc-d">استشارة زراعية وتشخيص أمراض النبات بالصورة</span></span></button>'+
+        '<button type="button" class="nb-svc-card nb-svc-card--study" style="--i:1" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.openStudy===\'function\'){window.NbFarmAI.openStudy(this);}"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z"/><path d="M12 6.5v13"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t">ذاكر مع نبتيكس</span><span class="nb-svc-d">ارفع محاضراتك واحصل على شرح واختبار فوري</span></span></button>'+
+        '<button type="button" class="nb-svc-card nb-svc-card--acad" style="--i:2" onclick="showPage(\'academy\');window.scrollTo(0,0);"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t">الأكاديمية</span><span class="nb-svc-d">دورات احترافية واختبارات وشهادات إتمام</span></span></button>'+
+        '<button type="button" class="nb-svc-card nb-svc-card--arena" style="--i:3" onclick="if(window.NbArena&&typeof window.NbArena.open===\'function\'){window.NbArena.open();}else{alert(\'الساحة غير متاحة الآن\');}"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t">ساحة نبتيكس</span><span class="nb-svc-d">تنافس مع أصدقائك في مسابقات زراعية</span></span></button>'+
+        '<button type="button" class="nb-svc-card nb-svc-card--farm" style="--i:4" onclick="showPage(\'farm\');window.scrollTo(0,0);"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t">إدارة المزرعة</span><span class="nb-svc-d">تابع حقولك ومحاصيلك وعملياتك</span></span></button>'+
+        '<button type="button" class="nb-svc-card nb-svc-card--mkt" style="--i:5" onclick="showPage(\'market\');window.scrollTo(0,0);"><span class="nb-svc-top"><span class="nb-svc-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span><span class="nb-svc-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span><span class="nb-svc-tx"><span class="nb-svc-t">السوق الزراعي</span><span class="nb-svc-d">بيع واشتري المنتجات الزراعية بسهولة</span></span></button>'+
       '</div>'+
-      '<div class="nb-qa-grid">'+
-        '<button type="button" class="nb-qa-card nb-qa-card--ai" style="--qa-i:0" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open===\'function\'){window.NbFarmAI.open(this);}">'+
-          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="28" height="28" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
-          '<span class="nb-qa-tx"><span class="nb-qa-t"><bdi dir="ltr">Nabtex AI</bdi></span><span class="nb-qa-d">استشارة زراعية وتشخيص أمراض النبات بالصورة</span></span>'+
-        '</button>'+
-        '<button type="button" class="nb-qa-card nb-qa-card--farm" style="--qa-i:1" onclick="showPage(\'farm\');window.scrollTo(0,0);">'+
-          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 15l6 6M15 15l-6 6" opacity=".55"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
-          '<span class="nb-qa-tx"><span class="nb-qa-t">إدارة المزرعة</span><span class="nb-qa-d">تابع حقولك ومحاصيلك وعملياتك</span></span>'+
-        '</button>'+
-        '<button type="button" class="nb-qa-card nb-qa-card--acad" style="--qa-i:2" onclick="showPage(\'academy\');window.scrollTo(0,0);">'+
-          '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
-          '<span class="nb-qa-tx"><span class="nb-qa-t">الأكاديمية</span><span class="nb-qa-d">دورات احترافية واختبارات وشهادات إتمام</span></span>'+
-        '</button>'+
-      '</div>'+
+      '</div></div>'+
     '</section>'+
+    /* القديم (للتراجع) — قسم «ماذا تريد أن تنجز اليوم؟» (3 كروت) — كان هنا، والـ CSS بتاعه (nb-home-quick-actions) لسه موجود:
+           '<section class="nb-h2-courses-sec nb-qa" aria-labelledby="nb-qa-title">'+
+             '<div class="nb-h2-courses-head">'+
+               '<h2 class="nb-h2-courses-title" id="nb-qa-title">ماذا تريد أن تنجز اليوم؟</h2>'+
+             '</div>'+
+             '<div class="nb-qa-grid">'+
+               '<button type="button" class="nb-qa-card nb-qa-card--ai" style="--qa-i:0" aria-haspopup="dialog" onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open===\'function\'){window.NbFarmAI.open(this);}">'+
+                 '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="28" height="28" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+                 '<span class="nb-qa-tx"><span class="nb-qa-t"><bdi dir="ltr">Nabtex AI</bdi></span><span class="nb-qa-d">استشارة زراعية وتشخيص أمراض النبات بالصورة</span></span>'+
+               '</button>'+
+               '<button type="button" class="nb-qa-card nb-qa-card--farm" style="--qa-i:1" onclick="showPage(\'farm\');window.scrollTo(0,0);">'+
+                 '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 15l6 6M15 15l-6 6" opacity=".55"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+                 '<span class="nb-qa-tx"><span class="nb-qa-t">إدارة المزرعة</span><span class="nb-qa-d">تابع حقولك ومحاصيلك وعملياتك</span></span>'+
+               '</button>'+
+               '<button type="button" class="nb-qa-card nb-qa-card--acad" style="--qa-i:2" onclick="showPage(\'academy\');window.scrollTo(0,0);">'+
+                 '<span class="nb-qa-top"><span class="nb-qa-ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nb-qa-go" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 18l-6-6 6-6"/></svg></span></span>'+
+                 '<span class="nb-qa-tx"><span class="nb-qa-t">الأكاديمية</span><span class="nb-qa-d">دورات احترافية واختبارات وشهادات إتمام</span></span>'+
+               '</button>'+
+             '</div>'+
+           '</section>'+
+    */
     continueHTML+
     '<div class="nb-h2-courses-sec">'+
       '<div class="nb-h2-courses-head">'+
@@ -14056,9 +14069,20 @@ document.addEventListener('click', e => {
         { view:'analytics', svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', label:'التحليلات' },
         { view:'archive',   svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>', label:'الأرشيف' },
         { view:'expenses',  svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', label:'المصروفات' },
+        /* FARM-AI-ENTRIES: عنصرين بيفتحوا Nabtex AI (مش صفحات) — لازم يفضلوا آخر القائمة عشان FarmNav بيربط الصفحات بالـ index */
+        { act:'diag', svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>', label:'تشخيص الأمراض بالصور' },
+        { act:'farm', svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/></svg>', label:'تحليل المزرعة' },
       ];
 
       var navHtml = navItems.map(function(n, i) {
+        if (n.act) {   /* FARM-AI-ENTRIES */
+          var go = n.act === 'diag' ? 'openDiag' : 'openFarmAsk';
+          return (n.act === 'diag' ? '<p class="farm-sb-label" style="margin-top:16px">المساعد الذكي</p>' : '') +
+            '<button type="button" class="farm-nav-item farm-nav-act" aria-haspopup="dialog" onclick="farmSbToggle(false);if(window.NbFarmAI&&window.NbFarmAI.' + go + '){window.NbFarmAI.' + go + '();}" style="animation-delay:' + (i * 0.06) + 's">' +
+            '<span class="farm-nav-icon" aria-hidden="true">' + n.svg + '</span>' +
+            '<span class="farm-nav-label">' + n.label + '</span>' +
+          '</button>';
+        }
         var active = farmState.currentView === n.view ? ' farm-nav-active' : '';
         return '<button type="button"' + (active ? ' aria-current="page"' : '') + ' class="farm-nav-item' + active + '" onclick="FarmNav(\'' + n.view + '\')" style="animation-delay:' + (i * 0.06) + 's">' +
           '<span class="farm-nav-icon" aria-hidden="true">' + n.svg + '</span>' +
@@ -24731,18 +24755,18 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
       </span>
       <span class="nb-lbl">الرئيسية</span>
     </button>
-    <!-- AI (Nabtex AI) — بدل «مزرعتي» في الموضع الثاني؛ بيفتح واجهة المساعد المستقلة (NbFarmAI.open) بنفس شرط الوصول القديم -->
-    <button class="nb-nav-item" data-page="ai"
-            onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open==='function'){window.NbFarmAI.open(this);}" aria-label="المساعد الذكي Nabtex AI" aria-haspopup="dialog">
+    <!-- ذاكر (ذاكر مع نبتيكس) — بدل تاب «AI»؛ بيفتح Nabtex AI على وضع المذاكرة (NbFarmAI.openStudy). «تشخيص بالصور» و«تحليل المزرعة» اتنقلوا لقائمة نظام إدارة المزرعة. القديم (للتراجع): data-page="ai" + onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.open==='function'){window.NbFarmAI.open(this);}" + أيقونة النجمة + label «AI» -->
+    <button class="nb-nav-item" data-page="study"
+            onclick="if(window.NbFarmAI&&typeof window.NbFarmAI.openStudy==='function'){window.NbFarmAI.openStudy(this);}" aria-label="ذاكر مع نبتيكس" aria-haspopup="dialog">
       <span class="nb-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
              aria-hidden="true" focusable="false">
-          <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>
-          <path d="M19 15v4M17 17h4"/>
+          <path d="M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z"/>
+          <path d="M12 6.5v13"/>
         </svg>
       </span>
-      <span class="nb-lbl">AI</span>
+      <span class="nb-lbl">ذاكر</span>
     </button>
     <!-- Academy (الكورسات) -->
     <button class="nb-nav-item" data-page="academy"
@@ -24757,18 +24781,17 @@ try{[].forEach.call(document.querySelectorAll('.vcash-overlay'),function(ov){try
       </span>
       <span class="nb-lbl">الكورسات</span>
     </button>
-    <!-- Farm — اتنقل لمكان تاب السوق -->
-    <button class="nb-nav-item" data-page="farm"
-            onclick="showPage('farm');window.scrollTo(0,0);" aria-label="مزرعتي">
+    <!-- Arena (ساحة نبتيكس) — بدل «مزرعتي»؛ بيفتح نفس الـ overlay بتاع المنيو (NbArena.open). القديم (للتراجع): تاب مزرعتي = data-page="farm" + onclick="showPage('farm');window.scrollTo(0,0);" + أيقونة النبتة + label «مزرعتي» -->
+    <button class="nb-nav-item" data-page="arena"
+            onclick="(function(){var o=function(){var A=window.NbArena;return A&&typeof A.open==='function'?(A.open(),1):0};if(o())return;var d=0,go=function(){if(d)return;d=1;if(!o())alert('الساحة: ملف arena.js اتحمّل بس NbArena غير معرّف — فيه خطأ جوه arena.js')};var el=document.querySelector('script[src^=arena]');if(!el){el=document.createElement('script');el.src='arena.js?v=15';document.head.appendChild(el)}el.addEventListener('load',go,{once:true});el.addEventListener('error',function(){alert('الساحة: ملف arena.js مش بيتحمّل (404 أو مش في نفس فولدر index.html)')},{once:true});setTimeout(go,2500)})();return false" aria-label="ساحة نبتيكس">
       <span class="nb-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
              aria-hidden="true" focusable="false">
-          <path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/>
-          <path d="M5 20c2-3 5-5 7-8"/>
+          <path d="M13 2L4 14h7l-1 8 9-12h-7z"/>
         </svg>
       </span>
-      <span class="nb-lbl">مزرعتي</span>
+      <span class="nb-lbl">الساحة</span>
     </button>
     <!-- القديم (للتراجع) — تاب السوق (السوق بقى في القائمة المنسدلة بالشريط العلوي):
     <button class="nb-nav-item" data-page="market"
@@ -25636,6 +25659,324 @@ body {
   border-color: rgba(75,184,112,.25) !important;
   background: rgba(27,107,58,.12) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM DROPDOWN MENU (#mob-menu) — تحسين شكل القائمة فقط
+   CSS فقط: بدون أي تغيير في الـ JS أو الـ ids أو الـ onclick.
+   - الإضافات دي بتتحط بعد القواعد القديمة عشان تكسبها في الـ cascade
+   - display بتاع #mobLogin/#mobRegister/#mobLogout بيتحكم فيه الـ JS
+     inline، فمش بنفرضه هنا بـ !important
+═══════════════════════════════════════════════════════════════ */
+
+/* ── الحاوية: لوحة زجاجية بزوايا ناعمة وظل عميق ── */
+.mob-menu {
+  padding-left: 14px;
+  padding-right: 14px;
+  gap: 2px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 24px 24px;
+  background:
+    radial-gradient(120% 90px at 50% 0, rgba(45,154,88,.10), transparent 70%),
+    var(--glass);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow:
+    0 28px 48px -18px rgba(10,40,22,.28),
+    0 8px 18px -10px rgba(10,40,22,.12);
+}
+.mob-menu.open {
+  max-height: 640px;
+  max-height: min(640px, calc(100dvh - 80px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: 8px;
+  padding-bottom: 14px;
+}
+[data-dark] .mob-menu {
+  background:
+    radial-gradient(120% 90px at 50% 0, rgba(75,184,112,.10), transparent 70%),
+    var(--glass);
+  box-shadow:
+    0 28px 52px -16px rgba(0,0,0,.7),
+    0 0 0 1px rgba(75,184,112,.06) inset;
+}
+
+/* ── الصف: أيقونة داخل مربع ناعم + نص + سهم ── */
+.mob-menu .nl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-align: start;
+  transition:
+    background .22s ease,
+    border-color .22s ease,
+    color .2s ease,
+    transform .2s var(--ease-out) !important;
+}
+
+/* الأيقونة: بدون مربع، بنفس أخضر لوجو نبتيكس (حرف N) */
+.mob-menu .nl > svg,
+.mob-menu #thm-btn svg {
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0 !important;
+  vertical-align: middle !important;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--brand);
+  transition: transform .3s var(--ease-spring), opacity .2s ease;
+}
+[data-dark] .mob-menu .nl > svg,
+[data-dark] .mob-menu #thm-btn svg {
+  color: var(--brand-xl);
+  border: 0;
+  background: none;
+}
+
+/* سهم التنقل (بيستخدم ::after الموجود للصفوف بس) */
+.mob-menu .nl::after {
+  content: '';
+  position: static;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-inline-start: auto;
+  margin-inline-end: 6px;
+  right: auto; left: auto; bottom: auto;
+  border: 0;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  border-radius: 1px;
+  background: none;
+  opacity: .32;
+  transform: rotate(45deg);
+  transition: transform .25s var(--ease-out), opacity .2s ease;
+}
+
+/* hover (للأجهزة اللي فيها ماوس بس) */
+@media (hover: hover) and (pointer: fine) {
+  .mob-menu .nl:hover {
+    background: var(--brand-pale);
+    border-color: var(--line);
+    color: var(--brand);
+  }
+  [data-dark] .mob-menu .nl:hover { color: var(--brand-xl); }
+  .mob-menu .nl:hover::after {
+    opacity: .85;
+    transform: translateX(-3px) rotate(45deg);
+  }
+  .mob-menu .nl:hover > svg,
+  .mob-menu #thm-btn:hover svg {
+    transform: scale(1.1);
+  }
+}
+/* ضغط (لمس) */
+.mob-menu .nl:active {
+  transform: scale(.985) !important;
+  background: var(--brand-mist);
+}
+.mob-menu .nl:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ── زرار المظهر: فاصل رفيع + مفتاح تبديل (switch) ── */
+.mob-menu #thm-btn { margin-top: 10px; }
+.mob-menu #thm-btn::before {
+  content: '';
+  position: absolute;
+  top: -6px; left: 14px; right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line2), transparent);
+  pointer-events: none;
+}
+.mob-menu #thm-btn::after {
+  box-sizing: border-box;
+  width: 34px;
+  height: 20px;
+  margin-inline-end: 4px;
+  padding: 3px;
+  border: 0;
+  border-radius: 99px;
+  opacity: 1;
+  transform: none;
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 6.4px, transparent 7px) 100% 50% / 14px 14px no-repeat content-box,
+    var(--line2);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
+  transition: background-position .3s var(--ease-spring), background-color .3s ease;
+}
+.mob-menu #thm-btn.is-dark::after {
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 6.4px, transparent 7px) 0% 50% / 14px 14px no-repeat content-box,
+    var(--brand);
+}
+.mob-menu #thm-btn:hover::after { opacity: 1; transform: none; }
+
+/* ── زرار تحميل التطبيق: بطاقة CTA هادية ── */
+.mob-menu .nb-dl-btn {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  min-height: 46px;
+  color: var(--brand) !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(27,107,58,.26) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(135deg, rgba(27,107,58,.07), rgba(95,201,126,.20)) !important;
+  box-shadow: 0 10px 22px -14px rgba(27,107,58,.55), inset 0 1px 0 rgba(255,255,255,.6);
+}
+[data-dark] .mob-menu .nb-dl-btn {
+  color: var(--brand-xl) !important;
+  border-color: rgba(75,184,112,.28) !important;
+  background: linear-gradient(135deg, rgba(27,107,58,.18), rgba(75,184,112,.10)) !important;
+  box-shadow: 0 10px 22px -14px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.mob-menu .nb-dl-btn::after { display: none; }
+/* أيقونة التنزيل: بدون دايرة، بنفس الأخضر */
+.mob-menu .nb-dl-btn > svg {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--brand);
+  stroke: var(--brand);
+}
+[data-dark] .mob-menu .nb-dl-btn > svg { color: var(--brand-xl); stroke: var(--brand-xl); border: 0; background: none; }
+@media (hover: hover) and (pointer: fine) {
+  .mob-menu .nb-dl-btn:hover {
+    background: linear-gradient(135deg, rgba(27,107,58,.12), rgba(95,201,126,.30)) !important;
+    border-color: rgba(27,107,58,.4) !important;
+    color: var(--brand) !important;
+  }
+  [data-dark] .mob-menu .nb-dl-btn:hover { color: var(--brand-xl) !important; }
+  .mob-menu .nb-dl-btn:hover > svg { transform: translateY(2px); }
+}
+
+/* ── أزرار الحساب (دخول / تسجيل / خروج) ── */
+.mob-menu #mobLogin,
+.mob-menu #mobRegister,
+.mob-menu #mobLogout {
+  justify-content: center;
+  text-align: center;
+  min-height: 0;
+  padding: 10px 14px;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.mob-menu #mobLogin::after,
+.mob-menu #mobRegister::after,
+.mob-menu #mobLogout::after { display: none; }
+.mob-menu #mobLogin {
+  color: var(--ink);
+  border: 1.5px solid var(--line2);
+  background: var(--card);
+}
+.mob-menu #mobRegister {
+  color: #fff;
+  border-color: transparent;
+  background: var(--brand);
+  box-shadow: 0 12px 22px -12px rgba(27,107,58,.7);
+}
+.mob-menu #mobLogout {
+  color: var(--red);
+  border-color: rgba(192,57,43,.16);
+  background: rgba(192,57,43,.05);
+}
+[data-dark] .mob-menu #mobLogout {
+  color: #ff8f84;
+  border-color: rgba(255,143,132,.2);
+  background: rgba(255,143,132,.07);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mob-menu #mobLogin:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-pale); }
+  .mob-menu #mobRegister:hover { color: #fff; background: var(--brand); border-color: transparent; }
+  .mob-menu #mobLogout:hover { color: var(--red); background: rgba(192,57,43,.10); border-color: rgba(192,57,43,.28); }
+  [data-dark] .mob-menu #mobLogout:hover { color: #ff8f84; }
+}
+.mob-menu #mobRegister:active { background: var(--brand); }
+
+/* ── دخول الصفوف بالتتابع عند فتح القائمة ── */
+@keyframes nbMobItemIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.mob-menu.open > .nl { animation: nbMobItemIn .42s var(--ease-out) backwards; }
+.mob-menu.open > .nl:nth-child(1) { animation-delay: .04s; }
+.mob-menu.open > .nl:nth-child(2) { animation-delay: .085s; }
+.mob-menu.open > .nl:nth-child(3) { animation-delay: .13s; }
+.mob-menu.open > .nl:nth-child(4) { animation-delay: .175s; }
+.mob-menu.open > .nl:nth-child(5) { animation-delay: .22s; }
+.mob-menu.open > .nl:nth-child(6) { animation-delay: .265s; }
+.mob-menu.open > .nl:nth-child(7) { animation-delay: .31s; }
+.mob-menu.open > .nl:nth-child(8) { animation-delay: .355s; }
+@media (prefers-reduced-motion: reduce) {
+  .mob-menu.open > .nl { animation: none; }
+  .mob-menu .nl, .mob-menu .nl > svg, .mob-menu .nl::after { transition: none !important; }
+}
+
+/* ── الشاشات الواسعة: بطاقة عايمة تحت زرار القائمة بدل شريط بعرض الشاشة ── */
+@media (min-width: 769px) {
+  .mob-menu {
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    right: auto;
+    width: 372px;
+    max-width: calc(100vw - 40px);
+    margin-top: 6px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOTTOM NAV — تصغير الشريط والأيقونات بنسب متناسقة (CSS فقط)
+   الأحجام القديمة: شريط ~66px · أيقونة 22px (الكورسات 25px) ·
+   نص 9.5px · تكبير الأيقونة النشطة 1.22
+   للتراجع: امسح البلوك ده.
+═══════════════════════════════════════════════════════════════ */
+#nb-bottom-nav {
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 40px);
+  max-width: 440px;
+}
+#nb-bottom-nav::before { border-radius: 26px; }
+#nb-bottom-nav .nb-nav-inner { padding: 5px 5px 4px; }
+#nb-bottom-nav #nb-slide-pill { top: 4px; bottom: 4px; }
+#nb-bottom-nav .nb-nav-item {
+  min-height: 44px;
+  padding: 6px 3px 5px;
+  gap: 2px;
+  border-radius: 14px;
+}
+#nb-bottom-nav .nb-nav-item .nb-ico svg { width: 19px; height: 19px; }
+#nb-bottom-nav button[data-page="academy"] .nb-ico svg { width: 21.5px; height: 21.5px; }
+#nb-bottom-nav .nb-nav-item .nb-lbl { font-size: 9px; letter-spacing: .01em; }
+#nb-bottom-nav .nb-nav-item.active .nb-ico { transform: translateY(-2px) scale(1.12); }
+#nb-bottom-nav .nb-nav-item.active .nb-ico svg { stroke-width: 2.45; }
+/* مسافة الأزرار العايمة فوق الشريط بعد ما بقى أقصر */
+#pwa-install-banner { bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important; }
+#pwa-fab            { bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important; }
 
 /* ─── HERO ANIMATIONS — REMOVED ──────────────────────────────
    particle canvas + floating orbs + scroll indicator
@@ -26587,6 +26928,43 @@ function nbFmtDate(date){
   -webkit-backdrop-filter:blur(16px) saturate(140%);
   box-shadow:0 2px 10px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
 }
+/* ═══════════════════════════════════════════════════════════════
+   COURSE CARDS SHADOW (.nb-h2-scroll / .nb-h2-course-card)
+   المشكلة: حاوية السكرول overflow:hidden وحشوها السفلي 10px بس،
+   فكانت بتقص الظل (~26px) بخط مستقيم. الحل: مساحة كافية للظل
+   (حشو + margin سالب بنفس القيمة فمفيش تغيير في مكان الكروت)
+   + ظل أنعم وأوسع بدرجة شفافية أقل.
+   للتراجع: امسح البلوك ده.
+═══════════════════════════════════════════════════════════════ */
+.nb-h2-scroll{
+  padding:8px 14px 30px;
+  margin:-6px -14px -20px;
+  scroll-padding-inline:14px; /* الـ snap يحترم الحشو فمكان أول كارت ما يتغيرش */
+}
+.nb-h2-course-card{
+  box-shadow:
+    0 1px 2px rgba(15,45,25,.04),
+    0 10px 24px -12px rgba(15,45,25,.16),
+    inset 0 1px 0 rgba(255,255,255,.5);
+}
+.nb-h2-course-card.nb-h2-in:hover{
+  box-shadow:
+    0 2px 6px rgba(15,45,25,.05),
+    0 16px 30px -14px rgba(27,107,58,.30);
+}
+[data-dark] .nb-h2-course-card{
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.25),
+    0 12px 26px -14px rgba(0,0,0,.60),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+[data-dark] .nb-h2-course-card.nb-h2-in:hover{
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.30),
+    0 18px 32px -14px rgba(0,0,0,.65),
+    0 0 0 1px rgba(46,170,92,.14);
+}
+
 </style>
 
 <style id="nb-home-quick-actions">
@@ -26720,6 +27098,100 @@ function nbFmtDate(date){
   .nb-qa-card,.nb-qa-card *,.nb-qa-card::after{animation:none!important;transition:none!important}
   .nb-qa-card--ai::after{display:none}
 }
+</style>
+
+<style id="nb-home-services">
+/* ══ الرئيسية › «خدمات نبتيكس» — شبكة موحّدة لكل الخدمات (6 كروت) ══
+   إضافة مستقلة: كل الكلاسات nb-svc-* ولا تلمس أي كلاس موجود. للتراجع: امسح هذه الكتلة + كتلة nb-svc في _renderUnifiedHome.
+   • الترتيب في الموبايل (عمودين): [Nabtex AI · ذاكر] [الأكاديمية · الساحة] [المزرعة · السوق] — كل صف عائلة لون واحدة
+   • اللون في الأيقونة فقط؛ الكارت أبيض موحّد بإطار رفيع • الحركة transform/opacity فقط ومتوقفة مع prefers-reduced-motion */
+.nb-svc{--svc-out:cubic-bezier(.16,1,.3,1)}
+/* القسم نفسه بقى من غير زر: مقفول = مفيش أي مسافة، ولما يتفتح بياخد مسافة بسيطة */
+.nb-h2-courses-sec.nb-svc{padding:0;transition:padding .45s var(--svc-out)}
+.nb-h2-courses-sec.nb-svc.nb-svc-open{padding:6px 0 6px}
+.nb-svc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px 4px 8px}
+.nb-svc-card{
+  --c1:#1B6B3A;--c2:#2eaa5c;--soft:rgba(27,107,58,.10);--tx:#1B6B3A;
+  position:relative;display:flex;flex-direction:column;align-items:stretch;gap:12px;
+  min-width:0;min-height:132px;padding:14px;
+  font-family:inherit;text-align:start;color:var(--ink);
+  border:1px solid var(--line);border-radius:20px;background:var(--card);
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 24px -18px rgba(0,0,0,.22);
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  transition:transform .25s var(--svc-out),box-shadow .25s ease,border-color .25s ease;
+}
+@keyframes nbSvcIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.nb-svc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nb-svc-ic{flex:none;width:34px;height:34px;display:grid;place-items:center;color:var(--tx);transition:transform .3s var(--svc-out)}
+.nb-svc-ic svg{width:34px;height:34px;stroke-width:1.8;display:block}
+@media (hover:hover){.nb-svc-card:hover .nb-svc-ic{transform:scale(1.08)}}
+.nb-svc-go{flex:none;display:grid;place-items:center;width:24px;height:24px;color:var(--muted);opacity:.7;transition:transform .25s var(--svc-out),color .25s,opacity .25s}
+.nb-svc-tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.nb-svc-t{font-size:14.5px;font-weight:800;line-height:1.35;color:var(--ink)}
+.nb-svc-d{
+  font-size:11.5px;line-height:1.65;font-weight:600;color:var(--slate);
+  min-height:3.3em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+}
+.nb-svc-card:active{transform:scale(.97)}
+.nb-svc-card:focus-visible{outline:2.5px solid var(--tx);outline-offset:2px}
+@media (hover:hover){
+  .nb-svc-card:hover{transform:translateY(-3px);border-color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.05),0 18px 30px -18px rgba(0,0,0,.28)}
+  .nb-svc-card:hover .nb-svc-go{transform:translateX(-3px);color:var(--tx);opacity:1}
+}
+/* ── زر «خدمات نبتيكس»: كبسولة ثانوية (outline) تحت الزر الرئيسي «ذاكر مع نبتيكس» — نفس العرض والشكل، لكن بدون تعبئة ولا لمعة ولا ظل،
+      وأقل شوية في الارتفاع والخط، عشان الهرمية البصرية تبان (الرئيسي واضح والثانوي هادي). بيفتح/يقفل لوحة الخدمات (aria-expanded). ── */
+.nb-svc-toggle{
+  position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-sizing:border-box;width:100%;max-width:100%;min-height:clamp(38px,10vw,42px);margin:12px auto 0;padding:0 clamp(16px,5vw,22px);
+  border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:clamp(13.5px,3.8vw,15px);font-weight:700;color:#1b6b3a;
+  background:transparent;
+  box-shadow:inset 0 0 0 1.5px rgba(45,154,88,.38);
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),background-color .25s ease,box-shadow .25s ease;
+}
+.nb-svc-toggle.nb-svc-on{background:rgba(45,154,88,.09);box-shadow:inset 0 0 0 1.5px rgba(45,154,88,.55)}
+.nb-svc-tic{flex:none;display:grid;place-items:center;color:inherit}
+.nb-svc-tic svg{width:clamp(17px,4.6vw,19px);height:clamp(17px,4.6vw,19px);stroke-width:2.1;display:block}
+.nb-svc-tt{font-size:inherit;font-weight:inherit;line-height:1.2;color:inherit}
+.nb-svc-chev{flex:none;display:grid;place-items:center;color:inherit;opacity:.75;transition:transform .35s var(--svc-out)}
+.nb-svc-chev svg{width:16px;height:16px;display:block}
+.nb-svc-toggle.nb-svc-on .nb-svc-chev{transform:rotate(180deg)}
+.nb-svc-toggle:active{transform:scale(.97);transition-duration:80ms}
+.nb-svc-toggle:focus-visible{outline:2.5px solid #2d9a58;outline-offset:2px}
+@media (hover:hover){.nb-svc-toggle:hover{transform:translateY(-1px);background:rgba(45,154,88,.07);box-shadow:inset 0 0 0 1.5px rgba(45,154,88,.5)}}
+@media (min-width:640px){.nb-svc-toggle{max-width:520px}}
+/* اللوحة: فتح/قفل بانسيابية (grid-template-rows) + الكروت بتدخل بالتتابع عند الفتح */
+.nb-svc-panel{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows .45s var(--svc-out),opacity .3s ease,visibility 0s linear .45s}
+.nb-svc-open .nb-svc-panel{grid-template-rows:1fr;opacity:1;visibility:visible;transition:grid-template-rows .45s var(--svc-out),opacity .35s ease .05s,visibility 0s}
+.nb-svc-clip{min-height:0;overflow:hidden}
+.nb-svc-open .nb-svc-card{animation:nbSvcIn .5s var(--svc-out) calc(.08s + var(--i,0) * 55ms) backwards}
+[data-dark] .nb-svc-toggle{color:#bfe8cd;box-shadow:inset 0 0 0 1.5px rgba(95,201,126,.4)}
+[data-dark] .nb-svc-toggle.nb-svc-on,[data-dark] .nb-svc-toggle:hover{background:rgba(45,154,88,.16);box-shadow:inset 0 0 0 1.5px rgba(95,201,126,.6)}
+/* عائلات الألوان: الذكاء = بنفسجي · التعلّم والمنافسة = ذهبي · الزراعة والسوق = أخضر */
+.nb-svc-card--ai{--c1:#6d28d9;--c2:#9333ea;--tx:#6d28d9}
+.nb-svc-card--study{--c1:#4f46e5;--c2:#7c6cf0;--tx:#4f46e5}
+.nb-svc-card--acad{--c1:#b97a12;--c2:#e2a93b;--tx:#a86b0b}
+.nb-svc-card--arena{--c1:#c2410c;--c2:#f59e42;--tx:#c2410c}
+.nb-svc-card--farm{--c1:#1B6B3A;--c2:#2eaa5c;--tx:#1B6B3A}
+.nb-svc-card--mkt{--c1:#0f766e;--c2:#2bb5a0;--tx:#0f766e}
+/* الوضع الداكن */
+[data-dark] .nb-svc-card{box-shadow:0 2px 10px rgba(0,0,0,.3)}
+[data-dark] .nb-svc-card--ai{--tx:#c4b5fd}
+[data-dark] .nb-svc-card--study{--tx:#a5b4fc}
+[data-dark] .nb-svc-card--acad{--tx:#fbbf24}
+[data-dark] .nb-svc-card--arena{--tx:#fdba74}
+[data-dark] .nb-svc-card--farm{--tx:#5fc97e}
+[data-dark] .nb-svc-card--mkt{--tx:#5eead4}
+/* شاشات ضيّقة جدًا: عمود واحد بدل ما النص يتزنق */
+@media (max-width:339px){.nb-svc-grid{grid-template-columns:minmax(0,1fr)}.nb-svc-card{min-height:0}.nb-svc-d{min-height:0}}
+/* شاشات أعرض: 3 أعمدة */
+@media (min-width:640px){
+  .nb-svc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .nb-svc-card{min-height:148px;padding:16px}
+  .nb-svc-t{font-size:15.5px}.nb-svc-d{font-size:12.5px}
+}
+@media (prefers-contrast:more){.nb-svc-card{border-color:var(--ink)}.nb-svc-d{color:var(--ink)}}
+@media (prefers-reduced-motion:reduce){.nb-svc-card,.nb-svc-card *,.nb-svc-toggle,.nb-svc-toggle *,.nb-svc-panel{animation:none!important;transition:none!important}}
 </style>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -28924,6 +29396,17 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbdc-row[hidden]{display:none}
 .nbdc-th{padding:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ai-ease)}
 .nbdc-th:active{transform:scale(.95)}
+/* STUDY-DOC-OFF: إلغاء/استرجاع صفحة من الدفعة — خاص بـ .nbdc-th بس (الصور العادية .nbst-x ماتتأثرش) */
+.nbdc-pvb{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nbdc-th .nbst-no{pointer-events:none}
+.nbdc-off{position:absolute;z-index:3;top:6px;inset-inline-start:6px;display:grid;place-items:center;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:rgba(15,23,42,.55);color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform 160ms var(--ai-ease),background 180ms;-webkit-tap-highlight-color:transparent}
+.nbdc-off::after{content:"";position:absolute;inset:-8px}
+.nbdc-off:active{transform:scale(.88)}
+.nbdc-off[disabled]{opacity:.5;cursor:default}
+.nbdc-th.is-off img{opacity:.3;filter:grayscale(1)}
+.nbdc-th.is-off .nbst-no{background:#6b7280}
+.nbdc-th.is-off .nbdc-off{background:var(--ai-g)}
+.nbai-ov :is(.nbdc-pvb,.nbdc-off):focus-visible{outline:2.5px solid var(--ai-tx);outline-offset:-3px}
 
 .nbdc-act{margin-top:10px}
 .nbdc-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
@@ -28993,6 +29476,45 @@ html[dir="ltr"] .nbai-ov .nbsv-dr.is-closing .nbsv-pn{animation-name:nbsv-out-l}
 .nbai-ov .nbai-qm-b.is-on .nbai-qm-sw i{inset-inline-start:19px}
 .nbai-ov .nbai-qm-b:focus-visible{outline:2px solid var(--ai-ring);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.nbai-ov .nbai-qm-b,.nbai-ov .nbai-qm-ic,.nbai-ov .nbai-qm-sw,.nbai-ov .nbai-qm-sw i{transition:none}}
+</style>
+<style id="nb-doc-focus">
+/* NB-DOC-FOCUS: تنظيم بصري لكارت الملف (.nbdc) في «ذاكر مع نبتكس» — CSS فقط (مفيش تغيير في الـ JS ولا الـ IDs ولا منطق الدفعات/النقاط).
+   المشكلة: الكارت كان بيفضل بحجمه الكامل (معاينة 96px + زر + صف تنقّل) طول وقت الشرح، فمساحة قراءة الشرح بتضيق.
+   الحل على مرحلتين:
+   1) أثناء الشرح الفعلي (الزر الرئيسي معطّل بنص «جاري شرح…»): المعاينة وصف التنقّل بيختفوا، والزر بيتحوّل لشريط حالة نحيف بنبضة هادية.
+   2) بعد ما المحادثة تبدأ (فيه رسائل فعلية): الكارت كله بيتدمج (رأس أصغر، شريط أرفع، زر 42px بسطر واحد، معاينة مصغّرة لو الطالب فتحها بزر العين).
+   الحالة الأولى (قبل أول شرح، الترحيب ظاهر) ما اتغيّرتش. للتراجع: امسح الـ style ده بس. */
+
+/* 1) أثناء الشرح */
+.nbai-ov .nbdc:has(.nbdc-go[disabled]:not(.is-sec)) :is(.nbdc-nav,.nbdc-row:not(:has(.is-load))){display:none}
+.nbai-ov .nbdc .nbdc-go[disabled]:not(.is-sec){flex-direction:row;gap:9px;min-height:38px;padding:4px 14px;border-radius:14px;background:var(--ai-soft);color:var(--ai-tx);opacity:1;box-shadow:inset 0 0 0 1px var(--ai-ring)}
+.nbai-ov .nbdc .nbdc-go[disabled]:not(.is-sec)>small{display:none}
+.nbai-ov .nbdc .nbdc-go[disabled]:not(.is-sec)::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--ai-tx);animation:nbdf-pulse 1.3s ease-in-out infinite}
+.nbai-ov .nbdc:has(.nbdc-go[disabled]:not(.is-sec)) .nbdc-tg{display:none}
+@keyframes nbdf-pulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* 2) بعد بداية المحادثة: كارت مدمج */
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc{margin-top:6px;padding:8px 10px 10px;border-radius:18px;box-shadow:none}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc :is(.nbdc-ic,.nbdc-tg,.nbdc-x){width:32px;height:32px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-ic{border-radius:10px;box-shadow:none}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc :is(.nbdc-ic,.nbdc-tg,.nbdc-x) svg{width:16px;height:16px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-nm{font-size:12.5px;line-height:1.4}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-sb{font-size:11px;line-height:1.4}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-bar{margin-top:8px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-bar.is-seg{height:5px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-ok{margin-top:8px;padding:4px 6px 4px 8px;font-size:11.5px;line-height:1.5}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-nw{min-height:28px;padding:0 11px;font-size:11px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-row{margin-top:8px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-th{width:48px;height:64px;border-radius:10px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-act{margin-top:8px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-go:not([disabled]){flex-direction:row;flex-wrap:wrap;gap:0 8px;min-height:42px;padding:4px 14px;border-radius:14px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-go:not([disabled])>small::before{content:"·";margin-inline-end:8px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-nav{margin-top:6px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-nv{min-height:36px;padding:0 10px;border-radius:12px;font-size:12px}
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbdc .nbdc-sb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 3) «وضع الأسئلة الفائق»: بيختفي أول ما المحادثة تبدأ (بعد الإرسال) ويظهر تاني في «جلسة جديدة». الحالة (qm) والـ JS ما اتغيّروش — إخفاء بصري بس. للتراجع: امسح السطر ده. */
+.nbai-ov .nbai-pane.nbai-study:has(.nbai-th>.nbai-m:not(.nbai-greet)) .nbai-qm{display:none}
+@media (prefers-reduced-motion:reduce){.nbai-ov .nbdc .nbdc-go[disabled]:not(.is-sec)::before{animation:none;opacity:1}}
 </style>
 <style id="nb-ai-qmode-visual">
 /* STUDY-QMODE-VISUAL: فصل بصري كامل بين «وضع الشرح» و«وضع الأسئلة الفائق» داخل «ذاكر مع نبتيكس» فقط — بصري بحت (مفيش تغيير في الـ IDs أو الـ handlers أو منطق الحصص/الطلبات).
@@ -29337,7 +29859,7 @@ function buildScreen(){
     '<header class="nbai-bar">' +
       '<div class="nbai-bar-id"><span class="nbai-bar-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0.3 0.8 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.25))"><g transform="translate(-1.2 1.4)"><path d="M12 22V12M12 12C12 8 8 5 4 6M12 12C12 8 16 5 20 6"/><path d="M5 20c2-3 5-5 7-8" opacity=".5"/></g><path d="M21.3 1.2Q21.8 2.9 23.5 3.4Q21.8 3.9 21.3 5.6Q20.8 3.9 19.1 3.4Q20.8 2.9 21.3 1.2Z" fill="#fff" stroke="none"/></svg></span><div><div class="nbai-bar-t" id="nbai-ov-t"><bdi dir="ltr">Nabtex AI</bdi></div><div class="nbai-bar-s">مهندسك الزراعي الذكي</div></div></div>' +
       '<div class="nbai-hq"></div>' +
-      '<button type="button" class="nbai-back" aria-label="الرجوع إلى إدارة المزرعة"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
+      '<button type="button" class="nbai-back" aria-label="رجوع"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>رجوع</span></button>' +
     '</header>' +
     '<div class="nbai-tabs" role="tablist">' +
       '<button type="button" class="nbai-tab" role="tab" data-t="ask" aria-selected="true">اسأل / ذاكر</button>' +
@@ -29544,7 +30066,7 @@ function buildScreen(){
       if(tab === 'diag' && TH.diag.children.length <= 1){ var _dp = scroller('diag'); if(_dp) _dp.scrollTop = 0; } else toEnd(tab);
       return;
     }
-    if(ev.target.closest && ev.target.closest('.nbai-back')){ if(stExit()) return; closeScreen(); return; }
+    if(ev.target.closest && ev.target.closest('.nbai-back')){ if(stLeave()) return; closeScreen(); return; }   /* القديم (للتراجع): if(stExit()) return; */
     if(ev.target.closest && ev.target.closest('.nbai-pick')){ card.querySelector('.nbai-file').click(); return; }
     var chip = ev.target.closest && ev.target.closest('.nbai-chip');
     if(chip) return runAsk(chip.getAttribute('data-q') || '');
@@ -29844,13 +30366,21 @@ function buildScreen(){
     card.classList.add('nbai-fx'); clearTimeout(card._fx); card._fx = setTimeout(function(){ card.classList.remove('nbai-fx'); }, 700);
     card.classList.toggle('nbai-focus', on);
     if(stSub){ stSub.textContent = on ? 'وضع المذاكرة والتركيز' : stSub0; stSub.classList.remove('nbf-sw'); void stSub.offsetWidth; stSub.classList.add('nbf-sw'); }
-    if(stBack) stBack.setAttribute('aria-label', on ? 'الخروج من وضع المذاكرة' : stBack0);
+    if(stBack) stBack.setAttribute('aria-label', on ? 'رجوع' : stBack0);
   }
   function stExit(){   /* true = السهم اتستخدم للخروج من المود (مايقفلش الواجهة) */
     if(src !== 'study') return false;
     if(busy){ if(stBack){ stBack.classList.remove('nbf-nudge'); void stBack.offsetWidth; stBack.classList.add('nbf-nudge'); } return true; }   /* الشرح شغال: نفس قاعدة أزرار الاختيار (متتبدّلش وقت الطلب) */
     src = stPrev; lsSet('nbai:src', src); paintSrc();
     return true;
+  }
+  /* STUDY-BACK-HOME: السهم في وضع «ذاكر» بقى بيقفل الواجهة بخروج ناعم ويرجّع الرئيسية (بدل ما كان يطلّع لشاشة Nabtex AI). المصدر بيرجع لاختيارك القديم بعد ما الواجهة تختفي (_afterHide) عشان شاشة Nabtex AI ما تلمحش وقت الخروج. لو الشرح شغال: نفس قاعدة الأول (السهم بيرتجّ ومابيخرجش). للتراجع: ارجع `stExit()` بدل `stLeave()` في معالج السهم وامسح الدالة دي وسطر _afterHide في hideScreen. */
+  function stLeave(){   /* true = السهم اتمنع (الشرح شغال) */
+    if(src !== 'study') return false;
+    if(busy){ if(stBack){ stBack.classList.remove('nbf-nudge'); void stBack.offsetWidth; stBack.classList.add('nbf-nudge'); } return true; }
+    lsSet('nbai:src', stPrev);
+    card._afterHide = function(){ if(src === 'study'){ src = stPrev; paintSrc(); } };
+    return false;
   }
   function paintStudy(){
     var on = src === 'study';
@@ -30886,6 +31416,15 @@ function buildScreen(){
   function dcBt(n){ return n === 1 ? 'دفعة' : (n === 2 ? 'دفعتين' : (n <= 10 ? n + ' دفعات' : n + ' دفعة')); }
   function dcSet(el, h){ if(el._h !== h){ el._h = h; el.innerHTML = h; } }   /* بنكتب بس لو المحتوى اتغيّر (من غير وميض ولا إعادة تشغيل حركات) */
 
+  /* STUDY-DOC-OFF: إلغاء/استرجاع صفحة من الدفعة قبل الشرح — الصفحات الملغية (D.off) بتتشال من stImgs فمش بتتبعت ومش بتتحسب مشروحة. للتراجع: امسح كل سطور STUDY-DOC-OFF (JS + CSS) */
+  var DCO = { x: dcSvg('<path d="M6 6l12 12M18 6 6 18"/>', 12, 3), add: dcSvg('<path d="M12 5v14M5 12h14"/>', 12, 3) };
+  function dcOnPages(D){ return D.pages.filter(function(p){ return !(D.off && D.off[p.n]); }); }   /* STUDY-DOC-OFF: صفحات الدفعة المحدّدة (غير الملغية) */
+  function dcNote(ns){   /* STUDY-DOC-OFF: أرقام الصفحات كمدى (1–4، 6–12) — لو متصلة بيطلع نفس الصيغة القديمة بالظبط */
+    var r = [], s0 = ns[0], e0 = s0, i;
+    for(i = 1; i <= ns.length; i++){ if(ns[i] === e0 + 1){ e0 = ns[i]; continue; } r.push(s0 === e0 ? '' + s0 : s0 + '–' + e0); s0 = ns[i]; e0 = s0; }
+    return ns.length === 1 ? 'الصفحة ' + ns[0] : 'الصفحات ' + r.join('، ');
+  }
+
   /* ── العناصر: كارت الملف (قبل شريط الصور) + زر الرفع جنب زر الصور + input الملف ── */
   var dcEl = document.createElement('div');
   dcEl.className = 'nbdc'; dcEl.hidden = true; dcEl.setAttribute('role', 'region'); dcEl.setAttribute('aria-label', 'ملف المذاكرة');
@@ -30936,7 +31475,11 @@ function buildScreen(){
     /* معاينة صفحات الدفعة الحالية (صفحة تظهر أول ما تتجهّز) */
     h = '';
     if(D && D.open){
-      D.pages.forEach(function(p, k){ h += '<button type="button" class="nbst-th nbdc-th" data-dc="pv" data-i="' + k + '" aria-label="معاينة صفحة ' + p.n + '"><img src="' + p.pv + '" alt="صفحة ' + p.n + '"><span class="nbst-no" aria-hidden="true">' + p.n + '</span></button>'; });
+      D.pages.forEach(function(p, k){   /* STUDY-DOC-OFF: القديم (للتراجع): <button class="nbst-th nbdc-th" data-dc="pv" …><img><span class="nbst-no"></span></button> */
+        var off = !!(D.off && D.off[p.n]), lk = busy || stLoad > 0;
+        h += '<div class="nbst-th nbdc-th' + (off ? ' is-off' : '') + '"><button type="button" class="nbdc-pvb" data-dc="pv" data-i="' + k + '" aria-label="معاينة صفحة ' + p.n + (off ? ' (ملغية)' : '') + '"><img src="' + p.pv + '" alt="صفحة ' + p.n + '"></button><span class="nbst-no" aria-hidden="true">' + p.n + '</span>' +
+          '<button type="button" class="nbdc-off" data-dc="off" data-i="' + k + '" aria-pressed="' + (off ? 'true' : 'false') + '" aria-label="' + (off ? 'استرجاع صفحة ' : 'إلغاء صفحة ') + p.n + '" title="' + (off ? 'استرجاع الصفحة' : 'إلغاء الصفحة') + '"' + (lk ? ' disabled' : '') + '>' + (off ? DCO.add : DCO.x) + '</button></div>';
+      });
       for(i = D.pages.length + D.bad; i < D.want; i++) h += '<div class="nbst-th is-load" aria-busy="true"><span class="nbai-wz-spin" aria-hidden="true"></span></div>';
     }
     dcRow.hidden = !h; dcSet(dcRow, h);
@@ -30952,7 +31495,8 @@ function buildScreen(){
       else if(stLoad > 0) h = '<button type="button" class="nbdc-go" disabled><span>بجهّز ' + dcRg(from, to) + '…</span><small>' + D.pages.length + ' من ' + D.want + '</small></button>';
       else if(allDone) h = '<button type="button" class="nbdc-go is-sec" disabled><span>' + dcRg(from, to) + ' اتشرحوا</span><small>اختار دفعة تانية بالأسهم</small></button>';
       else if(!D.pages.length) h = '<button type="button" class="nbdc-go is-sec" data-dc="retry"><span>حمّل ' + dcRg(from, to) + '</span><small>اضغط لتجهيز الصفحات</small></button>';
-      else h = '<button type="button" class="nbdc-go" data-dc="go"><span>اشرح ' + dcRg(from, to) + '</span><small>بنقطة واحدة</small></button>';
+      else if(!dcOnPages(D).length) h = '<button type="button" class="nbdc-go is-sec" disabled><span>كل الصفحات ملغية</span><small>رجّع صفحة واحدة على الأقل</small></button>';   /* STUDY-DOC-OFF */
+      else { var offN = D.pages.length - dcOnPages(D).length; h = '<button type="button" class="nbdc-go" data-dc="go"><span>اشرح ' + (offN ? dcPg(D.pages.length - offN) : dcRg(from, to)) + '</span><small>بنقطة واحدة' + (offN ? ' · ملغي ' + offN : '') + '</small></button>'; }   /* STUDY-DOC-OFF: القديم (للتراجع): else h = '<button … data-dc="go"><span>اشرح ' + dcRg(from, to) + '</span><small>بنقطة واحدة</small></button>'; */
       if(!endMode && (pv >= 0 || nx >= 0)) nh = '<button type="button" class="nbdc-nv" data-dc="prev" aria-label="الدفعة السابقة اللي لسه ماتشرحتش"' + (wait || pv < 0 ? ' disabled' : '') + '>' + DCI.prev + '<span>السابقة</span></button>' +
         '<span class="nbdc-nl">باقي ' + dcBt(left) + '</span>' +
         '<button type="button" class="nbdc-nv" data-dc="next" aria-label="الدفعة التالية اللي لسه ماتشرحتش"' + (wait || nx < 0 ? ' disabled' : '') + '><span>التالية</span>' + DCI.next + '</button>';
@@ -31029,7 +31573,7 @@ function buildScreen(){
     var old = DOC; if(old && old.pdf){ try{ old.pdf.destroy(); }catch(e){} }
     dcTok++; stImgs = []; stLoad = 0; dcOpening = '';
     if(dcAuto && stQi.value.trim() === dcAuto){ stQi.value = ''; fit(); } dcAuto = '';
-    DOC = { name: file.name || 'document.pdf', pdf: pdf, total: pdf.numPages, at: 0, done: {}, pages: [], want: 0, bad: 0, win: null, open: true, last: null, need: false };
+    DOC = { name: file.name || 'document.pdf', pdf: pdf, total: pdf.numPages, at: 0, done: {}, pages: [], want: 0, bad: 0, win: null, open: true, last: null, need: false, off: {} };
     dcBatch();
   }
   function dcClose(){
@@ -31079,7 +31623,7 @@ function buildScreen(){
   function dcBatch(){
     var D = DOC; if(!D) return;
     var N = dcSize(), from = D.at + 1, to = Math.min(D.total, D.at + N), tk = ++dcTok;
-    D.pages = []; D.bad = 0; D.win = [from, to]; D.want = to - from + 1; D.need = false;
+    D.pages = []; D.bad = 0; D.win = [from, to]; D.want = to - from + 1; D.need = false; D.off = {};   /* STUDY-DOC-OFF: دفعة جديدة = كل الصفحات محدّدة */
     stImgs = []; stLoad = D.want; show('', false); paintStrip();
     (function next(no){
       if(tk !== dcTok || DOC !== D || !card.isConnected) return;
@@ -31105,22 +31649,32 @@ function buildScreen(){
     D.at = at; D.last = null; D.need = false; D.open = true;
     dcBatch();
   }
+  function dcOff(k){   /* STUDY-DOC-OFF: إلغاء صفحة من الدفعة (أو استرجاعها) — stImgs بتتبني من الصفحات المحدّدة بس */
+    var D = DOC, p = D && D.pages[k]; if(!p || busy || stLoad) return;
+    if(!D.off) D.off = {};
+    if(D.off[p.n]) delete D.off[p.n]; else D.off[p.n] = 1;
+    stImgs = dcOnPages(D).map(function(q){ return { d: q.d, qc: null, pg: q.n }; });
+    show('', false); paintStrip();
+  }
   function dcGo(){
     var D = DOC; if(!D || busy || stLoad) return;
     if(!D.pages.length){ dcBatch(); return; }
-    var same = stImgs.length === D.pages.length && D.pages.every(function(p, i){ return stImgs[i] && stImgs[i].d === p.d; });
-    if(!same){ stImgs = D.pages.map(function(p){ return { d: p.d, qc: null, pg: p.n }; }); paintStrip(); }
+    var P = dcOnPages(D);   /* STUDY-DOC-OFF: القديم (للتراجع): D.pages بدل P في السطرين اللي تحت */
+    if(!P.length){ show('رجّع صفحة واحدة على الأقل عشان أشرحها.', true); return; }
+    var same = stImgs.length === P.length && P.every(function(p, i){ return stImgs[i] && stImgs[i].d === p.d; });
+    if(!same){ stImgs = P.map(function(p){ return { d: p.d, qc: null, pg: p.n }; }); paintStrip(); }
     runStudy();
   }
 
   /* ── ربط runStudy: قبل الإرسال (ملاحظة تلقائية بالصفحات لو الطالب ماكتبش حاجة) وبعد نجاح الشرح (تقدّم المؤشر) ── */
   function dcPre(){
     dcRun = null;
-    var D = DOC; if(!D || !D.pages.length || stImgs.length !== D.pages.length) return;
-    for(var i = 0; i < D.pages.length; i++) if(!stImgs[i] || stImgs[i].d !== D.pages[i].d) return;
-    var a = D.pages[0].n, b = D.pages[D.pages.length - 1].n, v = stQi.value.trim();
-    dcRun = { D: D, pages: D.pages.map(function(p){ return p.n; }), to: D.win ? D.win[1] : b };
-    if(!v || v === dcAuto){ dcAuto = (a === b ? 'الصفحة ' + a : 'الصفحات ' + a + '–' + b) + ' من «' + dcShort(D.name) + '»'; stQi.value = dcAuto; }
+    var D = DOC; if(!D) return;
+    var P = dcOnPages(D); if(!P.length || stImgs.length !== P.length) return;   /* STUDY-DOC-OFF: المقارنة بالصفحات المحدّدة بس (القديم: D.pages) */
+    for(var i = 0; i < P.length; i++) if(!stImgs[i] || stImgs[i].d !== P[i].d) return;
+    var b = P[P.length - 1].n, v = stQi.value.trim();
+    dcRun = { D: D, pages: P.map(function(p){ return p.n; }), to: D.win ? D.win[1] : b };
+    if(!v || v === dcAuto){ dcAuto = dcNote(dcRun.pages) + ' من «' + dcShort(D.name) + '»'; stQi.value = dcAuto; }   /* STUDY-DOC-OFF: القديم (للتراجع): (a === b ? 'الصفحة ' + a : 'الصفحات ' + a + '–' + b) */
     D.last = null;
   }
   function dcDone(S){
@@ -31213,6 +31767,7 @@ function buildScreen(){
     else if(a === 'new') dcAsk();
     else if(a === 'retry') dcBatch();
     else if(a === 'pv') dcLbOpen(+b.getAttribute('data-i'));
+    else if(a === 'off') dcOff(+b.getAttribute('data-i'));   /* STUDY-DOC-OFF */
   });
   dcBtn.addEventListener('click', dcAsk);
   dcFile.addEventListener('change', function(){ var f = this.files && this.files[0]; try{ this.value = ''; }catch(e){} dcPick(f); });
@@ -31427,13 +31982,14 @@ function dropScreen(){
 }
 function openScreen(opener){
   if(OPEN) return;
+  if(SCR && SCR._closeAn){ try{ SCR._closeAn.cancel(); }catch(e){} SCR._closeAn = null; SCR._afterHide = null; }   /* BACK-HOME: لو لسه بتقفل وفتحناها تاني */
   var u = user(), uid = u ? u.uid : '';
   if(SCR && SCR._uid !== uid) dropScreen();           /* مستخدم تاني → محادثة جديدة */
   if(!SCR) SCR = buildScreen();
   if(!BOUND){
     BOUND = true;
     document.addEventListener('keydown', onKey);
-    window.addEventListener('popstate', function(){ if(OPEN) hideScreen(); });
+    window.addEventListener('popstate', function(){ if(OPEN){ SOFT = true; hideScreen(); } });   /* BACK-HOME */
     if(window.visualViewport){ window.visualViewport.addEventListener('resize', syncVV); window.visualViewport.addEventListener('scroll', syncVV); }
     var kbRetry = function(){ [60, 200, 450, 800].forEach(function(t){ setTimeout(syncVV, t); }); };   /* الكيبورد بيستقر متأخر على آيفون */
     document.addEventListener('focusin', kbRetry); document.addEventListener('focusout', kbRetry);
@@ -31458,9 +32014,44 @@ function openScreen(opener){
   try{ history.pushState({ nbai: 1 }, '', location.href); HIST = true; }catch(e){ HIST = false; }   /* زر رجوع الموبايل/المتصفح يقفل الواجهة بدل ما يطلع من الصفحة */
   var b = SCR.querySelector('.nbai-back'); if(b) b.focus({ preventScroll: true });
 }
+var SOFT = false;   /* BACK-HOME */
 function hideScreen(){
   if(!OPEN) return;
   OPEN = false; HIST = false;
+  /* BACK-HOME: الإغلاق اللي المستخدم بيعمله (زر الرجوع / Esc / رجوع المتصفح) = خروج ناعم (الواجهة بتتلاشى وتنزل شوية) وتحتها الرئيسية بتظهر، إلا لو المستخدم فاتح من داخل نظام إدارة المزرعة فبيرجع للمزرعة. أي إغلاق برمجي (زي شاشة الاشتراك) فوري زي الأول. للتراجع: امسح فرع if(soft) ده + سطور SOFT = true في closeScreen والـ popstate + سطر _closeAn في openScreen. */
+  var soft = SOFT; SOFT = false;
+  if(soft){
+    var ov = SCR, o2 = OPENER, fin = false, still = false;
+    OPENER = null;
+    try{ still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
+    document.body.style.overflow = PREV_OV;
+    try{
+      var onFarm = (typeof currentPage !== 'undefined' && currentPage === 'farm');
+      if(!onFarm && typeof showPage === 'function') showPage('home');
+    }catch(e){}
+    var done = function(){
+      if(fin) return; fin = true;
+      if(OPEN || !ov) return;   /* اتفتحت تاني وهي بتقفل */
+      var _ca = ov._closeAn;   /* CLOSE-ANIM-FIX: أنيميشن الخروج (fill:'forwards') كان بيفضل ماسك الشاشة شفافة (opacity 0) بعد ما تتقفل، فلما «ذاكر» تتفتح تاني كانت بتتفتح مخفية وتبان الرئيسية بس. هنا بنلغيه بعد ما الشاشة تتخبّى. للتراجع: امسح السطر ده والسطر اللي بعد سطر _closeAn بس. */
+      ov._closeAn = null; ov.hidden = true; ov.style.height = ''; ov.style.top = '';
+      try{ if(_ca && _ca.cancel) _ca.cancel(); }catch(e){}   /* CLOSE-ANIM-FIX */
+      if(ov._afterHide){ var _ah = ov._afterHide; ov._afterHide = null; try{ _ah(); }catch(e){} }   /* STUDY-BACK-HOME */
+      if(o2 && o2.isConnected){ try{ o2.focus({ preventScroll: true }); }catch(e){} }
+    };
+    if(!still && ov && ov.animate){
+      try{
+        var an = ov.animate([
+          { opacity: 1, transform: 'none' },
+          { opacity: 0, transform: 'translateY(22px) scale(.985)' }
+        ], { duration: 320, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+        ov._closeAn = an;
+        an.onfinish = function(){ done(); };
+        an.oncancel = function(){ fin = true; };
+        return;
+      }catch(e){}
+    }
+    done(); return;
+  }
   SCR.hidden = true; SCR.style.height = ''; SCR.style.top = '';
   document.body.style.overflow = PREV_OV;
   var o = OPENER; OPENER = null;
@@ -31468,6 +32059,7 @@ function hideScreen(){
 }
 function closeScreen(){
   if(!OPEN) return;
+  SOFT = true;   /* BACK-HOME */
   if(HIST && history.state && history.state.nbai){
     HIST = false;
     try{ history.back(); }catch(e){ hideScreen(); return; }
@@ -31641,6 +32233,29 @@ window.NbFarmAI.openStudy = function(opener){
   }catch(e){}
   return window.NbFarmAI.open(opener);
 };
+/* FARM-AI-ENTRIES: مدخلين من قائمة نظام إدارة المزرعة — «تشخيص الأمراض بالصور» (تاب التشخيص) و«تحليل المزرعة» (تاب اسأل بمصدر «مزرعتي على نبتكس») — بنفس بوابة الدخول/الاشتراك بتاعة open (بنلفّها من غير ما نعدّلها). بيحدّدوا المصدر قبل الفتح وبعدين بيختاروا التاب بنفس معالج الضغط الأصلي. للتراجع: امسح الكتلة دي + عنصري القائمة في farmShell (act). */
+function _nbaiOpenAt(tabName, opener){
+  try{
+    if(user()){
+      lsSet('nbai:src', 'farm');
+      if(SCR && SCR._setSrc && !OPEN) SCR._setSrc('farm');
+    }
+  }catch(e){}
+  var r = window.NbFarmAI.open(opener), n = 0, t = setInterval(function(){
+    n++;
+    try{
+      if(OPEN && SCR && SCR.querySelector){
+        clearInterval(t);
+        var b = SCR.querySelector('.nbai-tab[data-t="' + tabName + '"]');
+        if(b && b.getAttribute('aria-selected') !== 'true') b.click();
+      }
+    }catch(e){}
+    if(n > 100) clearInterval(t);
+  }, 50);
+  return r;
+}
+window.NbFarmAI.openDiag = function(opener){ return _nbaiOpenAt('diag', opener); };
+window.NbFarmAI.openFarmAsk = function(opener){ return _nbaiOpenAt('ask', opener); };
 /* AI-WARMUP: تحميل حالة الاشتراك والرصيد في الخلفية بعد ما الصفحة تهدا (مرة واحدة في الجلسة)، عشان أول ضغطة على «AI» أو «ذاكر مع نبتيكس» تلاقي الحالة جاهزة وتفتح فورًا. للتراجع: امسح الكتلة دي بس. */
 (function(){
   var done = false;
@@ -31774,6 +32389,67 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 @media(prefers-reduced-motion:reduce){.nbsp{display:none}}
 </style>
 
+<style id="nb-study-green">
+/* STUDY-GREEN: «ذاكر مع نبتيكس» بقى بالأخضر الفاتح (نفس لون زر «ذاكر مع نبتيكس» في الرئيسية) بدل البنفسجي — شاشة المذاكرة + بوابة الدخول.
+   • شاشة المذاكرة: تبديل متغيّرات اللون بس (--aq1..3 و --ai-*) وقت وضع المذاكرة، فكل عنصر شغّال بالمتغيّرات (اللوجو، الأزرار، العدّاد، العناوين، الحدود) بيتلوّن أخضر لوحده.
+     «وضع الأسئلة الفائق» (.nbai-qmode) فاضل بباليته الأصلية (نيلي ← أزرق ← تركواز) ومفيش أي تأثير عليه، ولا على Nabtex AI العادي ولا التشخيص.
+   • البوابة (.nbsp): فاتحة (نعناعي) زي الزر في النهار، وأخضر غامق في الوضع الداكن.
+   للتراجع: امسح الكتلة دي بس. */
+.nbai-ov:not(.nbai-qmode):has(.nbai-pane.nbai-study:not([hidden])){--aq1:#238a4f;--aq2:#2f9d5c;--aq3:#45b873;--ai-tx:#1b6b3a;--ai-soft:rgba(45,154,88,.10);--ai-soft2:rgba(45,154,88,.18);--ai-ring:rgba(45,154,88,.34);--ai-glow:rgba(27,107,58,.5)}
+[data-dark] .nbai-ov:not(.nbai-qmode):has(.nbai-pane.nbai-study:not([hidden])){--ai-tx:#86e0a6;--ai-soft:rgba(45,154,88,.18);--ai-soft2:rgba(45,154,88,.28);--ai-ring:rgba(95,201,126,.42);--ai-glow:rgba(46,170,92,.5)}
+.nbai-ov:not(.nbai-qmode):has(.nbai-pane.nbai-study:not([hidden]))::before{background:radial-gradient(70% 30% at 92% -4%,rgba(45,154,88,.12),transparent 72%),radial-gradient(60% 28% at 6% 104%,rgba(27,107,58,.08),transparent 72%),var(--bg)}
+[data-dark] .nbai-ov:not(.nbai-qmode):has(.nbai-pane.nbai-study:not([hidden]))::before{background:radial-gradient(70% 30% at 92% -4%,rgba(46,170,92,.2),transparent 72%),radial-gradient(60% 28% at 6% 104%,rgba(27,107,58,.2),transparent 72%),var(--bg)}
+.nbai-ov:where(:not(.nbai-qmode)) .nbai-pane.nbai-study .nbai-cm{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 26px -16px rgba(27,107,58,.35),0 2px 6px -3px rgba(16,24,40,.08)}
+/* موجة الرجوع من «الأسئلة الفائق» لوضع المذاكرة بقت خضراء */
+.nbai-ov .nbai-qwash.is-off::before{background:radial-gradient(circle,rgba(45,154,88,.3) 0%,rgba(79,191,127,.14) 30%,transparent 62%)}
+[data-dark] .nbai-ov .nbai-qwash.is-off::before{background:radial-gradient(circle,rgba(46,170,92,.4) 0%,rgba(79,191,127,.16) 30%,transparent 62%)}
+
+/* ── بوابة «دخول عالم المذاكرة» ── */
+.nbsp{--sp-in:rgba(255,255,255,.9);--sp-g1:rgba(45,154,88,.25);--sp-g2:rgba(45,154,88,.45);color:#1b6b3a;background:#d9efe1}
+.nbsp-bg{background:radial-gradient(120% 80% at 50% 40%,#f4fbf6 0%,#e3f4e9 38%,#d3ecdc 74%,#c2e3cf 100%)}
+.nbsp-glow{background:radial-gradient(circle at 22% 28%,rgba(255,255,255,.85),transparent 42%),radial-gradient(circle at 80% 72%,rgba(45,154,88,.22),transparent 42%),radial-gradient(circle at 70% 18%,rgba(127,209,160,.35),transparent 36%)}
+.nbsp-st i{background:#2d9a58;box-shadow:0 0 7px rgba(45,154,88,.55)}
+.nbsp-orb{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95),rgba(255,255,255,.55) 62%);border:1px solid rgba(45,154,88,.28);box-shadow:inset 0 1px 0 var(--sp-in),0 0 44px var(--sp-g1)}
+.nbsp-orb::before,.nbsp-orb::after{border-color:rgba(45,154,88,.5)}
+.nbsp-ic{stroke:#1b6b3a}
+.nbsp-t{color:#1b6b3a;text-shadow:0 2px 14px rgba(255,255,255,.8)}
+.nbsp-s{color:rgba(27,107,58,.72)}
+.nbsp-pg{background:rgba(27,107,58,.14)}
+.nbsp-pg i{background:linear-gradient(90deg,#2d9a58,#7fd1a0)}
+@keyframes nbspGlow{0%,100%{box-shadow:inset 0 1px 0 var(--sp-in),0 0 44px var(--sp-g1)}50%{box-shadow:inset 0 1px 0 var(--sp-in),0 0 70px var(--sp-g2)}}
+[data-dark] .nbsp{--sp-in:rgba(255,255,255,.35);--sp-g1:rgba(46,170,92,.5);--sp-g2:rgba(127,209,160,.75);color:#fff;background:#06170f}
+[data-dark] .nbsp-bg{background:radial-gradient(120% 80% at 50% 40%,#14573a 0%,#0d3b27 38%,#08241a 74%,#04130d 100%)}
+[data-dark] .nbsp-glow{background:radial-gradient(circle at 22% 28%,rgba(46,170,92,.5),transparent 42%),radial-gradient(circle at 80% 72%,rgba(127,209,160,.18),transparent 42%),radial-gradient(circle at 70% 18%,rgba(190,240,210,.2),transparent 36%)}
+[data-dark] .nbsp-st i{background:#fff;box-shadow:0 0 7px rgba(190,240,210,.9)}
+[data-dark] .nbsp-orb{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.3),rgba(255,255,255,.06) 62%);border-color:rgba(255,255,255,.3)}
+[data-dark] .nbsp-orb::before,[data-dark] .nbsp-orb::after{border-color:rgba(190,240,210,.6)}
+[data-dark] .nbsp-ic{stroke:#fff}
+[data-dark] .nbsp-t{color:#fff;text-shadow:0 2px 18px rgba(46,170,92,.6)}
+[data-dark] .nbsp-s{color:rgba(255,255,255,.74)}
+[data-dark] .nbsp-pg{background:rgba(255,255,255,.14)}
+[data-dark] .nbsp-pg i{background:linear-gradient(90deg,#9fe0b8,#fff)}
+</style>
+
+<style id="nb-study-icons">
+/* STUDY-ICONS: في وضع المذاكرة بس — شيلت الخلفية المربعة اللي حوالين اللوجو (الهيدر + أيقونة الترحيب + علامة رسائل الـ AI)، ولوجو Nabtex AI اتبدّل بلوجو الكتاب (نفس أيقونة زر «ذاكر مع نبتيكس»).
+   الأيقونة بقت «لوجو لوحده» بلون التدرّج الحالي (أخضر في المذاكرة، ونيلي/أزرق في «الأسئلة الفائق» بالصاعقة بدل الكتاب) عن طريق mask فتتلوّن لوحدها مع الثيم.
+   مقيّد بـ .nbai-pane.nbai-study — مفيش تأثير على Nabtex AI العادي ولا التشخيص ولا مزرعتي. للتراجع: امسح الكتلة دي بس. */
+/* الهيدر */
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic{background:none;box-shadow:none;border-radius:0}
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic svg{display:none}
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic::before{content:'';position:absolute;inset:0;background:var(--ai-g);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/86% 86% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/86% 86% no-repeat;transition:opacity 260ms var(--ai-ease),transform 560ms var(--ai-ease)}
+.nbai-ov.nbai-qmode:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic::before{opacity:0;transform:scale(.5) rotate(40deg)}
+.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic::after{background:var(--ai-g);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/86% 86% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/86% 86% no-repeat;filter:none}
+/* أيقونة الترحيب في نص الشاشة */
+.nbai-ov .nbai-pane.nbai-study .nbai-th>.nbai-greet:only-child::before{width:60px;height:60px;border-radius:0;background:var(--ai-g);box-shadow:none;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-th>.nbai-greet:only-child::before{-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/100% 100% no-repeat;animation:none}
+.nbai-ov.nbai-qmode.nbai-qfx .nbai-pane.nbai-study .nbai-th>.nbai-greet:only-child::before{animation:nbqv-pop 760ms var(--ai-spring)}
+/* علامة «Nabtex AI» الصغيرة فوق رسايل الـ AI */
+.nbai-ov .nbai-pane.nbai-study .nbai-m-ai::after{width:18px;height:18px;border-radius:0;background:var(--ai-g);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5C4.5 4 8 4 12 6.5c4-2.5 7.5-2.5 10-1v13c-2.5-1.5-6-1.5-10 1-4-2.5-7.5-2.5-10-1z'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.nbai-ov.nbai-qmode .nbai-pane.nbai-study .nbai-m-ai::after{-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z' fill='%23000' fill-opacity='.2'/%3E%3Cpath d='M20.3 2.2Q20.7 3.6 22.1 4Q20.7 4.4 20.3 5.8Q19.9 4.4 18.5 4Q19.9 3.6 20.3 2.2Z' fill='%23000' stroke='none'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+@media (prefers-reduced-motion:reduce){.nbai-ov:has(.nbai-pane.nbai-study:not([hidden])) .nbai-bar-ic::before{transition:none}}
+</style>
+
 <style id="nb-ai-limit-pw">
 /* LIMIT-PAYWALL: دخول ناعم لشاشة الباقات لما النقاط تخلص (بس لما تتفتح بـ limit) — الخلفية تظهر بهدوء، الصندوق يطلع بحركة طويلة هادية، وبعدين الأيقونة والعنوان والباقات والزر يدخلوا ورا بعض. للتراجع: امسح الكتلة دي. */
 .aipw.aipw-lim{animation:aipwLimFade .5s ease both}
@@ -31856,9 +32532,9 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
 </style>
 <style id="nb-home-study-btn">
 /* زر «ذاكر مع نبتيكس» تحت شريط البحث في كارت الترحيب (الرئيسية). للتراجع: امسح الكتلة دي وزر .nb-h2-study من الـ HTML. */
-.nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;margin-top:10px;padding:0 18px;border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6d28d9 0%,#8b3fe6 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(109,40,217,.7);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
+.nb-h2-study{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;width:100%;max-width:100%;min-height:clamp(40px,10.5vw,44px);margin:12px auto 0;padding:0 clamp(16px,5vw,22px);border:0;border-radius:var(--rpill,50px);cursor:pointer;font:inherit;font-size:clamp(14px,3.9vw,15.5px);font-weight:700;color:#1b6b3a;background:linear-gradient(135deg,#eaf6ee 0%,#d9efe1 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 1px rgba(45,154,88,.18),0 6px 14px -8px rgba(27,107,58,.35);-webkit-tap-highlight-color:transparent;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,filter .2s}
 /* القديم (للتراجع) — اللون الأخضر: background:linear-gradient(145deg,#2d9a58 0%,#1B6B3A 62%,#0f552e 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 10px 20px -10px rgba(27,107,58,.7); — ولازم تمسح كتلة «PURPLE-PREMIUM» تحت وسكريبت PURPLE-PREMIUM الصغير بعد الستايل ده. */
-.nb-h2-study svg{width:19px;height:19px;flex:none}
+.nb-h2-study svg{width:clamp(17px,4.6vw,19px);height:clamp(17px,4.6vw,19px);flex:none}
 .nb-h2-study:hover{filter:brightness(1.06)}
 .nb-h2-study:active{transform:scale(.97);transition-duration:80ms}
 .nb-h2-study:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
@@ -31870,19 +32546,20 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
    • prefers-reduced-motion: كل الحركات الدايمة والموجة بتتوقف (اللون بس بيفضل). كله مقيّد بـ .nb-h2-study — مفيش تأثير على أي حاجة تانية.
    للتراجع: امسح الكتلة دي + سكريبت PURPLE-PREMIUM الصغير اللي بعد الستايل + ارجع ألوان القاعدة الأولى من التعليق اللي فوق. */
 .nb-h2-study{overflow:hidden;isolation:isolate;--mx:50%;--my:50%;animation:nbH2StGlow 4s ease-in-out infinite}
-.nb-h2-study::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(130px circle at var(--mx) var(--my),rgba(255,255,255,.3),transparent 70%);transition:opacity .35s ease}
-.nb-h2-study::after{content:"";position:absolute;top:0;bottom:0;left:0;width:42%;z-index:-1;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.34) 50%,transparent 100%);transform:translateX(-130%) skewX(-18deg);animation:nbH2StSheen 6s cubic-bezier(.4,0,.2,1) 1.4s infinite}
+.nb-h2-study::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(110px circle at var(--mx) var(--my),rgba(45,154,88,.16),transparent 70%);transition:opacity .35s ease}
+.nb-h2-study::after{content:"";position:absolute;top:0;bottom:0;left:0;width:42%;z-index:-1;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.65) 50%,transparent 100%);transform:translateX(-130%) skewX(-18deg);animation:nbH2StSheen 6s cubic-bezier(.4,0,.2,1) 1.4s infinite}
 .nb-h2-study svg{animation:nbH2StBook 4.4s ease-in-out infinite;transform-origin:50% 70%}
 .nb-h2-study:active::before{opacity:1}
-.nb-h2-st-rp{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(255,255,255,.18) 45%,transparent 70%);transform:scale(0);opacity:1;animation:nbH2StRp .7s cubic-bezier(.22,1,.36,1) forwards}
+.nb-h2-st-rp{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(45,154,88,.30) 0%,rgba(45,154,88,.12) 45%,transparent 70%);transform:scale(0);opacity:1;animation:nbH2StRp .7s cubic-bezier(.22,1,.36,1) forwards}
 @media(hover:hover){
   .nb-h2-study:hover{transform:translateY(-2px);filter:brightness(1.05)}
   .nb-h2-study:hover::before{opacity:1}
   .nb-h2-study:hover svg{animation:nbH2StBookHov .7s cubic-bezier(.34,1.56,.64,1) both}
 }
 .nb-h2-study:active{transform:scale(.97);transition-duration:80ms}
-.nb-h2-study:focus-visible{outline-color:#7c3aed}
-@keyframes nbH2StGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(109,40,217,.65),0 0 0 0 rgba(139,63,230,0)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 14px 28px -10px rgba(139,63,230,.85),0 0 0 6px rgba(139,63,230,.12)}}
+.nb-h2-study:focus-visible{outline-color:#2d9a58}
+@keyframes nbH2StGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 1px rgba(45,154,88,.18),0 6px 14px -8px rgba(27,107,58,.30),0 0 0 0 rgba(45,154,88,0)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 1px rgba(45,154,88,.22),0 8px 18px -8px rgba(27,107,58,.45),0 0 0 4px rgba(45,154,88,.10)}}
+[data-dark] .nb-h2-study{color:#bfe8cd;background:linear-gradient(135deg,rgba(45,154,88,.26) 0%,rgba(45,154,88,.16) 100%)}
 @keyframes nbH2StSheen{0%,58%{transform:translateX(-130%) skewX(-18deg)}100%{transform:translateX(340%) skewX(-18deg)}}
 @keyframes nbH2StBook{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1.5px) rotate(-4deg)}}
 @keyframes nbH2StBookHov{0%{transform:scale(1) rotate(0)}60%{transform:scale(1.2) rotate(-10deg)}100%{transform:scale(1.12) rotate(-6deg)}}
@@ -31892,6 +32569,31 @@ if(window.AiSub && typeof window.AiSub.onChange === 'function') window.AiSub.onC
   .nb-h2-st-rp{display:none!important}
   .nb-h2-study:hover{transform:none}
 }
+</style>
+<style id="nb-hero-btns-compact">
+/* HERO-BTNS-COMPACT: تصغير متناسق لزرّي «ذاكر مع نبتيكس» و«خدمات نبتيكس» في كارت الترحيب (الرئيسية) — مقاسات فقط (ارتفاع/خط/أيقونة/مسافة/عرض)، مفيش تغيير في الألوان ولا الحركات ولا الـ JS ولا الوظائف.
+   الهرمية محفوظة: الرئيسي أعلى بـ 4px من الثانوي، والاتنين بنفس العرض ومتمركزين. للتراجع: امسح الـ style ده بس. */
+.nb-h2-study,.nb-svc-toggle{width:min(100%,304px);margin-inline:auto;padding:0 clamp(14px,4.4vw,20px);gap:7px}
+.nb-h2-study{min-height:clamp(36px,9.4vw,40px);margin-top:10px;font-size:clamp(13px,3.6vw,14.5px)}
+.nb-h2-study svg{width:clamp(15px,4.1vw,17px);height:clamp(15px,4.1vw,17px)}
+.nb-svc-toggle{min-height:clamp(32px,8.6vw,36px);margin-top:10px;font-size:clamp(12.5px,3.4vw,13.5px)}
+.nb-svc-tic svg{width:clamp(15px,4.1vw,16px);height:clamp(15px,4.1vw,16px)}
+.nb-svc-chev svg{width:14px;height:14px}
+</style>
+<style id="nb-search-polish">
+/* SEARCH-POLISH: صفحة البحث — (1) المسافة بين زر «رجوع» والمحتوى أقل، (2) شريط البحث أنضف وأفخم: ارتفاع موحّد، أيقونة SVG بدل الإيموجي، وإلغاء الإطار الداخلي المزدوج (كان بيطلع من قاعدة :focus-visible العامة).
+   CSS فقط — مفيش تغيير في الـ HTML/JS/الـ IDs، وحركة دوران الأيقونة وقت البحث (#sp-ico) شغّالة زي ما هي. للتراجع: امسح الـ style ده بس. */
+#pg-search .page-back-bar{padding:12px 0 0}
+#pg-search .search-page{padding:14px 0 90px}
+#pg-search .sp-bar-wrap{margin:0 auto 30px}
+#pg-search .sp-title{font-size:clamp(1.9rem,7.4vw,2.4rem);line-height:1.25;margin-bottom:6px}
+#pg-search .sp-sub{font-size:14px;line-height:1.7;margin-bottom:20px}
+#pg-search .sp-bar{min-height:54px;padding:5px;padding-inline-start:16px;gap:10px;border:1.5px solid var(--line2);background:var(--card);box-shadow:0 10px 26px -16px rgba(27,107,58,.38),0 2px 6px -2px rgba(16,24,40,.06)}
+#pg-search .sp-bar:focus-within{border-color:var(--brand);box-shadow:0 0 0 4px rgba(27,107,58,.12),0 12px 28px -16px rgba(27,107,58,.45)}
+#pg-search .sp-bar i{flex:none;display:block;width:20px;height:20px;font-size:0;line-height:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238aa497' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") center/contain no-repeat;transition:filter .2s}
+#pg-search .sp-bar:focus-within i{filter:hue-rotate(-12deg) saturate(1.6) brightness(.8)}
+#pg-search .sp-bar-inp,#pg-search .sp-bar-inp:focus,#pg-search .sp-bar-inp:focus-visible{height:44px;padding:0;border:0;border-radius:0;outline:none;box-shadow:none;font-size:16px;line-height:1.5}
+#pg-search .sp-bar-btn{flex:none;min-height:44px;padding:0 24px;font-size:14px;box-shadow:0 6px 14px -8px rgba(27,107,58,.6)}
 </style>
 <script>
 /* PURPLE-PREMIUM (مع كتلة الـ CSS اللي فوق): بيحدّث موضع الإضاءة داخل الزر + موجة الضغط. تفويض أحداث على document (الزر بيتبني ديناميكيًا) — مفيش تأثير على onclick بتاعه. للتراجع: امسح الـ <script> ده. */
