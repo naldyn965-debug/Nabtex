@@ -112,7 +112,7 @@
      downloading it in parallel while parsing <head>, instead of only discovering
      it once the parser reaches the <script src="academy-data.js"> tag mid-document.
      Does not change execution order/timing — same script tag, same position. -->
-<link rel="preload" as="script" href="academy-data.js?v=7">
+<link rel="preload" as="script" href="academy-data.js?v=8">
 
 <!-- Firebase SDKs moved to body — see just before Firebase initialization -->
 
@@ -216,6 +216,9 @@ img{display:block;max-width:100%}
 #ldr .l-line{position:relative;width:min(200px,52vw);height:2px;margin-top:clamp(20px,4vh,30px);border-radius:2px;background:var(--line2);overflow:hidden;opacity:0;animation:ldrFade .4s .5s forwards}
 #ldr .l-line::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,var(--brand-xl),var(--gold-l));transform:scaleX(0);animation:ldrFill 1.4s .55s var(--ease-out) forwards,ldrGlow 1.6s 2s ease-in-out infinite}
 #ldr.out{pointer-events:none}
+#ldr .l-line::before{content:'';position:absolute;inset:0;z-index:1;border-radius:inherit;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-100%);animation:ldrSweep 1.3s 2s ease-in-out infinite}
+@keyframes ldrSweep{to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){#ldr .l-line::before{animation:none}}
 #ldr.out::before{animation:ldrCurtain .56s cubic-bezier(.76,0,.24,1) forwards}
 #ldr.out .l-stage{animation:ldrStageOut .32s cubic-bezier(.5,0,.75,0) forwards}
 @keyframes ldrDraw{to{stroke-dashoffset:0}}
@@ -9688,7 +9691,7 @@ body.modal-open { overflow: hidden; }
 
 </div>
 
-<script src="academy-data.js?v=7"></script>
+<script src="academy-data.js?v=8"></script>
 
 
 <div id="tw"></div>
@@ -9748,6 +9751,7 @@ db.collection('course_config').onSnapshot(function(snap){
   // Course offers (academy ad) — academy-data.js is wrapped in an IIFE so it can't see _acCourseConfig; hand it the offers via window
   window._acOffers={};
   snap.docs.forEach(function(d){var o=d.data().offer;if(o)window._acOffers[d.id]=o;});
+  try{console.info('[Nabtex] course offers loaded:',Object.keys(window._acOffers).join(',')||'none');}catch(e){}
   try{if(typeof window.acAdRefresh==='function')window.acAdRefresh();}catch(e){}
   // Live kick: if the course the student is looking at RIGHT NOW just got
   // paused by the admin, boot them to the catalog immediately instead of
@@ -9759,7 +9763,7 @@ db.collection('course_config').onSnapshot(function(snap){
       acGo('catalog',null);
     }
   }catch(e){}
-},function(){/* silent fail — courses stay accessible if rule missing */});
+},function(err){/* courses stay accessible if rule missing */ try{console.warn('[Nabtex] course_config listener error:',err&&err.code,err&&err.message);}catch(e){}});
 
 // ======================== GLOBAL STATE ========================
 let currentUser = null;
@@ -9883,7 +9887,18 @@ const App = {
     var self=this;
     this._hideLoaderNow = function(){
       var l=document.getElementById('ldr');
-      if(l){l.classList.add('out');setTimeout(()=>l&&l.remove(),600);}
+      if(!l||l._nbHold)return;
+      l._nbHold=true;
+      /* بيستنى صور أول كروت الكورسات (App._nbImgReveal) بحد أقصى 2.5 ثانية قبل ما الستارة تتسحب،
+         عشان الصفحة تظهر كاملة مش كروت بتدرّج لوني بس. لو الصور جاهزة/مفيش كروت بيطلع فوراً. */
+      var t0=Date.now(),fired=false;
+      var go=function(){if(fired)return;fired=true;l.classList.add('out');setTimeout(()=>l&&l.remove(),600);};
+      (function wait(){
+        var p=self._nbHomeImgReady;
+        if(p){p.then(go,go);setTimeout(go,Math.max(0,2500-(Date.now()-t0)));}
+        else if(Date.now()-t0<500)setTimeout(wait,50);
+        else go();
+      })();
     };
     setTimeout(function(){
       self._hideLoaderNow();
@@ -10318,6 +10333,27 @@ const App = {
     '</div>';
   },
 
+  /* صور كروت الكورسات في الرئيسية: shimmer بريميوم لحد ما الصورة تجهز (بدل تدرّج لوني ثابت)،
+     وبيحفظ وعد جاهزية أول 4 صور في App._nbHomeImgReady عشان شاشة التحميل تستناها. */
+  _nbImgReveal(cnt){
+    var all=[].slice.call(cnt.querySelectorAll('.nb-h2-cc-img'));
+    var track=all.map(function(el){
+      return new Promise(function(res){
+        var m=/url\(["']?([^"')]+)["']?\)/.exec(getComputedStyle(el).backgroundImage||'');
+        if(!m){res();return;}
+        var im=new Image();
+        im.onload=im.onerror=function(){
+          if(el.classList.contains('nb-img-pending')){el.classList.remove('nb-img-pending');el.classList.add('nb-img-done');}
+          res();
+        };
+        im.src=m[1];
+        if(im.complete){res();return;}
+        el.classList.add('nb-img-pending');
+      });
+    });
+    this._nbHomeImgReady=Promise.all(track.slice(0,4));
+  },
+
   _renderUnifiedHome(cnt){
     var name = (currentUser && (currentUser.displayName || currentUser.email.split('@')[0])) || '';
     var firstName = name ? name.trim().split(/\s+/)[0] : '';
@@ -10398,6 +10434,7 @@ const App = {
     '</div>';
 
     cnt.innerHTML = html;
+    try{ this._nbImgReveal(cnt); }catch(e){}
     /* دخول متدرج بريميوم للكروت */
     requestAnimationFrame(function(){
       var cards = cnt.querySelectorAll('.nb-h2-course-card');
@@ -26749,6 +26786,12 @@ function nbFmtDate(date){
 .nb-h2-cc-top{height:112px;position:relative;overflow:hidden}
 .nb-h2-cc-img{position:absolute;inset:0;transition:transform .6s var(--h2-out)}
 .nb-h2-course-card:hover .nb-h2-cc-img{transform:scale(1.09)}
+/* صورة الكورس لسه بتحمّل: shimmer ناعم فوق التدرّج، وبعدها وميض خفيف بيخفي ظهور الصورة (الكلاسات من App._nbImgReveal) */
+.nb-h2-cc-img.nb-img-pending::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,rgba(255,255,255,.04) 20%,rgba(255,255,255,.3) 50%,rgba(255,255,255,.04) 80%);background-size:220% 100%;animation:nbImgSk 1.5s ease-in-out infinite}
+.nb-h2-cc-img.nb-img-done::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.22);opacity:0;animation:nbImgIn .6s ease-out}
+@keyframes nbImgSk{from{background-position:220% 0}to{background-position:-120% 0}}
+@keyframes nbImgIn{from{opacity:1}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.nb-h2-cc-img.nb-img-pending::after{animation:none}.nb-h2-cc-img.nb-img-done::after{animation:none}}
 .nb-h2-cc-top::after{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(0,0,0,0) 48%,rgba(0,0,0,.34) 100%);
