@@ -32236,9 +32236,7 @@ var content=acGetContent(id);
 if(!content){if(typeof showToast==='function')showToast('⚠️ هذه المحاضرة قيد الإعداد، لا يمكن تحميلها بعد','err');return}
 var origHTML=btn?btn.innerHTML:null;
 if(btn){btn.disabled=true;btn.innerHTML='⏳ ...'}
-var w=window.open('','_blank');
 if(btn){btn.disabled=false;btn.innerHTML=origHTML}
-if(!w){if(typeof showToast==='function')showToast('⚠️ يرجى السماح بالنوافذ المنبثقة لتحميل المحاضرة','err');return}
 var styleTags='';
 try{
 var allStyles=document.querySelectorAll('style');
@@ -32266,7 +32264,7 @@ styleTags+
 '@media print{.acad-pdf-toolbar{display:none}@page{margin:18mm 16mm}body{padding:0}}'+
 '</style>'+
 '</head><body>'+
-'<div class="acad-pdf-toolbar"><button onclick="window.close()" style="background:var(--bg2,#f3faf4);color:var(--ink,#1e2a24);border:1.5px solid var(--line,#e2eee5)">← رجوع</button><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>'+
+'<div class="acad-pdf-toolbar"><button onclick="try{parent.document.getElementById(\'acPdfFrm\').remove()}catch(e){window.close()}" style="background:var(--bg2,#f3faf4);color:var(--ink,#1e2a24);border:1.5px solid var(--line,#e2eee5)">← رجوع</button><button onclick="window.focus();window.print()">🖨️ طباعة / حفظ PDF</button></div>'+
 '<div class="acad-pdf-wrap">'+
 '<div class="acad-pdf-head">'+
 '<div class="acad-pdf-brand">🛡️ نبتيكس أكاديمي — '+acEsc(AC_COURSE.title)+'</div>'+
@@ -32278,23 +32276,15 @@ content+
 '<div class="acad-pdf-foot">© نبتيكس Nabtex — تم إصدار هذا الملف من دورة '+acEsc(AC_COURSE.title)+'، نبتيكس أكاديمي</div>'+
 '</div>'+
 '</body></html>';
-var ua=navigator.userAgent||'';
-var isSafariOnly=/Safari/.test(ua)&&!/Chrome|CriOS|FxiOS|EdgiOS|OPiOS|Android/.test(ua);
-var isAndroid=/Android/.test(ua);
-if(isSafariOnly||isAndroid){
-w.document.write(html);
-w.document.close();
-}else{
-try{
-var pdfBlob=new Blob([html],{type:'text/html'});
-var pdfBlobUrl=URL.createObjectURL(pdfBlob);
-w.location.href=pdfBlobUrl;
-w.addEventListener&&w.addEventListener('unload',function(){try{URL.revokeObjectURL(pdfBlobUrl)}catch(e){}});
-}catch(e){
-w.document.write(html);
-w.document.close();
-}
-}
+/* Render inside the same tab (full-screen frame) instead of window.open: leaving the page made mobile browsers/PWA reload the site on return. */
+var oldFrm=document.getElementById('acPdfFrm');
+if(oldFrm&&oldFrm.parentNode)oldFrm.parentNode.removeChild(oldFrm);
+var frm=document.createElement('iframe');
+frm.id='acPdfFrm';
+frm.title=ls.title;
+frm.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:0;background:#fff;z-index:2147483000';
+frm.srcdoc=html;
+document.body.appendChild(frm);
 if(typeof showToast==='function')showToast('📄 جاري تجهيز المحاضرة للتحميل...','ok')}
 
 /* ── Subscribe flow (info page CTA) ──────────────────────────
