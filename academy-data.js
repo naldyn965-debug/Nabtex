@@ -32264,7 +32264,7 @@ styleTags+
 '@media print{.acad-pdf-toolbar{display:none}@page{margin:18mm 16mm}body{padding:0}}'+
 '</style>'+
 '</head><body>'+
-'<div class="acad-pdf-toolbar"><button onclick="try{parent.document.getElementById(\'acPdfFrm\').remove()}catch(e){window.close()}" style="background:var(--bg2,#f3faf4);color:var(--ink,#1e2a24);border:1.5px solid var(--line,#e2eee5)">← رجوع</button><button onclick="window.focus();window.print()">🖨️ طباعة / حفظ PDF</button></div>'+
+'<div class="acad-pdf-toolbar"><button onclick="try{var f=parent.document.getElementById(\'acPdfFrm\');parent.document.title=f.getAttribute(\'data-t\');f.remove()}catch(e){window.close()}" style="background:var(--bg2,#f3faf4);color:var(--ink,#1e2a24);border:1.5px solid var(--line,#e2eee5)">← رجوع</button><button onclick="window.focus();window.print()">🖨️ طباعة / حفظ PDF</button></div>'+
 '<div class="acad-pdf-wrap">'+
 '<div class="acad-pdf-head">'+
 '<div class="acad-pdf-brand">🛡️ نبتيكس أكاديمي — '+acEsc(AC_COURSE.title)+'</div>'+
@@ -32278,10 +32278,14 @@ content+
 '</body></html>';
 /* Render inside the same tab (full-screen frame) instead of window.open: leaving the page made mobile browsers/PWA reload the site on return. */
 var oldFrm=document.getElementById('acPdfFrm');
+var baseTitle=oldFrm?oldFrm.getAttribute('data-t'):document.title;
 if(oldFrm&&oldFrm.parentNode)oldFrm.parentNode.removeChild(oldFrm);
 var frm=document.createElement('iframe');
 frm.id='acPdfFrm';
 frm.title=ls.title;
+/* saved-PDF file name comes from the top document title -> use the lesson title while the frame is open (restored by the back button) */
+frm.setAttribute('data-t',baseTitle);
+document.title=ls.title+' — نبتيكس أكاديمي';
 frm.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:0;background:#fff;z-index:2147483000';
 frm.srcdoc=html;
 document.body.appendChild(frm);
