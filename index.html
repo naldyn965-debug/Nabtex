@@ -5722,6 +5722,35 @@ body.modal-open { overflow: hidden; }
 @media (prefers-reduced-motion:reduce){
   #auth-bg,#auth-bg *,#auth-bg *::before,#auth-bg *::after{animation:none !important;transition-duration:.01ms !important}
 }
+
+/* ═══ AUTH — Google first (presentation only: no markup, JS or auth-logic changes) ═══
+   Order: Google → "أو" → tabs (دخول / إنشاء حساب) → manual fields.
+   The active login/register form is made layout-transparent (display:contents) so its Google button and
+   divider can be ordered together with the tabs inside .auth-body. Hidden forms keep their inline
+   display:none, forgot/reset forms are untouched, and swAuth()/hLogin()/hReg()/signInWithGoogle() still
+   work exactly as before (same elements, same ids, same handlers). */
+#auth-bg .auth-body{display:flex;flex-direction:column;gap:14px}
+#auth-bg #af-l:not([style*="none"]),#auth-bg #af-r:not([style*="none"]){display:contents !important}
+#auth-bg .auth-body .btn-goo{order:-3}
+#auth-bg .auth-body .adiv{order:-2}
+#auth-bg .auth-body > .auth-tabs{order:-1;margin-bottom:2px}
+#auth-bg .aform .btn-goo,#auth-bg .aform .adiv{--i:3}
+
+/* Google = the primary door in */
+#auth-bg .aform .btn-goo{height:54px;gap:12px;font-size:15.5px;font-weight:800;border-width:1.5px;background:var(--card);box-shadow:0 12px 26px -16px rgba(8,18,11,.4),0 1px 2px rgba(8,18,11,.06)}
+#auth-bg .aform .btn-goo svg{width:22px;height:22px}
+#auth-bg .aform .btn-goo:hover{border-color:var(--brand);background:var(--card);box-shadow:0 16px 30px -16px rgba(27,107,58,.5),0 1px 2px rgba(8,18,11,.06)}
+#auth-bg .aform .btn-goo:active{transform:scale(.98);box-shadow:0 8px 16px -12px rgba(27,107,58,.45)}
+#auth-bg .aform .btn-goo:focus-visible{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(27,107,58,.16)}
+/* "الأسرع والأفضل" — floating hint on the Google button (CSS-only, decorative; not read by screen readers' button label) */
+#auth-bg .aform .btn-goo{position:relative;margin-top:8px;border-color:rgba(27,107,58,.34)}
+#auth-bg .aform .btn-goo::after{content:"الأسرع والأفضل";position:absolute;top:-11px;inset-inline-start:20px;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 10px 0 9px;border-radius:9999px;background:linear-gradient(135deg,var(--brand-l),var(--brand));color:#fff;font-size:11px;font-weight:800;line-height:1;letter-spacing:0;white-space:nowrap;pointer-events:none;box-shadow:0 6px 12px -6px rgba(27,107,58,.65),0 0 0 2px var(--bg)}
+#auth-bg .aform .btn-goo::before{content:"";position:absolute;top:-6px;inset-inline-start:27px;width:11px;height:11px;z-index:1;pointer-events:none;background:#fff;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13.5 2L4 14h6.5L9.5 22 20 9.5h-6.8z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13.5 2L4 14h6.5L9.5 22 20 9.5h-6.8z'/%3E%3C/svg%3E") center/contain no-repeat}
+#auth-bg .aform .btn-goo::after{padding-inline-start:24px}
+@media (max-height:640px){
+  #auth-bg .auth-body{gap:11px}
+  #auth-bg .aform .btn-goo{height:48px}
+}
 </style>
 <!-- ═══ EMAIL VERIFICATION SHEET — شاشة تأكيد البريد بعد إنشاء الحساب (عرض فقط، لا تلمس أي منطق قائم) ═══ -->
 <style id="nbvf-css">
